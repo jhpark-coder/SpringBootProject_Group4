@@ -1,0 +1,520 @@
+.ProseMirror {
+  border: 1px solid #ccc;
+  padding: 10px;
+  min-height: 200px;
+  border-radius: 5px;
+}
+
+.ProseMirror:focus {
+  outline: none;
+  border-color: #646cff;
+}
+
+.App {
+  margin: 0;
+  padding: 0;
+}
+
+.menu-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  border-radius: 5px 5px 0 0;
+}
+
+.menu-bar button {
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.menu-bar button:hover {
+  background-color: #f0f0f0;
+}
+
+.menu-bar button.is-active {
+  background-color: #e0e0e0;
+  font-weight: bold;
+}
+
+.bubble-menu {
+  display: flex;
+  background-color: #333;
+  padding: 5px;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.bubble-menu button {
+  padding: 5px;
+  border: none;
+  background-color: transparent;
+  color: white;
+  cursor: pointer;
+}
+
+.bubble-menu button:hover {
+  background-color: #555;
+}
+
+.bubble-menu button.is-active {
+  background-color: #777;
+}
+
+.divider {
+  width: 1px;
+  background-color: #555;
+  margin: 0 5px;
+}
+
+/* --- Layout Styles --- */
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.editor-container {
+  flex-grow: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  /* Allow editor to scroll independently */
+}
+
+/* Keep ProseMirror styles but maybe rename class to be more specific */
+.prose-mirror-editor {
+  border: none;
+  padding: 1rem;
+  min-height: 100%;
+}
+
+.prose-mirror-editor:focus {
+  outline: none;
+}
+
+/* --- Sidebar Styles --- */
+.sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  background-color: #f8f9fa;
+  border-left: 1px solid #dee2e6;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-section {
+  margin-bottom: 2rem;
+}
+
+.sidebar-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6c757d;
+  margin-bottom: 1rem;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.grid-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0.5rem;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  background-color: #fff;
+  cursor: pointer;
+  text-align: center;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.grid-button:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.grid-button>span {
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.update-button {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.update-button:hover {
+  background-color: #218838;
+}
+
+.preview-button {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6c757d;
+}
+
+.preview-button:hover {
+  color: #212529;
+}
+
+.iframe-container {
+  margin: 1rem auto;
+  /* Center the container */
+}
+
+.video-container {
+  margin: 1rem auto;
+  /* Center the container */
+}
+
+.image-container {
+  margin: 1rem auto;
+}
+
+.image-container img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* --- Iframe (Embed) Styles: Keep the aspect ratio trick --- */
+.iframe-wrapper {
+  position: relative;
+  padding-bottom: 56.25%;
+  /* 16:9 aspect ratio */
+  height: 0;
+  overflow: hidden;
+  background-color: #000;
+}
+
+.iframe-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Local Video Styles: Treat it like an image --- */
+.video-wrapper {
+  position: relative;
+  /* No special padding or height. Let the video define its own size. */
+}
+
+.video-wrapper video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  background-color: #000;
+}
+
+/* --- Image Styles --- */
+.image-wrapper {
+  position: relative;
+}
+
+/* Interceptor for all media types */
+.iframe-wrapper>.click-interceptor,
+.video-wrapper>.click-interceptor,
+.image-wrapper>.click-interceptor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  /* Sit on top to intercept clicks */
+}
+
+/* When the node is selected, disable the interceptor to allow video/iframe controls */
+.ProseMirror-selectednode .click-interceptor {
+  pointer-events: none;
+}
+
+.audio-wrapper {
+  padding: 1rem 0;
+  max-width: 50%;
+  margin: 0 auto;
+}
+
+.audio-wrapper audio {
+  width: 100%;
+}
+
+/* --- Remove old size controls --- */
+.size-controls {
+  display: none;
+}
+
+/* --- New Media Menu Styles --- */
+.media-menu {
+  position: absolute;
+  top: -40px;
+  /* Position above the node */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  z-index: 2;
+  /* Sit above the content */
+}
+
+.media-menu button {
+  padding: 5px 8px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.media-menu button:hover {
+  background-color: #f0f0f0;
+}
+
+.media-menu button.is-active {
+  background-color: #333;
+  color: white;
+}
+
+.media-menu .divider {
+  width: 1px;
+  height: 20px;
+  background-color: #eee;
+  margin: 0 4px;
+}
+
+/* --- Draggable Item Styles --- */
+.content-item-wrapper {
+  position: relative;
+  /* Add some padding on the left to make space for the handle */
+  padding-left: 24px;
+}
+
+/* --- Direct Alignment Styles for Content Items --- */
+.content-item-wrapper.has-text-align-left {
+  text-align: left;
+}
+
+.content-item-wrapper.has-text-align-center {
+  text-align: center;
+}
+
+.content-item-wrapper.has-text-align-right {
+  text-align: right;
+}
+
+/* --- Container Alignment Styles --- */
+.image-container.has-text-align-left,
+.video-container.has-text-align-left,
+.iframe-container.has-text-align-left {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.image-container.has-text-align-center,
+.video-container.has-text-align-center,
+.iframe-container.has-text-align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.image-container.has-text-align-right,
+.video-container.has-text-align-right,
+.iframe-container.has-text-align-right {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.drag-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  opacity: 0;
+  /* Hidden by default */
+  color: #aaa;
+  transition: opacity 0.2s;
+}
+
+.content-item-wrapper:hover .drag-handle {
+  opacity: 1;
+  /* Show on hover */
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* --- Alignment Styles for Custom Nodes --- */
+.ProseMirror .has-text-align-left {
+  text-align: left;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.ProseMirror .has-text-align-center {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+}
+
+.ProseMirror .has-text-align-right {
+  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* --- Modal Styles --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-content h3 {
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.modal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.modal-section label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #333;
+}
+
+.modal-content select,
+.modal-content input[type="text"],
+.modal-content input[type="url"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-content input[type="color"] {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.url-input-group {
+  display: flex;
+}
+
+.url-input-group input {
+  flex-grow: 1;
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  border-radius: 4px 0 0 4px;
+}
+
+.url-input-group button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ccc;
+  border-left: none;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  border-radius: 0 4px 4px 0;
+}
+
+.modal-divider {
+  text-align: center;
+  color: #aaa;
+}
+
+.upload-button,
+.close-button {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.upload-button {
+  background-color: #e9ecef;
+  border: 1px solid #dee2e6;
+}
+
+.close-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background-color: transparent;
+  border: none;
+  color: #6c757d;
+  margin-top: 20px;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background-color: #f0f0f0;
+}
