@@ -1,0 +1,36 @@
+# docker-compose.yml
+
+version: '3.8'
+
+services:
+  # MySQL 서비스 정의
+  mysql-db:
+    image: mysql:8.0
+    container_name: nexus-mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234              # 개발자만 아는 루트 비밀번호 (예: root1234)
+      MYSQL_DATABASE: springproject          # <<-- 사용자님의 DB 이름으로 수정
+      MYSQL_USER: nexus_user                 # <<-- 우리 앱이 사용할 사용자 이름
+      MYSQL_PASSWORD: nexus_password         # <<-- 우리 앱이 사용할 비밀번호
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+
+  # Redis 서비스 정의
+  redis-cache:
+    image: redis:latest
+    container_name: nexus-redis-cache
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  mysql-data:
+  redis-data:
