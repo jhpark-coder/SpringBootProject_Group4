@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Code, Image as ImageIcon, Video, Mic, Palette, LayoutGrid, Type, Settings } from 'lucide-react';
 
-const Sidebar = ({ editor, onEmbed, onImageAdd, onStylesClick }) => {
+const Sidebar = ({ editor, onEmbed, onImageAdd, onStylesClick, onPhotoGridClick, onPreviewClick, onDebugClick, onSaveClick }) => {
     const videoInputRef = useRef(null);
     const audioInputRef = useRef(null);
 
@@ -85,7 +85,7 @@ const Sidebar = ({ editor, onEmbed, onImageAdd, onStylesClick }) => {
                             <Type size={20} />
                             <span>Text</span>
                         </button>
-                        <button className="grid-button">
+                        <button className="grid-button" onClick={onPhotoGridClick}>
                             <LayoutGrid size={20} />
                             <span>Photo Grid</span>
                         </button>
@@ -105,6 +105,28 @@ const Sidebar = ({ editor, onEmbed, onImageAdd, onStylesClick }) => {
                         </button>
                     </div>
                 </div>
+            </div>
+
+            <div className="sidebar-footer">
+                <button
+                    className="preview-button"
+                    onClick={onPreviewClick}
+                >
+                    🔍 View a Preview
+                </button>
+                <button
+                    className="update-button"
+                    onClick={onSaveClick}
+                >
+                    Update Project
+                </button>
+                <button
+                    className="preview-button"
+                    onClick={onDebugClick}
+                    style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}
+                >
+                    🐛 Debug JSON
+                </button>
             </div>
         </div>
     );
