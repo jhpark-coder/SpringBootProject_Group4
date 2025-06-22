@@ -11,11 +11,29 @@ const ImageUploadModal = ({ onClose, onImageAdd }) => {
         }
     };
 
-    const handleFileChange = (event) => {
+    const handleFileChange = async (event) => {
         const file = event.target.files?.[0];
         if (file) {
-            const src = URL.createObjectURL(file);
-            onImageAdd({ src, alt: file.name });
+            try {
+                // 파일을 서버에 업로드
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/editor/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const uploadedUrl = await response.text();
+                    onImageAdd({ src: uploadedUrl, alt: file.name });
+                } else {
+                    alert('이미지 업로드에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('업로드 오류:', error);
+                alert('이미지 업로드 중 오류가 발생했습니다.');
+            }
         }
     };
 

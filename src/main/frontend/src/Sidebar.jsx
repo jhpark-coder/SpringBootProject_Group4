@@ -23,14 +23,33 @@ const Sidebar = ({ editor, onEmbed, onImageAdd, onStylesClick, onPhotoGridClick,
         }
     };
 
-    const handleFileChange = (event, nodeType) => {
+    const handleFileChange = async (event, nodeType) => {
         const file = event.target.files?.[0];
         if (file && editor) {
-            const url = URL.createObjectURL(file);
-            if (nodeType === 'video') {
-                editor.chain().focus().setVideo({ src: url }).run();
-            } else if (nodeType === 'audio') {
-                editor.chain().focus().setAudio({ src: url }).run();
+            try {
+                // 파일을 서버에 업로드
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/editor/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const uploadedUrl = await response.text();
+                    // 업로드된 URL로 에디터에 추가
+                    if (nodeType === 'video') {
+                        editor.chain().focus().setVideo({ src: uploadedUrl }).run();
+                    } else if (nodeType === 'audio') {
+                        editor.chain().focus().setAudio({ src: uploadedUrl }).run();
+                    }
+                } else {
+                    alert('파일 업로드에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('업로드 오류:', error);
+                alert('파일 업로드 중 오류가 발생했습니다.');
             }
             event.target.value = '';
         }
