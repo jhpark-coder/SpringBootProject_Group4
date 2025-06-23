@@ -37,13 +37,32 @@ export default Node.create({
     parseHTML() {
         return [
             {
-                tag: 'iframe',
+                tag: 'iframe[src]',
             },
         ]
     },
 
     renderHTML({ HTMLAttributes }) {
-        return ['iframe', mergeAttributes(HTMLAttributes)]
+        // `width` and `textAlign` are for the wrapper. The rest are for the iframe.
+        const { width, textAlign, ...iframeAttrs } = HTMLAttributes;
+
+        const wrapperStyles = [`width: ${width || '100%'}`]; // Default to 100%
+        if (textAlign === 'center') {
+            wrapperStyles.push('margin-left: auto', 'margin-right: auto');
+        } else if (textAlign === 'right') {
+            wrapperStyles.push('margin-left: auto', 'margin-right: 0');
+        } else { // 'left' is default
+            wrapperStyles.push('margin-left: 0', 'margin-right: auto');
+        }
+
+        return [
+            'div',
+            {
+                class: 'iframe-wrapper',
+                style: wrapperStyles.join('; '),
+            },
+            ['iframe', iframeAttrs],
+        ];
     },
 
     addNodeView() {

@@ -10,26 +10,48 @@ export default Node.create({
 
     addAttributes() {
         return {
-            // react-grid-layout's layout array: {i, x, y, w, h}
-            layout: { default: [] },
-            // Our items array: {id, src}
-            items: { default: [] },
+            items: {
+                default: [],
+            },
+            layout: {
+                default: '2-cols',
+            },
         };
     },
 
     parseHTML() {
-        return [{ tag: 'div[data-type="photo-grid"]' }];
+        return [
+            {
+                tag: 'div[data-type="photo-grid"]',
+                getAttrs: dom => {
+                    const items = Array.from(dom.querySelectorAll('.grid-item img')).map(img => ({
+                        src: img.getAttribute('src'),
+                        alt: img.getAttribute('alt'),
+                    }));
+                    const layout = dom.className.split(' ').find(cls => cls.includes('-cols')) || '2-cols';
+                    return { items, layout };
+                }
+            },
+        ];
     },
 
-    renderHTML({ HTMLAttributes, node }) {
-        const { layout = [], items = [] } = node.attrs;
+    renderHTML({ node, HTMLAttributes }) {
+        const { items = [], layout } = node.attrs;
 
-        // 간단한 방식: 데이터만 저장하고 CSS로 처리
-        return ['div', mergeAttributes(HTMLAttributes, {
-            'data-type': 'photo-grid',
-            'data-layout': JSON.stringify(layout),
-            'data-items': JSON.stringify(items)
-        })];
+        let layoutClass = 'grid-2-cols'; // Default class
+        if (typeof layout === 'string') {
+            layoutClass = layout.startsWith('grid-') ? layout : `grid-${layout}`;
+        }
+
+        return [
+            'div',
+            mergeAttributes(HTMLAttributes, { 'data-type': 'photo-grid', class: `photo-grid-wrapper ${layoutClass}` }),
+            ...items.map(item => [
+                'div',
+                { class: 'grid-item' },
+                ['img', { src: item.src, alt: item.alt }],
+            ]),
+        ];
     },
 
     addNodeView() {

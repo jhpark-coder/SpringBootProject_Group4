@@ -1,6 +1,7 @@
 package com.creatorworks.nexus.editor.entity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -15,13 +16,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.JoinColumn;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 
 @Entity
 @Table(name = "editors")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Editor {
     
     @Id
@@ -31,11 +37,20 @@ public class Editor {
     @Column(nullable = false)
     private String title;
     
+    @JsonRawValue
     @Column(columnDefinition = "JSON")
     private String tiptapJson;
     
     @Lob
     private String htmlBackup;
+    
+    @Lob
+    private String coverImage;
+    
+    @ElementCollection
+    @CollectionTable(name = "editor_tags", joinColumns = @JoinColumn(name = "editor_id"))
+    @Column(name = "tag")
+    private List<String> tags;
     
     @CreationTimestamp
     private LocalDateTime createdAt;

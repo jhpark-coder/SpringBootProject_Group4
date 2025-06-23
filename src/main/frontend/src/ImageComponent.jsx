@@ -3,31 +3,36 @@ import { NodeViewWrapper } from '@tiptap/react';
 import { GripVertical } from 'lucide-react';
 import MediaMenu from './MediaMenu.jsx';
 
-const ImageComponent = ({ editor, node, updateAttributes, selected, deleteNode }) => {
-    const { src, alt, width, textAlign = 'left' } = node.attrs;
+const ImageComponent = ({ node, updateAttributes, editor, deleteNode }) => {
+    const { src, alt, width, textAlign } = node.attrs;
+    const isSelected = editor.isActive('image', { src });
 
+    // textAlign 값에 따라 적절한 CSS 클래스를 반환하는 함수
     const getAlignmentClass = () => {
         switch (textAlign) {
-            case 'center': return 'has-text-align-center';
-            case 'right': return 'has-text-align-right';
-            default: return 'has-text-align-left';
+            case 'center':
+                return 'has-text-align-center';
+            case 'right':
+                return 'has-text-align-right';
+            default:
+                return 'has-text-align-left';
         }
     };
 
-    const alignmentClass = getAlignmentClass();
-
     return (
-        <NodeViewWrapper className={`content-item-wrapper ${alignmentClass}`}>
-            <div className="drag-handle" contentEditable={false}>
+        <NodeViewWrapper className={`image-wrapper resizable ${getAlignmentClass()}`}>
+            <div className="drag-handle" contentEditable="false" data-drag-handle>
                 <GripVertical size={18} />
             </div>
-            <div className={`image-container ${alignmentClass}`} style={{ width }}>
-                {selected && <MediaMenu editor={editor} node={node} updateAttributes={updateAttributes} deleteNode={deleteNode} />}
-                <div className="image-wrapper">
-                    <div className="click-interceptor" contentEditable={false} data-drag-handle></div>
-                    <img src={src} alt={alt} />
-                </div>
-            </div>
+            
+            <img
+                src={src}
+                alt={alt}
+                style={{ width: width }}
+                className={`tiptap-image ${isSelected ? 'ProseMirror-selectednode' : ''}`}
+            />
+
+            {isSelected && <MediaMenu editor={editor} node={node} updateAttributes={updateAttributes} deleteNode={deleteNode} />}
         </NodeViewWrapper>
     );
 };
