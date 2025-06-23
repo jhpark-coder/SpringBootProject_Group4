@@ -18,6 +18,7 @@ import ImageUploadModal from './ImageUploadModal.jsx';
 import StylesModal from './StylesModal.jsx';
 import PhotoGridModal from './PhotoGridModal.jsx';
 import PreviewModal from './PreviewModal.jsx';
+import EmbedModal from './EmbedModal.jsx';
 import './App.css';
 
 // 커스텀 FontSize 확장
@@ -65,6 +66,7 @@ const FontSize = Extension.create({
 
 function App() {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
   const [isStylesModalOpen, setIsStylesModalOpen] = useState(false);
   const [isPhotoGridModalOpen, setIsPhotoGridModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -303,43 +305,13 @@ function App() {
 
   return (
     <div className="app-container">
-      {isStylesModalOpen && (
-        <StylesModal
-          onClose={() => setIsStylesModalOpen(false)}
-          currentStyles={editorStyles}
-          onStyleChange={setEditorStyles}
-        />
-      )}
-
-      {isImageModalOpen && (
-        <ImageUploadModal
-          onClose={() => setIsImageModalOpen(false)}
-          onImageAdd={handleImageAdd}
-        />
-      )}
-
-      {isPhotoGridModalOpen && (
-        <PhotoGridModal
-          onClose={() => setIsPhotoGridModalOpen(false)}
-          onGridCreate={handleCreateGrid}
-        />
-      )}
-
-      {isPreviewModalOpen && (
-        <PreviewModal
-          isOpen={isPreviewModalOpen}
-          onClose={() => setIsPreviewModalOpen(false)}
-          editorContent={getEditorContent()}
-        />
-      )}
-
       <div className="main-content">
         <div className="editor-container" style={editorStyles}>
           <Tiptap editor={editor} />
         </div>
         <Sidebar
           editor={editor}
-          onEmbed={handleEmbed}
+          onEmbedClick={() => setIsEmbedModalOpen(true)}
           onImageAdd={() => setIsImageModalOpen(true)}
           onStylesClick={() => setIsStylesModalOpen(true)}
           onPhotoGridClick={() => setIsPhotoGridModalOpen(true)}
@@ -348,6 +320,11 @@ function App() {
           onSaveClick={handleSaveDocument}
         />
       </div>
+      {isImageModalOpen && <ImageUploadModal onClose={() => setIsImageModalOpen(false)} onImageAdd={handleImageAdd} />}
+      {isEmbedModalOpen && <EmbedModal onClose={() => setIsEmbedModalOpen(false)} onEmbed={handleEmbed} />}
+      {isStylesModalOpen && <StylesModal onClose={() => setIsStylesModalOpen(false)} currentStyles={editorStyles} onStyleChange={setEditorStyles} />}
+      {isPhotoGridModalOpen && <PhotoGridModal onClose={() => setIsPhotoGridModalOpen(false)} onGridCreate={handleCreateGrid} />}
+      {isPreviewModalOpen && <PreviewModal isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} editorContent={getEditorContent()} />}
     </div>
   );
 }

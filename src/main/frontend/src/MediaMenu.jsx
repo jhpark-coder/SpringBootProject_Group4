@@ -5,7 +5,13 @@ const MediaMenu = ({ editor, node, updateAttributes, deleteNode }) => {
     const { width, textAlign } = node.attrs;
 
     const handleAlignment = (align) => {
-        updateAttributes({ textAlign: align });
+        // iframe 노드의 경우 커스텀 명령어 사용
+        if (node.type.name === 'iframe') {
+            editor.chain().focus().setIframeAlignment(align).run();
+        } else {
+            // 다른 노드들은 기존 방식 사용
+            updateAttributes({ textAlign: align });
+        }
     };
 
     const handleSize = (newWidth) => {
@@ -13,7 +19,11 @@ const MediaMenu = ({ editor, node, updateAttributes, deleteNode }) => {
     };
 
     const resetAlignment = () => {
-        updateAttributes({ textAlign: 'left' });
+        if (node.type.name === 'iframe') {
+            editor.chain().focus().setIframeAlignment('left').run();
+        } else {
+            updateAttributes({ textAlign: 'left' });
+        }
     };
 
     return (
