@@ -4,7 +4,21 @@ import { GripVertical } from 'lucide-react'
 import MediaMenu from './MediaMenu.jsx'
 
 const IframeComponent = ({ editor, node, updateAttributes, selected, deleteNode }) => {
-    const { src, width } = node.attrs
+    const { src, width, textAlign = 'center' } = node.attrs
+
+    const containerStyle = {
+        width: width,
+        marginTop: '1rem',
+        marginBottom: '1rem',
+        marginLeft: 'auto',
+        marginRight: 'auto'
+    };
+
+    if (textAlign === 'left') {
+        containerStyle.marginLeft = '0';
+    } else if (textAlign === 'right') {
+        containerStyle.marginRight = '0';
+    }
 
     if (!src) {
         return (
@@ -22,7 +36,7 @@ const IframeComponent = ({ editor, node, updateAttributes, selected, deleteNode 
             <div className="drag-handle" contentEditable={false}>
                 <GripVertical size={18} />
             </div>
-            <div className="iframe-container" style={{ width }}>
+            <div className="iframe-container" style={containerStyle}>
                 {selected && <MediaMenu editor={editor} node={node} updateAttributes={updateAttributes} deleteNode={deleteNode} />}
                 <div className="iframe-wrapper">
                     <div className="click-interceptor" data-drag-handle contentEditable={false}></div>

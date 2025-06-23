@@ -16,6 +16,9 @@ export default Node.create({
             width: {
                 default: '100%',
             },
+            textAlign: {
+                default: 'center',
+            },
             frameborder: {
                 default: 0,
             },
@@ -54,6 +57,9 @@ export default Node.create({
                     type: this.name,
                     attrs: options,
                 });
+            },
+            setIframeAlignment: (alignment) => ({ commands }) => {
+                return commands.updateAttributes(this.name, { textAlign: alignment });
             },
         }
     },
