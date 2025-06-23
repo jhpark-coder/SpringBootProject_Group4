@@ -1,10 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>상품 목록</title>
+    <!-- 간단한 스타일링 추가 -->
+    <style>
+        .product-grid { display: flex; flex-wrap: wrap; gap: 16px; }
+        .product-card { border: 1px solid #ddd; padding: 16px; width: 200px; }
+        .product-card img { max-width: 100%; height: auto; }
+        /* JS 비활성화 시 보여줄 메시지 스타일 */
+        .no-js-message { text-align: center; padding: 50px; color: #ff0000; }
+    </style>
 </head>
 <body>
+    <!-- 자바스크립트가 비활성화된 경우 이 내용이 표시됩니다. -->
+    <noscript>
+        <div class="no-js-message">
+            <h1>자바스크립트 활성화 필요</h1>
+            <p>원활한 서비스 이용을 위해 자바스크립트를 활성화해주세요.</p>
+        </div>
+    </noscript>
 
+    <!-- 자바스크립트가 활성화되면 이 컨테이너에 상품 목록이 동적으로 채워집니다. -->
+    <div id="grid-container">
+        <!-- 초기에는 비어있거나 로딩 메시지를 표시할 수 있습니다. -->
+    </div>
+
+    <!-- 보안 스크립트와 그리드 생성 스크립트를 로드합니다. -->
+    <script src="/js/security.js"></script>
+    <script src="/js/gridView.js"></script>
 </body>
 </html>

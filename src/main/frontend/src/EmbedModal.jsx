@@ -1,0 +1,44 @@
+import React, { useState } from 'react';
+
+const EmbedModal = ({ onClose, onEmbed }) => {
+    const [url, setUrl] = useState('');
+
+    const handleEmbed = () => {
+        if (url) {
+            onEmbed(url);
+            onClose(); // URL을 전달하고 모달을 닫습니다.
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleEmbed();
+        }
+    };
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <h3>Embed Media</h3>
+                <div className="modal-section">
+                    <label htmlFor="embed-url">YouTube, Vimeo, or other media URL</label>
+                    <div className="url-input-group">
+                        <input
+                            id="embed-url"
+                            type="url"
+                            placeholder="https://www.youtube.com/watch?v=..."
+                            value={url}
+                            onChange={(e) => setUrl(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            autoFocus // 모달이 열리면 자동으로 포커스
+                        />
+                        <button onClick={handleEmbed}>Embed</button>
+                    </div>
+                </div>
+                 <button className="close-button" style={{marginTop: '1rem'}} onClick={onClose}>Close</button>
+            </div>
+        </div>
+    );
+};
+
+export default EmbedModal; 

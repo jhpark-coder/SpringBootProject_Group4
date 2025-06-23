@@ -1,0 +1,47 @@
+.paywall-node {
+  position: relative; /* 핸들 위치 기준점 */
+  padding: 2rem 0;
+  cursor: default;
+  user-select: none;
+}
+
+.paywall-content-wrapper {
+  /* 이 래퍼는 내용의 정렬이나 패딩을 위해 사용될 수 있습니다. */
+}
+
+.paywall-separator {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #adb5bd;
+  margin-bottom: 0.5rem;
+}
+
+.paywall-separator::before,
+.paywall-separator::after {
+  content: '';
+  flex: 1;
+  border-bottom: 2px dashed #ced4da;
+}
+
+.paywall-separator:not(:empty)::before {
+  margin-right: .5em;
+}
+
+.paywall-separator:not(:empty)::after {
+  margin-left: .5em;
+}
+
+.paywall-text {
+  font-weight: bold;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+  padding: 0 10px;
+}
+
+.paywall-description {
+  text-align: center;
+  color: #868e96;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+} 

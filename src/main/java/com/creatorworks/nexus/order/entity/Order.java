@@ -5,10 +5,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+@Entity
+@Table(name = "orders")
 @Getter
 @Setter
-@Table(name="order")
-@Entity
 public class Order extends BaseEntity {
 
     @Id
