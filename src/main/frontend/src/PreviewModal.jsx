@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+import './ResultPage.css';
+import './PaywallComponent.css';
 
 const PreviewModal = ({ isOpen, onClose, editorContent }) => {
     const contentRef = useRef(null);

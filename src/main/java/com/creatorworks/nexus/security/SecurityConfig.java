@@ -31,8 +31,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/editor/**", "/static/**", "/h2-console/**").permitAll()
                 .anyRequest().authenticated()
-            )
-            .csrf(csrf -> csrf.disable());
+            );
         
         return http.build();
     }

@@ -17,10 +17,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.PutMapping;
 
 import com.creatorworks.nexus.editor.dto.EditorSaveRequest;
 import com.creatorworks.nexus.editor.entity.Editor;
 import com.creatorworks.nexus.editor.service.EditorService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -40,9 +42,17 @@ public class EditorController {
     // 에디터 저장 API
     @PostMapping("/api/documents")
     @ResponseBody
-    public ResponseEntity<Long> saveEditor(@RequestBody EditorSaveRequest request) {
+    public ResponseEntity<Long> saveDocument(@RequestBody EditorSaveRequest request) throws JsonProcessingException {
         Editor savedEditor = editorService.saveEditor(request);
         return ResponseEntity.ok(savedEditor.getId());
+    }
+    
+    // ID로 에디터 데이터 조회 API
+    @GetMapping("/api/documents/{id}")
+    @ResponseBody
+    public ResponseEntity<Editor> getEditorById(@PathVariable Long id) {
+        Editor editor = editorService.findById(id);
+        return ResponseEntity.ok(editor);
     }
     
     // 저장된 에디터 결과 페이지
@@ -193,5 +203,11 @@ public class EditorController {
         if (extension.endsWith(".mp3")) return MediaType.parseMediaType("audio/mp3");
         if (extension.endsWith(".wav")) return MediaType.parseMediaType("audio/wav");
         return MediaType.APPLICATION_OCTET_STREAM;
+    }
+
+    @PutMapping("/api/documents/{id}")
+    public ResponseEntity<Long> updateDocument(@PathVariable("id") Long id, @RequestBody EditorSaveRequest request) {
+        Editor updatedEditor = editorService.updateEditor(id, request);
+        return ResponseEntity.ok(updatedEditor.getId());
     }
 } 

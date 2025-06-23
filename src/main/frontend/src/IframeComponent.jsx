@@ -12,12 +12,12 @@ const IframeComponent = ({ editor, node, updateAttributes, selected, deleteNode 
         marginBottom: '1rem',
         marginLeft: 'auto',
         marginRight: 'auto'
-    };
+    }
 
     if (textAlign === 'left') {
-        containerStyle.marginLeft = '0';
+        containerStyle.marginLeft = '0'
     } else if (textAlign === 'right') {
-        containerStyle.marginRight = '0';
+        containerStyle.marginRight = '0'
     }
 
     if (!src) {
@@ -28,19 +28,20 @@ const IframeComponent = ({ editor, node, updateAttributes, selected, deleteNode 
                     <p>전달된 속성: {JSON.stringify(node.attrs)}</p>
                 </div>
             </NodeViewWrapper>
-        );
+        )
     }
 
     return (
         <NodeViewWrapper className="content-item-wrapper">
-            <div className="drag-handle" contentEditable={false}>
+            <div className="drag-handle" contentEditable={false} data-drag-handle>
                 <GripVertical size={18} />
             </div>
             <div className="iframe-container" style={containerStyle}>
                 {selected && <MediaMenu editor={editor} node={node} updateAttributes={updateAttributes} deleteNode={deleteNode} />}
                 <div className="iframe-wrapper">
-                    <div className="click-interceptor" data-drag-handle contentEditable={false}></div>
+                    <div className="click-interceptor" contentEditable={false}></div>
                     <iframe
+                        className="iframe-content"
                         src={src}
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

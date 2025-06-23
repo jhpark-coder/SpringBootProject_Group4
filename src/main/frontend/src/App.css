@@ -1,7 +1,7 @@
 .ProseMirror {
   border: 1px solid #ccc;
   padding: 10px;
-  min-height: 200px;
+  min-height: 400px;
   border-radius: 5px;
 }
 
@@ -363,29 +363,25 @@
   margin-right: 0;
 }
 
+/* Drag Handle Styles */
 .drag-handle {
   position: absolute;
-  left: 0;
-  top: 0;
-  width: 24px;
-  height: 100%;
+  left: -24px; /* Editor padding 고려 */
+  top: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 20px;
+  height: 20px;
   cursor: grab;
+  color: #adb5bd;
   opacity: 0;
-  /* Hidden by default */
-  color: #aaa;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s ease-in-out;
 }
 
-.content-item-wrapper:hover .drag-handle {
+.ProseMirror-selectednode .drag-handle,
+.drag-handle:hover {
   opacity: 1;
-  /* Show on hover */
-}
-
-.drag-handle:active {
-  cursor: grabbing;
 }
 
 /* --- Alignment Styles for Custom Nodes --- */
@@ -800,6 +796,34 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  margin: 0;
+}
+
+.preview-content .photo-grid-wrapper {
+  display: grid;
+  gap: 10px;
+  margin: 1.5rem 0;
+}
+
+.preview-content .photo-grid-wrapper.grid-2-cols { grid-template-columns: repeat(2, 1fr); }
+.preview-content .photo-grid-wrapper.grid-3-cols { grid-template-columns: repeat(3, 1fr); }
+.preview-content .photo-grid-wrapper.grid-4-cols { grid-template-columns: repeat(4, 1fr); }
+.preview-content .photo-grid-wrapper.grid-5-cols { grid-template-columns: repeat(5, 1fr); }
+.preview-content .photo-grid-wrapper.grid-1-2-cols { grid-template-columns: 2fr 1fr; }
+.preview-content .photo-grid-wrapper.grid-2-1-cols { grid-template-columns: 1fr 2fr; }
+
+.preview-content .photo-grid-wrapper .grid-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.preview-content .photo-grid-wrapper .grid-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  margin: 0;
 }
 
 .preview-modal-footer {
@@ -809,6 +833,7 @@
   text-align: center;
   cursor: pointer;
   transition: background-color 0.2s;
+  margin-top: 1rem;
 }
 
 .preview-modal-footer:hover {

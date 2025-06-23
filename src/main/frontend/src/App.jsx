@@ -1,5 +1,12 @@
-import { useState } from 'react';
-import { useEditor } from '@tiptap/react';
+/**
+ * @file App.jsx
+ * @description 이 애플리케이션의 메인 컴포넌트입니다. Tiptap 에디터의 초기화, 상태 관리,
+ *              데이터 로딩 및 저장, UI 렌더링 등 에디터의 모든 핵심 로직을 담당합니다.
+ */
+
+import { useState, useEffect, useRef } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import { useParams } from 'react-router-dom';
 import StarterKit from '@tiptap/starter-kit';
 import CustomImage from './CustomImage.jsx';
 import Underline from '@tiptap/extension-underline';
@@ -11,17 +18,22 @@ import Iframe from './Iframe.jsx';
 import VideoNode from './VideoNode.jsx';
 import AudioNode from './AudioNode.jsx';
 import PhotoGridNode from './PhotoGridNode.jsx';
+import PaywallNode from './PaywallNode.jsx';
 
-import Tiptap from './Tiptap.jsx';
+import BubbleMenuComponent from './BubbleMenuComponent.jsx';
 import Sidebar from './Sidebar.jsx';
 import ImageUploadModal from './ImageUploadModal.jsx';
 import StylesModal from './StylesModal.jsx';
 import PhotoGridModal from './PhotoGridModal.jsx';
 import PreviewModal from './PreviewModal.jsx';
 import EmbedModal from './EmbedModal.jsx';
+import SettingsModal from './SettingsModal.jsx';
 import './App.css';
 
-// 커스텀 FontSize 확장
+//================================================================================
+// Tiptap 확장 기능 직접 만들기 (커스텀 FontSize)
+// Tiptap은 이런 식으로 필요한 기능을 직접 만들어 붙일 수 있는 유연한 구조를 가집니다.
+//================================================================================
 const FontSize = Extension.create({
   name: 'fontSize',
 
@@ -64,9 +76,22 @@ const FontSize = Extension.create({
   },
 })
 
+//================================================================================
+// 메인 애플리케이션 컴포넌트
+//================================================================================
 function App() {
+
+  //----------------------------------------------------------------
+  // 1. 상태 관리 (State Management)
+  // React의 useState는 컴포넌트가 기억해야 할 '상태'를 만듭니다.
+  // 이 상태값이 바뀌면 화면이 자동으로 다시 렌더링됩니다.
+  //----------------------------------------------------------------
+
+  const { id } = useParams(); // URL 파라미터에서 문서 ID를 가져옵니다. (예: /editor/123 -> id는 '123')
+  const hasLoaded = useRef(false); // 로딩 잠금장치
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isStylesModalOpen, setIsStylesModalOpen] = useState(false);
   const [isPhotoGridModalOpen, setIsPhotoGridModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -74,8 +99,20 @@ function App() {
     backgroundColor: '#ffffff',
     fontFamily: 'sans-serif',
   });
+  const [projectSettings, setProjectSettings] = useState({
+    title: '',
+    coverImage: '',
+    tags: []
+  });
+  const [initialContent, setInitialContent] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
+  //----------------------------------------------------------------
+  // 2. Tiptap 에디터 초기화
+  // `useEditor` 훅(hook)을 사용하여 Tiptap 에디터 인스턴스를 생성합니다.
+  //----------------------------------------------------------------
   const editor = useEditor({
+    // 에디터에서 사용할 확장 기능들을 배열로 등록합니다. 여기에 등록해야 해당 기능을 쓸 수 있습니다.
     extensions: [
       StarterKit,
       CustomImage,
@@ -95,14 +132,81 @@ function App() {
       VideoNode,
       AudioNode,
       PhotoGridNode,
+      PaywallNode,
     ],
-    content: '<p>Start typing here...</p>',
+    // 에디터의 초기 내용은 항상 비워둡니다. 서버에서 비동기적으로 데이터를 불러온 후 채워넣을 것입니다.
+    content: '',
+    // 에디터의 HTML 최상위 요소에 적용될 속성입니다. (CSS 클래스 등)
     editorProps: {
       attributes: {
         class: 'prose-mirror-editor',
       },
     },
   });
+
+  //----------------------------------------------------------------
+  // 3. 데이터 동기화 (React Effects)
+  // useEffect는 특정 조건에서만 코드를 실행하여 불필요한 재실행을 막는 성능 최적화 도구입니다.
+  //----------------------------------------------------------------
+
+  /**
+   * [Effect 1: 데이터 로딩]
+   * 컴포넌트가 처음 마운트되거나, URL의 id가 바뀔 때만 실행됩니다.
+   * 서버 API를 호출하여 문서 데이터를 가져오는 역할을 합니다.
+   */
+  useEffect(() => {
+    if (id) { // id가 있는 경우 (기존 문서 수정)
+      setIsLoading(true);
+      fetch(`/editor/api/documents/${id}`)
+        .then(response => {
+          if (!response.ok) throw new Error('문서를 불러오는데 실패했습니다.');
+          return response.json();
+        })
+        .then(data => {
+          setProjectSettings({
+            title: data.title || '',
+            coverImage: data.coverImage || '',
+            tags: data.tags || [],
+          });
+          if (data.tiptapJson) {
+            let content = data.tiptapJson;
+            // 호환성 코드: 과거에 이중으로 문자열화된 데이터가 있다면 객체로 파싱합니다.
+            if (typeof content === 'string') {
+              try {
+                content = JSON.parse(content);
+              } catch (e) {
+                console.error("Tiptap JSON 파싱 실패:", e);
+                content = null; 
+              }
+            }
+            setInitialContent(content); // 파싱된 객체를 상태에 저장
+          }
+        })
+        .catch(error => {
+          console.error("문서 로딩 중 오류:", error);
+          alert(error.message);
+        })
+        .finally(() => setIsLoading(false)); // 로딩 완료
+    } else { // id가 없는 경우 (새 문서 작성)
+      setIsLoading(false);
+    }
+  }, [id]); // 의존성 배열: 'id'가 바뀔 때만 이 Effect를 재실행합니다.
+
+  /**
+   * [Effect 2: 에디터에 내용 채우기]
+   * 로딩이 끝나고, 불러온 내용(initialContent)이 준비되면 에디터에 내용을 주입합니다.
+   * 로딩과 주입 로직을 분리해야 안정적으로 동작합니다.
+   */
+  useEffect(() => {
+    if (editor && !isLoading && initialContent && editor.isEmpty) {
+      editor.commands.setContent(initialContent, false);
+    }
+  }, [editor, isLoading, initialContent]); // 의존성 배열: 세 값 중 하나라도 바뀌면 재실행
+
+  //----------------------------------------------------------------
+  // 4. 이벤트 핸들러 및 헬퍼 함수
+  // 사용자의 행동(클릭 등)에 반응하거나, 특정 작업을 수행하는 함수들입니다.
+  //----------------------------------------------------------------
 
   const getYoutubeVideoId = (url) => {
     if (!url) return null;
@@ -160,6 +264,11 @@ function App() {
     setIsImageModalOpen(false);
   };
 
+  const handleSettingsSave = (newSettings) => {
+    setProjectSettings(newSettings);
+    setIsSettingsModalOpen(false);
+  };
+
   const handlePreviewClick = () => {
     setIsPreviewModalOpen(true);
   };
@@ -168,131 +277,40 @@ function App() {
     return editor ? editor.getHTML() : '';
   };
 
-  // 문서를 JSON 형태로 저장하기 위한 함수
-  const getDocumentData = () => {
-    if (!editor) return null;
-
-    const json = editor.getJSON(); // Tiptap의 네이티브 JSON
-    const html = editor.getHTML(); // HTML 백업용
-
-    // 모듈 분석 (검색/분석용)
-    const modules = [];
-    let moduleIndex = 0;
-
-    const extractModules = (content) => {
-      content.forEach((node, index) => {
-        moduleIndex++;
-
-        switch (node.type) {
-          case 'paragraph':
-            if (node.content && node.content.length > 0) {
-              modules.push({
-                index: moduleIndex,
-                type: 'text',
-                preview: node.content.map(c => c.text || '').join('').substring(0, 100),
-                data: node
-              });
-            }
-            break;
-
-          case 'image':
-            modules.push({
-              index: moduleIndex,
-              type: 'image',
-              preview: node.attrs.alt || 'Image',
-              data: node.attrs
-            });
-            break;
-
-          case 'photoGrid':
-            modules.push({
-              index: moduleIndex,
-              type: 'photoGrid',
-              preview: `Photo Grid (${node.attrs.items?.length || 0} images)`,
-              data: node.attrs
-            });
-            break;
-
-          case 'iframe':
-            modules.push({
-              index: moduleIndex,
-              type: 'video',
-              preview: 'Embedded Video',
-              data: node.attrs
-            });
-            break;
-
-          default:
-            modules.push({
-              index: moduleIndex,
-              type: node.type,
-              preview: JSON.stringify(node).substring(0, 100),
-              data: node
-            });
-        }
-      });
-    };
-
-    if (json.content) {
-      extractModules(json.content);
-    }
-
-    return {
-      // 완전한 문서 데이터 (복원용)
-      document: {
-        tiptap_json: json,
-        html_backup: html,
-        title: "문서 제목", // 나중에 제목 입력 기능 추가
-        created_at: new Date().toISOString()
-      },
-      // 모듈 분석 데이터 (검색/분석용)
-      modules: modules
-    };
-  };
-
-  // 저장된 JSON에서 에디터로 복원하는 함수
-  const loadDocumentData = (documentData) => {
-    if (editor && documentData.tiptap_json) {
-      editor.commands.setContent(documentData.tiptap_json);
-    }
-  };
-
-  // 디버깅용: 현재 문서 데이터를 콘솔에 출력
-  const debugDocumentData = () => {
-    const data = getDocumentData();
-    console.log('=== 문서 저장 데이터 ===');
-    console.log('전체 JSON:', data.document.tiptap_json);
-    console.log('모듈 분석:', data.modules);
-    console.log('HTML 백업:', data.document.html_backup);
-  };
-
-  // 문서 저장 함수
+  /**
+   * [메인 저장 함수] 'Update Project' 버튼 클릭 시 실행됩니다.
+   */
   const handleSaveDocument = async () => {
     if (!editor) return;
 
-    const data = getDocumentData();
-    const title = prompt('문서 제목을 입력하세요:', '새 문서');
+    if (!projectSettings.title) {
+      alert('프로젝트 제목을 입력해주세요.');
+      setIsSettingsModalOpen(true);
+      return;
+    }
 
-    if (!title) return;
-
+    // 서버로 전송할 데이터 객체를 구성합니다.
     const saveRequest = {
-      title: title,
-      tiptapJson: JSON.stringify(data.document.tiptap_json),
-      htmlBackup: data.document.html_backup
+      title: projectSettings.title,
+      tiptapJson: JSON.stringify(editor.getJSON()), // 에디터 내용을 JSON 문자열로 변환
+      htmlBackup: editor.getHTML(),
+      coverImage: projectSettings.coverImage,
+      tags: projectSettings.tags,
     };
+    
+    const isUpdating = !!id;
+    const url = isUpdating ? `/editor/api/documents/${id}` : '/editor/api/documents';
+    const method = isUpdating ? 'PUT' : 'POST';
 
     try {
-      const response = await fetch('/editor/api/documents', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(saveRequest)
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(saveRequest),
       });
 
       if (response.ok) {
         const documentId = await response.json();
-        // 결과 페이지로 리다이렉트
         window.location.href = `/editor/result/${documentId}`;
       } else {
         alert('저장에 실패했습니다.');
@@ -303,26 +321,42 @@ function App() {
     }
   };
 
+  const handleStylesApply = (newStyles) => {
+    setEditorStyles(newStyles);
+    setIsStylesModalOpen(false);
+  };
+
+  //----------------------------------------------------------------
+  // 5. JSX 렌더링
+  // 이 컴포넌트가 화면에 어떻게 보일지를 정의하는 부분입니다. (HTML과 유사)
+  //----------------------------------------------------------------
   return (
     <div className="app-container">
       <div className="main-content">
+        {/* 에디터 본문 영역 */}
         <div className="editor-container" style={editorStyles}>
-          <Tiptap editor={editor} />
+          {editor && <BubbleMenuComponent editor={editor} />}
+          <EditorContent editor={editor} />
         </div>
+
+        {/* 사이드바 UI. 필요한 함수와 상태를 props로 전달합니다. */}
         <Sidebar
           editor={editor}
           onEmbedClick={() => setIsEmbedModalOpen(true)}
           onImageAdd={() => setIsImageModalOpen(true)}
           onStylesClick={() => setIsStylesModalOpen(true)}
+          onSettingsClick={() => setIsSettingsModalOpen(true)}
           onPhotoGridClick={() => setIsPhotoGridModalOpen(true)}
           onPreviewClick={handlePreviewClick}
-          onDebugClick={debugDocumentData}
           onSaveClick={handleSaveDocument}
         />
       </div>
+
+      {/* 조건부 렌더링: 각 모달의 'isOpen' 상태가 true일 때만 화면에 나타납니다. */}
       {isImageModalOpen && <ImageUploadModal onClose={() => setIsImageModalOpen(false)} onImageAdd={handleImageAdd} />}
       {isEmbedModalOpen && <EmbedModal onClose={() => setIsEmbedModalOpen(false)} onEmbed={handleEmbed} />}
-      {isStylesModalOpen && <StylesModal onClose={() => setIsStylesModalOpen(false)} currentStyles={editorStyles} onStyleChange={setEditorStyles} />}
+      {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} settings={projectSettings} onSave={handleSettingsSave} />}
+      {isStylesModalOpen && <StylesModal onClose={() => setIsStylesModalOpen(false)} onStylesApply={handleStylesApply} currentStyles={editorStyles} />}
       {isPhotoGridModalOpen && <PhotoGridModal onClose={() => setIsPhotoGridModalOpen(false)} onGridCreate={handleCreateGrid} />}
       {isPreviewModalOpen && <PreviewModal isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} editorContent={getEditorContent()} />}
     </div>
