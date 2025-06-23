@@ -2,18 +2,18 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Nexus</title>
+    <title>상품 목록 (무한 스크롤 테스트)</title>
+    <!-- 간단한 스타일링 추가 -->
     <style>
-        /* 간단한 공통 스타일 */
-        body { font-family: sans-serif; }
-        .content-wrapper { max-width: 1200px; margin: 0 auto; padding: 20px; }
         .product-grid { display: flex; flex-wrap: wrap; gap: 16px; }
         .product-card { border: 1px solid #ddd; padding: 16px; width: 200px; }
         .product-card img { max-width: 100%; height: auto; }
+        /* JS 비활성화 시 보여줄 메시지 스타일 */
         .no-js-message { text-align: center; padding: 50px; color: #ff0000; }
     </style>
 </head>
 <body>
+    <!-- 자바스크립트가 비활성화된 경우 이 내용이 표시됩니다. -->
     <noscript>
         <div class="no-js-message">
             <h1>자바스크립트 활성화 필요</h1>
@@ -21,11 +21,13 @@
         </div>
     </noscript>
 
-    <div id="main-content-container" class="content-wrapper">
-        <!-- JS가 이 곳에 메인 콘텐츠를 동적으로 생성합니다. -->
+    <!-- 자바스크립트가 활성화되면 이 컨테이너에 상품 목록이 동적으로 채워집니다. -->
+    <div id="grid-container">
+        <!-- 초기에는 비어있거나 로딩 메시지를 표시할 수 있습니다. -->
     </div>
 
+    <!-- 보안 스크립트와 그리드 생성 스크립트를 로드합니다. -->
     <script src="/js/security.js"></script>
-    <script src="/js/main.js"></script>
+    <script src="/js/gridViewTest.js"></script>
 </body>
-</html>
+</html> 

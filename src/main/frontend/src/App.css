@@ -1,0 +1,870 @@
+.ProseMirror {
+  border: 1px solid #ccc;
+  padding: 10px;
+  min-height: 400px;
+  border-radius: 5px;
+}
+
+.ProseMirror:focus {
+  outline: none;
+  border-color: #646cff;
+}
+
+.App {
+  margin: 0;
+  padding: 0;
+}
+
+.menu-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  border-radius: 5px 5px 0 0;
+}
+
+.menu-bar button {
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.menu-bar button:hover {
+  background-color: #f0f0f0;
+}
+
+.menu-bar button.is-active {
+  background-color: #e0e0e0;
+  font-weight: bold;
+}
+
+.bubble-menu {
+  display: flex;
+  background-color: #333;
+  padding: 5px;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.bubble-menu button {
+  padding: 5px;
+  border: none;
+  background-color: transparent;
+  color: white;
+  cursor: pointer;
+}
+
+.bubble-menu button:hover {
+  background-color: #555;
+}
+
+.bubble-menu button.is-active {
+  background: #f0f0f0;
+}
+
+.bubble-menu .divider {
+  width: 1px;
+  background-color: #ddd;
+  margin: 4px 8px;
+}
+
+/* --- Layout Styles --- */
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.editor-container {
+  flex-grow: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  /* Allow editor to scroll independently */
+}
+
+/* Keep ProseMirror styles but maybe rename class to be more specific */
+.prose-mirror-editor {
+  border: none;
+  padding: 1rem;
+  min-height: 100%;
+}
+
+.prose-mirror-editor:focus {
+  outline: none;
+}
+
+/* --- Sidebar Styles --- */
+.sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  background-color: #f8f9fa;
+  border-left: 1px solid #dee2e6;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-section {
+  margin-bottom: 2rem;
+}
+
+.sidebar-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6c757d;
+  margin-bottom: 1rem;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.grid-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0.5rem;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  background-color: #fff;
+  cursor: pointer;
+  text-align: center;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.grid-button:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.grid-button>span {
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.update-button {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.update-button:hover {
+  background-color: #218838;
+}
+
+.preview-button {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6c757d;
+}
+
+.preview-button:hover {
+  color: #212529;
+}
+
+.iframe-container {
+  margin: 1rem auto;
+  /* Center the container */
+}
+
+.video-container {
+  margin: 1rem auto;
+  /* Center the container */
+}
+
+.image-container {
+  margin: 1rem auto;
+}
+
+.image-container img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* --- Iframe (Embed) Styles: Keep the aspect ratio trick --- */
+.iframe-wrapper {
+  position: relative;
+  padding-bottom: 56.25%;
+  /* 16:9 aspect ratio */
+  height: 0;
+  overflow: hidden;
+  background-color: #000;
+}
+
+.iframe-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Local Video Styles: Treat it like an image --- */
+.video-wrapper {
+  position: relative;
+  /* No special padding or height. Let the video define its own size. */
+}
+
+.video-wrapper video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  background-color: #000;
+}
+
+/* --- Image Styles --- */
+.image-wrapper {
+  position: relative;
+}
+
+/* Interceptor for all media types */
+.iframe-wrapper>.click-interceptor,
+.video-wrapper>.click-interceptor,
+.image-wrapper>.click-interceptor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  /* Sit on top to intercept clicks */
+}
+
+/* When the node is selected, disable the interceptor to allow video/iframe controls */
+.ProseMirror-selectednode .click-interceptor {
+  pointer-events: none;
+}
+
+.audio-wrapper {
+  padding: 1rem 0;
+  max-width: 50%;
+  margin: 0 auto;
+}
+
+.audio-wrapper audio {
+  width: 100%;
+}
+
+/* --- Remove old size controls --- */
+.size-controls {
+  display: none;
+}
+
+/* --- New Media Menu Styles --- */
+.media-menu {
+  position: absolute;
+  top: -40px;
+  /* Position above the node */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  z-index: 2;
+  /* Sit above the content */
+}
+
+.media-menu button {
+  padding: 5px 8px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.media-menu button:hover {
+  background-color: #f0f0f0;
+}
+
+.media-menu button.is-active {
+  background-color: #333;
+  color: white;
+}
+
+.media-menu .divider {
+  width: 1px;
+  height: 20px;
+  background-color: #eee;
+  margin: 0 4px;
+}
+
+/* --- Draggable Item Styles --- */
+.content-item-wrapper {
+  position: relative;
+  /* Add some padding on the left to make space for the handle */
+  padding-left: 24px;
+}
+
+/* --- Direct Alignment Styles for Content Items --- */
+.content-item-wrapper.has-text-align-left {
+  text-align: left;
+}
+
+.content-item-wrapper.has-text-align-center {
+  text-align: center;
+}
+
+.content-item-wrapper.has-text-align-right {
+  text-align: right;
+}
+
+/* --- Container Alignment Styles --- */
+.image-container.has-text-align-left,
+.video-container.has-text-align-left,
+.iframe-container.has-text-align-left {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.image-container.has-text-align-center,
+.video-container.has-text-align-center,
+.iframe-container.has-text-align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.image-container.has-text-align-right,
+.video-container.has-text-align-right,
+.iframe-container.has-text-align-right {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+/* Drag Handle Styles */
+.drag-handle {
+  position: absolute;
+  left: -24px; /* Editor padding 고려 */
+  top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  cursor: grab;
+  color: #adb5bd;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.ProseMirror-selectednode .drag-handle,
+.drag-handle:hover {
+  opacity: 1;
+}
+
+/* --- Alignment Styles for Custom Nodes --- */
+.ProseMirror .has-text-align-left {
+  text-align: left;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.ProseMirror .has-text-align-center {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+}
+
+.ProseMirror .has-text-align-right {
+  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* --- Modal Styles --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-content h3 {
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.modal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.modal-section label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #333;
+}
+
+.modal-content select,
+.modal-content input[type="text"],
+.modal-content input[type="url"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-content input[type="color"] {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.url-input-group {
+  display: flex;
+}
+
+.url-input-group input {
+  flex-grow: 1;
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  border-radius: 4px 0 0 4px;
+}
+
+.url-input-group button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ccc;
+  border-left: none;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  border-radius: 0 4px 4px 0;
+}
+
+.modal-divider {
+  text-align: center;
+  color: #aaa;
+}
+
+.upload-button,
+.close-button {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.upload-button {
+  background-color: #e9ecef;
+  border: 1px solid #dee2e6;
+}
+
+.close-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background-color: transparent;
+  border: none;
+  color: #6c757d;
+  margin-top: 20px;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background-color: #f0f0f0;
+}
+
+/* --- New Photo Grid Styles (react-grid-layout) --- */
+.photo-grid-wrapper .grid-item {
+  background-color: #f5f5f5;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.photo-grid-wrapper .grid-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  /* Prevents image drag interference */
+}
+
+/* Override react-resizable handle to be more subtle */
+.react-resizable-handle {
+  background: none;
+  border: none;
+  width: 20px;
+  height: 20px;
+}
+
+.react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 5px;
+  height: 5px;
+  border-right: 2px solid rgba(0, 0, 0, 0.4);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+}
+
+/* --- New Photo Grid Modal Styles --- */
+.photo-grid-modal {
+  max-width: 600px;
+}
+
+.layout-options {
+  margin-bottom: 1rem;
+}
+
+.image-upload-area {
+  margin-bottom: 1.5rem;
+}
+
+.upload-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #888;
+  background-color: #f9f9f9;
+  margin-bottom: 1rem;
+}
+
+.upload-box:hover {
+  border-color: #999;
+  color: #555;
+}
+
+.image-preview-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+}
+
+.preview-item {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.preview-item button {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  line-height: 18px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+}
+
+/* --- Modal Actions remain similar --- */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.cancel-button,
+.create-button {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.create-button {
+  background-color: #333;
+  color: white;
+  border-color: #333;
+}
+
+.bubble-menu-group {
+  display: flex;
+  align-items: center;
+}
+
+.font-size-input {
+  width: 50px;
+  border: 1px solid transparent;
+  background-color: transparent;
+  padding: 4px;
+  text-align: center;
+  border-radius: 4px;
+}
+
+.font-size-input:hover {
+  background-color: #f0f0f0;
+  border-color: #ddd;
+}
+
+.font-size-input:focus {
+  outline: none;
+  background-color: white;
+  border-color: #007bff;
+}
+
+/* TextStyle 마크로 적용된 폰트 크기가 제대로 렌더링되도록 */
+.ProseMirror [style*="font-size"] {
+  /* 인라인 스타일이 적용되도록 허용 */
+}
+
+/* Tiptap TextStyle 마크가 실제로 화면에 반영되도록 */
+.ProseMirror span[style*="font-size"] {
+  /* 인라인 스타일이 적용되도록 허용 */
+}
+
+.ProseMirror .custom-text-style {
+  display: inline;
+}
+
+/* 폰트 크기 스타일이 적용된 요소들 */
+.ProseMirror *[data-font-size] {
+  font-size: attr(data-font-size) !important;
+}
+
+/* === Preview Modal (Lightbox Style) === */
+.preview-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.preview-modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 800px;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+  overflow: hidden;
+}
+
+.preview-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem 1rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.preview-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.preview-close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.preview-close-button:hover {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.preview-modal-body {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  min-height: 400px;
+}
+
+.preview-content {
+  /* 에디터 스타일과 유사하게 설정 */
+  font-family: inherit;
+  line-height: 1.6;
+  color: #1f2937;
+}
+
+/* 미리보기 내용의 기본 스타일 */
+.preview-content p {
+  margin-bottom: 1rem;
+}
+
+.preview-content h1,
+.preview-content h2,
+.preview-content h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.preview-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+.preview-content iframe {
+  max-width: 100%;
+  border-radius: 6px;
+}
+
+/* 미리보기에서 Photo Grid 스타일 */
+.preview-content [data-type="photo-grid"] {
+  display: block;
+  margin: 1rem auto;
+}
+
+.preview-content .preview-grid-item {
+  position: absolute;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.preview-content .preview-grid-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  margin: 0;
+}
+
+.preview-content .photo-grid-wrapper {
+  display: grid;
+  gap: 10px;
+  margin: 1.5rem 0;
+}
+
+.preview-content .photo-grid-wrapper.grid-2-cols { grid-template-columns: repeat(2, 1fr); }
+.preview-content .photo-grid-wrapper.grid-3-cols { grid-template-columns: repeat(3, 1fr); }
+.preview-content .photo-grid-wrapper.grid-4-cols { grid-template-columns: repeat(4, 1fr); }
+.preview-content .photo-grid-wrapper.grid-5-cols { grid-template-columns: repeat(5, 1fr); }
+.preview-content .photo-grid-wrapper.grid-1-2-cols { grid-template-columns: 2fr 1fr; }
+.preview-content .photo-grid-wrapper.grid-2-1-cols { grid-template-columns: 1fr 2fr; }
+
+.preview-content .photo-grid-wrapper .grid-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.preview-content .photo-grid-wrapper .grid-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  margin: 0;
+}
+
+.preview-modal-footer {
+  padding: 1rem 2rem;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+}
+
+.preview-modal-footer:hover {
+  background: #f3f4f6;
+}
+
+.preview-modal-footer p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
