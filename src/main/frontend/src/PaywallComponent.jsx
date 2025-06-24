@@ -23,7 +23,7 @@ const PaywallComponent = ({ editor }) => {
       </div>
 
       {/* 실제 눈에 보이는 콘텐츠 부분 */}
-      <div className="paywall-content-wrapper">
+      <div className="paywall-content-wrapper" contentEditable={false}>
         <div className="paywall-separator">
           <span className="paywall-text">PREVIEW ENDS HERE</span>
         </div>
