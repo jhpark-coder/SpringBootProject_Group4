@@ -52,6 +52,10 @@ public class Editor {
     @Column(name = "tag")
     private List<String> tags;
     
+    // 스타일 저장을 위한 필드 추가
+    private String backgroundColor;
+    private String fontFamily;
+    
     @CreationTimestamp
     private LocalDateTime createdAt;
     

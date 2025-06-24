@@ -76,12 +76,23 @@ export default Node.create({
    */
   addCommands() {
     return {
-      // 'setPaywall' 이라는 새로운 명령어를 정의합니다.
-      setPaywall: () => ({ commands }) => {
-        // 현재 커서 위치에 이 노드('paywall' 타입)를 삽입하는 내장 명령어를 실행합니다.
-        return commands.insertContent({
-          type: this.name,
-        });
+      setPaywall: () => ({ chain, state }) => {
+        const { selection } = state;
+        const currentPos = selection.from;
+
+        return chain()
+          .insertContentAt(currentPos, [
+            {
+              type: this.name,
+            },
+            {
+              type: 'paragraph',
+              content: [],
+            },
+          ])
+          .setTextSelection(currentPos + 2)
+          .focus()
+          .run();
       },
     };
   },

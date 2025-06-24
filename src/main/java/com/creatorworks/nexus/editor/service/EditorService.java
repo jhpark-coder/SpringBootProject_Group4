@@ -24,6 +24,8 @@ public class EditorService {
                 .htmlBackup(request.getHtmlBackup())
                 .coverImage(request.getCoverImage())
                 .tags(request.getTags())
+                .backgroundColor(request.getBackgroundColor())
+                .fontFamily(request.getFontFamily())
                 .build();
         
         return editorRepository.save(editor);
@@ -39,6 +41,8 @@ public class EditorService {
         editor.setHtmlBackup(request.getHtmlBackup());
         editor.setCoverImage(request.getCoverImage());
         editor.setTags(request.getTags());
+        editor.setBackgroundColor(request.getBackgroundColor());
+        editor.setFontFamily(request.getFontFamily());
 
         return editor; // Transactional 어노테이션에 의해 변경 감지(dirty checking) 되어 자동 업데이트
     }
