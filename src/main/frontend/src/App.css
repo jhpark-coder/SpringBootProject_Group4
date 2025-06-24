@@ -179,14 +179,22 @@
 
 .preview-button {
   width: 100%;
-  padding: 0.5rem;
-  background-color: transparent;
-  border: none;
+  padding: 0.8rem;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
   cursor: pointer;
   color: #6c757d;
+  font-size: 1rem;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .preview-button:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
   color: #212529;
 }
 

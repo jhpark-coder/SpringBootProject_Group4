@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import {
-  Code, Image as ImageIcon, Video, Mic, Palette, Grid as LayoutGrid, Type, Settings, DollarSign, Eye, Save
+  Code, Image as ImageIcon, Video, Mic, Palette, Grid as LayoutGrid, Type, Settings, DollarSign, Eye, Save, Link
 } from 'lucide-react';
 
 /**
@@ -17,7 +17,6 @@ import {
  * @param {function} props.onPhotoGridClick - Photo Grid 버튼 클릭 시 실행될 함수
  * @param {function} props.onPreviewClick - Preview 버튼 클릭 시 실행될 함수
  * @param {function} props.onSaveClick - Save 버튼 클릭 시 실행될 함수
- * ... (다른 props 생략)
  */
 const Sidebar = ({
   editor,
@@ -29,7 +28,7 @@ const Sidebar = ({
   onSettingsClick,
   onPhotoGridClick,
   onPreviewClick,
-  onSaveClick
+  onSaveClick,
 }) => {
   // editor 객체가 아직 준비되지 않았으면 아무것도 렌더링하지 않습니다.
   if (!editor) {
@@ -50,7 +49,7 @@ const Sidebar = ({
               <span>Code</span>
             </button>
             <button className="grid-button" onClick={onEmbedClick}>
-              <Code size={20} />
+              <Link size={20} />
               <span>Embed</span>
             </button>
             <button className="grid-button" onClick={onImageAdd}>
@@ -65,18 +64,7 @@ const Sidebar = ({
               <Mic size={20} />
               <span>Audio</span>
             </button>
-            <button 
-              className="grid-button" 
-              onClick={() => 
-                editor.chain()
-                  .focus()
-                  .insertContent('<p>여기에 텍스트를 입력하세요...</p>')
-                  // Set the cursor inside the new paragraph. 
-                  // The position is calculated from where the insertion happened.
-                  .setTextSelection(editor.state.selection.from)
-                  .run()
-              }
-            >
+            <button className="grid-button" onClick={() => editor.chain().focus().insertContent('<p>여기에 텍스트를 입력하세요...</p>').run()}>
               <Type size={20} />
               <span>Text</span>
             </button>
@@ -111,14 +99,17 @@ const Sidebar = ({
       {/* 미리보기 및 저장 푸터 */}
       <div className="sidebar-footer">
         {/* '미리보기' 버튼 */}
-        <button className="preview-button" onClick={onPreviewClick}>
-          <Eye size={16} />
-          <span>View a Preview</span>
+        <button 
+          className="preview-button" 
+          onClick={onPreviewClick}
+        >
+          <Eye size={18} />
+          <span>Preview</span>
         </button>
 
         {/* 메인 저장/업데이트 버튼 */}
         <button onClick={onSaveClick} className="update-button">
-          프로젝트 제출
+          Project Submit
         </button>
 
         {/* 'JSON 디버그' 버튼: 클릭 시 개발자 콘솔에 현재 문서의 JSON 데이터를 출력합니다. */}

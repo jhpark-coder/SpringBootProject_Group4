@@ -43,20 +43,11 @@ const CustomCodeBlock = CodeBlockLowlight.extend({
 
   addCommands() {
     return {
-      insertCodeBlock: (attributes) => ({ chain, commands }) => {
-        const { defaultLanguage, languageClassPrefix } = this.options;
-        const { language = defaultLanguage } = attributes;
-
-        return chain()
-          .insertContent({
-            type: this.name,
-            attrs: { language },
-          })
-          .insertContent({
-            type: 'paragraph',
-            content: '',
-          })
-          .focus();
+      insertCodeBlock: (attributes) => ({ commands }) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: attributes,
+        });
       },
     };
   },
