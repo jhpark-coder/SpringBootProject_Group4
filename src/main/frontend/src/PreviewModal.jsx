@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import './ResultPage.css';
 import './PaywallComponent.css';
 
-const PreviewModal = ({ isOpen, onClose, editorContent }) => {
+const PreviewModal = ({ isOpen, onClose, editorContent, styles }) => {
     const contentRef = useRef(null);
 
     useEffect(() => {
@@ -83,7 +83,7 @@ const PreviewModal = ({ isOpen, onClose, editorContent }) => {
                     </button>
                 </div>
 
-                <div className="preview-modal-body">
+                <div className="preview-modal-body" style={styles}>
                     <div
                         ref={contentRef}
                         className="preview-content"

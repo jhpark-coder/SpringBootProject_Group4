@@ -284,7 +284,7 @@
     </style>
 </head>
 
-<body>
+<body th:styleappend="'background-color:' + ${document.backgroundColor} + '; font-family:' + ${document.fontFamily} + ';'">
     <div class="container">
         <div class="header">
             <div class="success-icon">✅</div>

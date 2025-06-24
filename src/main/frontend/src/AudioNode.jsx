@@ -37,11 +37,17 @@ export default Node.create({
 
     addCommands() {
         return {
-            setAudio: (options) => ({ commands }) => {
-                return commands.insertContent({
-                    type: this.name,
-                    attrs: options,
-                })
+            setAudio: (options) => ({ chain }) => {
+                return chain()
+                    .insertContent({
+                        type: this.name,
+                        attrs: options,
+                    })
+                    .insertContent({
+                        type: 'paragraph',
+                        content: '',
+                    })
+                    .focus();
             },
         }
     },

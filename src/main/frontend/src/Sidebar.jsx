@@ -10,12 +10,21 @@ import {
  * @param {object} props.editor - Tiptap 에디터 인스턴스
  * @param {function} props.onEmbedClick - Embed 버튼 클릭 시 실행될 함수
  * @param {function} props.onImageAdd - Image 버튼 클릭 시 실행될 함수
+ * @param {function} props.onVideoAdd - Video 버튼 클릭 시 실행될 함수
+ * @param {function} props.onAudioAdd - Audio 버튼 클릭 시 실행될 함수
+ * @param {function} props.onStylesClick - Styles 버튼 클릭 시 실행될 함수
+ * @param {function} props.onSettingsClick - Settings 버튼 클릭 시 실행될 함수
+ * @param {function} props.onPhotoGridClick - Photo Grid 버튼 클릭 시 실행될 함수
+ * @param {function} props.onPreviewClick - Preview 버튼 클릭 시 실행될 함수
+ * @param {function} props.onSaveClick - Save 버튼 클릭 시 실행될 함수
  * ... (다른 props 생략)
  */
 const Sidebar = ({
   editor,
   onEmbedClick,
   onImageAdd,
+  onVideoAdd,
+  onAudioAdd,
   onStylesClick,
   onSettingsClick,
   onPhotoGridClick,
@@ -36,6 +45,10 @@ const Sidebar = ({
         <div className="sidebar-section">
           <h4 className="sidebar-title">ADD CONTENT</h4>
           <div className="button-grid">
+            <button className="grid-button" onClick={() => editor.chain().focus().insertCodeBlock({ language: 'auto' }).run()}>
+              <Code size={20} />
+              <span>Code</span>
+            </button>
             <button className="grid-button" onClick={onEmbedClick}>
               <Code size={20} />
               <span>Embed</span>
@@ -44,15 +57,26 @@ const Sidebar = ({
               <ImageIcon size={20} />
               <span>Image</span>
             </button>
-            <button className="grid-button" onClick={() => editor.chain().focus().insertContent({ type: 'videoPlayer' }).run()}>
+            <button className="grid-button" onClick={onVideoAdd}>
               <Video size={20} />
               <span>Video</span>
             </button>
-            <button className="grid-button" onClick={() => editor.chain().focus().insertContent({ type: 'audioPlayer' }).run()}>
+            <button className="grid-button" onClick={onAudioAdd}>
               <Mic size={20} />
               <span>Audio</span>
             </button>
-            <button className="grid-button" onClick={() => editor.chain().focus().toggleNode('paragraph', 'paragraph').run()}>
+            <button 
+              className="grid-button" 
+              onClick={() => 
+                editor.chain()
+                  .focus()
+                  .insertContent('<p>여기에 텍스트를 입력하세요...</p>')
+                  // Set the cursor inside the new paragraph. 
+                  // The position is calculated from where the insertion happened.
+                  .setTextSelection(editor.state.selection.from)
+                  .run()
+              }
+            >
               <Type size={20} />
               <span>Text</span>
             </button>
@@ -94,7 +118,7 @@ const Sidebar = ({
 
         {/* 메인 저장/업데이트 버튼 */}
         <button onClick={onSaveClick} className="update-button">
-          Update Project
+          프로젝트 제출
         </button>
 
         {/* 'JSON 디버그' 버튼: 클릭 시 개발자 콘솔에 현재 문서의 JSON 데이터를 출력합니다. */}

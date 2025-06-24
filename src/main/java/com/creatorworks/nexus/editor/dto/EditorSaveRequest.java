@@ -5,12 +5,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class EditorSaveRequest {
     private String title;
+    @JsonRawValue
     private String tiptapJson;
     private String htmlBackup;
     private String coverImage;
     private List<String> tags;
+    private String backgroundColor;
+    private String fontFamily;
 }

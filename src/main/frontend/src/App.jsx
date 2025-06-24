@@ -19,6 +19,7 @@ import VideoNode from './VideoNode.jsx';
 import AudioNode from './AudioNode.jsx';
 import PhotoGridNode from './PhotoGridNode.jsx';
 import PaywallNode from './PaywallNode.jsx';
+import CodeBlockNode from './CodeBlockNode.jsx';
 
 import BubbleMenuComponent from './BubbleMenuComponent.jsx';
 import Sidebar from './Sidebar.jsx';
@@ -28,7 +29,26 @@ import PhotoGridModal from './PhotoGridModal.jsx';
 import PreviewModal from './PreviewModal.jsx';
 import EmbedModal from './EmbedModal.jsx';
 import SettingsModal from './SettingsModal.jsx';
+import VideoUploadModal from './VideoUploadModal';
+import AudioUploadModal from './AudioUploadModal';
 import './App.css';
+
+// highlight.js and lowlight for Code Block
+import { createLowlight } from 'lowlight';
+import 'highlight.js/styles/github-dark.css';
+import js from 'highlight.js/lib/languages/javascript';
+import css from 'highlight.js/lib/languages/css';
+import html from 'highlight.js/lib/languages/xml';
+import python from 'highlight.js/lib/languages/python';
+import javaLang from 'highlight.js/lib/languages/java';
+
+// lowlight 인스턴스는 App 컴포넌트 외부에 한 번만 생성합니다.
+const lowlight = createLowlight();
+lowlight.register('javascript', js);
+lowlight.register('css', css);
+lowlight.register('html', html);
+lowlight.register('python', python);
+lowlight.register('java', javaLang);
 
 //================================================================================
 // Tiptap 확장 기능 직접 만들기 (커스텀 FontSize)
@@ -90,6 +110,8 @@ function App() {
   const { id } = useParams(); // URL 파라미터에서 문서 ID를 가져옵니다. (예: /editor/123 -> id는 '123')
   const hasLoaded = useRef(false); // 로딩 잠금장치
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isStylesModalOpen, setIsStylesModalOpen] = useState(false);
@@ -133,6 +155,7 @@ function App() {
       AudioNode,
       PhotoGridNode,
       PaywallNode,
+      CodeBlockNode.configure({ lowlight }),
     ],
     // 에디터의 초기 내용은 항상 비워둡니다. 서버에서 비동기적으로 데이터를 불러온 후 채워넣을 것입니다.
     content: '',
@@ -167,6 +190,10 @@ function App() {
             title: data.title || '',
             coverImage: data.coverImage || '',
             tags: data.tags || [],
+          });
+          setEditorStyles({
+            backgroundColor: data.backgroundColor || '#ffffff',
+            fontFamily: data.fontFamily || 'sans-serif',
           });
           if (data.tiptapJson) {
             let content = data.tiptapJson;
@@ -246,13 +273,30 @@ function App() {
     }
 
     if (finalUrl) {
-      editor.chain().focus().setIframe({ src: finalUrl }).run();
+      const currentPos = editor.state.selection.from;
+      editor.chain()
+        .focus()
+        .insertContentAt(currentPos, [
+          {
+            type: 'iframe', // Make sure this matches the node name
+            attrs: { src: finalUrl },
+          },
+          {
+            type: 'paragraph',
+            content: [],
+          },
+        ])
+        .setTextSelection(currentPos + 2)
+        .run();
     }
   };
 
   const handleCreateGrid = (gridData) => {
-    if (editor) {
-      editor.chain().focus().setPhotoGrid(gridData).run();
+    if (gridData && gridData.items && gridData.items.length > 0) {
+      editor.chain()
+        .focus()
+        .setPhotoGrid(gridData)
+        .run();
     }
     setIsPhotoGridModalOpen(false);
   };
@@ -264,8 +308,22 @@ function App() {
     setIsImageModalOpen(false);
   };
 
+  const handleVideoAdd = (videoData) => {
+    if (videoData.src) {
+      editor.chain().focus().setVideo({ src: videoData.src }).run();
+    }
+    setIsVideoModalOpen(false);
+  };
+  
+  const handleAudioAdd = (audioData) => {
+    if (audioData.src) {
+      editor.chain().focus().setAudio({ src: audioData.src }).run();
+    }
+    setIsAudioModalOpen(false);
+  };
+
   const handleSettingsSave = (newSettings) => {
-    setProjectSettings(newSettings);
+    setProjectSettings(prev => ({ ...prev, ...newSettings }));
     setIsSettingsModalOpen(false);
   };
 
@@ -289,15 +347,19 @@ function App() {
       return;
     }
 
-    // 서버로 전송할 데이터 객체를 구성합니다.
-    const saveRequest = {
-      title: projectSettings.title,
-      tiptapJson: JSON.stringify(editor.getJSON()), // 에디터 내용을 JSON 문자열로 변환
-      htmlBackup: editor.getHTML(),
+    const jsonContent = editor.getJSON();
+    const htmlContent = editor.getHTML();
+
+    const payload = {
+      title: projectSettings.title || 'Untitled',
+      tiptapJson: JSON.stringify(jsonContent),
+      htmlBackup: htmlContent,
       coverImage: projectSettings.coverImage,
       tags: projectSettings.tags,
+      backgroundColor: editorStyles.backgroundColor,
+      fontFamily: editorStyles.fontFamily,
     };
-    
+
     const isUpdating = !!id;
     const url = isUpdating ? `/editor/api/documents/${id}` : '/editor/api/documents';
     const method = isUpdating ? 'PUT' : 'POST';
@@ -306,7 +368,7 @@ function App() {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(saveRequest),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -321,9 +383,8 @@ function App() {
     }
   };
 
-  const handleStylesApply = (newStyles) => {
+  const handleStyleChange = (newStyles) => {
     setEditorStyles(newStyles);
-    setIsStylesModalOpen(false);
   };
 
   //----------------------------------------------------------------
@@ -344,6 +405,8 @@ function App() {
           editor={editor}
           onEmbedClick={() => setIsEmbedModalOpen(true)}
           onImageAdd={() => setIsImageModalOpen(true)}
+          onVideoAdd={() => setIsVideoModalOpen(true)}
+          onAudioAdd={() => setIsAudioModalOpen(true)}
           onStylesClick={() => setIsStylesModalOpen(true)}
           onSettingsClick={() => setIsSettingsModalOpen(true)}
           onPhotoGridClick={() => setIsPhotoGridModalOpen(true)}
@@ -353,12 +416,29 @@ function App() {
       </div>
 
       {/* 조건부 렌더링: 각 모달의 'isOpen' 상태가 true일 때만 화면에 나타납니다. */}
-      {isImageModalOpen && <ImageUploadModal onClose={() => setIsImageModalOpen(false)} onImageAdd={handleImageAdd} />}
-      {isEmbedModalOpen && <EmbedModal onClose={() => setIsEmbedModalOpen(false)} onEmbed={handleEmbed} />}
-      {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} settings={projectSettings} onSave={handleSettingsSave} />}
-      {isStylesModalOpen && <StylesModal onClose={() => setIsStylesModalOpen(false)} onStylesApply={handleStylesApply} currentStyles={editorStyles} />}
-      {isPhotoGridModalOpen && <PhotoGridModal onClose={() => setIsPhotoGridModalOpen(false)} onGridCreate={handleCreateGrid} />}
-      {isPreviewModalOpen && <PreviewModal isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} editorContent={getEditorContent()} />}
+      <div className="modals">
+        {isImageModalOpen && (
+          <ImageUploadModal onClose={() => setIsImageModalOpen(false)} onImageAdd={handleImageAdd} />
+        )}
+        {isVideoModalOpen && (
+          <VideoUploadModal onClose={() => setIsVideoModalOpen(false)} onVideoAdd={handleVideoAdd} />
+        )}
+        {isAudioModalOpen && (
+          <AudioUploadModal onClose={() => setIsAudioModalOpen(false)} onAudioAdd={handleAudioAdd} />
+        )}
+        {isEmbedModalOpen && (
+          <EmbedModal onClose={() => setIsEmbedModalOpen(false)} onEmbed={handleEmbed} />
+        )}
+        {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} settings={projectSettings} onSave={handleSettingsSave} />}
+        {isStylesModalOpen && <StylesModal isOpen={isStylesModalOpen} onClose={() => setIsStylesModalOpen(false)} onStyleChange={handleStyleChange} currentStyles={editorStyles} />}
+        {isPhotoGridModalOpen && (
+          <PhotoGridModal
+            onClose={() => setIsPhotoGridModalOpen(false)}
+            onGridCreate={handleCreateGrid}
+          />
+        )}
+        {isPreviewModalOpen && <PreviewModal isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} editorContent={getEditorContent()} styles={editorStyles} />}
+      </div>
     </div>
   );
 }

@@ -1,71 +1,94 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { NodeViewWrapper } from '@tiptap/react';
-import GridLayout from 'react-grid-layout';
-
-// react-grid-layout의 CSS를 import해야 합니다.
+import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import _ from 'lodash';
 
-const PhotoGridComponent = ({ node, updateAttributes }) => {
-    const { layout: initialLayout, items } = node.attrs;
-    const [layout, setLayout] = useState(initialLayout);
-    const updateTimeoutRef = useRef(null);
-    const lastUpdateRef = useRef(null);
+const ResponsiveGridLayout = WidthProvider(Responsive);
 
-    // 디바운싱된 업데이트 함수
-    const debouncedUpdate = useCallback((newLayout) => {
-        // 이전 업데이트와 동일한지 확인
-        if (lastUpdateRef.current && JSON.stringify(lastUpdateRef.current) === JSON.stringify(newLayout)) {
-            return;
-        }
+const PhotoGridComponent = ({ node, updateAttributes, editor }) => {
+    const { items = [], layout: initialLayout } = node.attrs;
+    const [isComponentMounted, setIsComponentMounted] = useState(false);
+    const [currentLayout, setCurrentLayout] = useState([]);
+    const [isDraggable, setIsDraggable] = useState(true);
 
-        // 기존 타이머 클리어
-        if (updateTimeoutRef.current) {
-            clearTimeout(updateTimeoutRef.current);
-        }
+    const generateLayouts = useCallback(() => {
+        const cols = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 };
+        const layouts = {};
+        Object.keys(cols).forEach(breakpoint => {
+            layouts[breakpoint] = items.map((item, i) => ({
+                i: i.toString(),
+                x: (i * 2) % cols[breakpoint],
+                y: Math.floor((i * 2) / cols[breakpoint]),
+                w: 2,
+                h: 2,
+                ...item.layout
+            }));
+        });
+        return layouts;
+    }, [items]);
 
-        // 새로운 타이머 설정 (300ms 디바운스)
-        updateTimeoutRef.current = setTimeout(() => {
-            lastUpdateRef.current = newLayout;
-            updateAttributes({ layout: newLayout });
-        }, 300);
-    }, [updateAttributes]);
+    const initialLayoutsRef = useRef(generateLayouts());
 
-    // 컴포넌트 언마운트 시 타이머 정리
     useEffect(() => {
-        return () => {
-            if (updateTimeoutRef.current) {
-                clearTimeout(updateTimeoutRef.current);
-            }
-        };
+        setIsComponentMounted(true);
     }, []);
 
-    const onLayoutChange = (newLayout) => {
-        setLayout(newLayout);
+    const debouncedUpdate = useCallback(_.debounce((newLayout) => {
+        // Only update if layout has actually changed
+        if (!_.isEqual(newLayout, currentLayout)) {
+            // console.log("Updating attributes with new layout:", newLayout);
+            // updateAttributes({ layout: newLayout });
+        }
+    }, 500), [updateAttributes, currentLayout]);
+
+    const handleLayoutChange = (layout, layouts) => {
+        if (isComponentMounted) {
+            // console.log("Layout changed:", layout);
+            setCurrentLayout(layout);
+            debouncedUpdate(layout);
+        }
+    };
+    
+    const handleMouseEnter = () => {
+        if (editor.isEditable) {
+            setIsDraggable(true);
+        }
     };
 
-    // 그리드 아이템이 없는 경우 렌더링하지 않습니다.
+    const handleMouseLeave = () => {
+        if (editor.isEditable) {
+            setIsDraggable(false);
+        }
+    };
+
     if (!items || items.length === 0) {
         return null;
     }
 
     return (
-        <NodeViewWrapper className="photo-grid-wrapper">
-            <GridLayout
-                layout={layout}
-                onLayoutChange={onLayoutChange}
-                cols={12} // 그리드를 12단으로 설정하여 유연성을 높입니다.
-                rowHeight={30}
-                width={1200} // 기본 너비를 설정합니다. 실제 너비는 CSS로 조절됩니다.
-                className="photo-grid-layout"
-                margin={[10, 10]} // 아이템 간의 간격
+        <NodeViewWrapper 
+            className="photo-grid-node-view"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
             >
-                {items.map(item => (
-                    <div key={item.id} className="grid-item">
-                        <img src={item.src} alt={`grid item ${item.id}`} />
+            <ResponsiveGridLayout
+                className="layout"
+                layouts={initialLayoutsRef.current}
+                breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+                cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+                rowHeight={100}
+                onLayoutChange={handleLayoutChange}
+                isDraggable={editor.isEditable}
+                isResizable={editor.isEditable}
+            >
+                {items.map((item, index) => (
+                    <div key={index.toString()} className="grid-item">
+                        <img src={item.src} alt={item.alt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                 ))}
-            </GridLayout>
+            </ResponsiveGridLayout>
         </NodeViewWrapper>
     );
 };

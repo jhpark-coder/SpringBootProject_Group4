@@ -40,11 +40,17 @@ export default Node.create({
 
     addCommands() {
         return {
-            setVideo: (options) => ({ commands }) => {
-                return commands.insertContent({
-                    type: this.name,
-                    attrs: options,
-                })
+            setVideo: (options) => ({ chain }) => {
+                return chain()
+                    .insertContent({
+                        type: this.name,
+                        attrs: options,
+                    })
+                    .insertContent({
+                        type: 'paragraph',
+                        content: '',
+                    })
+                    .focus();
             },
         }
     },

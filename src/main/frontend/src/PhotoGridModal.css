@@ -1,0 +1,61 @@
+/* PhotoGridModal.css */
+
+.photo-grid-modal .form-group {
+    margin-bottom: 20px;
+}
+
+.photo-grid-modal .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.photo-grid-modal input[type="file"],
+.photo-grid-modal select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.photo-grid-modal .image-preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.photo-grid-modal .preview-item {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+.photo-grid-modal .preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.photo-grid-modal .error-message {
+    color: #d9534f;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.photo-grid-modal .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+} 
