@@ -273,30 +273,14 @@ function App() {
     }
 
     if (finalUrl) {
-      const currentPos = editor.state.selection.from;
-      editor.chain()
-        .focus()
-        .insertContentAt(currentPos, [
-          {
-            type: 'iframe', // Make sure this matches the node name
-            attrs: { src: finalUrl },
-          },
-          {
-            type: 'paragraph',
-            content: [],
-          },
-        ])
-        .setTextSelection(currentPos + 2)
-        .run();
+      editor.chain().focus().setIframe({ src: finalUrl }).run();
     }
+    setIsEmbedModalOpen(false);
   };
 
   const handleCreateGrid = (gridData) => {
     if (gridData && gridData.items && gridData.items.length > 0) {
-      editor.chain()
-        .focus()
-        .setPhotoGrid(gridData)
-        .run();
+      editor.chain().focus().setPhotoGrid(gridData).run();
     }
     setIsPhotoGridModalOpen(false);
   };
