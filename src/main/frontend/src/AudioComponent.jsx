@@ -6,7 +6,7 @@ const AudioComponent = ({ node }) => {
     const { src } = node.attrs
 
     return (
-        <NodeViewWrapper className="content-item-wrapper">
+        <NodeViewWrapper className="content-item-wrapper" contentEditable={false}>
             <div className="drag-handle" contentEditable={false} data-drag-handle>
                 <GripVertical size={18} />
             </div>

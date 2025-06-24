@@ -26,7 +26,7 @@ const VideoComponent = ({ editor, node, updateAttributes, selected, deleteNode }
     };
 
     return (
-        <NodeViewWrapper className={`content-item-wrapper ${alignmentClass}`}>
+        <NodeViewWrapper className={`content-item-wrapper ${alignmentClass}`} contentEditable={false}>
             <div className="drag-handle" contentEditable={false}>
                 <GripVertical size={18} />
             </div>
