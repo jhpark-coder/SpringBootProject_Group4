@@ -46,133 +46,130 @@
                 $("#birthDay").append('<option value="' + day + '">' + day + '일</option>');
             }
 
-            // 3. 최종 회원가입 함수 (form의 submit 버튼 클릭 시 호출)
-            $("#registerForm").on("submit", function(e) {
-                e.preventDefault();
-                if (!isEmailVerified) {
-                    alert("이메일 인증을 먼저 완료해주세요.");
-                    return;
-                }
+            // // 3. 최종 회원가입 함수 (form의 submit 버튼 클릭 시 호출)
+            // $("#registerForm").on("submit", function(e) {
+            //     e.preventDefault();
+            //     if (!isEmailVerified) {
+            //         alert("이메일 인증을 먼저 완료해주세요.");
+            //         return;
+            //     }
 
-                var formData = {
-                    name: $("#name").val(),
-                    email: $("#email").val(),
-                    password: $("#password").val(),
-                    address: $("#address").val(),
-                    tel: $("#tel").val()
-                };
+            //     var formData = {
+            //         name: $("#name").val(),
+            //         email: $("#email").val(),
+            //         password: $("#password").val(),
+            //         address: $("#address").val(),
+            //         tel: $("#tel").val()
+            //     };
 
-                $.ajax({
-                    url: "/members/new",
-                    type: "POST",
-                    contentType: "application/json",
-                    data: JSON.stringify(formData),
-                    success: function(response) {
-                        alert(response);
-                        window.location.href = "/members/login";
-                    },
-                    error: function(xhr) {
-                        alert(xhr.responseText);
-                    }
-                });
-            });
+            //     $.ajax({
+            //         url: "/members/new",
+            //         type: "POST",
+            //         contentType: "application/json",
+            //         data: JSON.stringify(formData),
+            //         success: function(response) {
+            //             alert(response);
+            //             window.location.href = "/members/login";
+            //         },
+            //         error: function(xhr) {
+            //             alert(xhr.responseText);
+            //         }
+            //     });
+            // });
         });
 
 // [핵심] 이메일 인증 상태를 저장할 전역 변수
-var isEmailVerified = false;
+// var isEmailVerified = false;
 
 // CSRF 토큰 설정 (Spring Security 사용 시)
-var token = $("meta[name='_csrf']").attr("content");
-var header = $("meta[name='_csrf_header']").attr("content");
-// 토큰이 없으면 경고 출력
-if (!token || !header) {
-    console.error("CSRF 토큰을 찾을 수 없습니다.");
-    console.log("Available meta tags:", $("meta").map(function() { return $(this).attr('name'); }).get());
-}
-
-$(document).ajaxSend(function(e, xhr, options) {
-    if (header && token) {
-        xhr.setRequestHeader(header, token);
-        console.log("CSRF 헤더 설정됨:", header, token);
-    } else {
-        console.warn("CSRF 헤더 설정 실패");
-    }
-});
-
-// 1. 인증메일 발송 함수
-function sendAuthEmail() {
-    console.log("sendAuthEmail 함수 호출됨");
-
-    var email = $("#email").val();
-    console.log("입력된 이메일:", email);
-
-    if (!email) {
-        alert("이메일을 입력해주세요.");
-        return;
-    }
-
-    console.log("AJAX 요청 시작...");
-    $.ajax({
-        url: "/members/email-auth",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify({ email: email }),
-        success: function(response) {
-            alert(response);
-            $("#verifyEmailBtn").prop("disabled", false);
-        },
-        error: function(xhr, status, error) {
-            alert("오류 발생: " + xhr.responseText);
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        // 토큰이 없으면 경고 출력
+        if (!token || !header) {
+            console.error("CSRF 토큰을 찾을 수 없습니다.");
+            console.log("Available meta tags:", $("meta").map(function() { return $(this).attr('name'); }).get());
         }
-    });
-}
 
-// 2. 인증코드 확인 함수
-function verifyEmail() {
-    var email = $("#email").val();
-    var authCode = $("#authCode").val();
+        $(document).ajaxSend(function(e, xhr, options) {
+            if (header && token) {
+                xhr.setRequestHeader(header, token);
+                console.log("CSRF 헤더 설정됨:", header, token);
+            } else {
+                console.warn("CSRF 헤더 설정 실패");
+            }
+        });
 
-    $.ajax({
-        url: "/members/email-verify",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify({ email: email, authCode: authCode }),
-        success: function(response) {
-            alert(response);
-            $("#emailVerifyMessage").text("인증 완료");
-            isEmailVerified = true;
+        // // 1. 인증메일 발송 함수
+        // function sendAuthEmail() {
+        //     console.log("sendAuthEmail 함수 호출됨");
 
-            $("#email").prop("readonly", true);
-            $("#email").addClass("readonly-as-disabled");
+        //     var email = $("#email").val();
+        //     console.log("입력된 이메일:", email);
 
-            $("#sendAuthEmailBtn").prop("disabled", true);
-            $("#authCode").prop("disabled", true);
-            $("#verifyEmailBtn").prop("disabled", true);
+        //     if (!email) {
+        //         alert("이메일을 입력해주세요.");
+        //         return;
+        //     }
+
+        //     console.log("AJAX 요청 시작...");
+        //     $.ajax({
+        //         url: "/members/email-auth",
+        //         type: "POST",
+        //         contentType: "application/json",
+        //         data: JSON.stringify({ email: email }),
+        //         success: function(response) {
+        //             alert(response);
+        //             $("#verifyEmailBtn").prop("disabled", false);
+        //         },
+        //         error: function(xhr, status, error) {
+        //             alert("오류 발생: " + xhr.responseText);
+        //         }
+        //     });
+        // }
+
+        // // 2. 인증코드 확인 함수
+        // function verifyEmail() {
+        //     var email = $("#email").val();
+        //     var authCode = $("#authCode").val();
+
+        //     $.ajax({
+        //         url: "/members/email-verify",
+        //         type: "POST",
+        //         contentType: "application/json",
+        //         data: JSON.stringify({ email: email, authCode: authCode }),
+        //         success: function(response) {
+        //             alert(response);
+        //             $("#emailVerifyMessage").text("인증 완료");
+        //             isEmailVerified = true;
+
+        //             $("#email").prop("readonly", true);
+        //             $("#email").addClass("readonly-as-disabled");
+
+        //             $("#sendAuthEmailBtn").prop("disabled", true);
+        //             $("#authCode").prop("disabled", true);
+        //             $("#verifyEmailBtn").prop("disabled", true);
 
 
-            checkFormValidity();
-        },
-        error: function(xhr) {
-            alert(xhr.responseText);
-            isEmailVerified = false;
-            checkFormValidity();
-        }
-    });
-}
+        //             checkFormValidity();
+        //         },
+        //         error: function(xhr) {
+        //             alert(xhr.responseText);
+        //             isEmailVerified = false;
+        //             checkFormValidity();
+        //         }
+        //     });
+        // }
 
 
 
-// [핵심] 회원가입 버튼 활성화 여부를 체크하는 함수
-function checkFormValidity() {
-    if (isEmailVerified) {
-        $("#submitBtn").prop("disabled", false);
-    } else {
-        $("#submitBtn").prop("disabled", true);
-    }
-}
-
-
-
+        // // [핵심] 회원가입 버튼 활성화 여부를 체크하는 함수
+        // function checkFormValidity() {
+        //     if (isEmailVerified) {
+        //         $("#submitBtn").prop("disabled", false);
+        //     } else {
+        //         $("#submitBtn").prop("disabled", true);
+        //     }
+        // }
     </script>
 </th:block>
 <div layout:fragment="content">
@@ -182,28 +179,12 @@ function checkFormValidity() {
         <main class="signup-page-container">
             <!-- 흰색 폼 카드 -->
             <div class="signup-form-wrapper">
-                <h1 class="form-title">회원가입</h1>
+                <h1 class="form-title">활동에 필요한 정보 기입</h1>
 
                 <!--
                     이메일과 인증 관련 필드.
                     form 태그 밖에 있지만, JavaScript로 처리되므로 구조를 유지합니다.
                 -->
-                <div class="form-group">
-                    <label for="email">이메일 주소(로그인ID)</label>
-                    <div class="input-with-button">
-                        <input type="email" id="email" class="email-check" placeholder="이메일을 입력해주세요." th:field="*{email}">
-                        <button type="button" id="sendAuthEmailBtn" class="btn btn-outline" onclick="sendAuthEmail()">인증메일 발송</button>
-                    </div>
-                    <p class="fieldError" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Incorrect date</p>
-                </div>
-                <div class="form-group">
-                    <label for="authCode">인증코드</label>
-                    <div class="input-with-button">
-                        <input type="text" id="authCode" name="authCode" placeholder="인증코드를 입력하세요">
-                        <button type="button" id="verifyEmailBtn" class="btn btn-outline" onclick="verifyEmail()" disabled>인증 확인</button>
-                    </div>
-                    <span id="emailVerifyMessage" style="color:green;"></span>
-                </div>
 
 
                 <!-- 실제 폼 제출 영역 -->
@@ -213,21 +194,11 @@ function checkFormValidity() {
                         <input type="text" placeholder="이름을 입력해주세요." th:field="*{name}">
                         <p class="fieldError" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Incorrect date</p>
                     </div>
-                    <div class="form-group">
-                        <label th:for="password">비밀번호</label>
-                        <input type="password" placeholder="비밀번호 입력" th:field="*{password}">
-                        <p class="fieldError" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Incorrect date</p>
-                    </div>
 
                     <!-- ===================================== -->
                     <!--            👇 [추가된 부분 시작] 👇         -->
                     <!-- ===================================== -->
 
-                    <!-- 비밀번호 확인 -->
-                    <div class="form-group">
-                        <label for="password-confirm">비밀번호 확인</label>
-                        <input type="password" id="password-confirm" name="password-confirm" placeholder="비밀번호를 다시 한번 입력하세요">
-                    </div>
 
                     <!-- 성별 -->
                     <div class="form-group">
