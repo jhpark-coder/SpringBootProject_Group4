@@ -1,10 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div class="site-header" th:fragment="header">
+        <div class="header-container">
 
+            <!-- 1. 로고 -->
+            <div class="logo">
+                <a href="/">
+                    <!-- SVG의 사각형 부분을 로고로 사용 -->
+                    <svg class="logo-img" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="100" height="100" fill="#E5EDFF"/>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- 모바일 레이아웃을 위해 내비게이션과 액션 버튼을 한번 더 묶음 -->
+            <div class="nav-actions-wrapper">
+                <!-- 2. 내비게이션 메뉴 -->
+                <nav class="main-nav">
+                    <ul>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">Action</a></li>
+                        <li><a href="#">MyPage</a></li>
+                        <li sec:authorize="isAnonymous()">
+                            <a href="/members/login">Login</a>
+                        </li>
+                        <li sec:authorize="isAuthenticated()">
+                            <a href="/members/logout">Logout</a>
+                        </li>
+                        <!-- 여기에 <li><a href="#">새 메뉴</a></li> 를 추가하면 자동으로 배치됩니다. -->
+                    </ul>
+                </nav>
+
+                <!-- 3. 사용자 액션 영역 -->
+                <div class="user-actions">
+                    <a href="#" class="points-button">
+                        <span>보유한 포인트 : 1000</span>
+                        <!-- SVG의 종 아이콘 부분 추출 -->
+                        <svg class="bell-icon" viewBox="0 0 25 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M24.31 25.3333C24.07 25.7374 23.74 26.0728 23.33 26.306C22.93 26.5392 22.47 26.6619 22 26.6619C21.53 26.6619 21.07 26.5392 20.67 26.306C20.26 26.0728 19.93 25.7374 19.69 25.3333M20 8.00001C20 5.87827 19.16 3.84345 17.66 2.34315C16.16 0.842854 14.12 0 12 0C9.88001 0 7.84001 0.842854 6.34001 2.34315C4.84001 3.84345 4.00001 5.87827 4.00001 8.00001C4.00001 17.3333 0 20 0 20H24C24 20 20 17.3333 20 8.00001Z" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <nav class="category-nav" th:fragment="category-nav">
+        <ul>
+            <li><a href="#">아트웍</a></li>
+            <li><a href="#">그래픽디자인</a></li>
+            <li><a href="#">캐릭터</a></li>
+            <li><a href="#">Java</a></li>
+            <li><a href="#">프론트엔드</a></li>
+            <li><a href="#">Python</a></li>
+            <!-- 여기에 <li><a href="#">새 메뉴</a></li> 를 추가하면 자동으로 배치됩니다. -->
+        </ul>
+    </nav>
 </body>
 </html>

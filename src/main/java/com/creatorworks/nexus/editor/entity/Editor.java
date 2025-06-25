@@ -27,7 +27,11 @@ import com.fasterxml.jackson.annotation.JsonRawValue;
 
 @Entity
 @Table(name = "editors")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter 
+@Setter 
+@NoArgsConstructor 
+@AllArgsConstructor 
+@Builder
 public class Editor {
     
     @Id

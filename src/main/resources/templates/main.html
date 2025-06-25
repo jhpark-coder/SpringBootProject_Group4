@@ -1,31 +1,98 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Nexus</title>
-    <style>
-        /* 간단한 공통 스타일 */
-        body { font-family: sans-serif; }
-        .content-wrapper { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .product-grid { display: flex; flex-wrap: wrap; gap: 16px; }
-        .product-card { border: 1px solid #ddd; padding: 16px; width: 200px; }
-        .product-card img { max-width: 100%; height: auto; }
-        .no-js-message { text-align: center; padding: 50px; color: #ff0000; }
-    </style>
-</head>
+<html lang="ko"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{fragment/layout}">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Main</title>
+        <th:block layout:fragment="css">
+            <link rel="stylesheet" th:href="@{/css/main.css}">
+        </th:block>
+    </head>
 <body>
-    <noscript>
-        <div class="no-js-message">
-            <h1>자바스크립트 활성화 필요</h1>
-            <p>원활한 서비스 이용을 위해 자바스크립트를 활성화해주세요.</p>
-        </div>
-    </noscript>
+    <div layout:fragment="content">
+        <!-- 1. 메인 슬라이드 섹션 -->
+        <section class="main-slide">
+            <div class="container main-slide-content">
+                <div class="main-slide-text">
+                    <h1>Art<br>Design<br>&<br>Java<br>FrontEnd</h1>
+                    <a href="#" class="btn">작품보러가기</a>
+                </div>
+            </div>
+        </section>
 
-    <div id="main-content-container" class="content-wrapper">
-        <!-- JS가 이 곳에 메인 콘텐츠를 동적으로 생성합니다. -->
+        <!-- 2. 작품 추천 그리드 섹션 -->
+        <section class="needs-grid">
+            <div class="container">
+                <div class="grid-container">
+                    <!-- 아이템 1 -->
+                    <article class="grid-item">
+                        <div class="item-image-placeholder"></div>
+                        <div class="item-info">
+                            <div class="author-info">
+                                <div class="author-avatar"></div>
+                                <span class="author-name">작가 이름</span>
+                            </div>
+                            <a href="#" class="btn subscribe-btn">Subscribe</a>
+                        </div>
+                    </article>
+                    <!-- 아이템 2 -->
+                    <article class="grid-item">
+                        <div class="item-image-placeholder"></div>
+                        <div class="item-info">
+                            <div class="author-info">
+                                <div class="author-avatar"></div>
+                                <span class="author-name">작가 이름</span>
+                            </div>
+                            <a href="#" class="btn subscribe-btn">Subscribe</a>
+                        </div>
+                    </article>
+                    <!-- 아이템 3 -->
+                    <article class="grid-item">
+                        <div class="item-image-placeholder"></div>
+                        <div class="item-info">
+                            <div class="author-info">
+                                <div class="author-avatar"></div>
+                                <span class="author-name">작가 이름</span>
+                            </div>
+                            <a href="#" class="btn subscribe-btn">Subscribe</a>
+                        </div>
+                    </article>
+                    <!-- 아이템 4 -->
+                    <article class="grid-item">
+                        <div class="item-image-placeholder"></div>
+                        <div class="item-info">
+                            <div class="author-info">
+                                <div class="author-avatar"></div>
+                                <span class="author-name">작가 이름</span>
+                            </div>
+                            <a href="#" class="btn subscribe-btn">Subscribe</a>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. 경매 홍보 섹션 (Call to Action) -->
+        <section class="auction-cta">
+            <div class="container auction-cta-content">
+                <p class="cta-text">이제 정말 좋은 작품들을<br>경매를 통해 보다 필요한 사람과 거래해보세요.</p>
+                <a href="#" class="btn">경매보러가기</a>
+            </div>
+        </section>
+
+        <!-- 4. 작가 등록 추천 섹션 -->
+        <section class="sell-recommend">
+            <div class="container sell-recommend-content">
+                <div class="sell-image-placeholder"></div>
+                <div class="sell-text-content">
+                    <p class="sell-description">창의적인 디자인 아트웍부터 논리적인 자바 코드구조까지 <br>정당한 비용을 받고 공유해보세요!</p>
+                    <a href="#" class="btn">작가 등록하기</a>
+                </div>
+            </div>
+        </section>
     </div>
-
-    <script src="/js/security.js"></script>
-    <script src="/js/main.js"></script>
 </body>
 </html>

@@ -19,12 +19,6 @@ public class ProductController {
 
     private final ProductService productService;
 
-    // 0. 메인 페이지를 렌더링하는 메서드
-    @GetMapping("/")
-    public String mainPage() {
-        return "main";
-    }
-
     // 1. GridView 페이지를 렌더링하는 메서드
     @GetMapping("/grid")
     public String gridView() {

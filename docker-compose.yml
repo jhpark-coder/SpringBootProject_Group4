@@ -3,6 +3,24 @@
 version: '3.8'
 
 services:
+  # Spring Boot 애플리케이션 서비스
+  nexus-app:
+    build: .
+    container_name: nexus-spring-app
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql-db
+      - redis-cache
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/springproject
+      SPRING_DATASOURCE_USERNAME: nexus_user
+      SPRING_DATASOURCE_PASSWORD: nexus_password
+      SPRING_DATA_REDIS_HOST: redis-cache
+      SPRING_DATA_REDIS_PORT: 6379
+
   # MySQL 서비스 정의
   mysql-db:
     image: mysql:8.0
