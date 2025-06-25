@@ -49,8 +49,22 @@ const StylesModal = ({ onClose, currentStyles, onStyleChange }) => {
         }
     }, []);
 
+    // ESC 키로 모달 닫기
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                onClose();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [onClose]);
+
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay">
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <h3>Editor Styles</h3>
                 <div className="modal-section">
@@ -82,7 +96,12 @@ const StylesModal = ({ onClose, currentStyles, onStyleChange }) => {
                         </optgroup>
                     </select>
                 </div>
-                <button className="close-button" onClick={onClose}>Done</button>
+                <div className="modal-footer">
+                    <button className="close-button" onClick={onClose}>완료</button>
+                    <small style={{ color: '#666', marginTop: '8px', display: 'block' }}>
+                        ESC 키를 누르거나 완료 버튼을 클릭하여 닫기
+                    </small>
+                </div>
             </div>
         </div>
     );

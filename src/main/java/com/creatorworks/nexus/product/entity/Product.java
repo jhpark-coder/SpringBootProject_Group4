@@ -1,15 +1,17 @@
 package com.creatorworks.nexus.product.entity;
 
+import java.io.Serializable;
+
 import com.creatorworks.nexus.global.BaseEntity;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.io.Serializable;
 
 @Getter
 @Setter
@@ -23,8 +25,16 @@ public class Product extends BaseEntity implements Serializable {
 
     private String name;
     private int price;
+    @Lob
     private String description;
+    @Lob
+    private String tiptapJson;
+    @Lob
     private String imageUrl;
+    private String primaryCategory;
+    private String secondaryCategory;
+    private String backgroundColor;
+    private String fontFamily;
 
     public Product(String name, int price, String description, String imageUrl) {
         this.name = name;

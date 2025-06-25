@@ -19,6 +19,14 @@ const router = createBrowserRouter([
     element: <App />,
   },
   {
+    path: "/editor/auction/:id",
+    element: <App />,
+  },
+  {
+    path: "/editor/product/:id",
+    element: <App />,
+  },
+  {
     path: "/editor/result/:id",
     element: <ResultPage />,
   },

@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import StarterKit from '@tiptap/starter-kit';
 import CustomImage from './CustomImage.jsx';
 import Underline from '@tiptap/extension-underline';
@@ -32,6 +32,15 @@ import SettingsModal from './SettingsModal.jsx';
 import VideoUploadModal from './VideoUploadModal';
 import AudioUploadModal from './AudioUploadModal';
 import './App.css';
+
+const CATEGORIES = {
+  '아트워크': ['포토그라피', '일러스트레이션', '스케치', '코믹스'],
+  '그래픽디자인': ['타이포그라피', '뮤직패키징', '로고', '그래픽디자인스', '편집'],
+  '캐릭터': ['카툰', '애니메', '팬아트', '3D'],
+  'Java': ['통신', '알고리즘', 'Thread', 'etc'],
+  '프론트엔드': ['HTML', 'CSS', 'Javascript', 'etc'],
+  'Python': ['통신', '알고리즘', 'Thread', 'etc'],
+};
 
 // highlight.js and lowlight for Code Block
 import { createLowlight } from 'lowlight';
@@ -108,6 +117,7 @@ function App() {
   //----------------------------------------------------------------
 
   const { id } = useParams(); // URL 파라미터에서 문서 ID를 가져옵니다. (예: /editor/123 -> id는 '123')
+  const location = useLocation(); // 현재 URL 경로 정보
   const hasLoaded = useRef(false); // 로딩 잠금장치
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
@@ -124,10 +134,46 @@ function App() {
   const [projectSettings, setProjectSettings] = useState({
     title: '',
     coverImage: '',
-    tags: []
+    tags: [],
+    saleType: '',
+    salePrice: '',
+    auctionDuration: '',
+    startBidPrice: '',
+    buyNowPrice: '',
   });
   const [initialContent, setInitialContent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [editMode, setEditMode] = useState('new'); // 'new', 'edit-auction', 'edit-product', 'edit-editor'
+
+  // 현재 경로에 따라 API 엔드포인트와 편집 모드 결정
+  const getApiInfo = () => {
+    const path = location.pathname;
+    if (path.includes('/editor/auction/')) {
+      return {
+        endpoint: `/api/auctions/${id}`,
+        mode: 'edit-auction',
+        title: '경매 편집'
+      };
+    } else if (path.includes('/editor/product/')) {
+      return {
+        endpoint: `/api/products/${id}`,
+        mode: 'edit-product',
+        title: '상품 편집'
+      };
+    } else if (path.includes('/editor/') && id) {
+      return {
+        endpoint: `/editor/api/documents/${id}`,
+        mode: 'edit-editor',
+        title: '문서 편집'
+      };
+    } else {
+      return {
+        endpoint: null,
+        mode: 'new',
+        title: '새 프로젝트'
+      };
+    }
+  };
 
   //----------------------------------------------------------------
   // 2. Tiptap 에디터 초기화
@@ -178,46 +224,114 @@ function App() {
    * 서버 API를 호출하여 문서 데이터를 가져오는 역할을 합니다.
    */
   useEffect(() => {
-    if (id) { // id가 있는 경우 (기존 문서 수정)
+    const { endpoint, mode } = getApiInfo();
+    setEditMode(mode);
+
+    if (endpoint && id) { // id가 있는 경우 (기존 데이터 편집)
       setIsLoading(true);
-      fetch(`/editor/api/documents/${id}`)
+      console.log('Loading data from:', endpoint);
+
+      fetch(endpoint)
         .then(response => {
-          if (!response.ok) throw new Error('문서를 불러오는데 실패했습니다.');
+          if (!response.ok) throw new Error('데이터를 불러오는데 실패했습니다.');
           return response.json();
         })
         .then(data => {
-          setProjectSettings({
-            title: data.title || '',
-            coverImage: data.coverImage || '',
-            tags: data.tags || [],
-          });
-          setEditorStyles({
+          console.log('Loaded data:', data);
+
+          // 공통 필드 처리
+          const commonData = {
+            title: data.title || data.name || '',
+            coverImage: data.coverImage || data.imageUrl || '',
             backgroundColor: data.backgroundColor || '#ffffff',
             fontFamily: data.fontFamily || 'sans-serif',
+          };
+
+          // 타입별 특화 처리
+          if (mode === 'edit-auction') {
+            console.log('경매 편집 데이터 로딩:', data);
+            setProjectSettings({
+              ...commonData,
+              tags: [data.primaryCategory, data.secondaryCategory].filter(Boolean),
+              saleType: 'auction',
+              salePrice: '',
+              auctionDuration: `${data.auctionDuration}일`,
+              startBidPrice: data.startBidPrice?.toString() || '',
+              buyNowPrice: data.buyNowPrice?.toString() || '',
+            });
+          } else if (mode === 'edit-product') {
+            console.log('상품 편집 데이터 로딩:', data);
+            setProjectSettings({
+              ...commonData,
+              tags: [data.primaryCategory, data.secondaryCategory].filter(Boolean),
+              saleType: 'sale',
+              salePrice: data.price?.toString() || '',
+              auctionDuration: '',
+              startBidPrice: '',
+              buyNowPrice: '',
+            });
+          } else {
+            // 기존 에디터 로직
+            setProjectSettings({
+              title: data.title || '',
+              coverImage: data.coverImage || '',
+              tags: data.tags || [],
+              saleType: data.saleType || '',
+              salePrice: data.salePrice || '',
+              auctionDuration: data.auctionDuration || '',
+              startBidPrice: data.startBidPrice || '',
+              buyNowPrice: data.buyNowPrice || '',
+            });
+          }
+
+          setEditorStyles({
+            backgroundColor: commonData.backgroundColor,
+            fontFamily: commonData.fontFamily,
           });
+
+          // 콘텐츠 처리
+          let content = null;
           if (data.tiptapJson) {
-            let content = data.tiptapJson;
-            // 호환성 코드: 과거에 이중으로 문자열화된 데이터가 있다면 객체로 파싱합니다.
+            content = data.tiptapJson;
             if (typeof content === 'string') {
               try {
                 content = JSON.parse(content);
               } catch (e) {
                 console.error("Tiptap JSON 파싱 실패:", e);
-                content = null; 
+                content = null;
               }
             }
-            setInitialContent(content); // 파싱된 객체를 상태에 저장
+          } else if (data.description) {
+            // description을 HTML로 처리
+            content = {
+              type: 'doc',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'HTML 내용을 편집하려면 새로 작성해주세요.'
+                    }
+                  ]
+                }
+              ]
+            };
+          }
+
+          if (content) {
+            setInitialContent(content);
           }
         })
         .catch(error => {
-          console.error("문서 로딩 중 오류:", error);
+          console.error("데이터 로딩 중 오류:", error);
           alert(error.message);
         })
-        .finally(() => setIsLoading(false)); // 로딩 완료
+        .finally(() => setIsLoading(false));
     } else { // id가 없는 경우 (새 문서 작성)
       setIsLoading(false);
     }
-  }, [id]); // 의존성 배열: 'id'가 바뀔 때만 이 Effect를 재실행합니다.
+  }, [id, location.pathname]); // 의존성 배열: 'id'나 경로가 바뀔 때만 이 Effect를 재실행합니다.
 
   /**
    * [Effect 2: 에디터에 내용 채우기]
@@ -245,69 +359,65 @@ function App() {
     return null;
   };
 
+  const extractSrcFromIframe = (iframeCode) => {
+    const srcMatch = iframeCode.match(/src=["']([^"']+)["']/);
+    return srcMatch ? srcMatch[1] : null;
+  };
+
   const handleEmbed = (urlOrIframe) => {
     if (!urlOrIframe || !editor) return;
 
-    let urlToProcess = urlOrIframe;
+    let embedUrl = null;
 
-    if (urlOrIframe.trim().startsWith('<iframe')) {
-      const srcMatch = urlOrIframe.match(/src="([^"]+)"/);
-      if (srcMatch && srcMatch[1]) {
-        urlToProcess = srcMatch[1];
-      } else {
+    if (urlOrIframe.includes('<iframe')) {
+      // iframe 코드에서 src URL 추출
+      embedUrl = extractSrcFromIframe(urlOrIframe);
+      if (!embedUrl) {
+        alert('iframe 코드에서 src URL을 찾을 수 없습니다.');
         return;
       }
-    }
-
-    let finalUrl = urlToProcess;
-
-    if (!urlToProcess.includes('youtube.com/embed/')) {
-      const youtubeVideoId = getYoutubeVideoId(urlToProcess);
-      if (youtubeVideoId) {
-        finalUrl = `https://www.youtube.com/embed/${youtubeVideoId}`;
-      }
     } else {
-      // If it's already an embed link, clean it up by removing query parameters
-      const urlParts = finalUrl.split('?');
-      finalUrl = urlParts[0];
+      // 일반 URL 처리
+      const videoId = getYoutubeVideoId(urlOrIframe);
+      if (videoId) {
+        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+      } else {
+        // 다른 임베드 URL은 그대로 사용
+        embedUrl = urlOrIframe;
+      }
     }
 
-    if (finalUrl) {
-      editor.chain().focus().setIframe({ src: finalUrl }).run();
+    if (embedUrl) {
+      console.log('임베드 URL:', embedUrl);
+      editor.chain().focus().setIframe({ src: embedUrl }).run();
+      setIsEmbedModalOpen(false);
+    } else {
+      alert('유효한 유튜브 URL 또는 아이프레임 코드를 입력해주세요.');
     }
-    setIsEmbedModalOpen(false);
   };
 
   const handleCreateGrid = (gridData) => {
-    if (gridData && gridData.items && gridData.items.length > 0) {
-      editor.chain().focus().setPhotoGrid(gridData).run();
-    }
+    editor.chain().focus().setPhotoGrid(gridData).run();
     setIsPhotoGridModalOpen(false);
   };
 
   const handleImageAdd = ({ src, alt }) => {
-    if (src && editor) {
-      editor.chain().focus().setImage({ src, alt }).run();
-    }
+    editor.chain().focus().setImage({ src, alt }).run();
     setIsImageModalOpen(false);
   };
 
   const handleVideoAdd = (videoData) => {
-    if (videoData.src) {
-      editor.chain().focus().setVideo({ src: videoData.src }).run();
-    }
+    editor.chain().focus().setVideo(videoData).run();
     setIsVideoModalOpen(false);
   };
-  
+
   const handleAudioAdd = (audioData) => {
-    if (audioData.src) {
-      editor.chain().focus().setAudio({ src: audioData.src }).run();
-    }
+    editor.chain().focus().setAudio(audioData).run();
     setIsAudioModalOpen(false);
   };
 
   const handleSettingsSave = (newSettings) => {
-    setProjectSettings(prev => ({ ...prev, ...newSettings }));
+    setProjectSettings(newSettings);
     setIsSettingsModalOpen(false);
   };
 
@@ -316,59 +426,126 @@ function App() {
   };
 
   const getEditorContent = () => {
-    return editor ? editor.getHTML() : '';
+    if (!editor) {
+      return '';
+    }
+    return editor.getHTML();
   };
 
-  /**
-   * [메인 저장 함수] 'Update Project' 버튼 클릭 시 실행됩니다.
-   */
   const handleSaveDocument = async () => {
     if (!editor) return;
 
-    if (!projectSettings.title) {
-      alert('프로젝트 제목을 입력해주세요.');
+    const { saleType } = projectSettings;
+
+    if (!saleType) {
+      alert("프로젝트 설정을 열어 판매 또는 경매 정보를 입력해주세요.");
       setIsSettingsModalOpen(true);
       return;
     }
 
-    const jsonContent = editor.getJSON();
-    const htmlContent = editor.getHTML();
+    const tiptapJson = editor.getJSON();
+    const htmlBackup = editor.getHTML();
 
-    const payload = {
-      title: projectSettings.title || 'Untitled',
-      tiptapJson: JSON.stringify(jsonContent),
-      htmlBackup: htmlContent,
-      coverImage: projectSettings.coverImage,
-      tags: projectSettings.tags,
+    let url;
+    let method;
+    let requestData;
+    let redirectUrl;
+
+    const commonData = {
+      name: projectSettings.title,
+      imageUrl: projectSettings.coverImage,
+      primaryCategory: projectSettings.tags.find(tag => Object.keys(CATEGORIES).includes(tag)),
+      secondaryCategory: projectSettings.tags.find(tag => !(Object.keys(CATEGORIES).includes(tag))),
+      tiptapJson: JSON.stringify(tiptapJson),
+      htmlBackup: htmlBackup,
       backgroundColor: editorStyles.backgroundColor,
       fontFamily: editorStyles.fontFamily,
     };
 
-    const isUpdating = !!id;
-    const url = isUpdating ? `/editor/api/documents/${id}` : '/editor/api/documents';
-    const method = isUpdating ? 'PUT' : 'POST';
+    // 편집 모드에 따른 URL과 HTTP 메서드 결정
+    const isEditMode = editMode.startsWith('edit-');
+
+    if (saleType === 'sale') {
+      if (isEditMode && id) {
+        url = `/api/products/${id}`;
+        method = 'PUT';
+      } else {
+        url = '/api/products';
+        method = 'POST';
+      }
+      requestData = {
+        ...commonData,
+        price: parseInt(projectSettings.salePrice),
+      };
+      redirectUrl = (responseId) => `http://localhost:8080/result/product/${responseId || id}`;
+    } else if (saleType === 'auction') {
+      if (isEditMode && id) {
+        url = `/api/auctions/${id}`;
+        method = 'PUT';
+      } else {
+        url = '/api/auctions';
+        method = 'POST';
+      }
+      requestData = {
+        ...commonData,
+        auctionDuration: parseInt(projectSettings.auctionDuration.replace('일', '')),
+        startBidPrice: parseInt(projectSettings.startBidPrice),
+        buyNowPrice: parseInt(projectSettings.buyNowPrice),
+      };
+      redirectUrl = (responseId) => `http://localhost:8080/result/auction/${responseId || id}`;
+    } else {
+      // 기존 저장 로직 (Editor) - 지금은 사용하지 않음
+      return;
+    }
+
+    console.log('Edit mode:', editMode);
+    console.log('Is edit mode:', isEditMode);
+    console.log('Current ID:', id);
+    console.log('HTTP method:', method);
+    console.log('Target URL:', url);
+    console.log('Saving document with data:', requestData);
 
     try {
       const response = await fetch(url, {
-        method,
+        method: method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(requestData),
       });
 
-      if (response.ok) {
-        const documentId = await response.json();
-        window.location.href = `/editor/result/${documentId}`;
-      } else {
-        alert('저장에 실패했습니다.');
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error response:', errorText);
+        throw new Error(`저장에 실패했습니다 (${response.status}): ${errorText}`);
       }
+
+      const savedId = await response.json();
+      console.log('Document saved successfully with ID:', savedId);
+
+      // 편집 모드일 때는 기존 ID 사용, 새 작성일 때는 응답받은 ID 사용
+      const finalId = isEditMode ? id : savedId;
+      window.location.href = redirectUrl(finalId);
+
     } catch (error) {
-      console.error('저장 중 오류:', error);
-      alert('저장 중 오류가 발생했습니다.');
+      console.error('Error saving document:', error);
+
+      // 네트워크 오류와 서버 오류를 구분
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        alert('네트워크 오류가 발생했습니다. 서버가 실행 중인지 확인해주세요.');
+      } else {
+        alert(`저장 중 오류가 발생했습니다: ${error.message}`);
+      }
     }
   };
 
   const handleStyleChange = (newStyles) => {
     setEditorStyles(newStyles);
+  };
+
+  const handleStylesModalClose = () => {
+    setIsStylesModalOpen(false);
   };
 
   //----------------------------------------------------------------
@@ -414,7 +591,7 @@ function App() {
           <EmbedModal onClose={() => setIsEmbedModalOpen(false)} onEmbed={handleEmbed} />
         )}
         {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} settings={projectSettings} onSave={handleSettingsSave} />}
-        {isStylesModalOpen && <StylesModal isOpen={isStylesModalOpen} onClose={() => setIsStylesModalOpen(false)} onStyleChange={handleStyleChange} currentStyles={editorStyles} />}
+        {isStylesModalOpen && <StylesModal isOpen={isStylesModalOpen} onClose={handleStylesModalClose} onStyleChange={handleStyleChange} currentStyles={editorStyles} />}
         {isPhotoGridModalOpen && (
           <PhotoGridModal
             onClose={() => setIsPhotoGridModalOpen(false)}

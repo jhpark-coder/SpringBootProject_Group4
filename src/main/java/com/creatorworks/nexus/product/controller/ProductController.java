@@ -1,17 +1,21 @@
 package com.creatorworks.nexus.product.controller;
 
-import com.creatorworks.nexus.product.entity.Product;
-import com.creatorworks.nexus.product.service.ProductService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
-import java.util.List;
+import com.creatorworks.nexus.product.dto.ProductSaveRequest;
+import com.creatorworks.nexus.product.entity.Product;
+import com.creatorworks.nexus.product.service.ProductService;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
@@ -56,5 +60,26 @@ public class ProductController {
     @ResponseBody
     public Product getProduct(@PathVariable("id") Long id) {
         return productService.findProductById(id);
+    }
+
+    @PostMapping("/api/products")
+    @ResponseBody
+    public Long saveProduct(@RequestBody ProductSaveRequest request) {
+        Product saved = productService.saveProduct(request);
+        return saved.getId();
+    }
+
+    @PutMapping("/api/products/{id}")
+    @ResponseBody
+    public Long updateProduct(@PathVariable Long id, @RequestBody ProductSaveRequest request) {
+        Product updated = productService.updateProduct(id, request);
+        return updated.getId();
+    }
+
+    @GetMapping("/result/product/{id}")
+    public String productResult(@PathVariable Long id, Model model) {
+        Product product = productService.findProductById(id);
+        model.addAttribute("product", product);
+        return "product/productResult";
     }
 }
