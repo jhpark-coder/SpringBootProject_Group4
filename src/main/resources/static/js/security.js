@@ -329,4 +329,11 @@
     console.log("%c경고: 이 사이트의 콘텐츠는 저작권으로 보호받습니다.",
         "color: red; font-size: 16px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);");
 
+    // --- [최종 실행] ---
+    // 모든 보안 설정이 완료되었음을 알리는 커스텀 이벤트를 발생시킵니다.
+    // 다른 스크립트 파일(예: gridViewTest.js)에서 이 이벤트를 수신하여,
+    // 보안 설정이 완료된 후에야 API 요청과 같은 중요한 작업을 시작하도록 할 수 있습니다.
+    window.securityIsInitialized = true; // 실행 완료 플래그(깃발)를 설정합니다.
+    document.dispatchEvent(new CustomEvent('security-initialized'));
+
 })(); 

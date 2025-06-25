@@ -5,29 +5,28 @@
 (function () {
     'use strict';
 
+    // --- [즉시 실행] UI 초기화 ---
+    // JavaScript가 활성화되었음을 즉시 사용자에게 보여줍니다.
+    // 'no-js-warning' 메시지를 숨기고, 실제 콘텐츠를 담을 'grid-container'를 보여줍니다.
+    const noJsWarning = document.getElementById('no-js-warning');
+    if (noJsWarning) {
+        noJsWarning.style.display = 'none';
+    }
+
+    const gridContainer = document.getElementById('grid-container');
+    if (gridContainer) {
+        gridContainer.style.display = 'block'; // 컨테이너를 보이게 처리
+    } else {
+        // 컨테이너가 없으면 이후 작업이 불가능하므로 중단합니다.
+        console.error('Grid container not found!');
+        return;
+    }
+
     /**
-     * DOMContentLoaded 이벤트 리스너:
-     * HTML 문서의 모든 요소가 로드되고 파싱되었을 때 내부 함수를 실행합니다.
-     * 이미지나 외부 리소스가 로드되기를 기다리지 않으므로, 스크립트 실행이 빠릅니다.
+     * 데이터 로딩 및 렌더링을 수행하는 메인 로직 함수.
      */
-    document.addEventListener('DOMContentLoaded', () => {
-
-        // --- [순서 1] 초기화 및 준비 단계 ---
-
-        // HTML에 정의된 'no-js-warning' 메시지 요소를 찾아서 숨깁니다.
-        // 이는 JavaScript가 정상적으로 실행되고 있음을 사용자에게 시각적으로 보여줍니다.
-        const noJsWarning = document.getElementById('no-js-warning');
-        if (noJsWarning) {
-            noJsWarning.style.display = 'none';
-        }
-
-        // 상품 그리드가 표시될 메인 컨테이너 요소를 찾습니다.
-        const gridContainer = document.getElementById('grid-container');
-        if (!gridContainer) {
-            // 컨테이너가 없으면 기능이 동작할 수 없으므로, 콘솔에 에러를 출력하고 실행을 중단합니다.
-            console.error('Grid container not found!');
-            return;
-        }
+    const initializeGrid = () => {
+        // --- [순서 1] 변수 및 요소 준비 ---
 
         // 실제 상품 카드들이 담길 'product-grid' div를 동적으로 생성하고 컨테이너에 추가합니다.
         const productGrid = document.createElement('div');
@@ -69,7 +68,7 @@
                     }
 
                     // (E) 화면 렌더링: 받아온 데이터(pageData.content)가 있을 경우, 각 상품을 화면에 추가합니다.
-                    if (pageData.content.length > 0) {
+                    if (pageData.content && pageData.content.length > 0) {
                         pageData.content.forEach(product => {
                             const card = document.createElement('div');
                             card.className = 'product-card';
@@ -98,6 +97,11 @@
                 })
                 .catch(error => { // 요청 실패 시 에러 처리
                     console.error('Error fetching products:', error);
+                    const loadingIndicator = gridContainer.querySelector('.loading-indicator');
+                    if (loadingIndicator) {
+                        loadingIndicator.remove();
+                    }
+                    gridContainer.insertAdjacentHTML('beforeend', '<p class="error-message">데이터를 불러오는 데 실패했습니다.</p>');
                     isLoading = false; // 에러가 발생해도 로딩 상태는 해제해야 합니다.
                 });
         };
@@ -121,6 +125,16 @@
 
         // 페이지에 처음 진입했을 때, 첫 페이지의 상품들을 불러오기 위해 함수를 즉시 호출합니다.
         fetchAndRenderProducts();
-    });
+    };
+
+    // --- [최종 실행] ---
+    // security.js가 이미 실행되어 '깃발'을 세웠는지 확인합니다.
+    if (window.securityIsInitialized) {
+        // 이미 완료되었다면, 즉시 메인 로직을 실행합니다.
+        initializeGrid();
+    } else {
+        // 아직 완료되지 않았다면, 'security-initialized' 이벤트가 발생할 때까지 기다립니다.
+        document.addEventListener('security-initialized', initializeGrid);
+    }
 
 })(); 

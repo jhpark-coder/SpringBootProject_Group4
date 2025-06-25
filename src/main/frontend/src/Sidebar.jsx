@@ -115,6 +115,12 @@ const Sidebar = ({
               <LayoutGrid size={20} />
               <span>Photo Grid</span>
             </button>
+
+            {/* 유료 콘텐츠(Paywall) 영역 추가 버튼 */}
+            <button className="grid-button" onClick={() => editor.chain().focus().setPaywall().run()}>
+              <DollarSign size={20} />
+              <span>Paywall</span>
+            </button>
           </div>
         </div>
 
@@ -126,12 +132,6 @@ const Sidebar = ({
             <button className="grid-button" onClick={onStylesClick}>
               <Palette size={20} />
               <span>Styles</span>
-            </button>
-
-            {/* 유료 콘텐츠(Paywall) 영역 추가 버튼 */}
-            <button className="grid-button" onClick={() => editor.chain().focus().setPaywall().run()}>
-              <DollarSign size={20} />
-              <span>Paywall</span>
             </button>
 
             {/* 프로젝트 설정 버튼 */}
