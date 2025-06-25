@@ -1,28 +1,63 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
-    <title>상품 상세</title>
+    <title>Nexus - 상품 상세</title>
     <style>
-        body { font-family: sans-serif; }
-        .content-wrapper { max-width: 900px; margin: 0 auto; padding: 20px; }
-        .product-detail-img { max-width: 100%; }
-        .no-js-message { text-align: center; padding: 50px; color: #ff0000; }
+        body {
+            font-family: sans-serif;
+        }
+
+        .content-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .product-detail-img {
+            max-width: 100%;
+        }
+
+        /* 🔒 JavaScript 필수 인증 스타일 */
+        .no-js-message {
+            text-align: center;
+            padding: 100px 20px;
+            color: #ff0000;
+            font-size: 18px;
+            background-color: #fff5f5;
+            border: 2px solid #ffcccc;
+            border-radius: 10px;
+            margin: 50px auto;
+            max-width: 600px;
+        }
+
+        /* 🔒 실제 콘텐츠는 기본적으로 숨김 - JavaScript가 활성화되면 보여짐 */
+        #product-detail-container {
+            display: none;
+            /* 핵심: JS 없으면 아예 안 보임 */
+        }
     </style>
 </head>
-<body>
-    <noscript>
-        <div class="no-js-message">
-            <h1>자바스크립트 활성화 필요</h1>
-            <p>원활한 서비스 이용을 위해 자바스크립트를 활성화해주세요.</p>
-        </div>
-    </noscript>
 
-    <div id="product-detail-container" class="content-wrapper">
-        <!-- JS가 이 곳에 상품 상세 정보를 동적으로 생성합니다. -->
+<body>
+    <!-- 🔒 JavaScript 비활성화 시에만 보이는 경고 메시지 -->
+    <div id="no-js-warning" class="no-js-message">
+        <h1>⚠️ JavaScript 활성화 필요</h1>
+        <p><strong>보안상의 이유로 JavaScript가 필요합니다.</strong></p>
+        <p>브라우저 설정에서 JavaScript를 활성화한 후 새로고침해주세요.</p>
+        <hr>
+        <p><small>원활한 서비스 이용을 위해 JavaScript를 허용해주시기 바랍니다.</small></p>
     </div>
 
+    <!-- 🔒 JavaScript 활성화 시에만 보이는 실제 콘텐츠 영역 -->
+    <div id="product-detail-container" class="content-wrapper">
+        <!-- 🔒 주의: 여기에는 하드코딩된 데이터가 전혀 없음! 오직 JavaScript를 통해서만 데이터 로딩됨 -->
+    </div>
+
+    <!-- 🔒 JavaScript 파일들 - 이 파일들이 실행되어야만 실제 콘텐츠를 볼 수 있음 -->
     <script src="/js/security.js"></script>
     <script src="/js/productDetail.js"></script>
 </body>
+
 </html>
