@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.creatorworks.nexus.product.dto.ProductPageResponse;
 import com.creatorworks.nexus.product.dto.ProductSaveRequest;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.service.ProductService;
@@ -68,9 +69,10 @@ public class ProductController {
      */
     @GetMapping("/api/products")
     @ResponseBody
-    public Page<Product> getProducts(Pageable pageable) {
+    public ProductPageResponse getProducts(Pageable pageable) {
         // ProductService를 통해 페이징 정보에 맞는 상품 목록을 조회하여 반환합니다.
-        return productService.findAllProducts(pageable);
+        Page<Product> productPage = productService.findAllProducts(pageable);
+        return new ProductPageResponse(productPage);
     }
 
     /**
