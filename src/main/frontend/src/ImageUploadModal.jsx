@@ -2,11 +2,12 @@ import React, { useState, useRef } from 'react';
 import { X } from 'lucide-react';
 
 /**
- * 이미지 추가를 위한 모달(팝업) 컴포넌트입니다.
+ * 이미지 추가를 위한 모달(팝업) UI를 담당하는 컴포넌트입니다.
  * URL로 이미지를 추가하거나, 컴퓨터에서 직접 파일을 업로드하는 두 가지 방법을 제공합니다.
- * @param {object} props - 부모 컴포넌트(App.jsx)로부터 전달받은 속성들
- * @param {function} props.onClose - 모달을 닫기 위해 호출하는 함수
- * @param {function} props.onImageAdd - 이미지 추가가 완료되었을 때, 이미지 정보를 부모에게 전달하기 위해 호출하는 함수
+ *
+ * @param {object} props - 부모 컴포넌트(App.jsx)로부터 전달받은 속성(props) 객체입니다.
+ * @param {function} props.onClose - 모달을 닫기 위해 부모가 전달해준 함수입니다. 이 함수를 호출하면 App.jsx의 `setIsImageModalOpen(false)`가 실행됩니다.
+ * @param {function} props.onImageAdd - 이미지 추가가 완료되었을 때, 이미지 정보({src, alt})를 부모에게 전달하기 위해 호출하는 함수입니다.
  */
 const ImageUploadModal = ({ onClose, onImageAdd }) => {
   //-- 상태 관리(State) --//
@@ -32,8 +33,9 @@ const ImageUploadModal = ({ onClose, onImageAdd }) => {
   };
 
   /**
-   * 'Upload from Computer' 버튼으로 파일을 선택했을 때 실행됩니다.
-   * @param {object} event - 파일 입력(input)의 변경 이벤트
+   * 'Upload from Computer'를 통해 사용자가 파일을 선택했을 때 실행됩니다.
+   * `async` 키워드는 이 함수 내에서 비동기 작업(파일 업로드)을 기다려야 함을 의미합니다.
+   * @param {object} event - 파일 입력(input) 요소에서 발생한 변경 이벤트 객체
    */
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0];
