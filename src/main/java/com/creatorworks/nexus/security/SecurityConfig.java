@@ -29,7 +29,7 @@ public class SecurityConfig {
     public SecurityFilterChain prodFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/editor/**", "/static/**", "/h2-console/**").permitAll()
+                .requestMatchers("/", "/editor/**", "/api/**", "/static/**", "/js/**", "/h2-console/**").permitAll()
                 .anyRequest().authenticated()
             );
         

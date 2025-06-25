@@ -3,7 +3,7 @@ import { ReactNodeViewRenderer } from '@tiptap/react'
 import VideoComponent from './VideoComponent'
 
 export default Node.create({
-    name: 'videoPlayer', // Changed name to avoid conflict with potential native 'video'
+    name: 'video',
     group: 'block',
     atom: true,
     draggable: true,
@@ -44,7 +44,7 @@ export default Node.create({
                 return commands.insertContent({
                     type: this.name,
                     attrs: options,
-                })
+                });
             },
         }
     },

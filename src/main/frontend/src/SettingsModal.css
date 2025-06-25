@@ -7,7 +7,7 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     max-height: 90vh;
 }
 
@@ -89,17 +89,21 @@
     border-top: 1px solid #eee;
     background-color: #f8f9fa;
 }
-.save-button, .cancel-button {
+
+.save-button,
+.cancel-button {
     padding: 0.75rem 1.5rem;
     border: none;
     border-radius: 4px;
     font-weight: 600;
     cursor: pointer;
 }
+
 .save-button {
     background-color: #28a745;
     color: white;
 }
+
 .cancel-button {
     background-color: #6c757d;
     color: white;
@@ -188,4 +192,124 @@
     font-size: 0.9rem;
     margin-bottom: 0.75rem;
     display: block;
-} 
+}
+
+/* 판매/경매 관련 스타일 */
+.sale-type-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.sale-type-button {
+    padding: 0.75rem 1.5rem;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.sale-type-button:hover {
+    background-color: #e9ecef;
+}
+
+.sale-type-button.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.price-input-section {
+    margin-bottom: 1rem;
+}
+
+.price-input-section label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.price-input-section input[type="number"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.price-input-section input[type="number"]:invalid {
+    border-color: #dc3545;
+}
+
+.price-hint {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.auction-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.auction-duration-section {
+    margin-bottom: 1rem;
+}
+
+.auction-duration-section label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.duration-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.duration-button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.duration-button:hover {
+    background-color: #e9ecef;
+}
+
+.duration-button.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+/* 에러 관련 스타일 */
+.error-message {
+    display: block;
+    color: #dc3545;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    font-weight: 500;
+}
+
+.settings-section input.error,
+.price-input-section input.error {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.settings-section input.error:focus,
+.price-input-section input.error:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}

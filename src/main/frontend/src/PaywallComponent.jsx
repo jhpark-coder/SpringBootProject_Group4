@@ -15,10 +15,10 @@ const PaywallComponent = ({ editor }) => {
     // NodeViewWrapper는 Tiptap이 노드를 감싸기 위해 제공하는 필수 컴포넌트입니다.
     // 이 컴포넌트가 있어야 Tiptap이 노드의 위치나 상태를 정확히 제어할 수 있습니다.
     <NodeViewWrapper className="paywall-node">
-      
+
       {/* 드래그 핸들: 이 부분을 드래그하여 노드의 위치를 옮길 수 있습니다. */}
       {/* 'data-drag-handle' 속성이 Tiptap에게 이 요소가 핸들임을 알려주는 중요한 역할을 합니다. */}
-      <div className="drag-handle" contentEditable="false" data-drag-handle>
+      <div className="drag-handle" data-drag-handle>
         <GripVertical size={18} />
       </div>
 

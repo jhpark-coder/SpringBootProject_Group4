@@ -20,7 +20,7 @@ const ImageComponent = ({ node, updateAttributes, editor, deleteNode }) => {
     };
 
     return (
-        <NodeViewWrapper className={`image-wrapper resizable ${getAlignmentClass()}`}>
+        <NodeViewWrapper className={`image-wrapper resizable ${getAlignmentClass()}`} contentEditable={false}>
             <div className="drag-handle" contentEditable="false" data-drag-handle>
                 <GripVertical size={18} />
             </div>

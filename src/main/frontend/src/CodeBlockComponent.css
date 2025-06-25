@@ -1,0 +1,148 @@
+/* CodeBlockComponent.css */
+
+.custom-code-block-wrapper {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  margin: 1rem 0 1rem 24px; /* 핸들을 위한 외부 여백 확보 */
+  display: flex;
+  position: relative;
+  /* padding-left는 여기서 설정하지 않아도 기본값 0입니다. */
+}
+
+.code-block-container {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer; /* 클릭 가능함을 나타내는 커서 */
+  min-height: 100px; /* 최소 높이 설정으로 클릭 영역 확보 */
+}
+
+.code-block-container:hover {
+  background-color: #f1f3f4; /* 호버 시 약간의 색상 변화 */
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #e9ecef;
+  padding: 0.3rem 0.8rem; /* 좌우 패딩을 유지하되, 아래에서 왼쪽만 재정의 */
+  padding-left: 0; /* 헤더의 왼쪽 패딩을 완전히 제거 */
+  border-top-left-radius: 7px;
+  border-top-right-radius: 7px;
+  border-bottom: 1px solid #dee2e6;
+  cursor: default; /* 헤더는 기본 커서 */
+}
+
+.language-selector {
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+  background-color: #fff;
+  margin-left: 0.5rem; /* 셀렉터 자체에 왼쪽 여백을 주어 간격을 만듭니다. */
+  cursor: pointer;
+}
+
+.code-block-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.code-block-toolbar button {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #495057;
+  padding: 0.3rem;
+  border-radius: 4px;
+}
+
+.code-block-toolbar button:hover {
+  background-color: #d8dde2;
+}
+
+.code-block-toolbar button > span {
+  font-size: 0.8rem;
+}
+
+.code-block-content {
+  margin: 0;
+  padding: 1rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  flex-grow: 1;
+  cursor: text; /* 코드 영역은 텍스트 커서 */
+  position: relative;
+}
+
+.code-block-content::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 30%; /* 오른쪽 30% 영역 */
+  background: linear-gradient(to right, transparent, rgba(173, 181, 189, 0.1));
+  pointer-events: none; /* 클릭 이벤트는 부모로 전달 */
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.code-block-container:hover .code-block-content::after {
+  opacity: 1; /* 호버 시 오른쪽 영역 하이라이트 */
+}
+
+/* Tiptap will add language-python, language-java etc. classes */
+.code-block-content code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  background: none !important;
+  color: inherit;
+  padding: 0;
+  line-height: 1.6; /* 코드 가독성을 위해 줄 간격을 넓힙니다. */
+}
+
+.caption-input-wrapper {
+  padding: 0.5rem 1rem;
+  border-top: 1px dashed #ced4da;
+}
+
+.caption-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  padding: 0.4rem 0;
+  background-color: transparent;
+  font-size: 0.9rem;
+  color: #6c757d;
+  cursor: text;
+}
+
+.caption-input::placeholder {
+  color: #adb5bd;
+}
+
+/* 핸들을 컨테이너 외부, 새로 만든 margin 영역으로 이동시킵니다. */
+.custom-code-block-wrapper .drag-handle {
+  position: absolute;
+  left: -24px; /* 외부 여백(margin-left) 만큼 왼쪽으로 이동 */
+  top: 0;
+  height: 100%;
+  width: 24px; /* 핸들 영역의 너비를 명확히 설정 */
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 핸들 아이콘을 중앙에 정렬 */
+  color: #adb5bd;
+  cursor: grab;
+}
+
+.custom-code-block-wrapper .drag-handle:hover {
+  color: #495057;
+} 

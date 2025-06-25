@@ -2,6 +2,7 @@ package com.creatorworks.nexus.editor.controller;
 
 import java.io.File;
 import java.util.List;
+import java.util.ArrayList;
 
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -57,9 +58,9 @@ public class EditorController {
     
     // 저장된 에디터 결과 페이지
     @GetMapping("/result/{id}")
-    public String resultPage(@PathVariable Long id, Model model) {
-        Editor editor = editorService.findById(id);
-        model.addAttribute("editor", editor);
+    public String showResult(@PathVariable Long id, Model model) {
+        Editor document = editorService.findById(id);
+        model.addAttribute("document", document);
         return "editor/result";
     }
     
@@ -109,8 +110,9 @@ public class EditorController {
             String savedPath = typeSpecificDir + "/" + uniqueFilename;
             file.transferTo(new File(savedPath));
             
-            // 5. 접근 가능한 URL 반환 (타입 폴더 포함)
-            return ResponseEntity.ok("/uploads/" + fileType + "/" + uniqueFilename);
+            // 5. 접근 가능한 URL을 순수 텍스트로 반환
+            String fileUrl = "/uploads/" + fileType + "/" + uniqueFilename;
+            return ResponseEntity.ok(fileUrl);
             
         } catch (Exception e) {
             e.printStackTrace();

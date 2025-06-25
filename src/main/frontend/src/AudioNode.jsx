@@ -3,7 +3,7 @@ import { ReactNodeViewRenderer } from '@tiptap/react'
 import AudioComponent from './AudioComponent'
 
 export default Node.create({
-    name: 'audioPlayer',
+    name: 'audio',
     group: 'block',
     atom: true,
     draggable: true,
@@ -41,7 +41,7 @@ export default Node.create({
                 return commands.insertContent({
                     type: this.name,
                     attrs: options,
-                })
+                });
             },
         }
     },

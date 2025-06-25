@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import {
-  Code, Image as ImageIcon, Video, Mic, Palette, Grid as LayoutGrid, Type, Settings, DollarSign, Eye, Save
+  Code, Image as ImageIcon, Video, Mic, Palette, Grid as LayoutGrid, Type, Settings, DollarSign, Eye, Save, Link
 } from 'lucide-react';
 
 /**
@@ -10,17 +10,25 @@ import {
  * @param {object} props.editor - Tiptap 에디터 인스턴스
  * @param {function} props.onEmbedClick - Embed 버튼 클릭 시 실행될 함수
  * @param {function} props.onImageAdd - Image 버튼 클릭 시 실행될 함수
- * ... (다른 props 생략)
+ * @param {function} props.onVideoAdd - Video 버튼 클릭 시 실행될 함수
+ * @param {function} props.onAudioAdd - Audio 버튼 클릭 시 실행될 함수
+ * @param {function} props.onStylesClick - Styles 버튼 클릭 시 실행될 함수
+ * @param {function} props.onSettingsClick - Settings 버튼 클릭 시 실행될 함수
+ * @param {function} props.onPhotoGridClick - Photo Grid 버튼 클릭 시 실행될 함수
+ * @param {function} props.onPreviewClick - Preview 버튼 클릭 시 실행될 함수
+ * @param {function} props.onSaveClick - Save 버튼 클릭 시 실행될 함수
  */
 const Sidebar = ({
   editor,
   onEmbedClick,
   onImageAdd,
+  onVideoAdd,
+  onAudioAdd,
   onStylesClick,
   onSettingsClick,
   onPhotoGridClick,
   onPreviewClick,
-  onSaveClick
+  onSaveClick,
 }) => {
   // editor 객체가 아직 준비되지 않았으면 아무것도 렌더링하지 않습니다.
   if (!editor) {
@@ -36,23 +44,27 @@ const Sidebar = ({
         <div className="sidebar-section">
           <h4 className="sidebar-title">ADD CONTENT</h4>
           <div className="button-grid">
-            <button className="grid-button" onClick={onEmbedClick}>
+            <button className="grid-button" onClick={() => editor.chain().focus().insertCodeBlock({ language: 'auto' }).run()}>
               <Code size={20} />
+              <span>Code</span>
+            </button>
+            <button className="grid-button" onClick={onEmbedClick}>
+              <Link size={20} />
               <span>Embed</span>
             </button>
             <button className="grid-button" onClick={onImageAdd}>
               <ImageIcon size={20} />
               <span>Image</span>
             </button>
-            <button className="grid-button" onClick={() => editor.chain().focus().insertContent({ type: 'videoPlayer' }).run()}>
+            <button className="grid-button" onClick={onVideoAdd}>
               <Video size={20} />
               <span>Video</span>
             </button>
-            <button className="grid-button" onClick={() => editor.chain().focus().insertContent({ type: 'audioPlayer' }).run()}>
+            <button className="grid-button" onClick={onAudioAdd}>
               <Mic size={20} />
               <span>Audio</span>
             </button>
-            <button className="grid-button" onClick={() => editor.chain().focus().toggleNode('paragraph', 'paragraph').run()}>
+            <button className="grid-button" onClick={() => editor.chain().focus().insertContent('<p>여기에 텍스트를 입력하세요...</p>').run()}>
               <Type size={20} />
               <span>Text</span>
             </button>
@@ -87,14 +99,17 @@ const Sidebar = ({
       {/* 미리보기 및 저장 푸터 */}
       <div className="sidebar-footer">
         {/* '미리보기' 버튼 */}
-        <button className="preview-button" onClick={onPreviewClick}>
-          <Eye size={16} />
-          <span>View a Preview</span>
+        <button 
+          className="preview-button" 
+          onClick={onPreviewClick}
+        >
+          <Eye size={18} />
+          <span>Preview</span>
         </button>
 
         {/* 메인 저장/업데이트 버튼 */}
         <button onClick={onSaveClick} className="update-button">
-          Update Project
+          Project Submit
         </button>
 
         {/* 'JSON 디버그' 버튼: 클릭 시 개발자 콘솔에 현재 문서의 JSON 데이터를 출력합니다. */}
