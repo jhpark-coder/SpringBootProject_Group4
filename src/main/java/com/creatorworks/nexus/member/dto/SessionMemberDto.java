@@ -1,32 +1,32 @@
 package com.creatorworks.nexus.member.dto;
 
-import java.io.Serializable;
-
 import com.creatorworks.nexus.member.entity.Member;
-
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.io.Serializable;
 
 @Getter
 @Setter
-public class SessionMemberDto implements Serializable{
+@NoArgsConstructor
+public class SessionMemberDto implements Serializable {
     private String email;
-
-    @NotBlank(message = "이름은 필수 입력 값입니다.")
     private String name;
-    @NotEmpty(message = "성별은 필수 입력 값입니다.")
-    private String gender;        // 성별 (male, female, other)
-    @NotEmpty(message = "생년은 필수 입력 값입니다.")
-    private String birthYear;     // 생년
-    @NotEmpty(message = "생월은 필수 입력 값입니다.")
-    private String birthMonth;    // 생월
-    @NotEmpty(message = "생일은 필수 입력 값입니다.")
-    private String birthDay;      // 생일
-    
+    private String gender;
+    private String birthYear;
+    private String birthMonth;
+    private String birthDay;
+    private boolean profileComplete;
+
+
 
     public SessionMemberDto(Member member) {
         this.email = member.getEmail();
+        this.name = member.getName();
+        this.gender = member.getGender();
+        this.birthYear = member.getBirthYear();
+        this.birthMonth = member.getBirthMonth();
+        this.birthDay = member.getBirthDay();
     }
 }

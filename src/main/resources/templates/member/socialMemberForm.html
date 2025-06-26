@@ -46,40 +46,9 @@
                 $("#birthDay").append('<option value="' + day + '">' + day + '일</option>');
             }
 
-            // // 3. 최종 회원가입 함수 (form의 submit 버튼 클릭 시 호출)
-            // $("#registerForm").on("submit", function(e) {
-            //     e.preventDefault();
-            //     if (!isEmailVerified) {
-            //         alert("이메일 인증을 먼저 완료해주세요.");
-            //         return;
-            //     }
-
-            //     var formData = {
-            //         name: $("#name").val(),
-            //         email: $("#email").val(),
-            //         password: $("#password").val(),
-            //         address: $("#address").val(),
-            //         tel: $("#tel").val()
-            //     };
-
-            //     $.ajax({
-            //         url: "/members/new",
-            //         type: "POST",
-            //         contentType: "application/json",
-            //         data: JSON.stringify(formData),
-            //         success: function(response) {
-            //             alert(response);
-            //             window.location.href = "/members/login";
-            //         },
-            //         error: function(xhr) {
-            //             alert(xhr.responseText);
-            //         }
-            //     });
-            // });
+            
         });
 
-// [핵심] 이메일 인증 상태를 저장할 전역 변수
-// var isEmailVerified = false;
 
 // CSRF 토큰 설정 (Spring Security 사용 시)
         var token = $("meta[name='_csrf']").attr("content");
@@ -99,77 +68,7 @@
             }
         });
 
-        // // 1. 인증메일 발송 함수
-        // function sendAuthEmail() {
-        //     console.log("sendAuthEmail 함수 호출됨");
-
-        //     var email = $("#email").val();
-        //     console.log("입력된 이메일:", email);
-
-        //     if (!email) {
-        //         alert("이메일을 입력해주세요.");
-        //         return;
-        //     }
-
-        //     console.log("AJAX 요청 시작...");
-        //     $.ajax({
-        //         url: "/members/email-auth",
-        //         type: "POST",
-        //         contentType: "application/json",
-        //         data: JSON.stringify({ email: email }),
-        //         success: function(response) {
-        //             alert(response);
-        //             $("#verifyEmailBtn").prop("disabled", false);
-        //         },
-        //         error: function(xhr, status, error) {
-        //             alert("오류 발생: " + xhr.responseText);
-        //         }
-        //     });
-        // }
-
-        // // 2. 인증코드 확인 함수
-        // function verifyEmail() {
-        //     var email = $("#email").val();
-        //     var authCode = $("#authCode").val();
-
-        //     $.ajax({
-        //         url: "/members/email-verify",
-        //         type: "POST",
-        //         contentType: "application/json",
-        //         data: JSON.stringify({ email: email, authCode: authCode }),
-        //         success: function(response) {
-        //             alert(response);
-        //             $("#emailVerifyMessage").text("인증 완료");
-        //             isEmailVerified = true;
-
-        //             $("#email").prop("readonly", true);
-        //             $("#email").addClass("readonly-as-disabled");
-
-        //             $("#sendAuthEmailBtn").prop("disabled", true);
-        //             $("#authCode").prop("disabled", true);
-        //             $("#verifyEmailBtn").prop("disabled", true);
-
-
-        //             checkFormValidity();
-        //         },
-        //         error: function(xhr) {
-        //             alert(xhr.responseText);
-        //             isEmailVerified = false;
-        //             checkFormValidity();
-        //         }
-        //     });
-        // }
-
-
-
-        // // [핵심] 회원가입 버튼 활성화 여부를 체크하는 함수
-        // function checkFormValidity() {
-        //     if (isEmailVerified) {
-        //         $("#submitBtn").prop("disabled", false);
-        //     } else {
-        //         $("#submitBtn").prop("disabled", true);
-        //     }
-        // }
+        
     </script>
 </th:block>
 <div layout:fragment="content">
@@ -181,17 +80,12 @@
             <div class="signup-form-wrapper">
                 <h1 class="form-title">활동에 필요한 정보 기입</h1>
 
-                <!--
-                    이메일과 인증 관련 필드.
-                    form 태그 밖에 있지만, JavaScript로 처리되므로 구조를 유지합니다.
-                -->
-
 
                 <!-- 실제 폼 제출 영역 -->
-                <form action="/members/new" method="post" role="form" th:object="${memberFormDto}" id="registerForm">
+                <form action="/social/addinfo" method="post" role="form" th:object="${sessionMemberFormDto}" id="registerForm">
                     <div class="form-group">
                         <label th:for="name">별명(활동명)</label>
-                        <input type="text" placeholder="이름을 입력해주세요." th:field="*{name}">
+                        <input type="text" placeholder="이름을 입력해주세요." th:value="${session.member.name}" th:field="*{name}">
                         <p class="fieldError" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Incorrect date</p>
                     </div>
 
@@ -205,15 +99,15 @@
                         <label>성별</label>
                         <div class="radio-group">
                             <div class="radio-item">
-                                <input type="radio" id="gender-male" name="gender" value="male" checked>
+                                <input type="radio" id="gender-male"  th:field="*{gender}" value="male" checked>
                                 <label for="gender-male">남성</label>
                             </div>
                             <div class="radio-item">
-                                <input type="radio" id="gender-female" name="gender" value="female">
+                                <input type="radio" id="gender-female"  th:field="*{gender}" value="female">
                                 <label for="gender-female">여성</label>
                             </div>
                             <div class="radio-item">
-                                <input type="radio" id="gender-other" name="gender" value="other">
+                                <input type="radio" id="gender-other"  th:field="*{gender}" value="other">
                                 <label for="gender-other">기타</label>
                             </div>
                         </div>
@@ -223,15 +117,15 @@
                     <div class="form-group">
                         <label>생년월일</label>
                         <div class="birthdate-group">
-                            <select name="birth-year" aria-label="출생 연도">
+                            <select aria-label="출생 연도" id="birthYear" th:field="*{birthYear}">
                                 <option>----년</option>
                                 <!-- JavaScript로 년도 채우기 -->
                             </select>
-                            <select name="birth-month" aria-label="출생 월">
+                            <select aria-label="출생 월" id="birthMonth" th:field="*{birthMonth}">
                                 <option>--월</option>
                                 <!-- JavaScript로 월 채우기 -->
                             </select>
-                            <select name="birth-day" aria-label="출생 일">
+                            <select aria-label="출생 일" id="birthDay" th:field="*{birthDay}">
                                 <option>--일</option>
                                 <!-- JavaScript로 일 채우기 -->
                             </select>

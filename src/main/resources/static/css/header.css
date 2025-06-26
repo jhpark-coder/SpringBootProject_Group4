@@ -67,7 +67,7 @@
         }
 
         .main-nav a {
-            font-size: 1.2rem; /* 폰트 크기 */
+            font-size: 1rem; /* 폰트 크기 */
             font-weight: 500;
             color: #333;
             transition: color 0.2s; /* 부드러운 색상 전환 효과 */
@@ -139,7 +139,7 @@
           border-radius: 10px; /* 모서리를 둥글게 */
 
           font-weight: 500;
-          font-size: 1.125rem; /* 18px을 rem 단위로 변경 */
+          font-size: 0.9rem; /* 18px을 rem 단위로 변경 */
           text-decoration: none; /* 링크 밑줄 제거 */
           white-space: nowrap; /* 버튼 내 글자가 줄바꿈되지 않도록 설정 */
 

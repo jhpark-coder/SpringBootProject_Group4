@@ -1,15 +1,29 @@
 package com.creatorworks.nexus.security;
 
+import com.creatorworks.nexus.member.service.SocialMemberService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final SocialMemberService socialMemberService;
+
+    SecurityConfig(SocialMemberService socialMemberService) {
+        this.socialMemberService = socialMemberService;
+    }
+    @Bean
+    public static PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
 
     @SuppressWarnings("removal")
     @Bean
@@ -19,9 +33,33 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 .anyRequest().permitAll()
             )
-            .csrf(csrf -> csrf.disable())
+            .oauth2Login(oauth2Login -> oauth2Login
+                .defaultSuccessUrl("/")
+                .userInfoEndpoint(userInfo -> userInfo
+                    .userService(socialMemberService)
+                )
+            )
+            .formLogin(formLogin -> formLogin
+                        .loginPage("/members/login")
+                        .defaultSuccessUrl("/")
+                        .usernameParameter("email")
+                        .failureUrl("/members/login/error")
+            )
+            .logout(logout -> logout
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/members/logout"))
+                        .logoutSuccessUrl("/")
+            )
+            .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+            )
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers(
+                new AntPathRequestMatcher("/members/email-auth"),
+                new AntPathRequestMatcher("/members/email-verify")
+                )
+            )
             .headers(headers -> headers.frameOptions().disable()); // H2 콘솔 사용을 위해
-        
+
         return http.build();
     }
     
@@ -30,9 +68,38 @@ public class SecurityConfig {
     public SecurityFilterChain prodFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/editor/**", "/static/**", "/h2-console/**").permitAll()
-                .anyRequest().authenticated()
-            );
+                .requestMatchers("/", "/editor/**", "/static/**", "/h2-console/**","/members/**").permitAll()
+                .requestMatchers("/my-page").authenticated()
+                // 위 규칙 외 나머지 모든 요청은 일단 허용 (개발 편의를 위해)
+                .anyRequest().permitAll()
+//                .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth2Login -> oauth2Login
+            .defaultSuccessUrl("/")
+            .userInfoEndpoint(userInfo -> userInfo
+                .userService(socialMemberService)
+            )
+        )
+        .formLogin(formLogin -> formLogin
+                    .loginPage("/members/login")
+                    .defaultSuccessUrl("/")
+                    .usernameParameter("email")
+                    .failureUrl("/members/login/error")
+        )
+        .logout(logout -> logout
+                    .logoutRequestMatcher(new AntPathRequestMatcher("/members/logout"))
+                    .logoutSuccessUrl("/")
+        )
+        .exceptionHandling(exception -> exception
+                    .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+        )
+        .csrf(csrf -> csrf
+                .ignoringRequestMatchers(
+                new AntPathRequestMatcher("/members/email-auth"),
+                new AntPathRequestMatcher("/members/email-verify")
+                )
+        );
+            
         
         return http.build();
     }

@@ -75,6 +75,10 @@ public class MemberService {
 
     public Member saveMember(Member member) {
         validateDuplicateMember(member);
+        System.out.println(member.getEmail());
+        System.out.println(member.getPassword());
+        System.out.println(member.getGender());
+        System.out.println(member.getBirthYear());
         return memberRepository.save(member); // 데이터베이스에 저장을 하라는 명령
     }
 
