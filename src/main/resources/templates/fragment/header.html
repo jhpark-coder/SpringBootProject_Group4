@@ -27,7 +27,7 @@
                     <ul>
                         <li><a href="#">Contact Us</a></li>
                         <li><a href="#">Action</a></li>
-                        <li><a href="#">MyPage</a></li>
+                        <li sec:authorize="isAuthenticated()"><a href="#">MyPage</a></li>
                         <li sec:authorize="isAnonymous()">
                             <a href="/members/login">Login</a>
                         </li>
@@ -39,7 +39,7 @@
                 </nav>
 
                 <!-- 3. 사용자 액션 영역 -->
-                <div class="user-actions">
+                <div class="user-actions" sec:authorize="isAuthenticated()">
                     <a href="#" class="points-button">
                         <span>보유한 포인트 : 1000</span>
                         <!-- SVG의 종 아이콘 부분 추출 -->

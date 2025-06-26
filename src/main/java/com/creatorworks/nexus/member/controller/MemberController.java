@@ -35,13 +35,22 @@ public class MemberController {
 
     @PostMapping("/new")
     public String memberForm(@Valid MemberFormDto memberFormDto, BindingResult bindingResult, Model model) {
+        System.out.println("들어는 옴");
         if (bindingResult.hasErrors()) {
+            System.out.println("입력값 오류");
+            return "member/memberForm";
+        }
+        if (!memberFormDto.getPassword().equals(memberFormDto.getPasswordConfirm())) {
+            System.out.println("비밀번호 일치 하지않음");
+            // bindingResult에 직접 에러를 추가하여 Thymeleaf에 전달
+            bindingResult.rejectValue("passwordConfirm", "password.mismatch", "비밀번호가 일치하지 않습니다.");
             return "member/memberForm";
         }
         try {
             Member member = Member.createMember(memberFormDto, passwordEncoder);
             memberService.saveMember(member);
         } catch (IllegalStateException e) {
+            System.out.println("Service 못보냄");
             model.addAttribute("errorMessage", e.getMessage());
             return "member/memberForm";
         }
@@ -76,7 +85,7 @@ public class MemberController {
     @GetMapping(value = "/login/error")
     public String loginError(Model model){
         model.addAttribute("loginErrorMsg","이메일(ID) 또는 비밀번호를 확인해주세요");
-        return "member/memberLoginForm";
+        return "member/loginForm";
     }
 
 }
