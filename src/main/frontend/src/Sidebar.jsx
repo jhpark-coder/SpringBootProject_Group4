@@ -3,7 +3,7 @@
 //================================================================================
 import React, { useRef } from 'react'; // React 라이브러리를 가져옵니다. JSX를 사용하기 위해 필수입니다.
 import { // lucide-react 라이브러리에서 아이콘 컴포넌트들을 가져옵니다.
-  Code, Image as ImageIcon, Video, Mic, Palette, Grid as LayoutGrid, Type, Settings, DollarSign, Eye, Save, Link
+  Code, Image as ImageIcon, Video, Mic, Palette, Grid as LayoutGrid, Type, Settings, DollarSign, Eye, Save, Link, Minus, ArrowUpDown
 } from 'lucide-react';
 
 //================================================================================
@@ -25,6 +25,7 @@ import { // lucide-react 라이브러리에서 아이콘 컴포넌트들을 가�
  * @param {function} props.onPhotoGridClick - 'Photo Grid' 버튼 클릭 시 App.jsx에서 실행될 함수입니다.
  * @param {function} props.onPreviewClick - 'Preview' 버튼 클릭 시 App.jsx에서 실행될 함수입니다.
  * @param {function} props.onSaveClick - 'Save' 버튼 클릭 시 App.jsx에서 실행될 함수입니다.
+ * @param {function} props.onSpacerAdd - 'Spacer' 버튼 클릭 시 App.jsx에서 실행될 함수입니다.
  */
 //================================================================================
 // 2. 사이드바 컴포넌트 정의
@@ -43,6 +44,7 @@ const Sidebar = ({
   onPhotoGridClick,
   onPreviewClick,
   onSaveClick,
+  onSpacerAdd,
 }) => {
   // --- 방어 코드 (Defensive Code) ---
   // editor 객체가 아직 준비되지 않았을 수 있습니다. (예: 데이터 로딩 중)
@@ -91,6 +93,12 @@ const Sidebar = ({
               <span>Image</span>
             </button>
 
+            {/* 포토 그리드 추가 버튼 */}
+            <button className="grid-button" onClick={onPhotoGridClick}>
+              <LayoutGrid size={20} />
+              <span>Photo Grid</span>
+            </button>
+
             {/* 비디오 추가 버튼 */}
             <button className="grid-button" onClick={onVideoAdd}>
               <Video size={20} />
@@ -110,10 +118,16 @@ const Sidebar = ({
               <span>Text</span>
             </button>
 
-            {/* 포토 그리드 추가 버튼 */}
-            <button className="grid-button" onClick={onPhotoGridClick}>
-              <LayoutGrid size={20} />
-              <span>Photo Grid</span>
+            {/* 라인 추가 버튼 */}
+            <button className="grid-button" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
+              <Minus size={20} />
+              <span>Line</span>
+            </button>
+
+            {/* 공백 추가 버튼 */}
+            <button className="grid-button" onClick={onSpacerAdd}>
+              <ArrowUpDown size={20} />
+              <span>Spacer</span>
             </button>
 
             {/* 유료 콘텐츠(Paywall) 영역 추가 버튼 */}

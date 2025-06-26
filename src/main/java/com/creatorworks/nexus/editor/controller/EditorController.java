@@ -1,102 +1,94 @@
 package com.creatorworks.nexus.editor.controller;
 
 import java.io.File;
-import java.util.List;
-import java.util.ArrayList;
 
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.bind.annotation.PutMapping;
-
-import com.creatorworks.nexus.editor.dto.EditorSaveRequest;
-import com.creatorworks.nexus.editor.entity.Editor;
-import com.creatorworks.nexus.editor.service.EditorService;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/editor")
-public class EditorController {
+public class EditorController implements WebMvcConfigurer {
     
-    private final EditorService editorService;
+    // 정적 파일 서빙을 위한 리소스 핸들러 설정
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        String uploadPath = System.getProperty("user.dir") + "/src/main/resources/static/uploads";
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + uploadPath + "/");
+        
+        // React 빌드 파일 서빙
+        registry.addResourceHandler("/editor/**")
+                .addResourceLocations("classpath:/static/editor/");
+    }
     
-    // 에디터 페이지
+    // React SPA 메인 페이지
     @GetMapping
     public String editor() {
-        return "editor/editor";
+        return "forward:/editor/index.html";
     }
     
-    // 에디터 저장 API
-    @PostMapping("/api/documents")
-    @ResponseBody
-    public ResponseEntity<Long> saveDocument(@RequestBody EditorSaveRequest request) throws JsonProcessingException {
-        Editor savedEditor = editorService.saveEditor(request);
-        return ResponseEntity.ok(savedEditor.getId());
+    // React 라우팅 처리 (모든 editor 경로를 index.html로 포워딩)
+    @GetMapping("/{path:^(?!api|uploads).*}")
+    public String handleReactRouting(@PathVariable String path) {
+        return "forward:/editor/index.html";
     }
     
-    // ID로 에디터 데이터 조회 API
-    @GetMapping("/api/documents/{id}")
-    @ResponseBody
-    public ResponseEntity<Editor> getEditorById(@PathVariable Long id) {
-        Editor editor = editorService.findById(id);
-        return ResponseEntity.ok(editor);
-    }
-    
-    // 저장된 에디터 결과 페이지
-    @GetMapping("/result/{id}")
-    public String showResult(@PathVariable Long id, Model model) {
-        Editor document = editorService.findById(id);
-        model.addAttribute("document", document);
-        return "editor/result";
-    }
-    
-    // 에디터 목록 페이지
-    @GetMapping("/list")
-    public String listPage(Model model) {
-        List<Editor> editors = editorService.findAll();
-        model.addAttribute("editors", editors);
-        return "editor/list";
+    // CSRF 토큰 및 세션 초기화를 위한 엔드포인트
+    @GetMapping("/api/init")
+    public ResponseEntity<Void> init() {
+        return ResponseEntity.ok().build();
     }
     
     @PostMapping("/api/upload")
     @ResponseBody
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
+            System.out.println("=== 파일 업로드 시작 ===");
             System.out.println("파일 업로드 요청 받음: " + (file != null ? file.getOriginalFilename() : "null"));
+            System.out.println("파일 크기: " + (file != null ? file.getSize() : "null"));
+            System.out.println("파일 타입: " + (file != null ? file.getContentType() : "null"));
             
             if (file == null) {
+                System.out.println("ERROR: 파일이 null입니다.");
                 return ResponseEntity.badRequest().body("파일이 null입니다.");
             }
             
             if (file.isEmpty()) {
+                System.out.println("ERROR: 파일이 비어있습니다.");
                 return ResponseEntity.badRequest().body("파일이 비어있습니다.");
             }
             
             // 1. 파일 타입별 폴더 결정
             String fileType = determineFileType(file);
+            System.out.println("결정된 파일 타입: " + fileType);
+            
             String baseUploadDir = System.getProperty("user.dir") + "/src/main/resources/static/uploads";
             String typeSpecificDir = baseUploadDir + "/" + fileType;
             
             // 2. 타입별 폴더 생성
             File dir = new File(typeSpecificDir);
             if (!dir.exists()) {
-                dir.mkdirs();
+                boolean created = dir.mkdirs();
+                System.out.println("폴더 생성 결과: " + created);
             }
-            System.out.println("Upload directory: " + typeSpecificDir); // 디버깅용
+            System.out.println("Upload directory: " + typeSpecificDir);
             
             // 3. 유니크한 파일명 생성 (확장자 유지)
             String originalFilename = file.getOriginalFilename();
@@ -105,16 +97,27 @@ public class EditorController {
                 extension = originalFilename.substring(originalFilename.lastIndexOf("."));
             }
             String uniqueFilename = java.util.UUID.randomUUID().toString() + extension;
+            System.out.println("생성된 파일명: " + uniqueFilename);
             
             // 4. 파일 저장
             String savedPath = typeSpecificDir + "/" + uniqueFilename;
-            file.transferTo(new File(savedPath));
+            File savedFile = new File(savedPath);
+            file.transferTo(savedFile);
             
-            // 5. 접근 가능한 URL을 순수 텍스트로 반환
+            // 5. 파일 저장 확인
+            System.out.println("파일 저장 경로: " + savedPath);
+            System.out.println("파일 존재 여부: " + savedFile.exists());
+            System.out.println("파일 크기: " + savedFile.length());
+            
+            // 6. 접근 가능한 URL을 순수 텍스트로 반환
             String fileUrl = "/uploads/" + fileType + "/" + uniqueFilename;
+            System.out.println("반환할 URL: " + fileUrl);
+            System.out.println("=== 파일 업로드 완료 ===");
+            
             return ResponseEntity.ok(fileUrl);
             
         } catch (Exception e) {
+            System.out.println("ERROR: 파일 업로드 중 예외 발생");
             e.printStackTrace();
             return ResponseEntity.badRequest().body("파일 업로드 중 오류가 발생했습니다: " + e.getMessage());
         }
@@ -196,20 +199,22 @@ public class EditorController {
      */
     private MediaType getMediaTypeForFile(String filename) {
         String extension = filename.toLowerCase();
-        if (extension.endsWith(".png")) return MediaType.IMAGE_PNG;
-        if (extension.endsWith(".jpg") || extension.endsWith(".jpeg")) return MediaType.IMAGE_JPEG;
-        if (extension.endsWith(".gif")) return MediaType.IMAGE_GIF;
-        if (extension.endsWith(".webp")) return MediaType.parseMediaType("image/webp");
-        if (extension.endsWith(".mp4")) return MediaType.parseMediaType("video/mp4");
-        if (extension.endsWith(".webm")) return MediaType.parseMediaType("video/webm");
-        if (extension.endsWith(".mp3")) return MediaType.parseMediaType("audio/mp3");
-        if (extension.endsWith(".wav")) return MediaType.parseMediaType("audio/wav");
-        return MediaType.APPLICATION_OCTET_STREAM;
-    }
-
-    @PutMapping("/api/documents/{id}")
-    public ResponseEntity<Long> updateDocument(@PathVariable("id") Long id, @RequestBody EditorSaveRequest request) {
-        Editor updatedEditor = editorService.updateEditor(id, request);
-        return ResponseEntity.ok(updatedEditor.getId());
+        if (extension.endsWith(".jpg") || extension.endsWith(".jpeg")) {
+            return MediaType.IMAGE_JPEG;
+        } else if (extension.endsWith(".png")) {
+            return MediaType.IMAGE_PNG;
+        } else if (extension.endsWith(".gif")) {
+            return MediaType.IMAGE_GIF;
+        } else if (extension.endsWith(".mp4")) {
+            return MediaType.valueOf("video/mp4");
+        } else if (extension.endsWith(".webm")) {
+            return MediaType.valueOf("video/webm");
+        } else if (extension.endsWith(".mp3")) {
+            return MediaType.valueOf("audio/mpeg");
+        } else if (extension.endsWith(".wav")) {
+            return MediaType.valueOf("audio/wav");
+        } else {
+            return MediaType.APPLICATION_OCTET_STREAM;
+        }
     }
 } 

@@ -88,25 +88,7 @@
 
     // [실행 순서 2-3] 키보드 단축키 및 조합키 차단
     document.addEventListener('keydown', function (e) {
-        // --- 스크린샷 및 화면 녹화 관련 단축키 차단 ---
-        if (e.key === 'PrintScreen' ||
-            (e.ctrlKey && e.key === 'PrintScreen') ||  // Ctrl + Print Screen
-            (e.altKey && e.key === 'PrintScreen') ||   // Alt + Print Screen
-            (e.metaKey && e.shiftKey && e.key === '3') || // Mac: Cmd + Shift + 3 (전체 화면)
-            (e.metaKey && e.shiftKey && e.key === '4') || // Mac: Cmd + Shift + 4 (부분 화면)
-            (e.metaKey && e.shiftKey && e.key === '5')) { // Mac: Cmd + Shift + 5 (스크린샷 도구)
-
-            e.preventDefault(); // 기본 동작(스크린샷) 차단
-            showNotice('스크린샷이 제한됩니다.');
-
-            // 만약의 경우를 대비해, 클립보드에 경고 메시지를 덮어씁니다.
-            try {
-                navigator.clipboard.writeText('⚠️ 무단 복제 금지 - Nexus 보안 시스템');
-            } catch (err) {
-                console.warn('클립보드 접근 권한이 없습니다.');
-            }
-            return false;
-        }
+        // [NOTE] PrintScreen 키는 OS 레벨에서 처리되어 브라우저에서 안정적인 감지가 거의 불가능하므로 관련 코드를 제거합니다.
 
         // Windows 게임 바(화면 녹화 기능) 관련 단축키 차단
         if ((e.metaKey && e.key === 'g') || // Windows + G (게임 바)
@@ -151,6 +133,12 @@
             if (e.key === 'c') { // 복사 (Ctrl+C)
                 e.preventDefault();
                 showNotice('복사가 제한됩니다.');
+                // 클립보드에 경고 메시지를 덮어쓰는 기능을 추가하여 보안을 강화합니다.
+                try {
+                    navigator.clipboard.writeText('⚠️ 무단 복제 금지 - Nexus 보안 시스템');
+                } catch (err) {
+                    console.warn('클립보드 접근 권한이 없습니다.');
+                }
                 return false;
             }
             if (e.key === 'v' && !isInputElement(e.target)) { // 붙여넣기 (Ctrl+V) (단, 입력 필드는 예외)

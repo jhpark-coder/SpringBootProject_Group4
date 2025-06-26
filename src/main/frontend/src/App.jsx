@@ -10,9 +10,16 @@
 // 'import'는 다른 파일에 있는 코드(컴포넌트, 함수, 변수 등)를 현재 파일에서 사용할 수 있게 해주는 문법입니다.
 // 이를 통해 코드를 재사용하고 모듈별로 정리할 수 있습니다.
 //================================================================================
-import { useState, useEffect, useRef } from 'react'; // React의 핵심 기능(Hooks)을 가져옵니다.
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react'; // React의 핵심 기능(Hooks)을 가져옵니다.
 import { useEditor, EditorContent } from '@tiptap/react'; // Tiptap 에디터의 React 버전을 가져옵니다.
 import { useParams, useLocation } from 'react-router-dom'; // URL 경로를 다루기 위한 기능을 가져옵니다.
+import { StarterKit } from '@tiptap/starter-kit'; // Tiptap의 기본 확장 기능 모음입니다. (볼드, 이탤릭 등)
+import { Underline } from '@tiptap/extension-underline'; // 밑줄 기능을 Tiptap에 추가하기 위해 가져옵니다.
+import { Link } from '@tiptap/extension-link'; // 링크 기능을 Tiptap에 추가하기 위해 가져옵니다.
+import { TextAlign } from '@tiptap/extension-text-align'; // 텍스트 정렬 기능을 Tiptap에 추가하기 위해 가져옵니다.
+import { TextStyle } from '@tiptap/extension-text-style'; // 텍스트 스타일(예: 색상)을 다루기 위한 확장입니다.
+import { Extension } from '@tiptap/core'; // Tiptap 확장 기능을 직접 만들 때 필요한 도구들입니다.
+import { Iframe } from '@tiptap/extension-iframe'; // 유튜브 영상 등을 삽입하기 위한 Iframe 노드입니다.
 import StarterKit from '@tiptap/starter-kit'; // Tiptap의 기본 확장 기능 모음입니다. (볼드, 이탤릭 등)
 import CustomImage from './CustomImage.jsx'; // 우리가 직접 만든 커스텀 이미지 노드를 가져옵니다.
 import Underline from '@tiptap/extension-underline'; // 밑줄 기능을 Tiptap에 추가하기 위해 가져옵니다.
@@ -26,6 +33,7 @@ import AudioNode from './AudioNode.jsx'; // 오디오 파일을 위한 커스텀
 import PhotoGridNode from './PhotoGridNode.jsx'; // 여러 이미지를 격자 형태로 보여주는 포토그리드 노드입니다.
 import PaywallNode from './PaywallNode.jsx'; // 유료 콘텐츠 영역을 표시하기 위한 페이월 노드입니다.
 import CodeBlockNode from './CodeBlockNode.jsx'; // 코드 블록을 위한 커스텀 노드입니다.
+import SpacerNode from './SpacerNode.jsx'; // 공백 영역을 표시하기 위한 스페이서 노드입니다.
 
 // 에디터 위에 뜨는 메뉴(버블 메뉴)와 사이드바, 각종 모달(팝업)창 컴포넌트들을 가져옵니다.
 // 각 파일은 독립적인 UI 조각(컴포넌트)으로 만들어져 있어 관리가 용이합니다.
@@ -39,6 +47,7 @@ import EmbedModal from './EmbedModal.jsx';
 import SettingsModal from './SettingsModal.jsx';
 import VideoUploadModal from './VideoUploadModal';
 import AudioUploadModal from './AudioUploadModal';
+import SpacerModal from './SpacerModal.jsx';
 import './App.css'; // 이 컴포넌트에 적용될 CSS 스타일 파일을 가져옵니다.
 
 // 카테고리 데이터입니다. 자바스크립트의 객체(Object) 형태로, 키(key)와 값(value)으로 이루어져 있습니다.
@@ -72,6 +81,15 @@ lowlight.register('css', css);
 lowlight.register('html', html);
 lowlight.register('python', python);
 lowlight.register('java', javaLang);
+
+// React의 contentEditable 경고 억제
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  if (args[0] && typeof args[0] === 'string' && args[0].includes('contentEditable')) {
+    return; // contentEditable 경고 억제
+  }
+  originalConsoleError.apply(console, args);
+};
 
 //================================================================================
 // Tiptap 확장 기능 직접 만들기 (커스텀 FontSize)
@@ -128,6 +146,33 @@ const FontSize = Extension.create({ // Extension.create를 사용하여 새로�
   },
 })
 
+// Google Fonts 목록 (StylesModal과 동일)
+const GOOGLE_FONTS = [
+  // Korean
+  { name: 'Noto Sans KR', family: "'Noto Sans KR', sans-serif" },
+  { name: 'Nanum Gothic', family: "'Nanum Gothic', sans-serif" },
+  { name: 'Black Han Sans', family: "'Black Han Sans', sans-serif" },
+  // English
+  { name: 'Roboto', family: "'Roboto', sans-serif" },
+  { name: 'Montserrat', family: "'Montserrat', sans-serif" },
+  { name: 'Playfair Display', family: "'Playfair Display', serif" },
+  // Monospace for code
+  { name: 'Source Code Pro', family: "'Source Code Pro', monospace" }
+];
+
+// Google Fonts 로딩 함수
+const loadGoogleFont = (fontName) => {
+  const fontId = `google-font-${fontName.replace(/\s/g, '-')}`;
+  if (document.getElementById(fontId)) {
+    return; // 이미 로드된 폰트는 다시 로드하지 않음
+  }
+  const link = document.createElement('link');
+  link.id = fontId;
+  link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s/g, '+')}:wght@400;700&display=swap`;
+  link.rel = 'stylesheet';
+  document.head.appendChild(link);
+};
+
 //================================================================================
 // 메인 애플리케이션 컴포넌트
 // React에서 컴포넌트는 UI를 독립적인 부분으로 나누어 재사용할 수 있게 해주는 코드 조각입니다.
@@ -166,6 +211,13 @@ function App() {
   const [isStylesModalOpen, setIsStylesModalOpen] = useState(false);
   const [isPhotoGridModalOpen, setIsPhotoGridModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isSpacerModalOpen, setIsSpacerModalOpen] = useState(false);
+
+  // 스페이서 모달 관련 상태 통합
+  const [spacerModalConfig, setSpacerModalConfig] = useState({
+    currentHeight: '2rem',
+    onSave: () => { },
+  });
 
   // 에디터 자체의 스타일(배경색, 글꼴)을 기억하기 위한 상태입니다.
   const [editorStyles, setEditorStyles] = useState({
@@ -248,9 +300,10 @@ function App() {
       Iframe,          // Iframe(유튜브 등) 삽입 기능
       VideoNode,       // 비디오 파일 삽입 기능
       AudioNode,       // 오디오 파일 삽입 기능
-      PhotoGridNode,   // 포토 그리드 기능
-      PaywallNode,     // 페이월 기능
-      CodeBlockNode.configure({ lowlight }), // 코드 블록 기능 (lowlight로 구문 강조)
+      PhotoGridNode,   // 포토 그리드 삽입 기능
+      PaywallNode,     // 유료 콘텐츠 영역 기능
+      CodeBlockNode.configure({ lowlight }), // 코드 블록 기능 (구문 강조 포함)
+      SpacerNode,      // 공백 삽입 기능
     ],
     // 에디터의 초기 내용은 항상 비워둡니다. 서버에서 비동기적으로 데이터를 불러온 후 채워넣을 것입니다.
     content: '',
@@ -259,6 +312,23 @@ function App() {
       attributes: {
         class: 'prose-mirror-editor',
       },
+    },
+    // 에디터의 내용이 변경될 때마다 실행되는 함수입니다.
+    // 여기서는 자동 저장 기능을 구현하거나, 내용이 변경되었음을 감지하는 데 사용할 수 있습니다.
+    onCreate: ({ editor }) => {
+      // 스페이서 '수정' 로직: 에디터 스토리지에 함수 저장
+      editor.storage.spacer = {
+        openModal: (currentHeight, onUpdateCallback) => {
+          setSpacerModalConfig({
+            currentHeight,
+            onSave: (newHeight) => {
+              onUpdateCallback(newHeight);
+              setIsSpacerModalOpen(false);
+            },
+          });
+          setIsSpacerModalOpen(true);
+        },
+      };
     },
   });
 
@@ -347,6 +417,15 @@ function App() {
             backgroundColor: commonData.backgroundColor,
             fontFamily: commonData.fontFamily,
           });
+
+          // Google Fonts 로딩 (편집 모드에서 폰트 불러오기)
+          if (commonData.fontFamily) {
+            const selectedFont = GOOGLE_FONTS.find(f => f.family === commonData.fontFamily);
+            if (selectedFont) {
+              console.log('Loading Google Font for edit mode:', selectedFont.name);
+              loadGoogleFont(selectedFont.name);
+            }
+          }
 
           // 에디터에 들어갈 콘텐츠(본문)를 처리합니다.
           let content = null;
@@ -506,6 +585,17 @@ function App() {
    * @param {object} videoData - 추가할 비디오의 데이터
    */
   const handleVideoAdd = (videoData) => {
+    console.log('handleVideoAdd called with:', videoData);
+    console.log('videoData type:', typeof videoData);
+    console.log('videoData.src:', videoData.src);
+    console.log('videoData.src type:', typeof videoData.src);
+
+    if (!videoData || !videoData.src) {
+      console.error('Invalid video data:', videoData);
+      alert('비디오 데이터가 유효하지 않습니다.');
+      return;
+    }
+
     editor.chain().focus().setVideo(videoData).run();
     setIsVideoModalOpen(false); // 모달을 닫습니다.
   };
@@ -682,6 +772,15 @@ function App() {
    */
   const handleStyleChange = (newStyles) => {
     setEditorStyles(newStyles); // App 컴포넌트의 에디터 스타일 상태를 업데이트합니다.
+
+    // Google Fonts 로딩 (스타일 변경 시)
+    if (newStyles.fontFamily) {
+      const selectedFont = GOOGLE_FONTS.find(f => f.family === newStyles.fontFamily);
+      if (selectedFont) {
+        console.log('Loading Google Font for style change:', selectedFont.name);
+        loadGoogleFont(selectedFont.name);
+      }
+    }
   };
 
   /**
@@ -689,6 +788,18 @@ function App() {
    */
   const handleStylesModalClose = () => {
     setIsStylesModalOpen(false); // 모달을 닫습니다.
+  };
+
+  // 스페이서 생성 요청 핸들러 (사이드바에서 호출)
+  const handleRequestSpacerCreation = () => {
+    setSpacerModalConfig({
+      currentHeight: '2rem', // 생성 시 기본 높이
+      onSave: (newHeight) => {
+        editor.chain().focus().setSpacer({ height: newHeight }).run();
+        setIsSpacerModalOpen(false);
+      },
+    });
+    setIsSpacerModalOpen(true);
   };
 
   //----------------------------------------------------------------
@@ -705,51 +816,85 @@ function App() {
         {/* style={editorStyles} 처럼 중괄호 안에 자바스크립트 객체를 넣어 동적으로 스타일을 적용할 수 있습니다. */}
         <div className="editor-container" style={editorStyles}>
           {/* editor가 존재할 때만 BubbleMenuComponent를 렌더링합니다. (조건부 렌더링) */}
-          {editor && <BubbleMenuComponent editor={editor} />}
+          {editor && (
+            <Suspense fallback={<div>로딩 중...</div>}>
+              <BubbleMenuComponent editor={editor} />
+            </Suspense>
+          )}
           {/* Tiptap 에디터의 내용이 실제로 렌더링되는 컴포넌트입니다. */}
           <EditorContent editor={editor} />
         </div>
 
         {/* 사이드바 UI. 필요한 함수와 상태를 'props'라는 이름으로 자식 컴포넌트에 전달합니다. */}
         {/* 예를 들어, onEmbedClick={...}는 Sidebar 컴포넌트에게 onEmbedClick이라는 이름으로 함수를 전달하는 것입니다. */}
-        <Sidebar
-          editor={editor}
-          onEmbedClick={() => setIsEmbedModalOpen(true)}
-          onImageAdd={() => setIsImageModalOpen(true)}
-          onVideoAdd={() => setIsVideoModalOpen(true)}
-          onAudioAdd={() => setIsAudioModalOpen(true)}
-          onStylesClick={() => setIsStylesModalOpen(true)}
-          onSettingsClick={() => setIsSettingsModalOpen(true)}
-          onPhotoGridClick={() => setIsPhotoGridModalOpen(true)}
-          onPreviewClick={handlePreviewClick}
-          onSaveClick={handleSaveDocument}
-        />
+        <Suspense fallback={<div>사이드바 로딩 중...</div>}>
+          <Sidebar
+            editor={editor}
+            onEmbedClick={() => setIsEmbedModalOpen(true)}
+            onImageAdd={() => setIsImageModalOpen(true)}
+            onVideoAdd={() => setIsVideoModalOpen(true)}
+            onAudioAdd={() => setIsAudioModalOpen(true)}
+            onStylesClick={() => setIsStylesModalOpen(true)}
+            onSettingsClick={() => setIsSettingsModalOpen(true)}
+            onPhotoGridClick={() => setIsPhotoGridModalOpen(true)}
+            onSpacerAdd={handleRequestSpacerCreation} // 스페이서 생성 요청 함수 전달
+            onPreviewClick={handlePreviewClick}
+            onSaveClick={handleSaveDocument}
+          />
+        </Suspense>
       </div>
 
       {/* 조건부 렌더링: 각 모달의 'isOpen' 상태가 true일 때만 화면에 나타납니다. */}
       {/* `isImageModalOpen && (...)` 구문은 isImageModalOpen이 true이면 `(...)` 안의 JSX를 렌더링하고, false이면 아무것도 렌더링하지 않습니다. */}
       <div className="modals">
         {isImageModalOpen && (
-          <ImageUploadModal onClose={() => setIsImageModalOpen(false)} onImageAdd={handleImageAdd} />
+          <Suspense fallback={<div>이미지 모달 로딩 중...</div>}>
+            <ImageUploadModal onClose={() => setIsImageModalOpen(false)} onImageAdd={handleImageAdd} />
+          </Suspense>
         )}
         {isVideoModalOpen && (
-          <VideoUploadModal onClose={() => setIsVideoModalOpen(false)} onVideoAdd={handleVideoAdd} />
+          <Suspense fallback={<div>비디오 모달 로딩 중...</div>}>
+            <VideoUploadModal onClose={() => setIsVideoModalOpen(false)} onVideoAdd={handleVideoAdd} />
+          </Suspense>
         )}
         {isAudioModalOpen && (
-          <AudioUploadModal onClose={() => setIsAudioModalOpen(false)} onAudioAdd={handleAudioAdd} />
+          <Suspense fallback={<div>오디오 모달 로딩 중...</div>}>
+            <AudioUploadModal onClose={() => setIsAudioModalOpen(false)} onAudioAdd={handleAudioAdd} />
+          </Suspense>
         )}
         {isEmbedModalOpen && (
-          <EmbedModal onClose={() => setIsEmbedModalOpen(false)} onEmbed={handleEmbed} />
+          <Suspense fallback={<div>임베드 모달 로딩 중...</div>}>
+            <EmbedModal onClose={() => setIsEmbedModalOpen(false)} onEmbed={handleEmbed} />
+          </Suspense>
         )}
-        {isSettingsModalOpen && <SettingsModal onClose={() => setIsSettingsModalOpen(false)} settings={projectSettings} onSave={handleSettingsSave} />}
-        {isStylesModalOpen && <StylesModal isOpen={isStylesModalOpen} onClose={handleStylesModalClose} onStyleChange={handleStyleChange} currentStyles={editorStyles} />}
+        {isSettingsModalOpen && (
+          <Suspense fallback={<div>설정 모달 로딩 중...</div>}>
+            <SettingsModal onClose={() => setIsSettingsModalOpen(false)} settings={projectSettings} onSave={handleSettingsSave} />
+          </Suspense>
+        )}
+        {isStylesModalOpen && (
+          <Suspense fallback={<div>스타일 모달 로딩 중...</div>}>
+            <StylesModal isOpen={isStylesModalOpen} onClose={handleStylesModalClose} onStyleChange={handleStyleChange} currentStyles={editorStyles} />
+          </Suspense>
+        )}
         {isPhotoGridModalOpen && (
-          <PhotoGridModal
-            onClose={() => setIsPhotoGridModalOpen(false)}
-            onGridCreate={handleCreateGrid}
-          />
+          <Suspense fallback={<div>포토 그리드 모달 로딩 중...</div>}>
+            <PhotoGridModal
+              onClose={() => setIsPhotoGridModalOpen(false)}
+              onGridCreate={handleCreateGrid}
+            />
+          </Suspense>
         )}
-        {isPreviewModalOpen && <PreviewModal isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} editorContent={getEditorContent()} styles={editorStyles} />}
+        {isPreviewModalOpen && (
+          <Suspense fallback={<div>미리보기 모달 로딩 중...</div>}>
+            <PreviewModal isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} editorContent={getEditorContent()} styles={editorStyles} />
+          </Suspense>
+        )}
+        {isSpacerModalOpen && (
+          <Suspense fallback={<div>스페이서 모달 로딩 중...</div>}>
+            <SpacerModal isOpen={isSpacerModalOpen} onClose={() => setIsSpacerModalOpen(false)} onSave={spacerModalConfig.onSave} currentHeight={spacerModalConfig.currentHeight} />
+          </Suspense>
+        )}
       </div>
     </div>
   );

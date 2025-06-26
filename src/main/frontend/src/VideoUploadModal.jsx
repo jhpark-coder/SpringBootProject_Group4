@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import './VideoUploadModal.css';
 
 /**
  * 비디오 추가를 위한 모달(팝업) 컴포넌트입니다.
@@ -7,6 +9,8 @@ import { X } from 'lucide-react';
  */
 const VideoUploadModal = ({ onClose, onVideoAdd }) => {
   const [url, setUrl] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef(null);
 
   const handleAddClick = () => {
@@ -22,25 +26,88 @@ const VideoUploadModal = ({ onClose, onVideoAdd }) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append('file', file);
+    // 파일 크기 체크 (100MB 제한)
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    if (file.size > maxSize) {
+      alert('비디오 파일 크기는 100MB를 초과할 수 없습니다.');
+      return;
+    }
+
+    // 파일 타입 체크
+    if (!file.type.startsWith('video/')) {
+      alert('비디오 파일만 업로드 가능합니다.');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
 
     try {
-      const response = await fetch('/editor/api/upload', {
-        method: 'POST',
-        body: formData,
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // XMLHttpRequest를 사용하여 진행률 표시
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const progress = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(progress);
+        }
       });
 
-      if (response.ok) {
-        const uploadedUrl = await response.text();
-        onVideoAdd({ src: uploadedUrl });
-        onClose();
-      } else {
-        alert('Video upload failed.');
-      }
+      xhr.addEventListener('load', () => {
+        if (xhr.status === 200) {
+          try {
+            console.log('Raw response:', xhr.responseText);
+            console.log('Response type:', typeof xhr.responseText);
+            console.log('Response length:', xhr.responseText.length);
+
+            // 서버에서 문자열 URL을 반환하므로 직접 사용
+            const videoUrl = xhr.responseText;
+            console.log('Video URL:', videoUrl);
+            console.log('Video URL type:', typeof videoUrl);
+            console.log('Video URL length:', videoUrl.length);
+
+            if (videoUrl && videoUrl.trim() !== '' && videoUrl !== '[]') {
+              console.log('Calling onVideoAdd with:', { src: videoUrl });
+              // 상대 경로를 Spring Boot 서버의 전체 URL로 변환
+              const fullVideoUrl = `http://localhost:8080${videoUrl}`;
+              console.log('Full video URL:', fullVideoUrl);
+              onVideoAdd({ src: fullVideoUrl });
+              onClose();
+            } else {
+              console.error('Empty or invalid response from server:', videoUrl);
+              alert('비디오 업로드 중 오류가 발생했습니다. 서버에서 유효한 URL을 반환하지 않았습니다.');
+            }
+          } catch (error) {
+            console.error('응답 파싱 오류:', error);
+            console.error('Response text:', xhr.responseText);
+            alert('비디오 업로드 중 오류가 발생했습니다.');
+          }
+        } else {
+          console.error('업로드 실패:', xhr.status, xhr.responseText);
+          alert('비디오 업로드에 실패했습니다.');
+        }
+        setIsUploading(false);
+        setUploadProgress(0);
+      });
+
+      xhr.addEventListener('error', () => {
+        console.error('업로드 오류');
+        alert('비디오 업로드 중 오류가 발생했습니다.');
+        setIsUploading(false);
+        setUploadProgress(0);
+      });
+
+      xhr.open('POST', '/editor/api/upload');
+      xhr.send(formData);
+
     } catch (error) {
-      console.error('Upload error:', error);
-      alert('An error occurred during video upload.');
+      console.error('파일 처리 오류:', error);
+      alert('비디오 처리 중 오류가 발생했습니다.');
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -51,11 +118,7 @@ const VideoUploadModal = ({ onClose, onVideoAdd }) => {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="modal-close-button">
-          <X size={24} />
-        </button>
-        <h3>Add a Video</h3>
-
+        <h3>Upload Video</h3>
         <div className="modal-section">
           <label htmlFor="video-url">Embed from URL</label>
           <input
@@ -73,9 +136,24 @@ const VideoUploadModal = ({ onClose, onVideoAdd }) => {
         <div className="modal-divider">OR</div>
 
         <div className="modal-section">
-          <button className="upload-button" onClick={handleUploadClick}>
-            Upload from Computer
+          <button
+            className="upload-button"
+            onClick={handleUploadClick}
+            disabled={isUploading}
+          >
+            {isUploading ? 'Uploading...' : 'Upload from Computer'}
           </button>
+          {isUploading && (
+            <div className="upload-progress">
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+              <span>{uploadProgress}%</span>
+            </div>
+          )}
           <input
             type="file"
             ref={fileInputRef}
@@ -83,6 +161,11 @@ const VideoUploadModal = ({ onClose, onVideoAdd }) => {
             accept="video/*"
             style={{ display: 'none' }}
           />
+        </div>
+
+        <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+          <Button onClick={handleUploadClick} disabled={isUploading}>Upload</Button>
+          <Button variant="outline" onClick={onClose} disabled={isUploading}>Cancel</Button>
         </div>
       </div>
     </div>

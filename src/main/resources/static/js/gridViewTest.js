@@ -5,27 +5,19 @@
 (function () {
     'use strict';
 
-    // --- [즉시 실행] UI 초기화 ---
-    // JavaScript가 활성화되었음을 즉시 사용자에게 보여줍니다.
-    // 'no-js-warning' 메시지를 숨기고, 실제 콘텐츠를 담을 'grid-container'를 보여줍니다.
-    const noJsWarning = document.getElementById('no-js-warning');
-    if (noJsWarning) {
-        noJsWarning.style.display = 'none';
-    }
-
-    const gridContainer = document.getElementById('grid-container');
-    if (gridContainer) {
-        gridContainer.style.display = 'block'; // 컨테이너를 보이게 처리
-    } else {
-        // 컨테이너가 없으면 이후 작업이 불가능하므로 중단합니다.
-        console.error('Grid container not found!');
-        return;
-    }
-
     /**
      * 데이터 로딩 및 렌더링을 수행하는 메인 로직 함수.
      */
     const initializeGrid = () => {
+        const gridContainer = document.getElementById('grid-container');
+        if (!gridContainer) {
+            // 컨테이너가 없으면 이후 작업이 불가능하므로 중단합니다.
+            console.error('Grid container not found!');
+            return;
+        }
+        // 이 코드가 없으면 grid-container가 계속 숨겨져 있게 됩니다.
+        gridContainer.style.display = 'block';
+
         // --- [순서 1] 변수 및 요소 준비 ---
 
         // 실제 상품 카드들이 담길 'product-grid' div를 동적으로 생성하고 컨테이너에 추가합니다.

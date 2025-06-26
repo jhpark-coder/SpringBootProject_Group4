@@ -4,6 +4,46 @@
 <head>
     <meta charset="UTF-8">
     <title>경매 등록 완료</title>
+
+    <!-- Google Fonts 로딩 스크립트 -->
+    <script th:inline="javascript">
+        // Google Fonts 목록
+        const GOOGLE_FONTS = [
+            { name: 'Noto Sans KR', family: "'Noto Sans KR', sans-serif" },
+            { name: 'Nanum Gothic', family: "'Nanum Gothic', sans-serif" },
+            { name: 'Black Han Sans', family: "'Black Han Sans', sans-serif" },
+            { name: 'Roboto', family: "'Roboto', sans-serif" },
+            { name: 'Montserrat', family: "'Montserrat', sans-serif" },
+            { name: 'Playfair Display', family: "'Playfair Display', serif" },
+            { name: 'Source Code Pro', family: "'Source Code Pro', monospace" }
+        ];
+
+        // Google Fonts 로딩 함수
+        function loadGoogleFont(fontName) {
+            const fontId = `google-font-${fontName.replace(/\s/g, '-')}`;
+            if (document.getElementById(fontId)) {
+                return; // 이미 로드된 폰트는 다시 로드하지 않음
+            }
+            const link = document.createElement('link');
+            link.id = fontId;
+            link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s/g, '+')}:wght@400;700&display=swap`;
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+        }
+
+        // 페이지 로드 시 저장된 폰트 로드
+        document.addEventListener('DOMContentLoaded', function () {
+            const savedFontFamily = /*[[${auction.fontFamily}]]*/ 'Arial, sans-serif';
+            if (savedFontFamily) {
+                const selectedFont = GOOGLE_FONTS.find(f => f.family === savedFontFamily);
+                if (selectedFont) {
+                    console.log('Loading Google Font for auction result page:', selectedFont.name);
+                    loadGoogleFont(selectedFont.name);
+                }
+            }
+        });
+    </script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
