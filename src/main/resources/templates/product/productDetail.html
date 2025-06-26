@@ -1,28 +1,399 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{fragment/layout}">
+
 <head>
     <meta charset="UTF-8">
-    <title>상품 상세</title>
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"/>
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}"/>
+    <title th:text="${product.name} + ' - Nexus'">Artwork Page</title>
     <style>
-        body { font-family: sans-serif; }
-        .content-wrapper { max-width: 900px; margin: 0 auto; padding: 20px; }
-        .product-detail-img { max-width: 100%; }
-        .no-js-message { text-align: center; padding: 50px; color: #ff0000; }
+    /* 기본 스타일 및 폰트 */
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    body {
+        font-family: 'Malgun Gothic', '맑은 고딕', Arial, sans-serif;
+        background: #fff;
+        color: #222;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    a { text-decoration: none; color: inherit; }
+    button { cursor: pointer; border: none; font-family: inherit; }
+
+    /* --- 헤더 --- */
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 60px;
+        height: 80px;
+        border-bottom: 1px solid #e0e0e0;
+        background: #fff;
+        position: relative;
+    }
+    .header .logo {
+        width: 50px;
+        height: 50px;
+        background: #e0f2ff;
+        border-radius: 8px;
+        flex-shrink: 0;
+        margin-left: 400px;
+    }
+    .header nav {
+        position: absolute;
+        left: 600px;
+        right: 0;
+        margin: auto;
+        width: fit-content;
+        top: 0; bottom: 0;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .header nav ul {
+        display: flex;
+        gap: 48px;
+        list-style: none;
+        font-size: 17px;
+        font-weight: bold;
+    }
+    .header .user-info {
+        margin-left: auto;
+    }
+    .header .points-btn {
+        background: #007bff;
+        color: #fff;
+        padding: 8px 18px;
+        border-radius: 20px;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* --- 카테고리 바 --- */
+    .category-bar {
+        background: #007bff;
+        padding: 14px 0;
+        display: flex;
+        justify-content: center;
+        gap: 18px;
+    }
+    .category-bar .category-btn {
+        background: #fff;
+        color: #007bff;
+        padding: 8px 32px;
+        border-radius: 20px;
+        font-size: 15px;
+        font-weight: 500;
+        border: none;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.07);
+        transition: background 0.2s;
+    }
+    .category-bar .category-btn:hover {
+        background: #e6f0ff;
+    }
+
+    /* --- 메인 컨텐츠 --- */
+    .main-content {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 0 0 0;
+    }
+    .artwork-section {
+        flex: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+    .artwork-section h1 {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 18px;
+    }
+    .artwork-image {
+        width: 100%;
+        max-width: 700px;
+        aspect-ratio: 4/3;
+        background: #d9d9d9;
+        border-radius: 8px;
+        object-fit: cover;
+        display: block;
+        margin-bottom: 0;
+    }
+
+    /* --- 사이드바 --- */
+    .sidebar {
+        flex: 1;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 22px 20px;
+        height: fit-content;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        min-width: 270px;
+        max-width: 320px;
+    }
+    .sidebar .author-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .sidebar .author-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .sidebar .author-pfp {
+        width: 40px;
+        height: 40px;
+        background: #e0e0e0;
+        border-radius: 50%;
+    }
+    .sidebar .author-name {
+        font-weight: bold;
+        font-size: 15px;
+    }
+    .sidebar .subscribe-btn {
+        background: #007bff;
+        color: #fff;
+        padding: 7px 16px;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    .sidebar .tags {
+        display: flex;
+        gap: 8px;
+    }
+    .sidebar .tag-btn {
+        background: #f0f0f0;
+        border: 1px solid #ddd;
+        border-radius: 15px;
+        padding: 5px 12px;
+        font-size: 12px;
+        color: #555;
+    }
+    .sidebar .description {
+        font-size: 14px;
+        color: #555;
+        line-height: 1.6;
+    }
+    .sidebar .continue-btn {
+        background: #ffc107;
+        color: #333;
+        width: 100%;
+        padding: 12px 0;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 8px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    /* --- 푸터 --- */
+    .footer {
+        background: #007bff;
+        color: #fff;
+        padding: 38px 0 24px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin-top: auto;
+    }
+    .footer .footer-logo {
+        width: 60px;
+        height: 60px;
+        background: #d9d9d9;
+        border-radius: 8px;
+    }
+    .footer .sitename {
+        font-size: 14px;
+        margin-top: 5px;
+    }
+    .footer .copyright {
+        font-size: 12px;
+        color: #cce5ff;
+        margin-top: 2px;
+    }
     </style>
 </head>
-<body>
-    <noscript>
-        <div class="no-js-message">
-            <h1>자바스크립트 활성화 필요</h1>
-            <p>원활한 서비스 이용을 위해 자바스크립트를 활성화해주세요.</p>
-        </div>
-    </noscript>
 
-    <div id="product-detail-container" class="content-wrapper">
-        <!-- JS가 이 곳에 상품 상세 정보를 동적으로 생성합니다. -->
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo"></div>
+        <nav>
+            <ul>
+                <li><a href="#">고객센터</a></li>
+                <li><a href="#">작품경매</a></li>
+                <li><a href="#">마이페이지</a></li>
+            </ul>
+        </nav>
+        <div class="user-info">
+            <button class="points-btn">
+                <span>보유한 포인트: 1000</span>
+                <span style="font-size: 18px;">🔔</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Category Bar -->
+    <div class="category-bar">
+        <button class="category-btn">아트웍</button>
+        <button class="category-btn">그래픽디자인</button>
+        <button class="category-btn">캐릭터</button>
+        <button class="category-btn">Java</button>
+        <button class="category-btn">프론트엔드</button>
+        <button class="category-btn">Python</button>
     </div>
 
-    <script src="/js/security.js"></script>
-    <script src="/js/productDetail.js"></script>
+    <!-- Main Content -->
+    <main class="main-content" layout:fragment="content">
+        <section class="artwork-section">
+            <h1 th:text="${product.name}">나는 이 작품의 엄청난 이름이시다.</h1>
+            <img th:src="${product.imageUrl}" 
+                 src="https://via.placeholder.com/800x600" 
+                 alt="Artwork Image" 
+                 class="artwork-image"
+                 onerror="this.src='https://via.placeholder.com/800x600/cccccc/666666?text=이미지를+불러올+수+없습니다'">
+            <div class="description-section" th:utext="${product.description}">
+                <p>여기에 TipTap 에디터로 작성된 상세한 상품 설명이 들어갑니다.</p>
+            </div>
+        </section>
+
+        <aside class="sidebar">
+            <div class="author-info">
+                <div class="author-profile">
+                    <img src="https://via.placeholder.com/40" 
+                         alt="작가 프로필" 
+                         class="author-pfp"
+                         onerror="this.src='https://via.placeholder.com/40/cccccc/666666?text=작가'"/>
+                    <span class="author-name" th:text="${product.createdBy ?: '익명 작가'}">작가이름이 들어가</span>
+                </div>
+                <button th:if="${#authentication.name != product.createdBy}" class="subscribe-btn">Subscribe</button>
+            </div>
+            <div class="tags">
+                <button class="tag-btn" th:text="${product.primaryCategory != null and product.primaryCategory != '' ? product.primaryCategory : '아트웍'}">아트웍</button>
+                <button class="tag-btn" th:text="${product.secondaryCategory != null and product.secondaryCategory != '' ? product.secondaryCategory : '포토그래피'}">포토그래피</button>
+            </div>
+            <p class="description">
+                보이시겠지만 이곳은 설명을 넣는 곳 입니다. 당연하게도 설명란입니다. 참으로 다양한 데이터를 적을 수 있는 이곳은 설명란입니다.
+            </p>
+            <div class="sidebar-actions">
+                <button class="like-btn" th:data-product-id="${product.id}" 
+                        th:classappend="${#authentication.name != null and product.productHearts != null and product.productHearts.?[member.username == #authentication.name].size() > 0 ? 'liked' : ''}"
+                        onclick="toggleLike(this)">
+                    <span class="like-icon">👍</span>
+                    <span class="like-count" th:text="${heartCount ?: 0}">0</span>
+                </button>
+                <button class="continue-btn" onclick="alert('포인트 결제 기능 추가 예정!')">
+                    <span>30P로 계속보기</span>
+                </button>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-logo"></div>
+        <p class="sitename">SiteName</p>
+        <p class="copyright">2025 Copyright 4조 프로젝트</p>
+    </footer>
+
+    <script>
+    function toggleLike(button) {
+        console.log('좋아요 버튼 클릭됨');
+        
+        const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+        
+        // CSRF 토큰이 있는 경우에만 헤더에 추가
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        if (csrfTokenMeta && csrfHeaderMeta && csrfTokenMeta.getAttribute('content') && csrfHeaderMeta.getAttribute('content')) {
+            headers[csrfHeaderMeta.getAttribute('content')] = csrfTokenMeta.getAttribute('content');
+            console.log('CSRF 토큰 추가됨:', csrfTokenMeta.getAttribute('content'));
+        } else {
+            console.log('CSRF 토큰 없음 (개발 환경)');
+        }
+
+        const productId = button.dataset.productId;
+        const likeCountSpan = button.querySelector('.like-count');
+        let currentCount = parseInt(likeCountSpan.textContent, 10);
+        const isLiked = button.classList.contains('liked');
+
+        // Optimistic UI: 먼저 UI를 즉시 변경
+        if (isLiked) {
+            likeCountSpan.textContent = Math.max(currentCount - 1, 0);
+            button.classList.remove('liked');
+        } else {
+            likeCountSpan.textContent = currentCount + 1;
+            button.classList.add('liked');
+        }
+
+        fetch(`/api/products/${productId}/heart`, {
+            method: 'POST',
+            headers: headers
+        })
+        .then(response => {
+            if (!response.ok) {
+                // 실패 시 롤백
+                if (isLiked) {
+                    likeCountSpan.textContent = currentCount;
+                    button.classList.add('liked');
+                } else {
+                    likeCountSpan.textContent = currentCount;
+                    button.classList.remove('liked');
+                }
+                throw new Error('로그인이 필요하거나 서버 오류가 발생했습니다. 상태: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // 서버 응답에 맞게 최종 상태 동기화
+            likeCountSpan.textContent = data.heartCount;
+            button.classList.toggle('liked', data.isLiked);
+            console.log('좋아요 상태 업데이트됨 - 좋아요 수:', data.heartCount, '좋아요 여부:', data.isLiked);
+        })
+        .catch(error => {
+            console.error('오류 발생:', error);
+            alert('오류: ' + error.message);
+        });
+    }
+    
+    // 페이지 로드 시 초기 상태 확인
+    document.addEventListener('DOMContentLoaded', function() {
+        const likeBtn = document.querySelector('.like-btn');
+        if (likeBtn) {
+            const productId = likeBtn.dataset.productId;
+            // 좋아요 상태 비동기 조회
+            fetch(`/api/products/${productId}/heart/status`)
+                .then(res => res.json())
+                .then(data => {
+                    likeBtn.classList.toggle('liked', data.isLiked);
+                    likeBtn.querySelector('.like-count').textContent = data.heartCount;
+                });
+        }
+    });
+    </script>
 </body>
 </html>
