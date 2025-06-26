@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { X } from 'lucide-react';
+import { X, UploadCloud, Link as LinkIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 /**
  * 이미지 추가를 위한 모달(팝업) UI를 담당하는 컴포넌트입니다.
@@ -14,6 +15,8 @@ const ImageUploadModal = ({ onClose, onImageAdd }) => {
   // 모달 내부에서 사용될 값들을 기억합니다.
   const [url, setUrl] = useState(''); // URL 입력 필드의 값
   const [alt, setAlt] = useState(''); // 대체 텍스트(alt) 입력 필드의 값
+  const [isUploading, setIsUploading] = useState(false); // 업로드 상태
+  const [uploadProgress, setUploadProgress] = useState(0); // 업로드 진행률
   const fileInputRef = useRef(null); // 숨겨진 파일 입력(input) 요소에 접근하기 위한 ref
 
   //-- 이벤트 핸들러 --//
@@ -34,35 +37,92 @@ const ImageUploadModal = ({ onClose, onImageAdd }) => {
 
   /**
    * 'Upload from Computer'를 통해 사용자가 파일을 선택했을 때 실행됩니다.
-   * `async` 키워드는 이 함수 내에서 비동기 작업(파일 업로드)을 기다려야 함을 의미합니다.
+   * 서버 업로드 방식으로 변경했습니다.
    * @param {object} event - 파일 입력(input) 요소에서 발생한 변경 이벤트 객체
    */
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0];
-    if (file) {
-      try {
-        // FormData는 파일과 같은 복잡한 데이터를 서버로 보낼 때 사용하는 형식입니다.
-        const formData = new FormData();
-        formData.append('file', file);
+    if (!file) return;
 
-        // 백엔드의 파일 업로드 API를 호출합니다.
-        const response = await fetch('/editor/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
+    // 이미지 파일 형식 확인
+    const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!imageTypes.includes(file.type)) {
+      alert('지원하지 않는 이미지 형식입니다.');
+      return;
+    }
 
-        if (response.ok) {
-          const uploadedUrl = await response.text();
-          // 업로드 성공 시, 반환된 URL로 이미지 정보를 구성하여 부모에게 전달합니다.
-          onImageAdd({ src: uploadedUrl, alt: file.name }); // alt 텍스트는 우선 파일명으로 설정
-          onClose();
+    // 파일 크기 체크 (10MB 제한)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      alert('이미지 파일 크기는 10MB를 초과할 수 없습니다.');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // XMLHttpRequest를 사용하여 진행률 표시
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const progress = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(progress);
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status === 200) {
+          try {
+            console.log('Raw response:', xhr.responseText);
+            // 서버에서 문자열 URL을 반환하므로 직접 사용
+            const imageUrl = xhr.responseText;
+            console.log('Image URL:', imageUrl);
+
+            if (imageUrl && imageUrl.trim() !== '' && imageUrl !== '[]') {
+              // 상대 경로를 Spring Boot 서버의 전체 URL로 변환
+              const fullImageUrl = `http://localhost:8080${imageUrl}`;
+              console.log('Full image URL:', fullImageUrl);
+
+              // Base64 데이터 URL을 이미지 소스로 사용
+              onImageAdd({ src: fullImageUrl, alt: file.name });
+              onClose();
+            } else {
+              console.error('Empty or invalid response from server:', imageUrl);
+              alert('이미지 업로드 중 오류가 발생했습니다. 서버에서 유효한 URL을 반환하지 않았습니다.');
+            }
+          } catch (error) {
+            console.error('응답 파싱 오류:', error);
+            console.error('Response text:', xhr.responseText);
+            alert('이미지 업로드 중 오류가 발생했습니다.');
+          }
         } else {
+          console.error('업로드 실패:', xhr.status, xhr.responseText);
           alert('이미지 업로드에 실패했습니다.');
         }
-      } catch (error) {
-        console.error('업로드 오류:', error);
+        setIsUploading(false);
+        setUploadProgress(0);
+      });
+
+      xhr.addEventListener('error', () => {
+        console.error('업로드 오류');
         alert('이미지 업로드 중 오류가 발생했습니다.');
-      }
+        setIsUploading(false);
+        setUploadProgress(0);
+      });
+
+      xhr.open('POST', '/editor/api/upload');
+      xhr.send(formData);
+
+    } catch (error) {
+      console.error('파일 처리 오류:', error);
+      alert('이미지 처리 중 오류가 발생했습니다.');
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -75,53 +135,72 @@ const ImageUploadModal = ({ onClose, onImageAdd }) => {
 
   //-- JSX 렌더링 --//
   return (
-    // 모달의 배경. 클릭하면 모달이 닫힙니다.
-    <div className="modal-overlay" onClick={onClose}>
-      {/* 실제 모달 콘텐츠. 배경 클릭 이벤트가 전파되지 않도록 막습니다. */}
+    <div className="modal-overlay">
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="modal-close-button">
-          <X size={24} />
-        </button>
-        <h3>Add an Image</h3>
-
-        {/* 1. URL로 이미지 추가하는 섹션 */}
-        <div className="modal-section">
-          <label htmlFor="image-url">Embed from URL</label>
-          <input
-            id="image-url"
-            type="text"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://example.com/image.jpg"
-          />
-          <label htmlFor="alt-text">Alt Text</label>
-          <input
-            id="alt-text"
-            type="text"
-            value={alt}
-            onChange={(e) => setAlt(e.target.value)}
-            placeholder="Description of the image"
-          />
-          <button className="add-button" onClick={handleAddClick}>
-            Add Image
-          </button>
+        <div className="modal-header">
+          <h2>Add Image</h2>
         </div>
+        <div className="modal-body">
+          <div className="upload-tabs">
+            {/* 1. URL로 이미지 추가하는 섹션 */}
+            <div className="modal-section">
+              <label htmlFor="image-url">Embed from URL</label>
+              <div className="image-url-input">
+                <LinkIcon className="input-icon" />
+                <input
+                  id="image-url"
+                  type="text"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+              <label htmlFor="alt-text">Alt Text</label>
+              <input
+                id="alt-text"
+                type="text"
+                value={alt}
+                onChange={(e) => setAlt(e.target.value)}
+                placeholder="Description of the image"
+              />
+              <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <Button onClick={handleAddClick}>Add Image</Button>
+                <Button variant="outline" onClick={onClose}>Cancel</Button>
+              </div>
+            </div>
 
-        <div className="modal-divider">OR</div>
+            <div className="modal-divider">OR</div>
 
-        {/* 2. 컴퓨터에서 파일 업로드하는 섹션 */}
-        <div className="modal-section">
-          <button className="upload-button" onClick={handleUploadClick}>
-            Upload from Computer
-          </button>
-          {/* 이 input은 화면에는 보이지 않지만, 위 버튼을 통해 클릭됩니다. */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept="image/*"
-            style={{ display: 'none' }}
-          />
+            {/* 2. 컴퓨터에서 파일 업로드하는 섹션 */}
+            <div className="modal-section">
+              <button
+                className="upload-button"
+                onClick={handleUploadClick}
+                disabled={isUploading}
+              >
+                {isUploading ? 'Uploading...' : 'Upload from Computer'}
+              </button>
+              {isUploading && (
+                <div className="upload-progress">
+                  <div className="progress-bar">
+                    <div
+                      className="progress-fill"
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                  <span>{uploadProgress}%</span>
+                </div>
+              )}
+              {/* 이 input은 화면에는 보이지 않지만, 위 버튼을 통해 클릭됩니다. */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                style={{ display: 'none' }}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -22,7 +22,7 @@ const IframeComponent = ({ editor, node, updateAttributes, selected, deleteNode 
 
     if (!src) {
         return (
-            <NodeViewWrapper>
+            <NodeViewWrapper contentEditable={false} suppressContentEditableWarning={true}>
                 <div style={{ border: '2px solid red', padding: '10px', backgroundColor: '#fff0f0' }}>
                     <h4>Iframe 렌더링 오류: SRC 주소 없음</h4>
                     <p>전달된 속성: {JSON.stringify(node.attrs)}</p>
@@ -32,7 +32,11 @@ const IframeComponent = ({ editor, node, updateAttributes, selected, deleteNode 
     }
 
     return (
-        <NodeViewWrapper className="content-item-wrapper">
+        <NodeViewWrapper
+            className="content-item-wrapper"
+            contentEditable={false}
+            suppressContentEditableWarning={true}
+        >
             <div className="drag-handle" contentEditable={false} data-drag-handle>
                 <GripVertical size={18} />
             </div>
@@ -46,6 +50,7 @@ const IframeComponent = ({ editor, node, updateAttributes, selected, deleteNode 
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowFullScreen
+                        contentEditable={false}
                     ></iframe>
                 </div>
             </div>

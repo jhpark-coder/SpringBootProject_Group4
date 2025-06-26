@@ -3,11 +3,47 @@ import { X } from 'lucide-react';
 import './ResultPage.css';
 import './PaywallComponent.css';
 
+// Google Fonts 목록
+const GOOGLE_FONTS = [
+    // Korean
+    { name: 'Noto Sans KR', family: "'Noto Sans KR', sans-serif" },
+    { name: 'Nanum Gothic', family: "'Nanum Gothic', sans-serif" },
+    { name: 'Black Han Sans', family: "'Black Han Sans', sans-serif" },
+    // English
+    { name: 'Roboto', family: "'Roboto', sans-serif" },
+    { name: 'Montserrat', family: "'Montserrat', sans-serif" },
+    { name: 'Playfair Display', family: "'Playfair Display', serif" },
+    // Monospace for code
+    { name: 'Source Code Pro', family: "'Source Code Pro', monospace" }
+];
+
+// Google Fonts 로딩 함수
+const loadGoogleFont = (fontName) => {
+    const fontId = `google-font-${fontName.replace(/\s/g, '-')}`;
+    if (document.getElementById(fontId)) {
+        return; // 이미 로드된 폰트는 다시 로드하지 않음
+    }
+    const link = document.createElement('link');
+    link.id = fontId;
+    link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s/g, '+')}:wght@400;700&display=swap`;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+};
+
 const PreviewModal = ({ isOpen, onClose, editorContent, styles }) => {
     const contentRef = useRef(null);
 
     useEffect(() => {
         if (isOpen && contentRef.current) {
+            // Google Fonts 로딩 (미리보기 모달에서 폰트 불러오기)
+            if (styles && styles.fontFamily) {
+                const selectedFont = GOOGLE_FONTS.find(f => f.family === styles.fontFamily);
+                if (selectedFont) {
+                    console.log('Loading Google Font for preview modal:', selectedFont.name);
+                    loadGoogleFont(selectedFont.name);
+                }
+            }
+
             // Photo Grid 요소들을 찾아서 이미지 렌더링
             const photoGrids = contentRef.current.querySelectorAll('[data-type="photo-grid"]');
 

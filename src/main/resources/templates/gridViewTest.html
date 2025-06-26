@@ -28,8 +28,10 @@
             height: auto;
         }
 
-        /* 🔒 JavaScript 필수 인증 스타일 */
+        /* 🔒 JavaScript 필수 인증 스타일 - 기본적으로 경고 메시지는 숨김 */
         .no-js-message {
+            display: none;
+            /* 핵심: JS가 켜져있을 것을 가정하고 일단 숨김 */
             text-align: center;
             padding: 100px 20px;
             color: #ff0000;
@@ -40,18 +42,27 @@
             margin: 50px auto;
             max-width: 600px;
         }
-
-        /* 🔒 실제 콘텐츠는 기본적으로 숨김 - JavaScript가 활성화되면 보여짐 */
-        #grid-container {
-            display: none;
-            /* 핵심: JS 없으면 아예 안 보임 */
-        }
     </style>
+
+    <!-- 🔒 JavaScript가 비활성화된 경우에만 아래 스타일이 적용됨 -->
+    <noscript>
+        <style>
+            #grid-container {
+                display: none;
+                /* JS 없으면 콘텐츠 숨김 */
+            }
+
+            .no-js-message {
+                display: block;
+                /* JS 없으면 경고 메시지 표시 */
+            }
+        </style>
+    </noscript>
 </head>
 
 <body>
-    <!-- 🔒 JavaScript 비활성화 시에만 보이는 경고 메시지 -->
-    <div id="no-js-warning" class="no-js-message">
+    <!-- 🔒 JavaScript 비활성화 시에만 <noscript> 내부 스타일에 의해 보이게 됨 -->
+    <div class="no-js-message">
         <h1>⚠️ JavaScript 활성화 필요</h1>
         <p><strong>보안상의 이유로 JavaScript가 필요합니다.</strong></p>
         <p>브라우저 설정에서 JavaScript를 활성화한 후 새로고침해주세요.</p>
@@ -59,7 +70,7 @@
         <p><small>원활한 서비스 이용을 위해 JavaScript를 허용해주시기 바랍니다.</small></p>
     </div>
 
-    <!-- 🔒 JavaScript 활성화 시에만 보이는 실제 콘텐츠 영역 -->
+    <!-- 🔒 실제 콘텐츠 영역 -->
     <div id="grid-container">
         <!-- 🔒 주의: 여기에는 하드코딩된 데이터가 전혀 없음! 오직 JavaScript를 통해서만 데이터 로딩됨 -->
     </div>

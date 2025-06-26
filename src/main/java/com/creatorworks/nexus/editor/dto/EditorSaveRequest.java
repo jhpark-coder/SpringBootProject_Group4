@@ -1,11 +1,13 @@
 package com.creatorworks.nexus.editor.dto;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonRawValue;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import com.fasterxml.jackson.annotation.JsonRawValue;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class EditorSaveRequest {
@@ -17,4 +19,4 @@ public class EditorSaveRequest {
     private List<String> tags;
     private String backgroundColor;
     private String fontFamily;
-}
+} 

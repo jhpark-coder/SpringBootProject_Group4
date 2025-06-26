@@ -20,16 +20,23 @@ const ImageComponent = ({ node, updateAttributes, editor, deleteNode }) => {
     };
 
     return (
-        <NodeViewWrapper className={`image-wrapper resizable ${getAlignmentClass()}`} contentEditable={false}>
-            <div className="drag-handle" contentEditable="false" data-drag-handle>
+        <NodeViewWrapper
+            className={`image-wrapper resizable ${getAlignmentClass()}`}
+            contentEditable={false}
+            suppressContentEditableWarning={true}
+            data-drag-handle
+        >
+            <div className="drag-handle" contentEditable={false} data-drag-handle>
                 <GripVertical size={18} />
             </div>
-            
+
             <img
                 src={src}
                 alt={alt}
                 style={{ width: width }}
                 className={`tiptap-image ${isSelected ? 'ProseMirror-selectednode' : ''}`}
+                contentEditable={false}
+                draggable={false}
             />
 
             {isSelected && <MediaMenu editor={editor} node={node} updateAttributes={updateAttributes} deleteNode={deleteNode} />}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 const EmbedModal = ({ onClose, onEmbed }) => {
     const [url, setUrl] = useState('');
@@ -32,10 +33,10 @@ const EmbedModal = ({ onClose, onEmbed }) => {
                             onKeyDown={handleKeyDown}
                             autoFocus // 모달이 열리면 자동으로 포커스
                         />
-                        <button onClick={handleEmbed}>Embed</button>
+                        <Button onClick={handleEmbed}>Embed</Button>
                     </div>
                 </div>
-                 <button className="close-button" style={{marginTop: '1rem'}} onClick={onClose}>Close</button>
+                <Button className="close-button" style={{ marginTop: '1rem' }} onClick={onClose}>Close</Button>
             </div>
         </div>
     );
