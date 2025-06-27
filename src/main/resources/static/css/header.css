@@ -29,19 +29,21 @@
         /* ----- 헤더 내부 컨테이너 (Flexbox 핵심) ----- */
         .header-container {
             /* Flexbox 적용 */
-            display: flex;
-            justify-content: space-between; /* 자식 요소들을 양 끝으로 분산 정렬 */
-            align-items: center;            /* 자식 요소들을 세로 중앙 정렬 */
+                      /* 자식 요소들을 세로 중앙 정렬 */
 
             /* 너비와 패딩 설정 */
             width: 100%;
-            max-width: 1920px; /* 최대 너비는 원본 디자인과 동일하게 */
+            max-width: 1180px; /* 최대 너비는 원본 디자인과 동일하게 */
             min-height: 100px; /* 최소 높이를 주어 내용이 적어도 찌그러지지 않게 */
-            margin: 0 auto;    /* max-width와 함께 사용하여 중앙 정렬 */
+            margin: 0 auto;
+
+            display: flex;
+            justify-content: space-between; /* 자식 요소들을 양 끝으로 분산 정렬 */
+            align-items: center;/* max-width와 함께 사용하여 중앙 정렬 */
 
             /* 원본 디자인의 padding 240px을 %로 변환 (240/1920 = 12.5%)
                하지만 너무 넓을 수 있으므로 2% ~ 6% 정도로 조정하는 것이 일반적입니다. */
-            padding: 1rem 12.5vw; /* 상하 1rem, 좌우 화면너비의 5% 패딩 */
+
             box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
         }
 
@@ -111,16 +113,18 @@
         /* 파란색 배경의 전체 컨테이너 */
         .category-nav {
           background-color: #0071DE;
-          padding: 1.5rem 5vw; /* 상하 1.5rem, 좌우 화면너비 5%의 여백 */
+          padding: 1.5rem 0; /* 상하 1.5rem, 좌우 화면너비 5%의 여백 */
           display: flex;
           justify-content: center; /* 내부 아이템들을 중앙 정렬 */
         }
 
         /* 흰색 버튼들을 감싸는 리스트 */
         .category-nav ul {
+          width: 100%;
+          max-width:1180px;
           display: flex;
           flex-wrap: wrap; /* 화면이 좁아지면 버튼들이 자동으로 다음 줄로 넘어감 (핵심) */
-          justify-content: center; /* 줄바꿈된 버튼들도 중앙 정렬 */
+          justify-content: space-between; /* 줄바꿈된 버튼들도 중앙 정렬 */
           gap: 1.5rem; /* 버튼들 사이의 간격 */
 
           /* ul 태그 기본 스타일 제거 */
