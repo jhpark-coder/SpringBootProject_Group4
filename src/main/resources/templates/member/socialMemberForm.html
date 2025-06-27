@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html layout:decorate="~{layouts/layout1}"
+<html layout:decorate="~{fragment/layout}"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <!-- <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"> -->
-    <link rel="stylesheet" href="member.css">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <link rel="stylesheet" th:href="@{/css/memberForm.css}">
 </head>
 <!-- 사용자 CSS 추가 -->
 <th:block layout:fragment="css">
@@ -72,7 +72,7 @@
     </script>
 </th:block>
 <div layout:fragment="content">
-    <div layout:fragment="content">
+    <div>
 
         <!-- 페이지 전체를 감싸는 컨테이너 (회색 배경) -->
         <main class="signup-page-container">
@@ -85,7 +85,7 @@
                 <form action="/social/addinfo" method="post" role="form" th:object="${sessionMemberFormDto}" id="registerForm">
                     <div class="form-group">
                         <label th:for="name">별명(활동명)</label>
-                        <input type="text" placeholder="이름을 입력해주세요." th:value="${session.member.name}" th:field="*{name}">
+                        <input type="text" placeholder="이름을 입력해주세요." th:field="*{name}">
                         <p class="fieldError" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Incorrect date</p>
                     </div>
 
@@ -117,18 +117,21 @@
                     <div class="form-group">
                         <label>생년월일</label>
                         <div class="birthdate-group">
-                            <select aria-label="출생 연도" id="birthYear" th:field="*{birthYear}">
+                            <select name="birthYear" aria-label="출생 연도" id="birthYear">
                                 <option>----년</option>
                                 <!-- JavaScript로 년도 채우기 -->
                             </select>
-                            <select aria-label="출생 월" id="birthMonth" th:field="*{birthMonth}">
+                            <p class="fieldError" th:if="${#fields.hasErrors('birthYear')}" th:errors="*{birthYear}">Incorrect date</p>
+                            <select name="birthMonth" aria-label="출생 월" id="birthMonth">
                                 <option>--월</option>
                                 <!-- JavaScript로 월 채우기 -->
                             </select>
-                            <select aria-label="출생 일" id="birthDay" th:field="*{birthDay}">
+                            <p class="fieldError" th:if="${#fields.hasErrors('birthMonth')}" th:errors="*{birthMonth}">Incorrect date</p>
+                            <select name="birthDay" aria-label="출생 일" id="birthDay">
                                 <option>--일</option>
                                 <!-- JavaScript로 일 채우기 -->
                             </select>
+                            <p class="fieldError" th:if="${#fields.hasErrors('birthDay')}" th:errors="*{birthDay}">Incorrect date</p>
                         </div>
                     </div>
 
@@ -142,11 +145,8 @@
                     <!-- type="submit"은 form을 제출하는 기본 동작을 합니다. -->
                     <button type="submit" class="btn btn-submit" id="submitBtn" disabled>가입하기</button>
                 </form>
-
             </div>
         </main>
-
     </div>
-    </form>
 </div>
 </html>

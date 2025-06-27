@@ -1,9 +1,12 @@
 package com.creatorworks.nexus.security;
 
+import com.creatorworks.nexus.member.service.MemberService;
 import com.creatorworks.nexus.member.service.SocialMemberService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
@@ -13,13 +16,12 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
-
+    private final CustomOAuth2LoginSuccessHandler customOAuth2LoginSuccessHandler;
     private final SocialMemberService socialMemberService;
+    private final MemberService memberService;
 
-    SecurityConfig(SocialMemberService socialMemberService) {
-        this.socialMemberService = socialMemberService;
-    }
     @Bean
     public static PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
@@ -34,11 +36,12 @@ public class SecurityConfig {
                 .anyRequest().permitAll()
             )
             .oauth2Login(oauth2Login -> oauth2Login
-                .defaultSuccessUrl("/")
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(socialMemberService)
                 )
+                .successHandler(customOAuth2LoginSuccessHandler)
             )
+
             .formLogin(formLogin -> formLogin
                         .loginPage("/members/login")
                         .defaultSuccessUrl("/")
@@ -79,6 +82,7 @@ public class SecurityConfig {
             .userInfoEndpoint(userInfo -> userInfo
                 .userService(socialMemberService)
             )
+            .successHandler(customOAuth2LoginSuccessHandler)
         )
         .formLogin(formLogin -> formLogin
                     .loginPage("/members/login")
@@ -102,5 +106,8 @@ public class SecurityConfig {
             
         
         return http.build();
+    }
+    public void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(memberService).passwordEncoder(passwordEncoder());
     }
 }
