@@ -1,5 +1,6 @@
 package com.creatorworks.nexus.member.controller;
 
+import com.creatorworks.nexus.member.dto.OAuthAttributesDto;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -22,21 +23,27 @@ public class SocialMemberController {
     private final SocialMemberService socialMemberService;
     private final HttpSession httpSession;
 
-    @GetMapping("/addinfo")
+    @GetMapping("/addInfo")
     public String socialMemberForm(Model model) {
         // 세션에서 추가 정보 입력 필요 여부 확인
         Boolean needsAdditionalInfo = (Boolean) httpSession.getAttribute("needsAdditionalInfo");
-                
+        OAuthAttributesDto attributes = (OAuthAttributesDto)httpSession.getAttribute("temp_oauth_attributes");;
         if (needsAdditionalInfo == null || !needsAdditionalInfo) {
             // 추가 정보가 필요하지 않으면 메인 페이지로 리다이렉트
             return "redirect:/";
         }
-        
-        model.addAttribute("sessionMemberFormDto", new SessionMemberFormDto());
+        SessionMemberFormDto formDto = new SessionMemberFormDto();
+        if (attributes != null && attributes.getName() != null) {
+            // 소셜 서비스에서 이름을 받아왔다면, 폼 DTO의 기본값으로 설정
+            formDto.setName(attributes.getName());
+        }
+
+        // formDto를 모델에 추가
+        model.addAttribute("sessionMemberFormDto", formDto);
         return "member/socialMemberForm";
     }
     
-    @PostMapping("/addinfo")
+    @PostMapping("/addInfo")
     public String socialMemberForm(@Valid SessionMemberFormDto sessionMemberFormDto, 
                                    BindingResult bindingResult, 
                                    Model model) {
@@ -45,16 +52,18 @@ public class SocialMemberController {
         }
         
         try {
-            SessionMemberDto sessionMember = (SessionMemberDto) httpSession.getAttribute("member");
-            if (sessionMember == null) {
-                model.addAttribute("errorMessage", "로그인 정보를 찾을 수 없습니다.");
+            String email = (String) httpSession.getAttribute("temp_oauth_email");
+            if (email == null) {
+                model.addAttribute("errorMessage", "세션이 만료되었거나 비정상적인 접근입니다.");
                 return "member/socialMemberForm";
             }
-            
-            socialMemberService.updateSocialMemberInfo(sessionMember.getEmail(), sessionMemberFormDto);
-            
-            // 추가 정보 입력 완료 플래그 제거
+
+            socialMemberService.completeSocialSignUp(email, sessionMemberFormDto);
+
+            // 사용 완료한 임시 세션 정보 제거
             httpSession.removeAttribute("needsAdditionalInfo");
+            httpSession.removeAttribute("temp_oauth_email");
+            httpSession.removeAttribute("temp_oauth_attributes");
             
             return "redirect:/";
         } catch (IllegalStateException e) {
