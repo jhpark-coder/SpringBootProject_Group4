@@ -174,6 +174,22 @@
         font-size: 14px;
         font-weight: 500;
     }
+    .sidebar .follow-btn {
+        background: #007bff;
+        color: black;
+        padding: 7px 16px;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    .sidebar .follow-btn.following {
+        background: #6c757d;
+        color: #fff;
+    }
+    .sidebar .follow-btn:hover {
+        opacity: 0.8;
+    }
     .sidebar .tags {
         display: flex;
         gap: 8px;
@@ -232,6 +248,65 @@
         color: #cce5ff;
         margin-top: 2px;
     }
+
+    /* 좋아요 버튼 스타일 */
+    .sidebar-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 16px;
+    }
+    
+    .like-btn, .wishlist-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .like-btn:hover, .wishlist-btn:hover {
+        background: #e9ecef;
+        border-color: #adb5bd;
+    }
+    
+    .like-btn.liked {
+        background: #dc3545;
+        color: white;
+        border-color: #dc3545;
+    }
+    
+    .like-btn.liked:hover {
+        background: #c82333;
+        border-color: #bd2130;
+    }
+    
+    .wishlist-btn.wished {
+        background: #ff6b6b;
+        color: white;
+        border-color: #ff6b6b;
+    }
+    
+    .wishlist-btn.wished:hover {
+        background: #ff5252;
+        border-color: #ff4757;
+    }
+    
+    .like-icon, .wishlist-icon {
+        font-size: 16px;
+    }
+    
+    .like-count, .wishlist-count {
+        font-weight: 600;
+    }
     </style>
 </head>
 
@@ -243,6 +318,7 @@
             <ul>
                 <li><a href="#">고객센터</a></li>
                 <li><a href="#">작품경매</a></li>
+                <li><a href="/wishlist">찜한 상품</a></li>
                 <li><a href="#">마이페이지</a></li>
             </ul>
         </nav>
@@ -285,9 +361,14 @@
                          alt="작가 프로필" 
                          class="author-pfp"
                          onerror="this.src='https://via.placeholder.com/40/cccccc/666666?text=작가'"/>
-                    <span class="author-name" th:text="${product.createdBy ?: '익명 작가'}">작가이름이 들어가</span>
+                    <span class="author-name" th:text="${product.creatorName ?: '익명 작가'}">작가이름이 들어가</span>
                 </div>
-                <button th:if="${#authentication.name != product.createdBy}" class="subscribe-btn">Subscribe</button>
+                <button th:if="${#authentication.name != null and product.creator != null and #authentication.name != product.creator.username}" 
+                        class="follow-btn" 
+                        th:data-creator-id="${product.creator.id}"
+                        onclick="toggleFollow(this)">
+                    팔로우
+                </button>
             </div>
             <div class="tags">
                 <button class="tag-btn" th:text="${product.primaryCategory != null and product.primaryCategory != '' ? product.primaryCategory : '아트웍'}">아트웍</button>
@@ -298,10 +379,16 @@
             </p>
             <div class="sidebar-actions">
                 <button class="like-btn" th:data-product-id="${product.id}" 
-                        th:classappend="${#authentication.name != null and product.productHearts != null and product.productHearts.?[member.username == #authentication.name].size() > 0 ? 'liked' : ''}"
+                        th:classappend="${isLiked ? 'liked' : ''}"
                         onclick="toggleLike(this)">
                     <span class="like-icon">👍</span>
                     <span class="like-count" th:text="${heartCount ?: 0}">0</span>
+                </button>
+                <button class="wishlist-btn" th:data-product-id="${product.id}" 
+                        th:classappend="${isWished ? 'wished' : ''}"
+                        onclick="toggleWishlist(this)">
+                    <span class="wishlist-icon">❤️</span>
+                    <span class="wishlist-count" th:text="${wishCount ?: 0}">0</span>
                 </button>
                 <button class="continue-btn" onclick="alert('포인트 결제 기능 추가 예정!')">
                     <span>30P로 계속보기</span>
@@ -318,8 +405,150 @@
     </footer>
 
     <script>
+    // 팔로우 토글 함수
+    function toggleFollow(button) {
+        console.log('팔로우 버튼 클릭됨');
+        
+        const creatorId = button.dataset.creatorId;
+        if (!creatorId) {
+            alert('작가 정보를 찾을 수 없습니다.');
+            return;
+        }
+
+        const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+        
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        if (csrfTokenMeta && csrfHeaderMeta && csrfTokenMeta.getAttribute('content') && csrfHeaderMeta.getAttribute('content')) {
+            headers[csrfHeaderMeta.getAttribute('content')] = csrfTokenMeta.getAttribute('content');
+        }
+
+        // Optimistic UI: 먼저 UI를 즉시 변경
+        const isFollowing = button.classList.contains('following');
+        if (isFollowing) {
+            button.classList.remove('following');
+            button.textContent = '팔로우';
+        } else {
+            button.classList.add('following');
+            button.textContent = '팔로잉';
+        }
+
+        // API 호출
+        fetch(`/api/follow/${creatorId}`, {
+            method: 'POST',
+            headers: headers
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                // 오류 발생 시 UI 되돌리기
+                if (isFollowing) {
+                    button.classList.add('following');
+                    button.textContent = '팔로잉';
+                } else {
+                    button.classList.remove('following');
+                    button.textContent = '팔로우';
+                }
+                alert(data.message);
+            } else {
+                console.log('팔로우 상태 변경됨:', data);
+            }
+        })
+        .catch(error => {
+            console.error('팔로우 요청 실패:', error);
+            // 오류 발생 시 UI 되돌리기
+            if (isFollowing) {
+                button.classList.add('following');
+                button.textContent = '팔로잉';
+            } else {
+                button.classList.remove('following');
+                button.textContent = '팔로우';
+            }
+            alert('팔로우 요청에 실패했습니다.');
+        });
+    }
+
+    // 페이지 로드 시 팔로우 상태 확인
+    document.addEventListener('DOMContentLoaded', function() {
+        const followBtn = document.querySelector('.follow-btn');
+        if (followBtn) {
+            const creatorId = followBtn.dataset.creatorId;
+            if (creatorId) {
+                // 팔로우 상태 확인
+                fetch(`/api/follow/${creatorId}/status`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.isFollowing) {
+                        followBtn.classList.add('following');
+                        followBtn.textContent = '팔로잉';
+                    }
+                })
+                .catch(error => {
+                    console.error('팔로우 상태 확인 실패:', error);
+                });
+            }
+        }
+
+        // 좋아요 상태 확인
+        const likeBtn = document.querySelector('.like-btn');
+        if (likeBtn) {
+            const productId = likeBtn.dataset.productId;
+            if (productId) {
+                // 좋아요 상태 확인
+                fetch(`/api/products/${productId}/heart/status`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.isLiked) {
+                        likeBtn.classList.add('liked');
+                    }
+                    // 서버에서 받은 정확한 좋아요 수로 업데이트
+                    const likeCountSpan = likeBtn.querySelector('.like-count');
+                    if (likeCountSpan) {
+                        likeCountSpan.textContent = data.heartCount;
+                    }
+                })
+                .catch(error => {
+                    console.error('좋아요 상태 확인 실패:', error);
+                });
+            }
+        }
+
+        // 찜하기 상태 확인
+        const wishlistBtn = document.querySelector('.wishlist-btn');
+        if (wishlistBtn) {
+            const productId = wishlistBtn.dataset.productId;
+            if (productId) {
+                // 찜하기 상태 확인
+                fetch(`/wishlist/check/${productId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.isWished) {
+                        wishlistBtn.classList.add('wished');
+                    }
+                    // 서버에서 받은 정확한 찜하기 수로 업데이트
+                    const wishlistCountSpan = wishlistBtn.querySelector('.wishlist-count');
+                    if (wishlistCountSpan) {
+                        wishlistCountSpan.textContent = data.wishCount;
+                    }
+                })
+                .catch(error => {
+                    console.error('찜하기 상태 확인 실패:', error);
+                });
+            }
+        }
+    });
+
     function toggleLike(button) {
         console.log('좋아요 버튼 클릭됨');
+        
+        const productId = button.dataset.productId;
+        if (!productId) {
+            alert('상품 정보를 찾을 수 없습니다.');
+            return;
+        }
         
         const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
         const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
@@ -336,7 +565,6 @@
             console.log('CSRF 토큰 없음 (개발 환경)');
         }
 
-        const productId = button.dataset.productId;
         const likeCountSpan = button.querySelector('.like-count');
         let currentCount = parseInt(likeCountSpan.textContent, 10);
         const isLiked = button.classList.contains('liked');
@@ -350,50 +578,137 @@
             button.classList.add('liked');
         }
 
+        // API 호출
         fetch(`/api/products/${productId}/heart`, {
             method: 'POST',
             headers: headers
         })
         .then(response => {
             if (!response.ok) {
-                // 실패 시 롤백
-                if (isLiked) {
-                    likeCountSpan.textContent = currentCount;
-                    button.classList.add('liked');
-                } else {
-                    likeCountSpan.textContent = currentCount;
-                    button.classList.remove('liked');
-                }
-                throw new Error('로그인이 필요하거나 서버 오류가 발생했습니다. 상태: ' + response.status);
+                throw new Error('Network response was not ok');
             }
             return response.json();
         })
         .then(data => {
-            // 서버 응답에 맞게 최종 상태 동기화
-            likeCountSpan.textContent = data.heartCount;
-            button.classList.toggle('liked', data.isLiked);
-            console.log('좋아요 상태 업데이트됨 - 좋아요 수:', data.heartCount, '좋아요 여부:', data.isLiked);
+            if (data.error) {
+                // 오류 발생 시 UI 되돌리기
+                if (isLiked) {
+                    likeCountSpan.textContent = currentCount;
+                    button.classList.add('liked');
+                } else {
+                    likeCountSpan.textContent = Math.max(currentCount - 1, 0);
+                    button.classList.remove('liked');
+                }
+                alert(data.message);
+            } else {
+                // 성공 시 서버에서 받은 정확한 값으로 업데이트
+                likeCountSpan.textContent = data.heartCount;
+                if (data.isLiked) {
+                    button.classList.add('liked');
+                } else {
+                    button.classList.remove('liked');
+                }
+                console.log('좋아요 상태 변경됨:', data);
+            }
         })
         .catch(error => {
-            console.error('오류 발생:', error);
-            alert('오류: ' + error.message);
+            console.error('좋아요 요청 실패:', error);
+            // 오류 발생 시 UI 되돌리기
+            if (isLiked) {
+                likeCountSpan.textContent = currentCount;
+                button.classList.add('liked');
+            } else {
+                likeCountSpan.textContent = Math.max(currentCount - 1, 0);
+                button.classList.remove('liked');
+            }
+            alert('좋아요 요청에 실패했습니다.');
         });
     }
-    
-    // 페이지 로드 시 초기 상태 확인
-    document.addEventListener('DOMContentLoaded', function() {
-        const likeBtn = document.querySelector('.like-btn');
-        if (likeBtn) {
-            const productId = likeBtn.dataset.productId;
-            // 좋아요 상태 비동기 조회
-            fetch(`/api/products/${productId}/heart/status`)
-                .then(res => res.json())
-                .then(data => {
-                    likeBtn.classList.toggle('liked', data.isLiked);
-                    likeBtn.querySelector('.like-count').textContent = data.heartCount;
-                });
+
+    // 찜하기 토글 함수
+    function toggleWishlist(button) {
+        console.log('찜하기 버튼 클릭됨');
+        
+        const productId = button.dataset.productId;
+        if (!productId) {
+            alert('상품 정보를 찾을 수 없습니다.');
+            return;
         }
-    });
+        
+        const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+        
+        // CSRF 토큰이 있는 경우에만 헤더에 추가
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        if (csrfTokenMeta && csrfHeaderMeta && csrfTokenMeta.getAttribute('content') && csrfHeaderMeta.getAttribute('content')) {
+            headers[csrfHeaderMeta.getAttribute('content')] = csrfTokenMeta.getAttribute('content');
+            console.log('CSRF 토큰 추가됨:', csrfTokenMeta.getAttribute('content'));
+        } else {
+            console.log('CSRF 토큰 없음 (개발 환경)');
+        }
+
+        const wishlistCountSpan = button.querySelector('.wishlist-count');
+        let currentCount = parseInt(wishlistCountSpan.textContent, 10);
+        const isWished = button.classList.contains('wished');
+
+        // Optimistic UI: 먼저 UI를 즉시 변경
+        if (isWished) {
+            wishlistCountSpan.textContent = Math.max(currentCount - 1, 0);
+            button.classList.remove('wished');
+        } else {
+            wishlistCountSpan.textContent = currentCount + 1;
+            button.classList.add('wished');
+        }
+
+        // API 호출
+        fetch(`/wishlist/toggle/${productId}`, {
+            method: 'POST',
+            headers: headers
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // 성공 시 서버에서 받은 정확한 값으로 업데이트
+                wishlistCountSpan.textContent = data.wishCount;
+                if (data.isWished) {
+                    button.classList.add('wished');
+                } else {
+                    button.classList.remove('wished');
+                }
+                console.log('찜하기 상태 변경됨:', data);
+            } else {
+                // 오류 발생 시 UI 되돌리기
+                if (isWished) {
+                    wishlistCountSpan.textContent = currentCount;
+                    button.classList.add('wished');
+                } else {
+                    wishlistCountSpan.textContent = Math.max(currentCount - 1, 0);
+                    button.classList.remove('wished');
+                }
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('찜하기 요청 실패:', error);
+            // 오류 발생 시 UI 되돌리기
+            if (isWished) {
+                wishlistCountSpan.textContent = currentCount;
+                button.classList.add('wished');
+            } else {
+                wishlistCountSpan.textContent = Math.max(currentCount - 1, 0);
+                button.classList.remove('wished');
+            }
+            alert('찜하기 요청에 실패했습니다.');
+        });
+    }
     </script>
 </body>
 </html>

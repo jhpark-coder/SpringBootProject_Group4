@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 구독 관리</title>
+    <link rel="stylesheet" href="/css/heartFollow.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+        .nav-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .user-list {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .user-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+        }
+        .user-item:last-child {
+            border-bottom: none;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-avatar-small {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="liked-products-header">
+            <h1>👥 내 구독 관리</h1>
+            <p>구독 관계를 관리하세요</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number" th:text="${stats.followerCount}">0</div>
+                <div class="stat-label">팔로워</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" th:text="${stats.followingCount}">0</div>
+                <div class="stat-label">구독 중</div>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="showTab('followers')">나를 구독하는 사람</div>
+            <div class="nav-tab" onclick="showTab('followings')">내가 구독하는 사람</div>
+        </div>
+
+        <div id="followers-tab" class="tab-content active">
+            <div class="user-list">
+                <h3>나를 구독하는 사람들</h3>
+                <div id="followers-list">
+                    <!-- JavaScript로 동적 로드 -->
+                </div>
+            </div>
+        </div>
+
+        <div id="followings-tab" class="tab-content">
+            <div class="user-list">
+                <h3>내가 구독하는 사람들</h3>
+                <div id="followings-list">
+                    <!-- JavaScript로 동적 로드 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/heartFollow.js"></script>
+    <script>
+        function showTab(tabName) {
+            // 모든 탭 비활성화
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // 선택된 탭 활성화
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+
+            // 해당 데이터 로드
+            if (tabName === 'followers') {
+                loadFollowers();
+            } else if (tabName === 'followings') {
+                loadFollowings();
+            }
+        }
+
+        function loadFollowers() {
+            const username = '[[${username}]]';
+            fetch(`/followers/${username}?page=0&size=20`)
+                .then(response => response.text())
+                .then(html => {
+                    // HTML 파싱하여 사용자 목록 추출
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const followers = doc.querySelectorAll('.follower-item');
+                    
+                    const container = document.getElementById('followers-list');
+                    if (followers.length === 0) {
+                        container.innerHTML = '<p>아직 나를 구독하는 사람이 없습니다.</p>';
+                        return;
+                    }
+
+                    let htmlContent = '';
+                    followers.forEach(follower => {
+                        htmlContent += follower.outerHTML;
+                    });
+                    container.innerHTML = htmlContent;
+                })
+                .catch(error => {
+                    console.error('팔로워 목록 로드 오류:', error);
+                    document.getElementById('followers-list').innerHTML = '<p>팔로워 목록을 불러올 수 없습니다.</p>';
+                });
+        }
+
+        function loadFollowings() {
+            const username = '[[${username}]]';
+            fetch(`/followings/${username}?page=0&size=20`)
+                .then(response => response.text())
+                .then(html => {
+                    // HTML 파싱하여 사용자 목록 추출
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const followings = doc.querySelectorAll('.following-item');
+                    
+                    const container = document.getElementById('followings-list');
+                    if (followings.length === 0) {
+                        container.innerHTML = '<p>아직 구독 중인 사람이 없습니다.</p>';
+                        return;
+                    }
+
+                    let htmlContent = '';
+                    followings.forEach(following => {
+                        htmlContent += following.outerHTML;
+                    });
+                    container.innerHTML = htmlContent;
+                })
+                .catch(error => {
+                    console.error('구독 목록 로드 오류:', error);
+                    document.getElementById('followings-list').innerHTML = '<p>구독 목록을 불러올 수 없습니다.</p>';
+                });
+        }
+
+        // 페이지 로드 시 초기 데이터 로드
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFollowers();
+        });
+    </script>
+</body>
+</html> 

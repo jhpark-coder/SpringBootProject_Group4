@@ -20,6 +20,7 @@ import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.product.dto.ProductSaveRequest;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.service.ProductService;
+import com.creatorworks.nexus.product.service.WishlistService;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpSession;
@@ -30,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductController {
 
     private final ProductService productService;
+    private final WishlistService wishlistService;
 
     @PostConstruct
     public void init() {
@@ -71,15 +73,36 @@ public class ProductController {
 
     // 3. 상품 상세 페이지 렌더링
     @GetMapping("/products/{id}")
-    public String productDetail(@PathVariable Long id, Model model) {
+    public String productDetail(@PathVariable Long id, Model model, HttpSession session) {
         try {
             Product product = productService.findProductById(id);
             long heartCount = productService.getHeartCount(id);
             
+            // 현재 로그인한 사용자 정보
+            Member loginUser = (Member) session.getAttribute("loginUser");
+            
+            // 좋아요 상태 확인
+            boolean isLiked = false;
+            if (loginUser != null) {
+                isLiked = productService.isLikedByUser(id, loginUser.getUsername());
+            }
+            
+            // 찜하기 상태 확인
+            boolean isWished = false;
+            long wishCount = 0;
+            if (loginUser != null) {
+                isWished = wishlistService.isWished(loginUser.getId(), id);
+                wishCount = wishlistService.getProductWishCount(id);
+            }
+            
             model.addAttribute("product", product);
             model.addAttribute("heartCount", heartCount);
+            model.addAttribute("loginUser", loginUser);
+            model.addAttribute("isLiked", isLiked);
+            model.addAttribute("isWished", isWished);
+            model.addAttribute("wishCount", wishCount);
             
-            System.out.println("상품 상세 페이지 로드 - 상품 ID: " + id + ", 좋아요 수: " + heartCount);
+            System.out.println("상품 상세 페이지 로드 - 상품 ID: " + id + ", 좋아요 수: " + heartCount + ", 좋아요 상태: " + isLiked + ", 찜하기 수: " + wishCount + ", 찜하기 상태: " + isWished);
             
             return "product/productDetail";
         } catch (IllegalArgumentException e) {
@@ -136,40 +159,56 @@ public class ProductController {
             return errorResponse;
         }
         
-        boolean isLiked = productService.toggleHeart(id, loginUser.getUsername());
-        long heartCount = productService.getHeartCount(id);
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("isLiked", isLiked);
-        response.put("heartCount", heartCount);
-        
-        System.out.println("응답: " + response);
-        System.out.println("========================");
-        
-        return response;
+        try {
+            boolean isLiked = productService.toggleHeart(id, loginUser.getUsername());
+            long heartCount = productService.getHeartCount(id);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("isLiked", isLiked);
+            response.put("heartCount", heartCount);
+            response.put("message", isLiked ? "좋아요를 눌렀습니다." : "좋아요를 취소했습니다.");
+            
+            System.out.println("응답: " + response);
+            System.out.println("========================");
+            
+            return response;
+        } catch (Exception e) {
+            System.out.println("좋아요 토글 중 오류: " + e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "좋아요 처리 실패");
+            errorResponse.put("message", e.getMessage());
+            return errorResponse;
+        }
     }
 
     // 좋아요 상태 확인 API (테스트용)
     @GetMapping("/api/products/{id}/heart/status")
     @ResponseBody
-    public Map<String, Object> getHeartStatus(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+    public Map<String, Object> getHeartStatus(@PathVariable Long id, HttpSession session) {
         System.out.println("=== 좋아요 상태 확인 요청 ===");
         System.out.println("상품 ID: " + id);
-        System.out.println("사용자: " + (userDetails != null ? userDetails.getUsername() : "null"));
+        
+        Member loginUser = (Member) session.getAttribute("loginUser");
+        System.out.println("사용자: " + (loginUser != null ? loginUser.getUsername() : "null"));
         
         Product product = productService.findProductById(id);
         boolean isLiked = false;
         long heartCount = productService.getHeartCount(id);
         
-        if (userDetails != null) {
-            isLiked = productService.isLikedByUser(id, userDetails.getUsername());
+        if (loginUser != null) {
+            try {
+                isLiked = productService.isLikedByUser(id, loginUser.getUsername());
+            } catch (Exception e) {
+                System.out.println("좋아요 상태 확인 중 오류: " + e.getMessage());
+            }
         }
         
         Map<String, Object> response = new HashMap<>();
         response.put("isLiked", isLiked);
         response.put("heartCount", heartCount);
         response.put("productId", id);
-        response.put("username", userDetails != null ? userDetails.getUsername() : "anonymous");
+        response.put("productName", product.getName());
+        response.put("username", loginUser != null ? loginUser.getUsername() : "anonymous");
         
         System.out.println("상태 확인 응답: " + response);
         System.out.println("=============================");

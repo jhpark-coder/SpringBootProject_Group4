@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>찜한 상품 목록</title>
+    <link rel="stylesheet" th:href="@{/css/wishlist.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="wishlist-header">
+            <h1><i class="fas fa-heart"></i> 찜한 상품 목록</h1>
+            <p class="wishlist-count">총 <span th:text="${wishlistCount}">0</span>개의 상품을 찜했습니다.</p>
+        </header>
+
+        <div class="wishlist-container">
+            <div th:if="${#lists.isEmpty(wishedProducts)}" class="empty-wishlist">
+                <i class="fas fa-heart-broken"></i>
+                <h2>아직 찜한 상품이 없습니다</h2>
+                <p>마음에 드는 상품을 찜해보세요!</p>
+                <a href="/products" class="btn-primary">상품 둘러보기</a>
+            </div>
+
+            <div th:if="${!#lists.isEmpty(wishedProducts)}" class="wishlist-grid">
+                <div th:each="product : ${wishedProducts}" class="wishlist-item">
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img th:src="${product.imageUrl}" th:alt="${product.name}" 
+                                 onerror="this.src='/images/default-product.jpg'">
+                            <button class="remove-wishlist" th:data-product-id="${product.id}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-name" th:text="${product.name}">상품명</h3>
+                            <p class="product-creator" th:text="${product.creatorName}">작가명</p>
+                            <div class="product-price">
+                                <span th:text="${#numbers.formatInteger(product.price, 3, 'COMMA')}">0</span>원
+                            </div>
+                            <div class="product-actions">
+                                <a th:href="@{/products/{id}(id=${product.id})}" class="btn-detail">상세보기</a>
+                                <button class="btn-remove" th:data-product-id="${product.id}">
+                                    <i class="fas fa-trash"></i> 삭제
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="wishlist-actions">
+            <button id="clearAllWishlist" class="btn-clear-all">
+                <i class="fas fa-trash-alt"></i> 전체 삭제
+            </button>
+        </div>
+    </div>
+
+    <!-- 알림 메시지 -->
+    <div id="notification" class="notification hidden">
+        <span id="notification-message"></span>
+        <button class="notification-close">&times;</button>
+    </div>
+
+    <script th:src="@{/js/wishlist.js}"></script>
+</body>
+</html> 

@@ -1,0 +1,22 @@
+[33m71de4c6[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Merge remote-tracking branch 'origin/layout'
+[33m86f5bce[m[33m ([m[1;31morigin/layout[m[33m)[m Login & member Dto~Entity까지 작업 소셜 로그인 후 Data 저장 및 불러오기 작업 중 거의다 함 내일 작업 마무리 및 설정만 하면 끝!
+[33mdda2de9[m Merge pull request #3 from jhpark-coder/editor3
+[33ma7a1a08[m[33m ([m[1;31morigin/editor3[m[33m)[m 에디터 작업
+[33mccbf10d[m 에디터 수정중
+[33ma65e76c[m 에디터 수정중
+[33m5f53e93[m 에디터 수정중
+[33mfe14466[m Merge pull request #1 from jhpark-coder/editor
+[33m00bba61[m 에디터 수정중
+[33md8da778[m 에디터 수정중
+[33m5ac359f[m 에디터 작업
+[33m0ead87a[m 에디터 작업
+[33m5de20e9[m 에디터 작업
+[33me33bd4f[m 세팅 변경
+[33m32ecd43[m 세팅 변경
+[33mc55533b[m 세팅 변경
+[33mc961f86[m 세팅 변경
+[33m6642934[m 세팅 변경
+[33md1607b7[m Merge remote-tracking branch ' origin/main'
+[33m308af79[m Initial commit of Spring Boot Project
+[33mc2ca1b8[m Update README.md
+[33ma7aadcb[m Initial commit

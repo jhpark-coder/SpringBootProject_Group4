@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>찜한 상품 목록</title>
+    <link rel="stylesheet" href="/css/heartFollow.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="liked-products-container">
+        <div class="liked-products-header">
+            <h1> 찜한 상품 목록</h1>
+            <p class="liked-products-count">
+                총 <span id="liked-products-count" th:text="${totalLikedCount}">0</span>개의 상품을 찜하셨습니다.
+            </p>
+        </div>
+
+        <div class="products-grid" id="liked-products-container">
+            <!-- JavaScript로 동적 로드 -->
+        </div>
+
+        <div class="pagination" id="pagination">
+            <!-- JavaScript로 동적 생성 -->
+        </div>
+    </div>
+
+    <script src="/js/heartFollow.js"></script>
+    <script>
+        // 페이지 로드 시 찜한 상품 목록 로드
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLikedProducts();
+            loadLikedProductsStats();
+        });
+    </script>
+</body>
+</html> 
