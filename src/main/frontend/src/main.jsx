@@ -2,8 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App.jsx'
-import ResultPage from './ResultPage.jsx';
 import './index.css'
+import './App.css';
 
 const router = createBrowserRouter([
   {
@@ -25,10 +25,6 @@ const router = createBrowserRouter([
   {
     path: "/editor/product/:id",
     element: <App />,
-  },
-  {
-    path: "/editor/result/:id",
-    element: <ResultPage />,
   },
 ]);
 

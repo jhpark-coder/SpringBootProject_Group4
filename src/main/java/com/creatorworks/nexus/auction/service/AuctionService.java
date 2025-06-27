@@ -28,6 +28,7 @@ public class AuctionService {
         auction.setSecondaryCategory(request.getSecondaryCategory());
         auction.setDescription(request.getHtmlBackup()); // htmlBackup을 description으로 매핑
         auction.setTiptapJson(request.getTiptapJson());
+        auction.setWorkDescription(request.getWorkDescription());
         auction.setBackgroundColor(request.getBackgroundColor());
         auction.setFontFamily(request.getFontFamily());
         auction.setAuctionDuration(request.getAuctionDuration());
@@ -55,6 +56,7 @@ public class AuctionService {
         auction.setSecondaryCategory(request.getSecondaryCategory());
         auction.setDescription(request.getHtmlBackup());
         auction.setTiptapJson(request.getTiptapJson());
+        auction.setWorkDescription(request.getWorkDescription());
         auction.setBackgroundColor(request.getBackgroundColor());
         auction.setFontFamily(request.getFontFamily());
         auction.setAuctionDuration(request.getAuctionDuration());

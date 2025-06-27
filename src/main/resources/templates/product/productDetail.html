@@ -37,6 +37,20 @@
             display: none;
             /* 핵심: JS 없으면 아예 안 보임 */
         }
+
+        /* 🔒 콘텐츠 선택(드래그) 방지 스타일 */
+        .content-selection-disabled {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* 
+         * @media print 규칙은 security.js에서 동적으로 처리하므로
+         * 개별 HTML 파일에서는 제거하여 중복을 피하고 관리를 일원화합니다.
+         */
     </style>
 </head>
 
@@ -58,6 +72,14 @@
     <!-- 🔒 JavaScript 파일들 - 이 파일들이 실행되어야만 실제 콘텐츠를 볼 수 있음 -->
     <script src="/js/security.js"></script>
     <script src="/js/productDetail.js"></script>
+
+    <!-- 🔒 콘텐츠 보호 기능 활성화 스크립트 -->
+    <script>
+        // DOMContentLoaded 이벤트 발생 시, body에 콘텐츠 선택(드래그) 방지 클래스를 추가합니다.
+        document.addEventListener('DOMContentLoaded', function () {
+            document.body.classList.add('content-selection-disabled');
+        });
+    </script>
 </body>
 
 </html>

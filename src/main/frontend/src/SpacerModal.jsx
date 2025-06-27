@@ -7,12 +7,15 @@ const SpacerModal = ({ isOpen, currentHeight, onSave, onClose }) => {
 
     useEffect(() => {
         if (currentHeight) {
-            const value = parseFloat(currentHeight);
+            const value = parseFloat(currentHeight) || 2;
             const newUnit = currentHeight.replace(String(value), '') || 'rem';
             setHeight(value);
             setUnit(newUnit);
+        } else {
+            setHeight('2');
+            setUnit('rem');
         }
-    }, [currentHeight]);
+    }, [currentHeight, isOpen]);
 
     if (!isOpen) return null;
 
@@ -21,26 +24,43 @@ const SpacerModal = ({ isOpen, currentHeight, onSave, onClose }) => {
     };
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content" style={{ width: '300px' }}>
-                <h3>Adjust Spacer Height</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '1rem', marginBottom: '1.5rem' }}>
-                    <input
-                        type="number"
-                        value={height}
-                        onChange={(e) => setHeight(e.target.value)}
-                        className="modal-input"
-                    />
-                    <select value={unit} onChange={(e) => setUnit(e.target.value)} className="modal-select">
-                        <option value="px">px</option>
-                        <option value="rem">rem</option>
-                        <option value="%">%</option>
-                        <option value="vh">vh</option>
-                    </select>
+        <div className="modal-overlay fancy-modal-overlay" onClick={onClose}>
+            <div className="modal-content fancy-modal-content animate-fadeIn" onClick={e => e.stopPropagation()}>
+                <h2 className="fancy-modal-title">스페이서 설정</h2>
+                <div className="modal-section">
+                    <label className="fancy-label">공백 높이</label>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="number"
+                            value={height}
+                            onChange={e => setHeight(e.target.value)}
+                            className="fancy-input w-full"
+                        />
+                        <select
+                            value={unit}
+                            onChange={e => setUnit(e.target.value)}
+                            className="fancy-input"
+                        >
+                            <option value="px">px</option>
+                            <option value="rem">rem</option>
+                            <option value="em">em</option>
+                            <option value="%">%</option>
+                        </select>
+                    </div>
                 </div>
-                <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                    <Button onClick={handleSave}>Save</Button>
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
+                <div className="flex justify-end space-x-2">
+                    <button
+                        onClick={handleSave}
+                        className="fancy-embed-btn"
+                    >
+                        저장
+                    </button>
+                    <button
+                        onClick={onClose}
+                        className="fancy-embed-btn"
+                    >
+                        취소
+                    </button>
                 </div>
             </div>
         </div>

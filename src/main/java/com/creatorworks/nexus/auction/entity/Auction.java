@@ -2,6 +2,7 @@ package com.creatorworks.nexus.auction.entity;
 
 import com.creatorworks.nexus.global.BaseEntity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -26,10 +27,12 @@ public class Auction extends BaseEntity {
     private String imageUrl; // 대표이미지 (Base64 이미지 데이터 지원)
     private String primaryCategory; // 1차 카테고리
     private String secondaryCategory; // 2차 카테고리
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String description; // 프로젝트 내용 (tiptapJson, htmlBackup 등)
     @Lob
     private String tiptapJson;
+    @Column(columnDefinition = "TEXT")
+    private String workDescription; // 작품 설명
     private String backgroundColor; // 스타일
     private String fontFamily; // 스타일
     private int auctionDuration; // 경매기간 (일)

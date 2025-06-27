@@ -10,7 +10,7 @@
 // 'import'는 다른 파일에 있는 코드(컴포넌트, 함수, 변수 등)를 현재 파일에서 사용할 수 있게 해주는 문법입니다.
 // 이를 통해 코드를 재사용하고 모듈별로 정리할 수 있습니다.
 //================================================================================
-import React, { useState, useEffect, useRef } from 'react'; // React의 핵심 기능(Hooks)을 가져옵니다.
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react'; // React의 핵심 기능(Hooks)을 가져옵니다.
 import { useEditor, EditorContent } from '@tiptap/react'; // Tiptap 에디터의 React 버전을 가져옵니다.
 import { useParams, useLocation } from 'react-router-dom'; // URL 경로를 다루기 위한 기능을 가져옵니다.
 import StarterKit from '@tiptap/starter-kit'; // Tiptap의 기본 확장 기능 모음입니다. (볼드, 이탤릭 등)
@@ -28,20 +28,18 @@ import PaywallNode from './PaywallNode.jsx'; // 유료 콘텐츠 영역을 표�
 import CodeBlockNode from './CodeBlockNode.jsx'; // 코드 블록을 위한 커스텀 노드입니다.
 import SpacerNode from './SpacerNode.jsx'; // 공백 영역을 표시하기 위한 스페이서 노드입니다.
 
-// 에디터 위에 뜨는 메뉴(버블 메뉴)와 사이드바, 각종 모달(팝업)창 컴포넌트들을 가져옵니다.
-// 각 파일은 독립적인 UI 조각(컴포넌트)으로 만들어져 있어 관리가 용이합니다.
-import BubbleMenuComponent from './BubbleMenuComponent.jsx';
-import Sidebar from './Sidebar.jsx';
-import ImageUploadModal from './ImageUploadModal.jsx';
-import StylesModal from './StylesModal.jsx';
-import PhotoGridModal from './PhotoGridModal.jsx';
-import PreviewModal from './PreviewModal.jsx';
-import EmbedModal from './EmbedModal.jsx';
-import SettingsModal from './SettingsModal.jsx';
-import VideoUploadModal from './VideoUploadModal';
-import AudioUploadModal from './AudioUploadModal';
-import SpacerModal from './SpacerModal.jsx';
-import './App.css'; // 이 컴포넌트에 적용될 CSS 스타일 파일을 가져옵니다.
+// 동적 임포트로 큰 컴포넌트들을 지연 로딩
+const SettingsModal = lazy(() => import('./SettingsModal.jsx'));
+const Sidebar = lazy(() => import('./Sidebar.jsx'));
+const BubbleMenuComponent = lazy(() => import('./BubbleMenuComponent.jsx'));
+const ImageUploadModal = lazy(() => import('./ImageUploadModal.jsx'));
+const VideoUploadModal = lazy(() => import('./VideoUploadModal.jsx'));
+const AudioUploadModal = lazy(() => import('./AudioUploadModal.jsx'));
+const PhotoGridModal = lazy(() => import('./PhotoGridModal.jsx'));
+const PreviewModal = lazy(() => import('./PreviewModal.jsx'));
+const EmbedModal = lazy(() => import('./EmbedModal.jsx'));
+const StylesModal = lazy(() => import('./StylesModal.jsx'));
+const SpacerModal = lazy(() => import('./SpacerModal.jsx'));
 
 // 카테고리 데이터입니다. 자바스크립트의 객체(Object) 형태로, 키(key)와 값(value)으로 이루어져 있습니다.
 const CATEGORIES = {
@@ -173,6 +171,14 @@ const loadGoogleFont = (fontName) => {
 // 함수 이름이 대문자로 시작하는 것이 React 컴포넌트의 규칙입니다.
 //================================================================================
 function App() {
+  const [dbContent, setDbContent] = useState('');
+  const [isStylesModalOpen, setIsStylesModalOpen] = useState(false);
+  // ... (다른 useState 선언들)
+
+  // 컴포넌트가 마운트될 때 모든 Google Fonts를 미리 로드합니다.
+  React.useEffect(() => {
+    GOOGLE_FONTS.forEach(font => loadGoogleFont(font.name));
+  }, []);
 
   //----------------------------------------------------------------
   // 1. 상태 관리 (State Management)
@@ -201,7 +207,6 @@ function App() {
   const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [isStylesModalOpen, setIsStylesModalOpen] = useState(false);
   const [isPhotoGridModalOpen, setIsPhotoGridModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isSpacerModalOpen, setIsSpacerModalOpen] = useState(false);
@@ -366,6 +371,7 @@ function App() {
             coverImage: data.coverImage || data.imageUrl || '',
             backgroundColor: data.backgroundColor || '#ffffff',
             fontFamily: data.fontFamily || 'sans-serif',
+            workDescription: data.workDescription || '',
           };
 
           // 편집 모드(경매, 상품)에 따라 받아온 데이터를 다르게 처리하여 `projectSettings` 상태에 저장합니다.
@@ -667,6 +673,7 @@ function App() {
       htmlBackup: htmlBackup,
       backgroundColor: editorStyles.backgroundColor,
       fontFamily: editorStyles.fontFamily,
+      workDescription: projectSettings.workDescription || '',
     };
 
     // 현재 편집 모드인지(기존 글 수정) 확인합니다.
@@ -810,7 +817,9 @@ function App() {
         <div className="editor-container" style={editorStyles}>
           {/* editor가 존재할 때만 BubbleMenuComponent를 렌더링합니다. (조건부 렌더링) */}
           {editor && (
-            <BubbleMenuComponent editor={editor} />
+            <Suspense fallback={<div>메뉴 로딩 중...</div>}>
+              <BubbleMenuComponent editor={editor} />
+            </Suspense>
           )}
           {/* Tiptap 에디터의 내용이 실제로 렌더링되는 컴포넌트입니다. */}
           <EditorContent editor={editor} />
@@ -818,53 +827,78 @@ function App() {
 
         {/* 사이드바 UI. 필요한 함수와 상태를 'props'라는 이름으로 자식 컴포넌트에 전달합니다. */}
         {/* 예를 들어, onEmbedClick={...}는 Sidebar 컴포넌트에게 onEmbedClick이라는 이름으로 함수를 전달하는 것입니다. */}
-        <Sidebar
-          editor={editor}
-          onEmbedClick={() => setIsEmbedModalOpen(true)}
-          onImageAdd={() => setIsImageModalOpen(true)}
-          onVideoAdd={() => setIsVideoModalOpen(true)}
-          onAudioAdd={() => setIsAudioModalOpen(true)}
-          onStylesClick={() => setIsStylesModalOpen(true)}
-          onSettingsClick={() => setIsSettingsModalOpen(true)}
-          onPhotoGridClick={() => setIsPhotoGridModalOpen(true)}
-          onSpacerAdd={handleRequestSpacerCreation} // 스페이서 생성 요청 함수 전달
-          onPreviewClick={handlePreviewClick}
-          onSaveClick={handleSaveDocument}
-        />
+        <Suspense fallback={<div>사이드바 로딩 중...</div>}>
+          <Sidebar
+            editor={editor}
+            onEmbedClick={() => setIsEmbedModalOpen(true)}
+            onImageAdd={() => setIsImageModalOpen(true)}
+            onVideoAdd={() => setIsVideoModalOpen(true)}
+            onAudioAdd={() => setIsAudioModalOpen(true)}
+            onStylesClick={() => setIsStylesModalOpen(true)}
+            onSettingsClick={() => setIsSettingsModalOpen(true)}
+            onPhotoGridClick={() => setIsPhotoGridModalOpen(true)}
+            onSpacerAdd={handleRequestSpacerCreation} // 스페이서 생성 요청 함수 전달
+            onPreviewClick={handlePreviewClick}
+            onSaveClick={handleSaveDocument}
+          />
+        </Suspense>
       </div>
 
       {/* 조건부 렌더링: 각 모달의 'isOpen' 상태가 true일 때만 화면에 나타납니다. */}
       {/* `isImageModalOpen && (...)` 구문은 isImageModalOpen이 true이면 `(...)` 안의 JSX를 렌더링하고, false이면 아무것도 렌더링하지 않습니다. */}
       <div className="modals">
         {isImageModalOpen && (
-          <ImageUploadModal onClose={() => setIsImageModalOpen(false)} onImageAdd={handleImageAdd} />
+          <Suspense fallback={<div>이미지 업로드 모달 로딩 중...</div>}>
+            <ImageUploadModal onClose={() => setIsImageModalOpen(false)} onImageAdd={handleImageAdd} />
+          </Suspense>
         )}
         {isVideoModalOpen && (
-          <VideoUploadModal onClose={() => setIsVideoModalOpen(false)} onVideoAdd={handleVideoAdd} />
+          <Suspense fallback={<div>비디오 업로드 모달 로딩 중...</div>}>
+            <VideoUploadModal onClose={() => setIsVideoModalOpen(false)} onVideoAdd={handleVideoAdd} />
+          </Suspense>
         )}
         {isAudioModalOpen && (
-          <AudioUploadModal onClose={() => setIsAudioModalOpen(false)} onAudioAdd={handleAudioAdd} />
+          <Suspense fallback={<div>오디오 업로드 모달 로딩 중...</div>}>
+            <AudioUploadModal onClose={() => setIsAudioModalOpen(false)} onAudioAdd={handleAudioAdd} />
+          </Suspense>
         )}
         {isEmbedModalOpen && (
-          <EmbedModal onClose={() => setIsEmbedModalOpen(false)} onEmbed={handleEmbed} />
+          <Suspense fallback={<div>임베드 모달 로딩 중...</div>}>
+            <EmbedModal onClose={() => setIsEmbedModalOpen(false)} onEmbed={handleEmbed} />
+          </Suspense>
         )}
         {isSettingsModalOpen && (
-          <SettingsModal onClose={() => setIsSettingsModalOpen(false)} settings={projectSettings} onSave={handleSettingsSave} />
+          <Suspense fallback={<div>설정 모달 로딩 중...</div>}>
+            <SettingsModal
+              isOpen={isSettingsModalOpen}
+              onClose={() => setIsSettingsModalOpen(false)}
+              onSave={handleSettingsSave}
+              initialSettings={projectSettings}
+            />
+          </Suspense>
         )}
         {isStylesModalOpen && (
-          <StylesModal isOpen={isStylesModalOpen} onClose={handleStylesModalClose} onStyleChange={handleStyleChange} currentStyles={editorStyles} />
+          <Suspense fallback={<div>스타일 모달 로딩 중...</div>}>
+            <StylesModal isOpen={isStylesModalOpen} onClose={handleStylesModalClose} onStyleChange={handleStyleChange} currentStyles={editorStyles} />
+          </Suspense>
         )}
         {isPhotoGridModalOpen && (
-          <PhotoGridModal
-            onClose={() => setIsPhotoGridModalOpen(false)}
-            onGridCreate={handleCreateGrid}
-          />
+          <Suspense fallback={<div>포토 그리드 모달 로딩 중...</div>}>
+            <PhotoGridModal
+              onClose={() => setIsPhotoGridModalOpen(false)}
+              onGridCreate={handleCreateGrid}
+            />
+          </Suspense>
         )}
         {isPreviewModalOpen && (
-          <PreviewModal isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} editorContent={getEditorContent()} styles={editorStyles} />
+          <Suspense fallback={<div>미리보기 모달 로딩 중...</div>}>
+            <PreviewModal isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} editorContent={getEditorContent()} styles={editorStyles} />
+          </Suspense>
         )}
         {isSpacerModalOpen && (
-          <SpacerModal isOpen={isSpacerModalOpen} onClose={() => setIsSpacerModalOpen(false)} onSave={spacerModalConfig.onSave} currentHeight={spacerModalConfig.currentHeight} />
+          <Suspense fallback={<div>스페이서 모달 로딩 중...</div>}>
+            <SpacerModal isOpen={isSpacerModalOpen} onClose={() => setIsSpacerModalOpen(false)} onSave={spacerModalConfig.onSave} currentHeight={spacerModalConfig.currentHeight} />
+          </Suspense>
         )}
       </div>
     </div>

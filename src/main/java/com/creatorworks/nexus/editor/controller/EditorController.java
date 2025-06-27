@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,31 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/editor")
-public class EditorController implements WebMvcConfigurer {
-    
-    // 정적 파일 서빙을 위한 리소스 핸들러 설정
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String uploadPath = System.getProperty("user.dir") + "/src/main/resources/static/uploads";
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadPath + "/");
-        
-        // React 빌드 파일 서빙
-        registry.addResourceHandler("/editor/**")
-                .addResourceLocations("classpath:/static/editor/");
-    }
-    
-    // React SPA 메인 페이지
-    @GetMapping
-    public String editor() {
-        return "forward:/editor/index.html";
-    }
-    
-    // React 라우팅 처리 (모든 editor 경로를 index.html로 포워딩)
-    @GetMapping("/{path:^(?!api|uploads).*}")
-    public String handleReactRouting(@PathVariable String path) {
-        return "forward:/editor/index.html";
-    }
+public class EditorController {
     
     // CSRF 토큰 및 세션 초기화를 위한 엔드포인트
     @GetMapping("/api/init")

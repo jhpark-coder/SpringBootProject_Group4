@@ -80,8 +80,9 @@ public class ProductService {
         product.setImageUrl(request.getImageUrl());
         product.setPrimaryCategory(request.getPrimaryCategory());
         product.setSecondaryCategory(request.getSecondaryCategory());
-        product.setDescription(request.getHtmlBackup());
         product.setTiptapJson(request.getTiptapJson());
+        product.setDescription(request.getHtmlBackup());
+        product.setWorkDescription(request.getWorkDescription());
         product.setBackgroundColor(request.getBackgroundColor());
         product.setFontFamily(request.getFontFamily());
         product.setPrice(request.getPrice());
@@ -106,8 +107,9 @@ public class ProductService {
         product.setImageUrl(request.getImageUrl());
         product.setPrimaryCategory(request.getPrimaryCategory());
         product.setSecondaryCategory(request.getSecondaryCategory());
-        product.setDescription(request.getHtmlBackup());
         product.setTiptapJson(request.getTiptapJson());
+        product.setDescription(request.getHtmlBackup());
+        product.setWorkDescription(request.getWorkDescription());
         product.setBackgroundColor(request.getBackgroundColor());
         product.setFontFamily(request.getFontFamily());
         product.setPrice(request.getPrice());

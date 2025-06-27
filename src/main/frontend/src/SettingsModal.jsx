@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './SettingsModal.css';
 
 const CATEGORIES = {
@@ -12,17 +12,35 @@ const CATEGORIES = {
 
 const AUCTION_DURATIONS = ['1일', '3일', '7일'];
 
-const SettingsModal = ({ onClose, settings, onSave }) => {
-    const [currentSettings, setCurrentSettings] = useState(settings);
+const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
+    const [currentSettings, setCurrentSettings] = useState(initialSettings || {});
     const [primaryCategory, setPrimaryCategory] = useState('');
     const [saleType, setSaleType] = useState(''); // 'sale' 또는 'auction'
     const [salePrice, setSalePrice] = useState('');
     const [auctionDuration, setAuctionDuration] = useState('');
     const [startBidPrice, setStartBidPrice] = useState('');
     const [buyNowPrice, setBuyNowPrice] = useState('');
+    const [workDescription, setWorkDescription] = useState('');
+    const [buyout_price, setBuyout_price] = useState('');
 
     // 에러 상태 추가
     const [errors, setErrors] = useState({});
+
+    const fileInputRef = useRef(null);
+
+    useEffect(() => {
+        if (isOpen && initialSettings) {
+            setCurrentSettings(initialSettings);
+            setPrimaryCategory(initialSettings.primaryCategory || '');
+            setSaleType(initialSettings.saleType || '');
+            setSalePrice(initialSettings.salePrice || '');
+            setAuctionDuration(initialSettings.auctionDuration || '');
+            setStartBidPrice(initialSettings.startBidPrice || '');
+            setBuyNowPrice(initialSettings.buyNowPrice || '');
+            setWorkDescription(initialSettings.workDescription || '');
+            setBuyout_price(initialSettings.buyout_price || '');
+        }
+    }, [isOpen, initialSettings]);
 
     useEffect(() => {
         const foundCategory = Object.keys(CATEGORIES).find(cat => currentSettings.tags.includes(cat));
@@ -33,23 +51,23 @@ const SettingsModal = ({ onClose, settings, onSave }) => {
 
     // settings가 변경될 때 판매방식과 가격 정보를 초기화
     useEffect(() => {
-        console.log('SettingsModal 초기화 - settings:', settings);
-        if (settings.saleType) {
-            setSaleType(settings.saleType);
+        console.log('SettingsModal 초기화 - settings:', currentSettings);
+        if (currentSettings.saleType) {
+            setSaleType(currentSettings.saleType);
         }
-        if (settings.salePrice) {
-            setSalePrice(settings.salePrice);
+        if (currentSettings.salePrice) {
+            setSalePrice(currentSettings.salePrice);
         }
-        if (settings.auctionDuration) {
-            setAuctionDuration(settings.auctionDuration);
+        if (currentSettings.auctionDuration) {
+            setAuctionDuration(currentSettings.auctionDuration);
         }
-        if (settings.startBidPrice) {
-            setStartBidPrice(settings.startBidPrice);
+        if (currentSettings.startBidPrice) {
+            setStartBidPrice(currentSettings.startBidPrice);
         }
-        if (settings.buyNowPrice) {
-            setBuyNowPrice(settings.buyNowPrice);
+        if (currentSettings.buyNowPrice) {
+            setBuyNowPrice(currentSettings.buyNowPrice);
         }
-    }, [settings]);
+    }, [currentSettings]);
 
     // 유효성 검사 함수
     const validateForm = () => {
@@ -209,6 +227,10 @@ const SettingsModal = ({ onClose, settings, onSave }) => {
         }
     };
 
+    const handleWorkDescriptionChange = (e) => {
+        setWorkDescription(e.target.value);
+    };
+
     const handleSave = () => {
         if (validateForm()) {
             const updatedSettings = {
@@ -217,7 +239,8 @@ const SettingsModal = ({ onClose, settings, onSave }) => {
                 salePrice: saleType === 'sale' ? salePrice : '',
                 auctionDuration: saleType === 'auction' ? auctionDuration : '',
                 startBidPrice: saleType === 'auction' ? startBidPrice : '',
-                buyNowPrice: saleType === 'auction' ? buyNowPrice : ''
+                buyNowPrice: saleType === 'auction' ? buyNowPrice : '',
+                workDescription
             };
             onSave(updatedSettings);
         }
@@ -228,40 +251,57 @@ const SettingsModal = ({ onClose, settings, onSave }) => {
         primaryCategory && CATEGORIES[primaryCategory]?.includes(tag)
     );
 
+    if (!isOpen) return null;
+
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="settings-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="settings-modal-content" onClick={e => e.stopPropagation()}>
                 <div className="settings-modal-header">
-                    <h2>프로젝트 설정</h2>
+                    <h2>Settings</h2>
                 </div>
-                <div className="settings-modal-body">
-                    <div className="settings-layout">
-                        <div className="settings-left">
-                            <div className="cover-image-section">
+                <div className="modal-body">
+                    <div className="settings-grid">
+                        <div className="left-column">
+                            <div className="form-group">
                                 <label>프로젝트 표지</label>
                                 <div className="cover-image-container">
                                     {currentSettings.coverImage ? (
-                                        <img src={currentSettings.coverImage} alt="프로젝트 표지" />
+                                        <div className="image-wrapper" onClick={() => fileInputRef.current.click()}>
+                                            <img src={currentSettings.coverImage} alt="프로젝트 표지" className="main-image" />
+                                            <div className="image-overlay">
+                                                <button className="overlay-button">이미지 변경</button>
+                                            </div>
+                                        </div>
                                     ) : (
-                                        <div className="cover-image-placeholder">
-                                            <span>표지 이미지를 선택해주세요</span>
+                                        <div className="cover-image-placeholder" onClick={() => fileInputRef.current.click()}>
+                                            <span>+</span>
+                                            <p>클릭하여 표지 이미지 추가</p>
                                         </div>
                                     )}
                                     <input
                                         type="file"
-                                        id="cover-image"
-                                        accept="image/*"
+                                        ref={fileInputRef}
                                         onChange={handleCoverImageChange}
-                                        className="cover-image-input"
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
                                     />
-                                    <label htmlFor="cover-image" className="cover-image-button">
-                                        이미지 {currentSettings.coverImage ? '변경' : '선택'}
-                                    </label>
                                 </div>
                             </div>
+
+                            <div className="form-group">
+                                <label htmlFor="work-description">작품 설명</label>
+                                <textarea
+                                    id="work-description"
+                                    value={workDescription}
+                                    onChange={handleWorkDescriptionChange}
+                                    placeholder="작품에 대한 간단한 설명을 입력해주세요. (200자 이내)"
+                                    maxLength="200"
+                                    className="form-textarea"
+                                />
+                            </div>
                         </div>
-                        <div className="settings-right">
-                            <div className="settings-section">
+                        <div className="right-column">
+                            <div className="form-group">
                                 <label htmlFor="project-title">프로젝트 제목 (필수)</label>
                                 <input
                                     type="text"
@@ -274,7 +314,7 @@ const SettingsModal = ({ onClose, settings, onSave }) => {
                                 {errors.title && <span className="error-message">{errors.title}</span>}
                             </div>
 
-                            <div className="settings-section">
+                            <div className="form-group">
                                 <label>1차 카테고리</label>
                                 <div className="category-group primary-categories">
                                     {Object.keys(CATEGORIES).map(cat => (
@@ -290,7 +330,7 @@ const SettingsModal = ({ onClose, settings, onSave }) => {
                                 {errors.primaryCategory && <span className="error-message">{errors.primaryCategory}</span>}
 
                                 {primaryCategory && (
-                                    <div className="secondary-categories-container">
+                                    <div className="form-group">
                                         <label>세부 카테고리</label>
                                         <div className="category-group secondary-categories">
                                             {CATEGORIES[primaryCategory].map(subCat => (
@@ -308,9 +348,8 @@ const SettingsModal = ({ onClose, settings, onSave }) => {
                                 )}
                             </div>
 
-                            {/* 판매/경매 선택 섹션 - 2차 카테고리가 선택된 경우에만 표시 */}
-                            {hasSecondaryCategory && (
-                                <div className="settings-section">
+                            {currentSettings.tags && currentSettings.tags.length > 1 && (
+                                <div className="form-group">
                                     <label>판매 방식</label>
                                     <div className="sale-type-group">
                                         <button
@@ -327,80 +366,78 @@ const SettingsModal = ({ onClose, settings, onSave }) => {
                                         </button>
                                     </div>
                                     {errors.saleType && <span className="error-message">{errors.saleType}</span>}
+                                </div>
+                            )}
 
-                                    {/* 판매 선택 시 희망판매가 입력 */}
-                                    {saleType === 'sale' && (
-                                        <div className="price-input-section">
-                                            <label htmlFor="sale-price">희망판매가 (원)</label>
-                                            <input
-                                                type="number"
-                                                id="sale-price"
-                                                value={salePrice}
-                                                onChange={handleSalePriceChange}
-                                                placeholder="희망판매가를 입력하세요"
-                                                min="0"
-                                                className={errors.salePrice ? 'error' : ''}
-                                            />
-                                            {errors.salePrice && <span className="error-message">{errors.salePrice}</span>}
+                            {saleType === 'sale' && (
+                                <div className="price-input-section">
+                                    <label htmlFor="sale-price">희망판매가 (원)</label>
+                                    <input
+                                        type="number"
+                                        id="sale-price"
+                                        value={salePrice}
+                                        onChange={handleSalePriceChange}
+                                        placeholder="희망판매가를 입력하세요"
+                                        min="0"
+                                        className={errors.salePrice ? 'error' : ''}
+                                    />
+                                    {errors.salePrice && <span className="error-message">{errors.salePrice}</span>}
+                                </div>
+                            )}
+
+                            {saleType === 'auction' && (
+                                <div className="auction-settings">
+                                    <div className="auction-duration-section">
+                                        <label>경매 기간</label>
+                                        <div className="duration-group">
+                                            {AUCTION_DURATIONS.map(duration => (
+                                                <button
+                                                    key={duration}
+                                                    className={`duration-button ${auctionDuration === duration ? 'active' : ''}`}
+                                                    onClick={() => handleAuctionDurationChange(duration)}
+                                                >
+                                                    {duration}
+                                                </button>
+                                            ))}
                                         </div>
-                                    )}
+                                        {errors.auctionDuration && <span className="error-message">{errors.auctionDuration}</span>}
+                                    </div>
 
-                                    {/* 경매 선택 시 경매 설정 */}
-                                    {saleType === 'auction' && (
-                                        <div className="auction-settings">
-                                            <div className="auction-duration-section">
-                                                <label>경매 기간</label>
-                                                <div className="duration-group">
-                                                    {AUCTION_DURATIONS.map(duration => (
-                                                        <button
-                                                            key={duration}
-                                                            className={`duration-button ${auctionDuration === duration ? 'active' : ''}`}
-                                                            onClick={() => handleAuctionDurationChange(duration)}
-                                                        >
-                                                            {duration}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                {errors.auctionDuration && <span className="error-message">{errors.auctionDuration}</span>}
-                                            </div>
+                                    <div className="price-input-section">
+                                        <label htmlFor="start-bid-price">시작입찰가 (원)</label>
+                                        <input
+                                            type="number"
+                                            id="start-bid-price"
+                                            value={startBidPrice}
+                                            onChange={handleStartBidPriceChange}
+                                            placeholder="시작입찰가를 입력하세요"
+                                            min="0"
+                                            className={errors.startBidPrice ? 'error' : ''}
+                                        />
+                                        {errors.startBidPrice && <span className="error-message">{errors.startBidPrice}</span>}
+                                    </div>
 
-                                            <div className="price-input-section">
-                                                <label htmlFor="start-bid-price">시작입찰가 (원)</label>
-                                                <input
-                                                    type="number"
-                                                    id="start-bid-price"
-                                                    value={startBidPrice}
-                                                    onChange={handleStartBidPriceChange}
-                                                    placeholder="시작입찰가를 입력하세요"
-                                                    min="0"
-                                                    className={errors.startBidPrice ? 'error' : ''}
-                                                />
-                                                {errors.startBidPrice && <span className="error-message">{errors.startBidPrice}</span>}
-                                            </div>
-
-                                            <div className="price-input-section">
-                                                <label htmlFor="buy-now-price">즉시입찰가 (원)</label>
-                                                <input
-                                                    type="number"
-                                                    id="buy-now-price"
-                                                    value={buyNowPrice}
-                                                    onChange={handleBuyNowPriceChange}
-                                                    placeholder="즉시입찰가는 시작입찰가보다 높아야 합니다."
-                                                    min="0"
-                                                    className={errors.buyNowPrice ? 'error' : ''}
-                                                />
-                                                {errors.buyNowPrice && <span className="error-message">{errors.buyNowPrice}</span>}
-                                            </div>
-                                        </div>
-                                    )}
+                                    <div className="price-input-section">
+                                        <label htmlFor="buy-now-price">즉시입찰가 (원)</label>
+                                        <input
+                                            type="number"
+                                            id="buy-now-price"
+                                            value={buyNowPrice}
+                                            onChange={handleBuyNowPriceChange}
+                                            placeholder="즉시입찰가는 시작입찰가보다 높아야 합니다."
+                                            min="0"
+                                            className={errors.buyNowPrice ? 'error' : ''}
+                                        />
+                                        {errors.buyNowPrice && <span className="error-message">{errors.buyNowPrice}</span>}
+                                    </div>
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
                 <div className="settings-modal-footer">
-                    <button className="cancel-button" onClick={onClose}>취소</button>
-                    <button className="save-button" onClick={handleSave}>프로젝트 업데이트</button>
+                    <button onClick={handleSave} className="save-button">저장</button>
+                    <button onClick={onClose} className="cancel-button">취소</button>
                 </div>
             </div>
         </div>
