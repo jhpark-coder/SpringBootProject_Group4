@@ -1,5 +1,6 @@
 package com.creatorworks.nexus.product.service;
 
+import com.creatorworks.nexus.product.constant.ProductCategory;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import jakarta.transaction.Transactional;
@@ -27,5 +28,21 @@ public class ProductService {
     public Product findProductById(Long id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid product Id:" + id));
+    }
+
+    public Page<Product> findProductsByCategory(String category, Pageable pageable) {
+        ProductCategory category1;
+        try {
+            // URL 파라미터로 받은 문자열("artwork")을 Enum(ProductCategory.ARTWORK)으로 변환
+            category1 = ProductCategory.valueOf(category.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            // 존재하지 않는 카테고리 문자열이 들어오면 안전하게 빈 페이지를 반환
+            return Page.empty(pageable);
+        }
+
+        // Repository에 조회 위임
+        return productRepository.findByCategory1(category1, pageable);
+
+
     }
 }

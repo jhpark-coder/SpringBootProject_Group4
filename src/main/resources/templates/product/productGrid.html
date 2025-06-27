@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragment/layout}">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Main</title>
+        <th:block layout:fragment="css">
+            <link rel="stylesheet" th:href="@{/css/productGrid.css}">
+        </th:block>
+    </head>
+    <body>
+        <main class="container" layout:fragment="content">
+            <!-- 상단 카테고리 메뉴 -->
+            <nav class="category-nav">
+                <button class="nav-button active">모두 보기</button>
+                <button class="nav-button">포토그라피</button>
+                <button class="nav-button">일러스트레이션</button>
+                <button class="nav-button">스케치</button>
+                <button class="nav-button">코믹스</button>
+            </nav>
+
+            <!-- ========================================================== -->
+            <!--      콘텐츠 그리드 섹션 (새로운 요구사항 적용)         -->
+            <!-- ========================================================== -->
+            <section class="grid-container">
+
+                <article class="item-card" th:each="product : ${products.getContent()}">
+
+                    <!-- 1. 이미지 호버 효과를 위한 컨테이너. 상세 페이지로 이동하는 링크 역할. -->
+                    <a th:href="'/product/' + ${product.id}" class="image-container">
+                        <!-- 실제 상품 이미지 -->
+                        <img th:src="${product.imgUrl}" class="card-image" th:alt="${product.productName}">
+                        <!-- 호버 시 나타날 오버레이와 제목 -->
+                        <div class="overlay">
+                            <h4 class="hover-title" th:text="${product.productName}">상품 이름</h4>
+                        </div>
+                    </a>
+
+                    <!-- 2. 카드 하단 정보 (작가 이름 + 구독 버튼) -->
+                    <div class="card-info">
+                        <!-- th:text에 Elvis 연산자(?:)를 사용해 authorName이 null일 경우 기본값을 보여줍니다. -->
+                        <span class="author-name" th:text="${product.authorName}">작가 이름</span>
+                        <button class="subscribe-btn">구독</button>
+                    </div>
+                </article>
+
+                <!-- 상품이 없을 경우 보여줄 메시지 -->
+                <div th:if="${items.isEmpty()}" class="no-items-message">
+                    <p>표시할 콘텐츠가 없습니다.</p>
+                </div>
+
+            </section>
+
+            <!-- 페이지네이션 코드는 여기에 추가 -->
+
+        </main>
+    </body>
+</html>

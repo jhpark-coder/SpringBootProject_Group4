@@ -52,12 +52,12 @@
     </div>
     <nav class="category-nav" th:fragment="category-nav">
         <ul>
-            <li><a href="#">아트웍</a></li>
-            <li><a href="#">그래픽디자인</a></li>
-            <li><a href="#">캐릭터</a></li>
-            <li><a href="#">Java</a></li>
-            <li><a href="#">프론트엔드</a></li>
-            <li><a href="#">Python</a></li>
+            <li><a th:href="@{/products/infGrid(category1='artwork')}" class="menu-button">아트웍</a></li>
+            <li><a th:href="@{/products/infGrid(category1='graphic-design')}" class="menu-button">그래픽디자인</a></li>
+            <li><a th:href="@{/products/infGrid(category1='character')}" class="menu-button">캐릭터</a></li>
+            <li><a th:href="@{/products/infGrid(category1='java')}" class="menu-button">Java</a></li>
+            <li><a th:href="@{/products/infGrid(category1='frontend')}" class="menu-button">프론트엔드</a></li>
+            <li><a th:href="@{/products/infGrid(category1='python')}" class="menu-button">Python</a></li>
             <!-- 여기에 <li><a href="#">새 메뉴</a></li> 를 추가하면 자동으로 배치됩니다. -->
         </ul>
     </nav>
