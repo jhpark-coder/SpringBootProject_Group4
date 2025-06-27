@@ -148,6 +148,14 @@
                 <th>프로젝트명</th>
                 <td th:text="${auction.name}"></td>
             </tr>
+            <tr th:if="${auction.workDescription != null and !auction.workDescription.isEmpty()}">
+                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    작품 설명
+                </th>
+                <td class="px-6 py-4 whitespace-pre-wrap text-sm text-gray-900" th:text="${auction.workDescription}">
+                    작품에 대한 간단한 설명이 여기에 표시됩니다.
+                </td>
+            </tr>
             <tr>
                 <th>대표이미지</th>
                 <td><img th:src="${auction.imageUrl}" th:alt="${auction.name}" /></td>
@@ -182,20 +190,27 @@
             </tr>
         </table>
 
+        <!-- 구분선 -->
+        <hr class="my-8 border-gray-300">
+
+        <!-- 프로젝트 내용 -->
         <div
-            th:style="'background-color: ' + ${auction.backgroundColor ?: '#f8f9fa'} + '; font-family: ' + ${auction.fontFamily ?: 'Arial, sans-serif'} + '; padding: 20px; border-radius: 5px; margin-bottom: 20px;'">
-            <h3>프로젝트 내용</h3>
-            <div th:utext="${auction.description}"></div>
+            th:style="'background-color: ' + ${auction.backgroundColor ?: '#ffffff'} + '; padding: 2rem; border-radius: 0.5rem;'">
+            <div class="prose max-w-none"
+                th:style="'font-family: &quot;' + (${auction.fontFamily} ?: 'inherit') + '&quot;, sans-serif;'"
+                th:utext="${auction.description}">
+                <!-- Tiptap 에디터 내용이 여기에 렌더링됩니다. -->
+            </div>
         </div>
 
         <div class="action-buttons">
-            <a th:href="@{'http://localhost:5173/editor/auction/' + ${auction.id}}" class="btn btn-primary">
+            <a th:href="@{'/editor/auction/' + ${auction.id}}" class="btn btn-primary">
                 ✏️ 편집하기
             </a>
-            <a th:href="@{'http://localhost:5173/'}" class="btn btn-secondary">
+            <a th:href="@{/editor}" class="btn btn-secondary">
                 🎨 새 프로젝트 만들기
             </a>
-            <a href="http://localhost:8080/" class="btn btn-secondary">
+            <a th:href="@{/}" class="btn btn-secondary">
                 🏠 홈으로 가기
             </a>
             <a href="#" onclick="window.print()" class="btn btn-success">

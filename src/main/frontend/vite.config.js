@@ -4,6 +4,7 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/editor/',
   plugins: [react()],
   resolve: {
     alias: {
@@ -13,6 +14,24 @@ export default defineConfig({
   build: {
     outDir: '../resources/static/editor',
     emptyOutDir: true,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'tiptap-vendor': [
+            '@tiptap/react',
+            '@tiptap/starter-kit',
+            '@tiptap/extension-underline',
+            '@tiptap/extension-link',
+            '@tiptap/extension-text-align',
+            '@tiptap/extension-text-style'
+          ],
+          'icons-vendor': ['lucide-react'],
+          'utils-vendor': ['axios', 'lowlight', 'highlight.js']
+        }
+      }
+    }
   },
   server: {
     proxy: {

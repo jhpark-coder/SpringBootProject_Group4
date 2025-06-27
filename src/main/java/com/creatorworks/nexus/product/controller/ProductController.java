@@ -2,6 +2,7 @@ package com.creatorworks.nexus.product.controller;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,7 @@ import com.creatorworks.nexus.product.dto.ProductSaveRequest;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.service.ProductService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -54,7 +56,12 @@ public class ProductController {
      * @return 렌더링할 뷰의 이름 ("gridViewTest")
      */
     @GetMapping("/grid/test")
-    public String gridViewTest() {
+    public String gridViewTest(Model model, HttpServletRequest request) {
+        // CSRF 토큰을 Model에 추가
+        CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+        if (csrfToken != null) {
+            model.addAttribute("_csrf", csrfToken);
+        }
         return "gridViewTest";
     }
 

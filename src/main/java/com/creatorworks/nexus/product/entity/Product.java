@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import com.creatorworks.nexus.global.BaseEntity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,8 +26,10 @@ public class Product extends BaseEntity implements Serializable {
 
     private String name;
     private int price;
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String description;
+    @Column(columnDefinition = "TEXT")
+    private String workDescription;
     @Lob
     private String tiptapJson;
     @Lob

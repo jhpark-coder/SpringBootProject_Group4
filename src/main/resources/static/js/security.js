@@ -99,11 +99,6 @@
         }
 
         // --- 개발자 도구 관련 단축키 차단 ---
-        if (e.key === 'F12') {
-            e.preventDefault();
-            showNotice('개발자도구 사용이 제한됩니다.');
-            return false;
-        }
         if (e.ctrlKey || e.metaKey) { // Ctrl 또는 Cmd 키가 함께 눌렸을 경우
             if (e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) {
                 e.preventDefault();
@@ -152,6 +147,22 @@
                 return false;
             }
         }
+
+        // F12 키
+        if (e.key === 'F12' || e.keyCode === 123) {
+            e.preventDefault();
+            showNotice('개발자도구 사용이 제한됩니다.');
+            return false;
+        }
+
+        // 개발자 도구 관련
+        if (e.ctrlKey || e.metaKey) {
+            if (e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) {
+                e.preventDefault();
+                showNotice('개발자도구 사용이 제한됩니다.');
+                return false;
+            }
+        }
     });
 
     // [실행 순서 2-4] 탭 전환 감지 및 화면 보호
@@ -163,7 +174,7 @@
             isPageVisible = false;
             // 페이지가 보이지 않을 때, 다른 프로그램으로 화면을 캡처하는 것을 방해하기 위해 화면을 흐리게 처리합니다.
             document.body.style.filter = 'blur(10px)';
-            showNotice('페이지 전환 감지 - 보안 모드 활성화');
+            showNotice('다른 창으로 전환되어 화면을 보호합니다.');
         } else {
             isPageVisible = true;
             // 페이지가 다시 활성화되면, 0.1초 후에 흐림 효과를 제거하여 원래대로 복구합니다.
@@ -196,6 +207,55 @@
                 -moz-user-select: text;
                 -ms-user-select: text;
                 user-select: text;
+            }
+            
+            /* 🔒 스크린샷 방지 CSS */
+            /* 스크린샷 시 특수 효과 적용 */
+            @media print {
+                * {
+                    display: none !important;
+                }
+                body::before {
+                    content: "⚠️ 스크린샷 금지 - Nexus 보안 시스템";
+                    display: block !important;
+                    text-align: center;
+                    font-size: 24px;
+                    color: red;
+                    background: black;
+                    padding: 50px;
+                }
+            }
+            
+            /* 스크린샷 시 미세한 효과 (일부 도구에서 감지 가능) */
+            body {
+                -webkit-filter: brightness(1.001);
+                filter: brightness(1.001);
+            }
+            
+            /* 이미지 보호 강화 */
+            img {
+                -webkit-user-drag: none;
+                -khtml-user-drag: none;
+                -moz-user-drag: none;
+                -o-user-drag: none;
+                user-drag: none;
+                pointer-events: none;
+            }
+            
+            /* 스크린샷 시 특수 효과 (고급) */
+            @media screen and (max-width: 9999px) {
+                body::after {
+                    content: "";
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                    z-index: 999999;
+                    background: transparent;
+                    opacity: 0.001;
+                }
             }
         `;
         document.head.appendChild(style);
@@ -249,6 +309,287 @@
         observer.observe(document.body, { childList: true, subtree: true });
     });
 
+    // ===================================================================
+    // [B-1] 강화된 스크린샷 방지 - CSS 기반 + 키보드 감지 시스템
+    // 클립보드 권한 없이도 효과적인 스크린샷 방지
+    // ===================================================================
+    (function () {
+        let screenshotAttempts = 0;
+        let lastScreenshotTime = 0;
+
+        // CSS 기반 스크린샷 방지 스타일 적용
+        function applyScreenshotPreventionCSS() {
+            const style = document.createElement('style');
+            style.textContent = `
+                /* 스크린샷 방지용 CSS (주석처리됨)
+                /* 스크린샷 시 특수 효과 */
+                @media print {
+                    * {
+                        display: none !important;
+                    }
+                    body::before {
+                        content: "⚠️ 스크린샷 금지 - Nexus 보안 시스템";
+                        display: block !important;
+                        text-align: center;
+                        font-size: 24px;
+                        color: red;
+                        background: black;
+                        padding: 50px;
+                    }
+                }
+                
+                /* 스크린샷 방지용 CSS */
+                .screenshot-protection {
+                    -webkit-user-select: none;
+                    -moz-user-select: none;
+                    -ms-user-select: none;
+                    user-select: none;
+                    -webkit-touch-callout: none;
+                }
+                
+                /* 스크린샷 시도 감지용 가상 요소 */
+                .screenshot-detector::before {
+                    content: "";
+                    position: fixed;
+                    top: -9999px;
+                    left: -9999px;
+                    width: 1px;
+                    height: 1px;
+                    background: transparent;
+                    z-index: -1;
+                }
+                
+                /* 스크린샷 시 화면 효과 */
+                .screenshot-alert {
+                    animation: screenshotAlert 0.5s ease-in-out;
+                }
+                
+                @keyframes screenshotAlert {
+                    0% { filter: blur(0px); }
+                    50% { filter: blur(10px) brightness(0.5); }
+                    100% { filter: blur(0px); }
+                }
+
+                /* 스크린샷 방지 강화 - 모든 요소에 적용 */
+                * {
+                    -webkit-print-color-adjust: exact !important;
+                    color-adjust: exact !important;
+                }
+                */
+            `;
+            document.head.appendChild(style);
+        }
+
+        // 강화된 키보드 이벤트 감지
+        function setupEnhancedKeyboardDetection() {
+            document.addEventListener('keydown', function (e) {
+                // F12 키 (개발자도구) - 최우선 처리
+                if (e.key === 'F12' || e.keyCode === 123) {
+                    e.preventDefault();
+                    showNotice('개발자도구 사용이 제한됩니다.');
+                    return false;
+                }
+
+                /* 스크린샷 관련 키 감지 (주석처리됨)
+                // PrintScreen 키 감지 (다양한 방법)
+                if (e.key === 'PrintScreen' || e.keyCode === 44 ||
+                    e.which === 44 || e.code === 'PrintScreen' ||
+                    e.key === 'F13' || e.keyCode === 124 || // 일부 브라우저에서 PrintScreen을 F13으로 감지
+                    (e.ctrlKey && e.key === 'p') || // Ctrl+P (인쇄)
+                    (e.metaKey && e.key === 'p')) { // Cmd+P (Mac 인쇄)
+                    e.preventDefault();
+                    handleScreenshotAttempt('PrintScreen/인쇄 키 감지');
+                    return false;
+                }
+
+                // Windows + Shift + S (스니핑 도구)
+                if (e.metaKey && e.shiftKey && e.key === 'S') {
+                    e.preventDefault();
+                    handleScreenshotAttempt('스니핑 도구 감지');
+                    return false;
+                }
+
+                // Windows + G (게임 바)
+                if (e.metaKey && e.key === 'G') {
+                    e.preventDefault();
+                    handleScreenshotAttempt('게임 바 감지');
+                    return false;
+                }
+
+                // Windows + PrtScn
+                if (e.metaKey && (e.key === 'PrintScreen' || e.keyCode === 44)) {
+                    e.preventDefault();
+                    handleScreenshotAttempt('Windows + PrintScreen 감지');
+                    return false;
+                }
+
+                // Alt + PrintScreen
+                if (e.altKey && (e.key === 'PrintScreen' || e.keyCode === 44)) {
+                    e.preventDefault();
+                    handleScreenshotAttempt('Alt + PrintScreen 감지');
+                    return false;
+                }
+                */
+
+                // 개발자 도구 관련 (Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C)
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) {
+                        e.preventDefault();
+                        showNotice('개발자도구 사용이 제한됩니다.');
+                        return false;
+                    }
+                }
+            });
+
+            /* 스크린샷 관련 keyup 이벤트 (주석처리됨)
+            // keyup 이벤트도 감지 (일부 PrintScreen 키는 keydown에서 감지되지 않음)
+            document.addEventListener('keyup', function (e) {
+                if (e.key === 'PrintScreen' || e.keyCode === 44 ||
+                    e.which === 44 || e.code === 'PrintScreen') {
+                    e.preventDefault();
+                    handleScreenshotAttempt('PrintScreen 키 감지 (keyup)');
+                    return false;
+                }
+            });
+
+            // beforeprint 이벤트 감지 (인쇄 시도)
+            window.addEventListener('beforeprint', function () {
+                handleScreenshotAttempt('인쇄 시도 감지');
+                // 인쇄를 취소
+                setTimeout(() => {
+                    window.close();
+                }, 100);
+            });
+            */
+        }
+
+        /* 스크린샷 시도 처리 함수 (주석처리됨)
+        // 스크린샷 시도 처리
+        function handleScreenshotAttempt(reason) {
+            const now = Date.now();
+            screenshotAttempts++;
+
+            // 연속 시도 방지 (1초 내 3회 이상)
+            if (now - lastScreenshotTime < 1000 && screenshotAttempts > 3) {
+                showNotice('⚠️ 과도한 스크린샷 시도 - 보안 모드 활성화');
+                activateSecurityMode();
+                return;
+            }
+
+            lastScreenshotTime = now;
+            showNotice(`스크린샷 시도 감지: ${reason}`);
+
+            // 화면 효과 적용
+            document.body.classList.add('screenshot-alert');
+            setTimeout(() => {
+                document.body.classList.remove('screenshot-alert');
+            }, 500);
+
+            // 추가 보안 조치
+            setTimeout(() => {
+                document.body.style.filter = 'blur(3px)';
+                setTimeout(() => {
+                    document.body.style.filter = 'none';
+                }, 2000);
+            }, 100);
+        }
+
+        // 보안 모드 활성화
+        function activateSecurityMode() {
+            // 화면 강제 흐림
+            document.body.style.filter = 'blur(8px) brightness(0.3)';
+
+            // 경고 메시지 표시
+            const warning = document.createElement('div');
+            warning.id = 'security-warning';
+            warning.style.cssText = `
+                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                background: #e74c3c; color: white; padding: 30px;
+                border-radius: 10px; font-size: 18px; font-weight: bold;
+                z-index: 10000; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            `;
+            warning.innerHTML = `
+                <h2>⚠️ 보안 경고</h2>
+                <p>스크린샷 시도가 감지되어 보안 모드가 활성화되었습니다.</p>
+                <p>1초 후 정상 모드로 복구됩니다.</p>
+            `;
+            document.body.appendChild(warning);
+
+            // 1초 후 복구
+            setTimeout(() => {
+                document.body.style.filter = 'none';
+                warning.remove();
+                screenshotAttempts = 0;
+            }, 1000);
+        }
+        */
+
+        // 마우스 이벤트 감지 (의심스러운 행동)
+        function setupMouseDetection() {
+            let mouseDownTime = 0;
+            let mousePosition = { x: 0, y: 0 };
+
+            document.addEventListener('mousedown', function (e) {
+                mouseDownTime = Date.now();
+                mousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            document.addEventListener('mouseup', function (e) {
+                const holdTime = Date.now() - mouseDownTime;
+                const distance = Math.sqrt(
+                    Math.pow(e.clientX - mousePosition.x, 2) +
+                    Math.pow(e.clientY - mousePosition.y, 2)
+                );
+
+                // 길게 누르기 + 드래그 감지
+                if (holdTime > 3000 && distance < 10) {
+                    handleScreenshotAttempt('의심스러운 마우스 동작');
+                }
+            });
+        }
+
+        // 페이지 가시성 변화 감지
+        function setupVisibilityDetection() {
+            let lastVisibilityChange = Date.now();
+
+            document.addEventListener('visibilitychange', function () {
+                const now = Date.now();
+
+                // 빠른 탭 전환 감지 (스크린샷 도구 사용 시)
+                if (now - lastVisibilityChange < 500) {
+                    handleScreenshotAttempt('빠른 탭 전환 감지');
+                }
+
+                lastVisibilityChange = now;
+
+                if (document.hidden) {
+                    // 페이지가 숨겨질 때 화면 흐림
+                    document.body.style.filter = 'blur(5px)';
+                } else {
+                    // 페이지가 다시 보일 때
+                    setTimeout(() => {
+                        document.body.style.filter = 'none';
+                    }, 300);
+                }
+            });
+        }
+
+        // 초기화
+        function initScreenshotPrevention() {
+            applyScreenshotPreventionCSS();
+            setupEnhancedKeyboardDetection();
+            setupMouseDetection();
+            setupVisibilityDetection();
+
+            // 페이지에 스크린샷 방지 클래스 추가
+            document.body.classList.add('screenshot-protection', 'screenshot-detector');
+
+            console.log('🔒 CSS 기반 스크린샷 방지 시스템 활성화됨');
+        }
+
+        // 시스템 시작
+        initScreenshotPrevention();
+    })();
 
     // ===================================================================
     // [D] 헬퍼(Helper) 함수 및 기타 기능
@@ -280,32 +621,47 @@
         // 2. 새로운 알림 <div> 요소를 생성하고, CSS 스타일을 적용합니다.
         const notice = document.createElement('div');
         notice.id = 'security-notice';
+
+        // 스크롤 위치를 고려한 동적 위치 계산
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const topPosition = Math.max(20, scrollTop + 20); // 최소 20px, 스크롤 위치 + 20px
+
         notice.style.cssText = `
-            position: fixed; top: 20px; right: 20px;
+            position: fixed; top: ${topPosition}px; right: 20px;
             background: #ff6b6b; color: white; padding: 12px 20px;
             border-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             font-size: 14px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 10000; opacity: 0; transform: translateX(100%);
-            transition: all 0.3s ease;
+            z-index: 10000; opacity: 0; transform: translateY(-20px);
+            transition: all 0.3s ease; max-width: 300px; word-wrap: break-word;
         `;
         notice.textContent = message;
 
         // 3. 생성된 알림을 페이지의 <body>에 추가합니다.
         document.body.appendChild(notice);
 
-        // 4. 애니메이션 효과와 함께 알림을 표시합니다.
+        // 4. 스크롤 이벤트 리스너 추가 (토스트가 표시되는 동안 위치 업데이트)
+        const updatePosition = () => {
+            const newScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const newTopPosition = Math.max(20, newScrollTop + 20);
+            notice.style.top = `${newTopPosition}px`;
+        };
+
+        window.addEventListener('scroll', updatePosition);
+
+        // 5. 애니메이션 효과와 함께 알림을 표시합니다.
         setTimeout(() => {
             notice.style.opacity = '1';
-            notice.style.transform = 'translateX(0)';
+            notice.style.transform = 'translateY(0)';
         }, 10);
 
-        // 5. 3초 후에 자동으로 사라지도록 설정합니다.
+        // 6. 3초 후에 자동으로 사라지도록 설정합니다.
         setTimeout(() => {
             notice.style.opacity = '0';
             notice.style.transform = 'translateX(100%)';
             setTimeout(() => {
                 if (notice.parentNode) {
                     notice.remove();
+                    window.removeEventListener('scroll', updatePosition);
                 }
             }, 300);
         }, 3000);

@@ -3,7 +3,7 @@
     padding: 0;
     border-radius: 8px;
     width: 90%;
-    max-width: 920px;
+    max-width: 1100px;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -25,41 +25,55 @@
 }
 
 .settings-modal-body {
-    padding: 1rem 1.5rem;
+    padding: 2rem 2.5rem;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
 }
 
-.settings-section {
-    display: flex;
-    flex-direction: column;
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 2.5rem;
 }
 
-.settings-section label {
-    margin-bottom: 0.5rem;
-    font-weight: 600;
+.left-column,
+.right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* 모든 레이블 스타일 통일 */
+.form-group>label {
     font-size: 0.9rem;
+    font-weight: normal;
+    color: #495057;
+    margin-bottom: 0.25rem;
+    /* 모든 레이블 하단 마진 통일 */
 }
 
-.settings-section input[type="text"] {
+input[type="text"],
+input[type="number"],
+.form-textarea {
     padding: 0.75rem;
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .category-group {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-}
-
-.category-group.secondary-categories {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: none;
 }
 
 .category-button {
@@ -109,96 +123,88 @@
     color: white;
 }
 
-.settings-layout {
-    display: flex;
-    gap: 2rem;
-}
-
-.settings-left {
-    width: 300px;
-    flex-shrink: 0;
-}
-
-.settings-right {
-    flex-grow: 1;
-}
-
-.cover-image-section {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
 .cover-image-container {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 4/3;
-    background-color: #f8f9fa;
+    border: 2px dashed #ccc;
     border-radius: 8px;
+    cursor: pointer;
+    background-color: #f9f9f9;
+    transition: all 0.3s ease;
+    width: 100%;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
     overflow: hidden;
+}
+
+.cover-image-container:hover {
+    border-color: #007bff;
+    background-color: #f0f8ff;
+}
+
+.cover-image-placeholder {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    color: #888;
+    text-align: center;
 }
 
-.cover-image-container img {
+.cover-image-placeholder span {
+    font-size: 48px;
+    font-weight: 200;
+    line-height: 1;
+}
+
+.cover-image-placeholder p {
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+.image-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.main-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.cover-image-placeholder {
-    width: 100%;
-    height: 100%;
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #adb5bd;
-    text-align: center;
-    padding: 1rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-.cover-image-input {
-    display: none;
+.image-wrapper:hover .image-overlay {
+    opacity: 1;
 }
 
-.cover-image-button {
-    position: absolute;
-    bottom: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
+.overlay-button {
+    background: white;
+    color: black;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
     cursor: pointer;
-    font-size: 0.875rem;
-    transition: background-color 0.2s;
 }
 
-.cover-image-button:hover {
-    background-color: rgba(0, 0, 0, 0.8);
-}
-
-.secondary-categories-container {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #eee;
-}
-
-.secondary-categories-container label {
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-bottom: 0.75rem;
-    display: block;
-}
-
-/* 판매/경매 관련 스타일 */
 .sale-type-group {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 1rem;
 }
 
 .sale-type-button {
@@ -222,33 +228,9 @@
 }
 
 .price-input-section {
-    margin-bottom: 1rem;
-}
-
-.price-input-section label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.price-input-section input[type="number"] {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-}
-
-.price-input-section input[type="number"]:invalid {
-    border-color: #dc3545;
-}
-
-.price-hint {
-    display: block;
-    margin-top: 0.25rem;
-    font-size: 0.8rem;
-    color: #6c757d;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 .auction-settings {
@@ -258,14 +240,9 @@
 }
 
 .auction-duration-section {
-    margin-bottom: 1rem;
-}
-
-.auction-duration-section label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .duration-group {
@@ -280,7 +257,6 @@
     background-color: #f8f9fa;
     cursor: pointer;
     transition: all 0.2s;
-    font-size: 0.9rem;
 }
 
 .duration-button:hover {
@@ -293,23 +269,30 @@
     border-color: #007bff;
 }
 
-/* 에러 관련 스타일 */
+.auction-settings .price-input-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+}
+
+.auction-settings .price-input-section label {
+    margin-bottom: 0;
+    flex-shrink: 0;
+    width: 100px;
+    white-space: nowrap;
+}
+
+.auction-settings .price-input-section input[type="number"] {
+    flex-grow: 1;
+}
+
 .error-message {
-    display: block;
-    color: #dc3545;
+    color: red;
     font-size: 0.8rem;
-    margin-top: 0.25rem;
-    font-weight: 500;
 }
 
-.settings-section input.error,
-.price-input-section input.error {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
-}
-
-.settings-section input.error:focus,
-.price-input-section input.error:focus {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+input.error {
+    border-color: red;
 }

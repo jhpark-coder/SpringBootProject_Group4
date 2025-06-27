@@ -374,7 +374,8 @@
 /* Drag Handle Styles */
 .drag-handle {
   position: absolute;
-  left: -24px; /* Editor padding 고려 */
+  left: -24px;
+  /* Editor padding 고려 */
   top: 8px;
   display: flex;
   align-items: center;
@@ -813,12 +814,29 @@
   margin: 1.5rem 0;
 }
 
-.preview-content .photo-grid-wrapper.grid-2-cols { grid-template-columns: repeat(2, 1fr); }
-.preview-content .photo-grid-wrapper.grid-3-cols { grid-template-columns: repeat(3, 1fr); }
-.preview-content .photo-grid-wrapper.grid-4-cols { grid-template-columns: repeat(4, 1fr); }
-.preview-content .photo-grid-wrapper.grid-5-cols { grid-template-columns: repeat(5, 1fr); }
-.preview-content .photo-grid-wrapper.grid-1-2-cols { grid-template-columns: 2fr 1fr; }
-.preview-content .photo-grid-wrapper.grid-2-1-cols { grid-template-columns: 1fr 2fr; }
+.preview-content .photo-grid-wrapper.grid-2-cols {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.preview-content .photo-grid-wrapper.grid-3-cols {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.preview-content .photo-grid-wrapper.grid-4-cols {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.preview-content .photo-grid-wrapper.grid-5-cols {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.preview-content .photo-grid-wrapper.grid-1-2-cols {
+  grid-template-columns: 2fr 1fr;
+}
+
+.preview-content .photo-grid-wrapper.grid-2-1-cols {
+  grid-template-columns: 1fr 2fr;
+}
 
 .preview-content .photo-grid-wrapper .grid-item {
   position: relative;
@@ -875,4 +893,152 @@
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+/* === Fancy Modal/EmbedModal Custom Styles === */
+.fancy-modal-content {
+  background: #fff;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 1.5px 6px rgba(0, 0, 0, 0.08);
+  padding: 2.5rem 2rem 2rem 2rem;
+  max-width: 420px;
+  width: 100%;
+  animation: fadeIn 0.3s cubic-bezier(.4, 0, .2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.fancy-modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.5px;
+}
+
+.fancy-label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.fancy-url-input-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.fancy-input {
+  flex: 1;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  transition: border 0.2s, box-shadow 0.2s;
+  outline: none;
+  background: #fafbfc;
+}
+
+.fancy-input:focus {
+  border: 1.5px solid #7c3aed;
+  box-shadow: 0 0 0 2px #a78bfa33;
+  background: #fff;
+}
+
+.fancy-embed-btn {
+  background: linear-gradient(90deg, #6366f1 0%, #a78bfa 100%);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.10);
+  padding: 0.75rem 1.5rem;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.fancy-embed-btn:hover {
+  background: linear-gradient(90deg, #7c3aed 0%, #6366f1 100%);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.18);
+}
+
+.fancy-close-btn {
+  background: #f3f4f6;
+  color: #6b7280;
+  border-radius: 0.75rem;
+  font-weight: 500;
+  border: none;
+  margin-top: 0.5rem;
+  transition: background 0.2s, color 0.2s;
+}
+
+.fancy-close-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s cubic-bezier(.4, 0, .2, 1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fancy-modal-content .flex.justify-end>button+button {
+  margin-left: 1rem;
+}
+
+.fancy-file-upload-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.fancy-file-btn {
+  /* <label> 태그를 <button>과 완전히 동일하게 만들기 위해 모든 스타일을 명시적으로 정의합니다. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  /* '업로드' 버튼(.fancy-embed-btn)의 모든 시각적 스타일을 복사하여 강제로 적용 */
+  background: linear-gradient(90deg, #6366f1 0%, #a78bfa 100%);
+  color: #fff !important;
+  /* !important를 사용해 다른 스타일의 간섭을 무시하고 흰색 글씨를 강제합니다. */
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.10);
+  transition: background 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+  /* 혹시 모를 밑줄 제거 */
+  line-height: 1.5;
+  /* 버튼과 줄 높이를 일치시킵니다. */
+}
+
+.fancy-file-btn:hover {
+  background: linear-gradient(90deg, #7c3aed 0%, #6366f1 100%);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.18);
+}
+
+.fancy-file-name {
+  flex: 1 1 0%;
+  min-width: 0;
+  font-size: 0.95rem;
+  color: #6366f1;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

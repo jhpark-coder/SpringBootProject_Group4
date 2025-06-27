@@ -148,6 +148,11 @@
                 <th>상품명</th>
                 <td th:text="${product.name}"></td>
             </tr>
+            <tr th:if="${product.workDescription != null and !product.workDescription.isEmpty()}">
+                <th>작품 설명</th>
+                <td th:text="${product.workDescription}"
+                    th:if="${product.workDescription != null and !product.workDescription.isEmpty()}"></td>
+            </tr>
             <tr>
                 <th>대표이미지</th>
                 <td><img th:src="${product.imageUrl}" th:alt="${product.name}" /></td>
@@ -174,20 +179,27 @@
             </tr>
         </table>
 
+        <!-- 구분선 -->
+        <hr class="my-8 border-gray-300">
+
+        <!-- 프로젝트 내용 -->
         <div
-            th:style="'background-color: ' + ${product.backgroundColor ?: '#f8f9fa'} + '; font-family: ' + ${product.fontFamily ?: 'Arial, sans-serif'} + '; padding: 20px; border-radius: 5px; margin-bottom: 20px;'">
-            <h3>상품 내용</h3>
-            <div th:utext="${product.description}"></div>
+            th:style="'background-color: ' + ${product.backgroundColor ?: '#ffffff'} + '; padding: 2rem; border-radius: 0.5rem;'">
+            <div class="prose max-w-none"
+                th:style="'font-family: &quot;' + (${product.fontFamily} ?: 'inherit') + '&quot;, sans-serif;'"
+                th:utext="${product.description}">
+                <!-- Tiptap 에디터 내용이 여기에 렌더링됩니다. -->
+            </div>
         </div>
 
         <div class="action-buttons">
-            <a th:href="@{'http://localhost:5173/editor/product/' + ${product.id}}" class="btn btn-primary">
+            <a th:href="@{'/editor/product/' + ${product.id}}" class="btn btn-primary">
                 ✏️ 편집하기
             </a>
-            <a th:href="@{'http://localhost:5173/'}" class="btn btn-secondary">
+            <a th:href="@{/editor}" class="btn btn-secondary">
                 🎨 새 프로젝트 만들기
             </a>
-            <a href="http://localhost:8080/" class="btn btn-secondary">
+            <a th:href="@{/}" class="btn btn-secondary">
                 🏠 홈으로 가기
             </a>
             <a href="#" onclick="window.print()" class="btn btn-success">

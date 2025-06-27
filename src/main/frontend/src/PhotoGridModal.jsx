@@ -73,27 +73,31 @@ const PhotoGridModal = ({ onGridCreate, onClose }) => {
     const triggerFileSelect = () => fileInputRef.current.click();
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content photo-grid-modal">
-                <h2>Create Photo Grid</h2>
-
-                <div className="form-group">
-                    <label>Upload Images</label>
-                    <input
-                        type="file"
-                        multiple
-                        onChange={handleFileChange}
-                        accept="image/*"
-                        ref={fileInputRef}
-                        style={{ display: 'none' }}
-                    />
-                    <Button variant="outline" onClick={triggerFileSelect}>
-                        Choose Files
-                    </Button>
-                    {isUploading && <p style={{ marginTop: '0.5rem' }}>Uploading...</p>}
-                    {error && <p className="error-message" style={{ marginTop: '0.5rem' }}>{error}</p>}
+        <div className="modal-overlay fancy-modal-overlay" onClick={onClose}>
+            <div className="modal-content fancy-modal-content animate-fadeIn" onClick={e => e.stopPropagation()}>
+                <h2 className="fancy-modal-title">포토 그리드 생성</h2>
+                <div className="modal-section">
+                    <label className="fancy-label">이미지 업로드 (여러장 선택 가능)</label>
+                    <div className="fancy-file-upload-group">
+                        <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="hidden"
+                            id="photo-grid-file-upload"
+                            ref={fileInputRef}
+                        />
+                        <label htmlFor="photo-grid-file-upload" className="fancy-embed-btn fancy-file-btn">
+                            파일 선택
+                        </label>
+                        {images.length > 0 && (
+                            <span className="fancy-file-name">
+                                {images.length}개의 이미지 선택됨
+                            </span>
+                        )}
+                    </div>
                 </div>
-
                 <div className="image-preview">
                     {images.map((image, index) => (
                         <div key={index} className="preview-item">
@@ -101,7 +105,6 @@ const PhotoGridModal = ({ onGridCreate, onClose }) => {
                         </div>
                     ))}
                 </div>
-
                 <div className="form-group">
                     <label>Layout</label>
                     <select value={layout} onChange={(e) => setLayout(e.target.value)}>
@@ -112,10 +115,20 @@ const PhotoGridModal = ({ onGridCreate, onClose }) => {
                         <option value="2-1-cols">2-1 Columns</option>
                     </select>
                 </div>
-
-                <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                    <Button onClick={handleCreateClick} disabled={isUploading || images.length === 0}>Create Grid</Button>
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
+                <div className="flex justify-end space-x-2">
+                    <button
+                        onClick={onClose}
+                        className="fancy-close-btn"
+                    >
+                        취소
+                    </button>
+                    <button
+                        onClick={handleCreateClick}
+                        className="fancy-embed-btn"
+                        disabled={isUploading || images.length === 0}
+                    >
+                        {isUploading ? '업로드 중...' : `그리드 생성 (${images.length})`}
+                    </button>
                 </div>
             </div>
         </div>

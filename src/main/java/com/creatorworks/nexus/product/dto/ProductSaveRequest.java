@@ -12,6 +12,7 @@ public class ProductSaveRequest {
     private String secondaryCategory;
     private String description;
     private String tiptapJson;
+    private String workDescription;
     private String htmlBackup;
     private String backgroundColor;
     private String fontFamily;
