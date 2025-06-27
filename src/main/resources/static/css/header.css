@@ -1,0 +1,201 @@
+/* ----- 기본 스타일 초기화 ----- */
+        body {
+            margin: 0;
+            font-family: 'Noto Sans KR', sans-serif; /* 폰트 지정 */
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* ----- 헤더 전체 스타일 ----- */
+        .site-header {
+            width: 100%;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: #ffffff;
+            /* 화면 상단에 헤더 고정 (선택 사항) */
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        /* ----- 헤더 내부 컨테이너 (Flexbox 핵심) ----- */
+        .header-container {
+            /* Flexbox 적용 */
+            display: flex;
+            justify-content: space-between; /* 자식 요소들을 양 끝으로 분산 정렬 */
+            align-items: center;            /* 자식 요소들을 세로 중앙 정렬 */
+
+            /* 너비와 패딩 설정 */
+            width: 100%;
+            max-width: 1920px; /* 최대 너비는 원본 디자인과 동일하게 */
+            min-height: 100px; /* 최소 높이를 주어 내용이 적어도 찌그러지지 않게 */
+            margin: 0 auto;    /* max-width와 함께 사용하여 중앙 정렬 */
+
+            /* 원본 디자인의 padding 240px을 %로 변환 (240/1920 = 12.5%)
+               하지만 너무 넓을 수 있으므로 2% ~ 6% 정도로 조정하는 것이 일반적입니다. */
+            padding: 1rem 12.5vw; /* 상하 1rem, 좌우 화면너비의 5% 패딩 */
+            box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+        }
+
+        /* ----- 1. 로고 ----- */
+        .logo a {
+            display: block; /* 링크 영역 확보 */
+        }
+        .logo-img {
+            width: 80px; /* 로고 크기를 적절히 조절 */
+            height: 80px;
+        }
+        .nav-actions-wrapper {
+                display: flex;
+                justify-content: flex-end;
+                gap: 3rem;
+                width: 100%;
+                align-items: center;
+            }
+        /* ----- 2. 내비게이션 메뉴 ----- */
+        .main-nav ul {
+            display: flex;
+            gap: 3rem; /* 메뉴 아이템 간의 간격 */
+        }
+
+        .main-nav a {
+            font-size: 1rem; /* 폰트 크기 */
+            font-weight: 500;
+            color: #333;
+            transition: color 0.2s; /* 부드러운 색상 전환 효과 */
+        }
+        .main-nav a:hover {
+            color: #0071DE;
+        }
+
+        /* ----- 3. 사용자 액션 영역 (포인트, 알람) ----- */
+        .user-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .points-button {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem; /* 버튼 내 텍스트와 아이콘 간격 */
+
+            background-color: #0071DE;
+            color: #FFFFFF;
+            font-weight: 500;
+            font-size: 1rem;
+
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            transition: opacity 0.2s;
+        }
+        .points-button:hover {
+            opacity: 0.9;
+        }
+
+        .bell-icon {
+            width: 24px;
+            height: 24px;
+        }
+        /* ============================================= */
+        /*          카테고리 메뉴 바 (추가된 부분)          */
+        /* ============================================= */
+
+        /* 파란색 배경의 전체 컨테이너 */
+        .category-nav {
+          background-color: #0071DE;
+          padding: 1.5rem 5vw; /* 상하 1.5rem, 좌우 화면너비 5%의 여백 */
+          display: flex;
+          justify-content: center; /* 내부 아이템들을 중앙 정렬 */
+        }
+
+        /* 흰색 버튼들을 감싸는 리스트 */
+        .category-nav ul {
+          display: flex;
+          flex-wrap: wrap; /* 화면이 좁아지면 버튼들이 자동으로 다음 줄로 넘어감 (핵심) */
+          justify-content: center; /* 줄바꿈된 버튼들도 중앙 정렬 */
+          gap: 1.5rem; /* 버튼들 사이의 간격 */
+
+          /* ul 태그 기본 스타일 제거 */
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+
+        /* 각각의 흰색 버튼 (a 태그) */
+        .category-nav a {
+          display: inline-block; /* 버튼 모양을 만들기 위해 block 요소처럼 만듦 */
+          padding: 0.8rem 2.5rem; /* 상하/좌우 안쪽 여백으로 크기 조절 */
+
+          background-color: #FFFFFF;
+          color: #000000;
+          border-radius: 10px; /* 모서리를 둥글게 */
+
+          font-weight: 500;
+          font-size: 0.9rem; /* 18px을 rem 단위로 변경 */
+          text-decoration: none; /* 링크 밑줄 제거 */
+          white-space: nowrap; /* 버튼 내 글자가 줄바꿈되지 않도록 설정 */
+
+          /* 부드러운 전환 효과 */
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* 버튼에 마우스를 올렸을 때 효과 */
+        .category-nav a:hover {
+          transform: translateY(-3px); /* 살짝 위로 이동 */
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* 입체적인 그림자 효과 */
+        }
+
+        /* ----- 반응형 웹을 위한 미디어 쿼리 ----- */
+
+        /* 태블릿 사이즈 (예: 1024px 이하) */
+        @media (max-width: 1024px) {
+            .header-container {
+                padding: 1rem 3vw;
+            }
+            .main-nav ul {
+                gap: 2rem;
+            }
+            .main-nav a {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* 모바일 사이즈 (예: 768px 이하) */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column; /* 세로로 쌓기 */
+                align-items: flex-start; /* 왼쪽 정렬 */
+                padding: 1rem;
+                gap: 1rem; /* 요소들 간의 세로 간격 */
+            }
+            .main-nav ul {
+                gap: 1.5rem;
+            }
+            .main-nav a {
+                font-size: 1rem;
+            }
+
+            /* 메뉴가 너무 많아지면 햄버거 메뉴로 전환해야 합니다.
+               우선은 간단히 폰트 사이즈를 줄이는 예시입니다. */
+        }
+
+        /* 더 작은 모바일 화면 (예: 480px 이하) */
+        @media (max-width: 480px) {
+            .nav-actions-wrapper {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .main-nav ul {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+        }
