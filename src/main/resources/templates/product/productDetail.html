@@ -178,7 +178,7 @@
 
 <div layout:fragment="content" class="product-detail-page">
 
-    <main class="main-content" th:object="${view.product}">
+    <main class="main-content" th:object="${product}">
         <!-- Artwork Section -->
         <section class="artwork-section">
             <h1 th:text="*{name}">작품 제목</h1>
@@ -199,7 +199,7 @@
             <div class="author-info">
                 <div class="author-profile">
                     <img class="author-pfp" alt="author profile picture">
-                    <span class="author-name" th:text="*{authorName}">작가 이름</span>
+                    <span class="author-name" th:text="*{author.name}">작가 이름</span>
                 </div>
                 <button class="subscribe-btn">구독하기</button>
             </div>
@@ -230,7 +230,7 @@
     </main>
 
     <!-- 문의/답변 섹션 삽입 -->
-    <div th:replace="~{product/inquiry_section :: inquirySection(view=${view})}"></div>
+    <div th:replace="~{product/inquiry_section :: inquirySection(${product}, ${inquiryPage})}"></div>
 
 </div>
 

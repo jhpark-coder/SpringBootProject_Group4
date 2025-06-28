@@ -1,12 +1,21 @@
 package com.creatorworks.nexus.member.entity;
 
+import java.util.Objects;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.creatorworks.nexus.global.BaseEntity;
 import com.creatorworks.nexus.member.constant.Role;
 import com.creatorworks.nexus.member.dto.MemberFormDto;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -68,6 +77,22 @@ public class Member extends BaseEntity {
         member.setBirthDay(memberFormDto.getBirthDay());
         member.setRole(Role.USER);
         return member;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || !(o instanceof Member)) return false;
+        Member member = (Member) o;
+        if (this.id == null || member.id == null) {
+            return false;
+        }
+        return Objects.equals(id, member.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? Objects.hash(id) : super.hashCode();
     }
     
 }

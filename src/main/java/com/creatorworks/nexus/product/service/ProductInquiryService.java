@@ -1,5 +1,7 @@
 package com.creatorworks.nexus.product.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,13 @@ public class ProductInquiryService {
     private final MemberRepository memberRepository;
     private final ProductInquiryRepository productInquiryRepository;
 
+    @Transactional(readOnly = true)
+    public Page<ProductInquiry> findInquiriesByProduct(Long productId, Pageable pageable) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 상품을 찾을 수 없습니다. id=" + productId));
+        return productInquiryRepository.findByProductAndParentIsNull(product, pageable);
+    }
+
     public void createInquiry(Long productId, ProductInquiryRequestDto requestDto, String userEmail) {
         // 상품과 작성자(회원) 엔티티를 조회합니다.
         Product product = productRepository.findById(productId)
@@ -37,7 +46,7 @@ public class ProductInquiryService {
                 .product(product)
                 .writer(writer)
                 .content(requestDto.getContent())
-                .isSecret(requestDto.isSecret())
+                .isSecret(requestDto.getIsSecret() != null && requestDto.getIsSecret())
                 .parent(null) // 최상위 문의이므로 부모는 null
                 .build();
 
@@ -60,7 +69,7 @@ public class ProductInquiryService {
                 .orElseThrow(() -> new IllegalArgumentException("부모 문의를 찾을 수 없습니다. id=" + parentInquiryId));
         
         // 권한 검증: 현재 로그인한 사용자가 상품의 작가인지 확인합니다.
-        if (!product.getAuthor().equals(writer)) {
+        if (!product.getAuthor().getId().equals(writer.getId())) {
             throw new IllegalStateException("답변을 작성할 권한이 없습니다.");
         }
 
@@ -69,7 +78,7 @@ public class ProductInquiryService {
                 .product(product)
                 .writer(writer)
                 .content(requestDto.getContent())
-                .isSecret(requestDto.isSecret())
+                .isSecret(requestDto.getIsSecret() != null && requestDto.getIsSecret())
                 .parent(parent) // 부모 문의 설정
                 .build();
         

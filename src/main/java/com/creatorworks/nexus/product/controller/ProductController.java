@@ -1,9 +1,11 @@
 package com.creatorworks.nexus.product.controller;
 
 import java.security.Principal;
-import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
@@ -15,7 +17,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.creatorworks.nexus.product.dto.ProductDetailViewDto;
+import com.creatorworks.nexus.member.entity.Member;
+import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.product.dto.ProductInquiryRequestDto;
 import com.creatorworks.nexus.product.dto.ProductPageResponse;
 import com.creatorworks.nexus.product.dto.ProductSaveRequest;
@@ -44,6 +47,7 @@ public class ProductController {
     private final ProductRepository productRepository;
     private final ProductInquiryRepository productInquiryRepository;
     private final ProductInquiryService productInquiryService;
+    private final MemberRepository memberRepository;
 
     /**
      * 그리드 뷰 페이지("/grid") 요청을 처리하여 'gridView.html' 뷰를 렌더링합니다.
@@ -89,15 +93,22 @@ public class ProductController {
      * @return 렌더링할 뷰의 이름 ("product/productDetail")
      */
     @GetMapping("/products/{id}")
-    public String productDetail(@PathVariable("id") Long id, Model model) {
+    public String productDetail(@PathVariable("id") Long id, 
+                                @PageableDefault(size = 4, sort = "regTime", direction = Sort.Direction.DESC) Pageable pageable, 
+                                Principal principal,
+                                Model model) {
         Product product = productService.findProductById(id);
-        List<ProductInquiry> inquiries = productInquiryRepository.findByProduct_IdOrderByParent_IdAscRegTimeAsc(id);
+        Page<ProductInquiry> inquiryPage = productInquiryService.findInquiriesByProduct(id, pageable);
 
-        // 뷰 렌더링을 위한 DTO 생성
-        ProductDetailViewDto viewDto = new ProductDetailViewDto(product, inquiries);
-        
-        // DTO를 모델에 담아서 전달
-        model.addAttribute("view", viewDto);
+        // 현재 로그인한 사용자 정보 조회
+        Member currentMember = null;
+        if (principal != null) {
+            currentMember = memberRepository.findByEmail(principal.getName());
+        }
+
+        model.addAttribute("product", product);
+        model.addAttribute("inquiryPage", inquiryPage);
+        model.addAttribute("currentMember", currentMember); // 뷰로 전달
         
         return "product/productDetail";
     }
