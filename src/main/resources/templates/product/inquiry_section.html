@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<!-- 문의/답변 섹션 Fragment -->
+<div th:fragment="inquirySection(view)" class="inquiry-section-container">
+    <h2 class="inquiry-title">상품 문의</h2>
+
+    <!-- 문의 목록 -->
+    <div class="inquiry-list">
+        <!-- 최상위 문의만 반복 처리. 답변은 각 문의 아래에서 처리. -->
+        <div th:each="inquiry : ${view.inquiries.?[!isReply]}" th:classappend="${inquiry.isReply} ? 'reply' : ''"
+            class="inquiry-item">
+
+            <div class="inquiry-content">
+                <span class="inquiry-author" th:text="${inquiry.writerName}">작성자</span>
+
+                <!-- 
+                    비밀글 권한 체크 로직 (최종 수정)
+                    - 인증된 사용자인지 먼저 확인 후, 사용자 이름을 비교하여 SpelEvaluationException 방지
+                -->
+                <th:block
+                    th:with="isAllowed=${#authorization.expression('isAuthenticated()') and (#authentication.name == inquiry.writerEmail or #authentication.name == view.product.authorEmail)}">
+                    <!-- 비밀글일 경우 -->
+                    <th:block th:if="${inquiry.isSecret}">
+                        <span th:if="${!isAllowed}" class="secret-text">🔒 비밀글입니다.</span>
+                        <p th:if="${isAllowed}" th:text="${inquiry.content}"></p>
+                    </th:block>
+
+                    <!-- 일반글일 경우 -->
+                    <th:block th:unless="${inquiry.isSecret}">
+                        <p th:text="${inquiry.content}">문의 내용이 여기에 표시됩니다.</p>
+                    </th:block>
+                </th:block>
+            </div>
+
+            <div class="inquiry-meta">
+                <span th:text="${#temporals.format(inquiry.regTime, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00</span>
+                <!-- '답변하기' 버튼: 상품 작성자이고, 최상위 문의일 경우에만 표시 -->
+                <button
+                    th:if="${#authorization.expression('isAuthenticated()') and #authentication.name == view.product.authorEmail and !inquiry.isReply}"
+                    th:attr="data-inquiry-id=${inquiry.id}"
+                    onclick="toggleReplyForm(this.getAttribute('data-inquiry-id'))" class="reply-btn">
+                    답변하기
+                </button>
+            </div>
+
+            <!-- 답변 작성 폼 (기본적으로 숨겨져 있음) -->
+            <div th:if="${!inquiry.isReply}" th:id="|reply-form-${inquiry.id}|" class="reply-form"
+                style="display:none;">
+                <form
+                    th:action="@{/products/{productId}/inquiries/{inquiryId}/replies(productId=${view.product.id}, inquiryId=${inquiry.id})}"
+                    method="post">
+                    <textarea name="content" rows="3" placeholder="답변을 작성하세요..."></textarea>
+                    <div class="form-actions">
+                        <label>
+                            <input type="checkbox" name="isSecret" value="true"> 비밀글
+                        </label>
+                        <button type="submit">답변 등록</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 대댓글(답변) 목록 -->
+            <div th:each="reply : ${inquiry.children}" class="inquiry-item reply">
+                <div class="inquiry-content">
+                    <span class="inquiry-author" th:text="${reply.writerName}">답변 작성자</span>
+                    <th:block
+                        th:with="isAllowed=${#authorization.expression('isAuthenticated()') and (#authentication.name == reply.writerEmail or #authentication.name == view.product.authorEmail)}">
+                        <!-- 비밀글일 경우 -->
+                        <th:block th:if="${reply.isSecret}">
+                            <span th:if="${!isAllowed}" class="secret-text">🔒 비밀글입니다.</span>
+                            <p th:if="${isAllowed}" th:text="${reply.content}"></p>
+                        </th:block>
+                        <!-- 일반글일 경우 -->
+                        <th:block th:unless="${reply.isSecret}">
+                            <p th:text="${reply.content}">답변 내용</p>
+                        </th:block>
+                    </th:block>
+                </div>
+                <div class="inquiry-meta">
+                    <span th:text="${#temporals.format(reply.regTime, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 문의 작성 폼 (최상위) -->
+    <div class="inquiry-form">
+        <h3>문의 작성</h3>
+        <form th:action="@{/products/{id}/inquiries(id=${view.product.id})}" method="post">
+            <textarea name="content" rows="4" placeholder="상품에 대한 문의를 남겨주세요."></textarea>
+            <div class="form-actions">
+                <label>
+                    <input type="checkbox" name="isSecret" value="true"> 비밀글
+                </label>
+                <button type="submit">등록</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function toggleReplyForm(inquiryId) {
+            const form = document.getElementById('reply-form-' + inquiryId);
+            if (form) {
+                form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+    </script>
+    <style>
+        .inquiry-section-container {
+            margin-top: 40px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .inquiry-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .inquiry-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .inquiry-item {
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .inquiry-item.reply {
+            margin-left: 40px;
+            border-color: #e0e0e0;
+            background-color: #f9f9f9;
+        }
+
+        .inquiry-author {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .secret-text {
+            color: #888;
+        }
+
+        .inquiry-meta {
+            font-size: 12px;
+            color: #888;
+            text-align: right;
+            margin-top: 10px;
+        }
+
+        .reply-btn {
+            background: none;
+            border: 1px solid #007bff;
+            color: #007bff;
+            padding: 2px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .reply-form {
+            margin-top: 15px;
+            padding: 15px;
+            border-top: 1px dashed #ddd;
+        }
+
+        .inquiry-form {
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .inquiry-form textarea,
+        .reply-form textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .inquiry-form .form-actions,
+        .reply-form .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+    </style>
+</div>
+
+</html>

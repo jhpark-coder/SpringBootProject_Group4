@@ -1,34 +1,27 @@
 package com.creatorworks.nexus.product.dto;
 
+import lombok.Getter;
+
 import java.util.List;
 
-import com.creatorworks.nexus.product.entity.Product;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 @Getter
-@NoArgsConstructor
 public class ProductPageResponse {
-  private List<Product> content;
-  private int totalPages;
-  private long totalElements;
-  private int number;
-  private int size;
-  private boolean last;
-  private boolean first;
-  private int numberOfElements;
-  private boolean empty;
 
-  public ProductPageResponse(org.springframework.data.domain.Page<Product> page) {
-    this.content = page.getContent();
-    this.totalPages = page.getTotalPages();
-    this.totalElements = page.getTotalElements();
-    this.number = page.getNumber();
-    this.size = page.getSize();
-    this.last = page.isLast();
-    this.first = page.isFirst();
-    this.numberOfElements = page.getNumberOfElements();
-    this.empty = page.isEmpty();
-  }
+    private final List<ProductDto> products;
+    private final int currentPage;
+    private final int totalPages;
+    private final long totalElements;
+    private final int pageSize;
+    private final boolean isFirst;
+    private final boolean isLast;
+
+    public ProductPageResponse(List<ProductDto> products, int currentPage, int totalPages, long totalElements, int pageSize, boolean isFirst, boolean isLast) {
+        this.products = products;
+        this.currentPage = currentPage;
+        this.totalPages = totalPages;
+        this.totalElements = totalElements;
+        this.pageSize = pageSize;
+        this.isFirst = isFirst;
+        this.isLast = isLast;
+    }
 } 

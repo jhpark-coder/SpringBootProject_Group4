@@ -1,31 +1,92 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-    layout:decorate="~{fragment/layout}">
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{fragment/layout}">
 
-<th:block layout:fragment="css">
-    <link rel="stylesheet" th:href="@{/css/main.css}">
-    <style>
-        .no-js-message {
-            text-align: center;
-            padding: 100px 20px;
-            color: #ff0000;
-            font-size: 18px;
-            background-color: #fff5f5;
-            border: 2px solid #ffcccc;
-            border-radius: 10px;
-            margin: 50px auto;
-            max-width: 600px;
-        }
-    </style>
-</th:block>
+<head>
+    <!-- 이 페이지의 CSS를 layout.html에 전달 -->
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/main.css}">
+    </th:block>
+    <title>Nexus - 당신의 창작품, 세상과 만나다</title>
+</head>
 
-<div layout:fragment="content">
-    <div id="main-content-placeholder"></div>
-</div>
+<body>
+    <!-- layout.html의 content fragment를 이 내용으로 교체 -->
+    <div layout:fragment="content">
+        <!-- 1. 메인 슬라이드 섹션 -->
+        <section class="main-slide" id="main-slide">
+            <div class="container main-slide-content">
+                <div class="main-slide-text">
+                    <h1>Art<br>Design<br>&<br>Java<br>FrontEnd</h1>
+                    <a href="#needs-grid" class="btn">작품보러가기</a>
+                </div>
+            </div>
+        </section>
 
-<th:block layout:fragment="script">
-    <script th:src="@{/js/security.js}"></script>
-    <script th:src="@{/js/main.js}"></script>
-</th:block>
+        <!-- 2. 작품 추천 그리드 섹션 -->
+        <section class="needs-grid" id="needs-grid">
+            <div class="container" style="flex-direction: column; align-items: flex-start; max-width: 1180px;">
+                <!-- 로그인 사용자에게만 보이는 제목 -->
+                <h2 sec:authorize="isAuthenticated()"
+                    style="width:100%; text-align: left; margin-bottom: 2rem; font-weight: 500;">
+                    <span sec:authentication="principal.name" style="font-weight: 700;">홍길동</span>님을 위한 작품 추천!
+                </h2>
+                <!-- 비로그인 사용자에게 보이는 제목 -->
+                <h2 sec:authorize="!isAuthenticated()"
+                    style="width:100%; text-align: left; margin-bottom: 2rem; font-weight: 500;">
+                    새로운 작품들
+                </h2>
+
+                <div class="row" th:if="${productPage != null and !productPage.products.isEmpty()}">
+                    <!-- th:each를 사용하여 상품 목록을 동적으로 생성 -->
+                    <div th:each="product : ${productPage.products}" class="col-md-3">
+                        <article class="grid-item">
+                            <a th:href="@{/products/{id}(id=${product.id})}">
+                                <div class="item-image-placeholder"
+                                    th:style="'background-image: url(\'' + ${product.imageUrl} + '\'); background-size: cover; background-position: center;'">
+                                </div>
+                            </a>
+                            <div class="item-info">
+                                <div class="author-info">
+                                    <div class="author-avatar"></div>
+                                    <span class="author-name" th:text="${product.authorName}">작가 이름</span>
+                                </div>
+                                <!-- 구독 기능은 추후 구현 -->
+                                <a href="#" class="btn subscribe-btn">Subscribe</a>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+                <!-- 상품이 없을 경우 메시지 -->
+                <div th:if="${productPage == null or productPage.products.isEmpty()}"
+                    style="width:100%; text-align: center; padding: 4rem 0;">
+                    <p style="font-size: 1.2rem; color: #555;">등록된 상품이 없습니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. 경매 홍보 섹션 (Call to Auction) -->
+        <section class="auction-cta">
+            <div class="container auction-cta-content">
+                <p class="cta-text">이제 정말 좋은 작품들을<br>경매를 통해 보다 필요한 사람과 거래해보세요.</p>
+                <!-- 경매 기능은 추후 구현 -->
+                <a th:href="@{/auction}" class="btn">경매보러가기</a>
+            </div>
+        </section>
+
+        <!-- 4. 작가 등록 추천 섹션 -->
+        <section class="sell-recommend">
+            <div class="container sell-recommend-content">
+                <div class="sell-image-placeholder"></div>
+                <div class="sell-text-content">
+                    <p class="sell-description">창의적인 디자인 아트웍부터 논리적인 자바 코드구조까지 <br>정당한 비용을 받고 공유해보세요!</p>
+                    <a href="#" class="btn">작가 등록하기</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 페이지네이션은 새로운 디자인에 포함되지 않으므로 제거됩니다. -->
+    </div>
+</body>
 
 </html>

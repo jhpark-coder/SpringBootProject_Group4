@@ -27,7 +27,7 @@
                 <nav class="main-nav">
                     <ul>
                         <li><a href="/editor">Contact Us</a></li>
-                        <li><a href="#">Action</a></li>
+                        <li><a th:href="@{/auction}">Auction</a></li>
                         <li sec:authorize="isAuthenticated()"><a href="#">MyPage</a></li>
                         <li sec:authorize="isAnonymous()">
                             <a href="/members/login">Login</a>

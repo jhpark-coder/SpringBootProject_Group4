@@ -178,25 +178,60 @@
 
 <div layout:fragment="content" class="product-detail-page">
 
-    <!-- 1. JS 비활성화 시 보이는 경고 메시지 (기본) -->
-    <div id="no-js-warning" class="no-js-message">
-        <h1>⚠️ JavaScript 활성화 필요</h1>
-        <p><strong>보안상의 이유로 JavaScript가 필요합니다.</strong></p>
-        <p>브라우저 설정에서 JavaScript를 활성화한 후 새로고침해주세요.</p>
-    </div>
+    <main class="main-content" th:object="${view.product}">
+        <!-- Artwork Section -->
+        <section class="artwork-section">
+            <h1 th:text="*{name}">작품 제목</h1>
+            <img th:src="*{imageUrl}" alt="Artwork Image" class="artwork-image"
+                onerror="this.onerror=null; this.src='/images/placeholder.png';">
 
-    <!-- 2. JS가 동적으로 콘텐츠를 채워넣을 자리 (placeholder) -->
-    <div id="product-detail-placeholder">
-        <!-- JS가 여기에 상세 페이지 콘텐츠를 생성하여 삽입할 예정 -->
-    </div>
+            <div class="description-section">
+                <h2>작품 설명</h2>
+                <p
+                    th:text="*{workDescription != null and !workDescription.trim().isEmpty()} ? *{workDescription} : '작품에 대한 설명이 아직 준비되지 않았습니다.'">
+                    여기에 작품에 대한 상세 설명이 들어갑니다.
+                </p>
+            </div>
+        </section>
+
+        <!-- Sidebar Section -->
+        <aside class="sidebar">
+            <div class="author-info">
+                <div class="author-profile">
+                    <img class="author-pfp" alt="author profile picture">
+                    <span class="author-name" th:text="*{authorName}">작가 이름</span>
+                </div>
+                <button class="subscribe-btn">구독하기</button>
+            </div>
+
+            <div class="tags">
+                <button class="tag-btn" th:text="*{primaryCategory}">주 카테고리</button>
+                <button class="tag-btn" th:if="*{secondaryCategory != null}" th:text="*{secondaryCategory}">부
+                    카테고리</button>
+            </div>
+
+            <div class="description">
+                <p th:text="*{description}">여기에 작가의 말이 들어갑니다. 이 작품을 만들게 된 계기나 작품에 대한 간단한 소개를 포함할 수 있습니다.</p>
+            </div>
+
+            <div class="sidebar-actions">
+                <button class="like-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                        </path>
+                    </svg>
+                    <span class="like-count">1.2k</span> <!-- 좋아요 수는 동적으로 처리 필요 -->
+                </button>
+                <button class="continue-btn" th:text="|*{price}원 계속보기|">가격 원 계속보기</button>
+            </div>
+        </aside>
+    </main>
+
+    <!-- 문의/답변 섹션 삽입 -->
+    <div th:replace="~{product/inquiry_section :: inquirySection(view=${view})}"></div>
+
 </div>
-
-<th:block layout:fragment="script">
-    <!-- 보안 스크립트를 가장 먼저 로드합니다. -->
-    <script th:src="@{/js/security.js}"></script>
-
-    <!-- 이 페이지 전용 스크립트 -->
-    <script th:src="@{/js/productDetail.js}"></script>
-</th:block>
 
 </html>

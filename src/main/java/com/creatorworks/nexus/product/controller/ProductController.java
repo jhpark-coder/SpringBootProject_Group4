@@ -1,7 +1,10 @@
 package com.creatorworks.nexus.product.controller;
 
-import org.springframework.data.domain.Page;
+import java.security.Principal;
+import java.util.List;
+
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,9 +15,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.creatorworks.nexus.product.dto.ProductDetailViewDto;
+import com.creatorworks.nexus.product.dto.ProductInquiryRequestDto;
 import com.creatorworks.nexus.product.dto.ProductPageResponse;
 import com.creatorworks.nexus.product.dto.ProductSaveRequest;
 import com.creatorworks.nexus.product.entity.Product;
+import com.creatorworks.nexus.product.entity.ProductInquiry;
+import com.creatorworks.nexus.product.repository.ProductInquiryRepository;
+import com.creatorworks.nexus.product.repository.ProductRepository;
+import com.creatorworks.nexus.product.service.ProductInquiryService;
 import com.creatorworks.nexus.product.service.ProductService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,15 +41,9 @@ public class ProductController {
 
     // final 키워드와 @RequiredArgsConstructor에 의해, Spring이 자동으로 ProductService의 인스턴스를 주입해줍니다. (생성자 주입)
     private final ProductService productService;
-
-    /**
-     * 메인 페이지("/") 요청을 처리하여 'main.html' 뷰를 렌더링합니다.
-     * @return 렌더링할 뷰의 이름 ("main")
-     */
-    // @GetMapping("/")
-    public String mainPage() {
-        return "main";
-    }
+    private final ProductRepository productRepository;
+    private final ProductInquiryRepository productInquiryRepository;
+    private final ProductInquiryService productInquiryService;
 
     /**
      * 그리드 뷰 페이지("/grid") 요청을 처리하여 'gridView.html' 뷰를 렌더링합니다.
@@ -77,9 +80,8 @@ public class ProductController {
     @GetMapping("/api/products")
     @ResponseBody
     public ProductPageResponse getProducts(Pageable pageable) {
-        // ProductService를 통해 페이징 정보에 맞는 상품 목록을 조회하여 반환합니다.
-        Page<Product> productPage = productService.findAllProducts(pageable);
-        return new ProductPageResponse(productPage);
+        // ProductService를 통해 페이징 및 DTO 변환이 완료된 결과를 받아 그대로 반환합니다.
+        return productService.findAllProducts(pageable);
     }
 
     /**
@@ -87,21 +89,29 @@ public class ProductController {
      * @return 렌더링할 뷰의 이름 ("product/productDetail")
      */
     @GetMapping("/products/{id}")
-    public String productDetail() {
+    public String productDetail(@PathVariable("id") Long id, Model model) {
+        Product product = productService.findProductById(id);
+        List<ProductInquiry> inquiries = productInquiryRepository.findByProduct_IdOrderByParent_IdAscRegTimeAsc(id);
+
+        // 뷰 렌더링을 위한 DTO 생성
+        ProductDetailViewDto viewDto = new ProductDetailViewDto(product, inquiries);
+        
+        // DTO를 모델에 담아서 전달
+        model.addAttribute("view", viewDto);
+        
         return "product/productDetail";
     }
 
     /**
      * 특정 상품 한 개의 데이터를 JSON 형태로 반환하는 API 엔드포인트입니다.
-     * @PathVariable("id"): URL 경로의 {id} 부분을 메소드의 id 파라미터로 받아옵니다.
-     * @param id 조회할 상품의 ID.
-     * @return 조회된 상품(Product) 객체.
+     * @param id 상품 ID
+     * @return 상품 데이터(JSON) 또는 404 Not Found
      */
     @GetMapping("/api/products/{id}")
     @ResponseBody
-    public Product getProduct(@PathVariable("id") Long id) {
-        // ProductService를 통해 특정 ID의 상품을 찾아 반환합니다.
-        return productService.findProductById(id);
+    public ResponseEntity<Product> getProductById(@PathVariable("id") Long id) {
+        Product product = productService.findProductById(id);
+        return ResponseEntity.ok(product);
     }
 
     /**
@@ -113,8 +123,9 @@ public class ProductController {
      */
     @PostMapping("/api/products")
     @ResponseBody
-    public Long saveProduct(@RequestBody ProductSaveRequest request) {
-        Product saved = productService.saveProduct(request);
+    public Long saveProduct(@RequestBody ProductSaveRequest request, Principal principal) {
+        String userEmail = principal.getName();
+        Product saved = productService.saveProduct(request, userEmail);
         return saved.getId();
     }
 
@@ -127,25 +138,43 @@ public class ProductController {
      */
     @PutMapping("/api/products/{id}")
     @ResponseBody
-    public Long updateProduct(@PathVariable Long id, @RequestBody ProductSaveRequest request) {
+    public Long updateProduct(@PathVariable Long id, @RequestBody ProductSaveRequest request, Principal principal) {
+        // TODO: principal을 사용하여 권한 검증 로직을 서비스 계층에 추가해야 함.
         Product updated = productService.updateProduct(id, request);
         return updated.getId();
     }
 
     /**
-     * 상품 저장 또는 수정 후, 결과를 보여주는 페이지를 렌더링합니다.
+     * 상품 저장 또는 수정 후, 해당 상품의 상세 페이지로 리다이렉트합니다.
      * @param id 결과를 확인할 상품의 ID.
-     * @param model View(HTML)에 데이터를 전달하기 위한 Spring 객체.
-     * @return 렌더링할 뷰의 이름 ("product/productResult")
+     * @return 상품 상세 페이지로의 리다이렉트 경로.
      */
     @GetMapping("/result/product/{id}")
-    public String productResult(@PathVariable Long id, Model model) {
-        // 1. ID로 상품 정보를 다시 조회합니다.
-        Product product = productService.findProductById(id);
-        // 2. Model 객체에 "product"라는 이름으로 조회된 상품 정보를 담습니다.
-        //    이렇게 담은 데이터는 'productResult.html'에서 사용할 수 있습니다.
-        model.addAttribute("product", product);
-        // 3. 'productResult.html' 뷰를 렌더링하여 사용자에게 보여줍니다.
-        return "product/productResult";
+    public String productResultRedirect(@PathVariable Long id) {
+        // 상세 페이지 URL로 리다이렉트
+        return "redirect:/products/" + id;
+    }
+
+    @PostMapping("/products/{id}/inquiries")
+    public String createInquiry(@PathVariable("id") Long productId,
+                                ProductInquiryRequestDto inquiryDto,
+                                Principal principal) {
+        
+        String userEmail = principal.getName();
+        productInquiryService.createInquiry(productId, inquiryDto, userEmail);
+        
+        return "redirect:/products/" + productId;
+    }
+
+    @PostMapping("/products/{productId}/inquiries/{inquiryId}/replies")
+    public String createReply(@PathVariable("productId") Long productId,
+                              @PathVariable("inquiryId") Long inquiryId,
+                              ProductInquiryRequestDto inquiryDto,
+                              Principal principal) {
+        
+        String userEmail = principal.getName();
+        productInquiryService.createReply(productId, inquiryId, inquiryDto, userEmail);
+
+        return "redirect:/products/" + productId;
     }
 }
