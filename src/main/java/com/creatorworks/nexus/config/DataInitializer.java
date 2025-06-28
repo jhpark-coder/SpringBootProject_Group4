@@ -9,6 +9,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.creatorworks.nexus.member.constant.Role;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.order.entity.Order;
+import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 
@@ -22,6 +24,7 @@ public class DataInitializer {
     private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final OrderRepository orderRepository;
 
     @Bean
     public CommandLineRunner initData() {
@@ -43,8 +46,9 @@ public class DataInitializer {
             }
 
             // 일반 사용자 계정 생성
-            if (memberRepository.findByEmail("usertest@test.com") == null) {
-                Member user = Member.builder()
+            Member user = memberRepository.findByEmail("usertest@test.com");
+            if (user == null) {
+                user = Member.builder()
                         .email("usertest@test.com")
                         .name("유저")
                         .password(passwordEncoder.encode("password"))
@@ -99,7 +103,20 @@ public class DataInitializer {
 
                     productRepository.save(product);
                 }
-                System.out.println("상품 데이터 생성이 완료되었습니다.");
+                 System.out.println("상품 데이터 생성이 완료되었습니다.");
+            }
+
+            // 임시 구매 데이터 생성 (usertest가 product1을 구매)
+            Product product1 = productRepository.findById(1L).orElse(null);
+            if (user != null && product1 != null) {
+                if (!orderRepository.existsByBuyerAndProduct(user, product1)) {
+                    Order testOrder = Order.builder()
+                            .buyer(user)
+                            .product(product1)
+                            .build();
+                    orderRepository.save(testOrder);
+                    System.out.println("초기 데이터: usertest가 샘플 상품 1을 구매한 것으로 처리");
+                }
             }
 
             System.out.println("데이터 초기화 작업이 완료되었습니다.");

@@ -229,9 +229,16 @@
         </aside>
     </main>
 
-    <!-- 문의/답변 섹션 삽입 -->
+    <!-- Review Section -->
+    <div
+        th:replace="~{product/review_section :: reviewSection(${product}, ${reviewPage}, ${canWriteReview}, ${existingReview})}">
+    </div>
+
+    <!-- Inquiry Section -->
     <div th:replace="~{product/inquiry_section :: inquirySection(${product}, ${inquiryPage})}"></div>
 
 </div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
 
 </html>
