@@ -2,8 +2,11 @@ package com.creatorworks.nexus.product.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.entity.ProductInquiry;
 
 public interface ProductInquiryRepository extends JpaRepository<ProductInquiry, Long> {
@@ -15,5 +18,7 @@ public interface ProductInquiryRepository extends JpaRepository<ProductInquiry, 
      * @return 정렬된 문의 목록
      */
     List<ProductInquiry> findByProduct_IdOrderByParent_IdAscRegTimeAsc(Long productId);
+
+    Page<ProductInquiry> findByProductAndParentIsNull(Product product, Pageable pageable);
 
 } 

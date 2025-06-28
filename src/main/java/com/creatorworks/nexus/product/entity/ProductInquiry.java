@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.creatorworks.nexus.global.BaseEntity;
+import com.creatorworks.nexus.member.constant.Role;
 import com.creatorworks.nexus.member.entity.Member;
 
 import jakarta.persistence.Column;
@@ -69,5 +70,46 @@ public class ProductInquiry extends BaseEntity {
     public void setParent(ProductInquiry parent) {
         this.parent = parent;
         parent.getChildren().add(this);
+    }
+
+    //== 비즈니스 로직 ==//
+    /**
+     * 현재 사용자가 이 문의를 볼 수 있는지 확인합니다.
+     * @param currentMember 현재 로그인한 사용자 (비로그인 시 null)
+     * @return 조회 가능 여부
+     */
+    public boolean isViewableBy(Member currentMember) {
+        // 1. 비밀글이 아니면 누구나 볼 수 있음
+        if (!this.isSecret) {
+            return true;
+        }
+        
+        // 2. 비밀글이지만 로그인하지 않았으면 볼 수 없음
+        if (currentMember == null) {
+            return false;
+        }
+
+        // 3. 비밀글이고, 로그인한 경우
+        // 관리자는 모든 비밀글을 볼 수 있음
+        if (currentMember.getRole() == Role.ADMIN) {
+            return true;
+        }
+        
+        // 상품 작성자(작가)는 모든 비밀글을 볼 수 있음
+        if (this.product.getAuthor().getId().equals(currentMember.getId())) {
+            return true;
+        }
+
+        // 문의 작성자 본인만 볼 수 있음
+        if (this.writer.getId().equals(currentMember.getId())) {
+            return true;
+        }
+
+        // 답변글의 경우, 원본 질문 작성자도 볼 수 있음
+        if (this.parent != null && this.parent.getWriter().getId().equals(currentMember.getId())) {
+            return true;
+        }
+
+        return false;
     }
 } 
