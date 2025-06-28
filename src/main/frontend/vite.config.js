@@ -38,14 +38,17 @@ export default defineConfig({
       '/editor/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
+        cookieDomainRewrite: ""
       },
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
+        cookieDomainRewrite: ""
       },
       '/uploads': {
         target: 'http://localhost:8080',
         changeOrigin: true,
+        cookieDomainRewrite: ""
       }
     }
   }

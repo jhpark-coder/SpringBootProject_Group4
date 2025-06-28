@@ -24,6 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/editor")
 public class EditorController {
     
+    @GetMapping
+    public String editorPage() {
+        return "forward:/editor/index.html";
+    }
+    
     // CSRF 토큰 및 세션 초기화를 위한 엔드포인트
     @GetMapping("/api/init")
     public ResponseEntity<Void> init() {

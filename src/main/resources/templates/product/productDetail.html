@@ -1,25 +1,167 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{fragment/layout}">
 
-<head>
-    <meta charset="UTF-8">
-    <title>Nexus - 상품 상세</title>
+<th:block layout:fragment="css">
     <style>
-        body {
-            font-family: sans-serif;
+        /* 기본 스타일 */
+        .product-detail-page * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
-        .content-wrapper {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
+        .product-detail-page a {
+            text-decoration: none;
+            color: inherit;
         }
 
-        .product-detail-img {
-            max-width: 100%;
+        .product-detail-page button {
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
         }
 
-        /* 🔒 JavaScript 필수 인증 스타일 */
+        /* --- 메인 컨텐츠 --- */
+        .main-content {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .artwork-section {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-width: 700px;
+        }
+
+        .artwork-section h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 0;
+        }
+
+        .artwork-image {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #d9d9d9;
+            border-radius: 8px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .description-section {
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        /* --- 사이드바 --- */
+        .sidebar {
+            flex: 1;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 22px 20px;
+            height: fit-content;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            min-width: 270px;
+            max-width: 320px;
+        }
+
+        .sidebar .author-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar .author-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar .author-pfp {
+            width: 40px;
+            height: 40px;
+            background: #e0e0e0;
+            border-radius: 50%;
+        }
+
+        .sidebar .author-name {
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .sidebar .subscribe-btn {
+            background: #007bff;
+            color: #fff;
+            padding: 7px 16px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .sidebar .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .sidebar .tag-btn {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            padding: 5px 12px;
+            font-size: 12px;
+            color: #555;
+        }
+
+        .sidebar .description {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .sidebar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .like-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #f0f0f0;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .like-btn.liked {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .continue-btn {
+            background: #007bff;
+            color: #fff;
+            flex-grow: 1;
+            padding: 12px 0;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+
         .no-js-message {
             text-align: center;
             padding: 100px 20px;
@@ -31,55 +173,30 @@
             margin: 50px auto;
             max-width: 600px;
         }
-
-        /* 🔒 실제 콘텐츠는 기본적으로 숨김 - JavaScript가 활성화되면 보여짐 */
-        #product-detail-container {
-            display: none;
-            /* 핵심: JS 없으면 아예 안 보임 */
-        }
-
-        /* 🔒 콘텐츠 선택(드래그) 방지 스타일 */
-        .content-selection-disabled {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
-        }
-
-        /* 
-         * @media print 규칙은 security.js에서 동적으로 처리하므로
-         * 개별 HTML 파일에서는 제거하여 중복을 피하고 관리를 일원화합니다.
-         */
     </style>
-</head>
+</th:block>
 
-<body>
-    <!-- 🔒 JavaScript 비활성화 시에만 보이는 경고 메시지 -->
+<div layout:fragment="content" class="product-detail-page">
+
+    <!-- 1. JS 비활성화 시 보이는 경고 메시지 (기본) -->
     <div id="no-js-warning" class="no-js-message">
         <h1>⚠️ JavaScript 활성화 필요</h1>
         <p><strong>보안상의 이유로 JavaScript가 필요합니다.</strong></p>
         <p>브라우저 설정에서 JavaScript를 활성화한 후 새로고침해주세요.</p>
-        <hr>
-        <p><small>원활한 서비스 이용을 위해 JavaScript를 허용해주시기 바랍니다.</small></p>
     </div>
 
-    <!-- 🔒 JavaScript 활성화 시에만 보이는 실제 콘텐츠 영역 -->
-    <div id="product-detail-container" class="content-wrapper">
-        <!-- 🔒 주의: 여기에는 하드코딩된 데이터가 전혀 없음! 오직 JavaScript를 통해서만 데이터 로딩됨 -->
+    <!-- 2. JS가 동적으로 콘텐츠를 채워넣을 자리 (placeholder) -->
+    <div id="product-detail-placeholder">
+        <!-- JS가 여기에 상세 페이지 콘텐츠를 생성하여 삽입할 예정 -->
     </div>
+</div>
 
-    <!-- 🔒 JavaScript 파일들 - 이 파일들이 실행되어야만 실제 콘텐츠를 볼 수 있음 -->
-    <script src="/js/security.js"></script>
-    <script src="/js/productDetail.js"></script>
+<th:block layout:fragment="script">
+    <!-- 보안 스크립트를 가장 먼저 로드합니다. -->
+    <script th:src="@{/js/security.js}"></script>
 
-    <!-- 🔒 콘텐츠 보호 기능 활성화 스크립트 -->
-    <script>
-        // DOMContentLoaded 이벤트 발생 시, body에 콘텐츠 선택(드래그) 방지 클래스를 추가합니다.
-        document.addEventListener('DOMContentLoaded', function () {
-            document.body.classList.add('content-selection-disabled');
-        });
-    </script>
-</body>
+    <!-- 이 페이지 전용 스크립트 -->
+    <script th:src="@{/js/productDetail.js}"></script>
+</th:block>
 
 </html>

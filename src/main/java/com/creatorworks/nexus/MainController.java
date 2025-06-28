@@ -9,4 +9,9 @@ public class MainController {
     public String main(){
         return "main";
     }
+
+    @GetMapping("/main-content")
+    public String getMainContent() {
+        return "fragment/main_content";
+    }
 }

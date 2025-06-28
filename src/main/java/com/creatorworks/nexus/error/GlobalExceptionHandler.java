@@ -4,8 +4,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,11 +31,17 @@ public class GlobalExceptionHandler {
                 .body("파일 업로드 요청 처리 중 오류가 발생했습니다. 요청 형식을 확인해주세요.");
     }
 
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleNoResourceFoundException(NoResourceFoundException ex, WebRequest request) {
+        log.error("404 Not Found: 요청한 리소스를 찾을 수 없습니다. URL: {}", request.getDescription(false), ex);
+        return "error/404";
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleGeneralException(Exception e) {
-        log.error("예상치 못한 오류 발생", e);
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("서버 내부에서 예상치 못한 오류가 발생했습니다.");
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public String handleException(Exception ex, WebRequest request) {
+        log.error("예상치 못한 오류 발생. URL: {}", request.getDescription(false), ex);
+        return "error/500";
     }
 } 

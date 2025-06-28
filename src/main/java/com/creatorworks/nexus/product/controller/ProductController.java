@@ -37,7 +37,7 @@ public class ProductController {
      * 메인 페이지("/") 요청을 처리하여 'main.html' 뷰를 렌더링합니다.
      * @return 렌더링할 뷰의 이름 ("main")
      */
-    @GetMapping("/")
+    // @GetMapping("/")
     public String mainPage() {
         return "main";
     }
