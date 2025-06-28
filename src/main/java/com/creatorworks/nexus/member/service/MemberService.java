@@ -1,26 +1,25 @@
 package com.creatorworks.nexus.member.service;
 
-import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.mail.javamail.JavaMailSender;
-
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.creatorworks.nexus.member.dto.CustomUserDetails;
 import com.creatorworks.nexus.member.dto.EmailAuthRequestDto;
 import com.creatorworks.nexus.member.entity.EmailAuth;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.EmailAuthRepository;
 import com.creatorworks.nexus.member.repository.MemberRepository;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 
 @Service
 @Transactional
@@ -100,10 +99,7 @@ public class MemberService implements UserDetailsService {
         if(member == null){
             throw new UsernameNotFoundException(email);
         }
-        //빌더패턴
-        return User.builder().username(member.getEmail())
-                .password(member.getPassword())
-                .roles(member.getRole().toString())
-                .build();
+        
+        return new CustomUserDetails(member);
     }
 }

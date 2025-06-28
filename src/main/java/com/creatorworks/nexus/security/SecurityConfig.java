@@ -45,7 +45,7 @@ public class SecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().requestMatchers(
-            "/favicon.ico", "/css/**", "/assets/**", 
+            "/favicon.ico", "/css/**", "/js/**", "/assets/**", 
             "/uploads/**", "/h2-console/**", "/img/**", "/.well-known/**");
     }
 
@@ -65,11 +65,12 @@ public class SecurityConfig {
             // CSRF 보호를 활성화하고, 토큰을 JS가 읽을 수 있는 쿠키로 생성합니다.
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/h2-console/**", "/editor/api/upload", "/api/products/**")
+                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel")
             )
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/editor/**", "/editor").permitAll()
-                .anyRequest().permitAll()
+                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**").permitAll()
+                .requestMatchers("/editor/**", "/editor").hasAnyRole("ADMIN", "SELLER")
+                .anyRequest().authenticated()
             )
             .formLogin(formLogin -> formLogin
                 .loginPage("/members/login")
@@ -101,12 +102,13 @@ public class SecurityConfig {
             // CSRF 보호를 활성화하고, 토큰을 JS가 읽을 수 있는 쿠키로 생성합니다.
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/h2-console/**", "/editor/api/upload", "/api/products/**")
+                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel")
             )
             // 모든 요청을 허용합니다. (개발환경과 동일하게)
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/editor/**", "/editor").permitAll()
-                .anyRequest().permitAll()
+                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**").permitAll()
+                .requestMatchers("/editor/**", "/editor").hasAnyRole("ADMIN", "SELLER")
+                .anyRequest().authenticated()
             )
             // 폼 로그인 설정
             .formLogin(formLogin -> formLogin

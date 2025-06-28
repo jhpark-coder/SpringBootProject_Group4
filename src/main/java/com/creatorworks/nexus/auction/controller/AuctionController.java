@@ -20,6 +20,11 @@ import lombok.RequiredArgsConstructor;
 public class AuctionController {
     private final AuctionService auctionService;
 
+    @GetMapping("/auction")
+    public String auctionPage() {
+        return "auction";
+    }
+
     @PostMapping("/api/auctions")
     @ResponseBody
     public Long saveAuction(@RequestBody AuctionSaveRequest request) {
