@@ -1,9 +1,14 @@
 package com.creatorworks.nexus.security;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.creatorworks.nexus.member.service.MemberService;
+import com.creatorworks.nexus.member.service.SocialMemberService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -11,11 +16,10 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
 
@@ -27,25 +31,22 @@ import java.util.Arrays;
  */
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig implements WebMvcConfigurer {
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final MemberService memberService;
+    private final SocialMemberService socialMemberService;
+    private final CustomOAuth2LoginSuccessHandler customOAuth2LoginSuccessHandler;
 
     // @Value("${file.upload-dir}")
     // private String uploadDir;
-    
-    // WebConfig의 리소스 핸들러 기능을 SecurityConfig로 통합
-    // @Override
-    // public void addResourceHandlers(ResourceHandlerRegistry registry) {
-    //     String uploadPath = "file:" + System.getProperty("user.dir") + "/src/main/resources/static/uploads/";
-    //     registry.addResourceHandler("/uploads/**")
-    //             .addResourceLocations(uploadPath);
-    // }
     
     // 정적 리소스는 보안 필터 체인을 완전히 무시하도록 설정
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().requestMatchers(
-            "/static/**", "/js/**", "/css/**", "/assets/**", 
-            "/uploads/**", "/h2-console/**", "/img/**");
+            "/favicon.ico", "/css/**", "/assets/**", 
+            "/uploads/**", "/h2-console/**", "/img/**", "/.well-known/**");
     }
 
     /**
@@ -61,10 +62,30 @@ public class SecurityConfig implements WebMvcConfigurer {
         http
             // 개발 환경에서는 CORS 설정도 동일하게 적용
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // 개발 환경에서는 CSRF 보호 기능을 명시적으로 비활성화
-            .csrf(csrf -> csrf.disable())
+            // CSRF 보호를 활성화하고, 토큰을 JS가 읽을 수 있는 쿠키로 생성합니다.
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .ignoringRequestMatchers("/h2-console/**", "/editor/api/upload", "/api/products/**")
+            )
             .authorizeHttpRequests(authz -> authz
+                .requestMatchers("/editor/**", "/editor").permitAll()
                 .anyRequest().permitAll()
+            )
+            .formLogin(formLogin -> formLogin
+                .loginPage("/members/login")
+                .usernameParameter("email")
+                .defaultSuccessUrl("/")
+                .failureUrl("/members/login/error")
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutRequestMatcher(new AntPathRequestMatcher("/members/logout"))
+                .logoutSuccessUrl("/")
+                .permitAll()
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .userInfoEndpoint(userInfo -> userInfo.userService(socialMemberService))
+                .successHandler(customOAuth2LoginSuccessHandler)
             )
             .headers(headers -> headers
                 .frameOptions().disable());
@@ -75,39 +96,49 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Profile("!dev")
     public SecurityFilterChain prodFilterChain(HttpSecurity http) throws Exception {
         http
+            // CORS 설정
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // CSRF 보호를 활성화하고, 토큰을 JS가 읽을 수 있는 쿠키로 생성합니다.
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                // SPA 포워딩 경로를 CSRF 검증에서 제외
-                .ignoringRequestMatchers("/editor", "/editor/**")
+                .ignoringRequestMatchers("/h2-console/**", "/editor/api/upload", "/api/products/**")
             )
+            // 모든 요청을 허용합니다. (개발환경과 동일하게)
             .authorizeHttpRequests(authz -> authz
-                // '/editor/**' 경로는 SPA 컨트롤러가 처리하므로 permitAll()에 남겨둡니다.
-                // 하지만 API 호출은 인증이 필요하므로 '/api/**'는 여기서 제외하고 아래에서 별도 처리합니다.
-                .requestMatchers("/", "/editor/**", "/static/**", "/js/**", "/css/**", "/assets/**", "/h2-console/**", "/uploads/**", "/login", "/members/**", "/img/**").permitAll()
-                // '/api/**' 경로는 인증된 사용자만 접근 가능하도록 설정
-                .requestMatchers("/api/**").authenticated()
-                .anyRequest().authenticated()
+                .requestMatchers("/editor/**", "/editor").permitAll()
+                .anyRequest().permitAll()
             )
-            // 로그인 설정 추가
+            // 폼 로그인 설정
             .formLogin(formLogin -> formLogin
-                .loginPage("/login")  // 로그인 페이지 경로
-                .defaultSuccessUrl("/")  // 로그인 성공 시 리다이렉트
-                .failureUrl("/login?error=true")  // 로그인 실패 시 리다이렉트
+                .loginPage("/members/login")
+                .usernameParameter("email")
+                .defaultSuccessUrl("/")
+                .failureUrl("/members/login/error")
                 .permitAll()
             )
-            // 로그아웃 설정 추가
+            // 로그아웃 설정
             .logout(logout -> logout
-                .logoutSuccessUrl("/")  // 로그아웃 성공 시 리다이렉트
+                .logoutRequestMatcher(new AntPathRequestMatcher("/members/logout"))
+                .logoutSuccessUrl("/")
                 .permitAll()
             )
-            // HTTP 보안 헤더 추가
+            // OAuth2 로그인 설정
+            .oauth2Login(oauth2 -> oauth2
+                .userInfoEndpoint(userInfo -> userInfo.userService(socialMemberService))
+                .successHandler(customOAuth2LoginSuccessHandler)
+            )
+            // H2 콘솔을 위한 헤더 설정
             .headers(headers -> headers
-                .frameOptions().deny()  // 클릭재킹 방지
-                .contentTypeOptions()  // MIME 스니핑 방지
-            );
-        
+                .frameOptions().disable());
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setPasswordEncoder(passwordEncoder());
+        provider.setUserDetailsService(memberService);
+        return new ProviderManager(provider);
     }
 
     // CORS 설정을 위한 Bean

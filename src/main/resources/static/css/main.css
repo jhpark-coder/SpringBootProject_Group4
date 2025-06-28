@@ -1,7 +1,7 @@
 /* 기본 & 전역 설정 */
 :root {
     /* rem의 기준이 되는 폰트 크기. 1rem = 16px */
-    font-size: 16px; 
+    font-size: 16px;
 }
 
 body {
@@ -22,8 +22,10 @@ a {
 /* 중앙 정렬을 위한 컨테이너 */
 .container {
     width: 90%;
-    max-width: 1440px; /* 최대 너비 제한 */
-    margin: 0 auto; /* 수평 중앙 정렬 */
+    max-width: 1440px;
+    /* 최대 너비 제한 */
+    margin: 0 auto;
+    /* 수평 중앙 정렬 */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -39,7 +41,8 @@ a {
     background: #FFFFFF;
     border: 3px solid #006583;
     border-radius: 10px;
-    font-size: 1rem; /* 20px */
+    font-size: 1rem;
+    /* 20px */
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
@@ -61,9 +64,11 @@ a {
 }
 
 .main-slide .main-slide-content {
-    justify-content: flex-end; /* 텍스트를 오른쪽으로 정렬 */
+    justify-content: flex-end;
+    /* 텍스트를 오른쪽으로 정렬 */
     width: 100%;
-    max-width: 1180px; /* 피그마 디자인 기준 너비 */
+    max-width: 1180px;
+    /* 피그마 디자인 기준 너비 */
 }
 
 .main-slide .main-slide-text {
@@ -74,7 +79,8 @@ a {
 }
 
 .main-slide h1 {
-    font-size: 3.125rem; /* 50px */
+    font-size: 3.125rem;
+    /* 50px */
     line-height: 1.2;
     font-weight: 500;
     margin: 0;
@@ -83,14 +89,16 @@ a {
 /* 2. NeedsGridContainer */
 .needs-grid {
     padding: 100px 0;
-   
+
 }
 
 .grid-container {
     display: flex;
     justify-content: center;
-    gap: 2.5%; /* 아이템 사이의 간격 */
-    flex-wrap: wrap; /* 화면이 좁아지면 줄바꿈 */
+    gap: 2.5%;
+    /* 아이템 사이의 간격 */
+    flex-wrap: wrap;
+    /* 화면이 좁아지면 줄바꿈 */
     width: 100%;
 }
 
@@ -98,14 +106,17 @@ a {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    flex-basis: 23%; /* 4개 아이템 배치 */
-    min-width: 280px; /* 최소 너비 보장 */
+    flex-basis: 23%;
+    /* 4개 아이템 배치 */
+    min-width: 280px;
+    /* 최소 너비 보장 */
     color: #000000;
 }
 
 .item-image-placeholder {
     width: 100%;
-    padding-top: 100%; /* 1:1 비율 유지 */
+    padding-top: 100%;
+    /* 1:1 비율 유지 */
     background: #D9D9D9;
     height: 0;
 }
@@ -132,7 +143,8 @@ a {
 }
 
 .author-name {
-    font-size: 1rem; /* 16px */
+    font-size: 1rem;
+    /* 16px */
     font-weight: 500;
 }
 
@@ -164,7 +176,8 @@ a {
 }
 
 .cta-text {
-    font-size: 2rem; /* 32px */
+    font-size: 2rem;
+    /* 32px */
     font-weight: 500;
     line-height: 1.5;
     margin: 0;
@@ -189,8 +202,10 @@ a {
 
 .sell-image-placeholder,
 .sell-text-content {
-    flex: 1; /* 가용 공간을 똑같이 나눠가짐 */
-    min-width: 300px; /* 최소 너비 */
+    flex: 1;
+    /* 가용 공간을 똑같이 나눠가짐 */
+    min-width: 300px;
+    /* 최소 너비 */
 }
 
 .sell-image-placeholder {
@@ -206,7 +221,8 @@ a {
 }
 
 .sell-description {
-    font-size: 1.2rem; /* 24px */
+    font-size: 1.2rem;
+    /* 24px */
     font-weight: 500;
     line-height: 1.6;
     margin: 0;
@@ -217,42 +233,53 @@ a {
 /* 태블릿 사이즈 (예: 1024px 이하) */
 @media (max-width: 1024px) {
     .grid-item {
-        flex-basis: 48%; /* 2개 아이템 배치 */
+        flex-basis: 48%;
+        /* 2개 아이템 배치 */
         margin-bottom: 2rem;
     }
 
     .sell-recommend-content {
-        flex-direction: column; /* 세로로 쌓기 */
+        flex-direction: column;
+        /* 세로로 쌓기 */
         gap: 2rem;
         text-align: center;
     }
+
     .sell-text-content {
-        align-items: center; /* 텍스트와 버튼 중앙 정렬 */
+        align-items: center;
+        /* 텍스트와 버튼 중앙 정렬 */
     }
 }
 
 /* 모바일 사이즈 (예: 768px 이하) */
 @media (max-width: 768px) {
     .main-slide .main-slide-content {
-        justify-content: center; /* 텍스트 중앙 정렬 */
+        justify-content: center;
+        /* 텍스트 중앙 정렬 */
         text-align: center;
     }
+
     .main-slide .main-slide-text {
         align-items: center;
     }
+
     .main-slide h1 {
-        font-size: 2.5rem; /* 40px */
+        font-size: 2.5rem;
+        /* 40px */
     }
 
     .grid-item {
-        flex-basis: 100%; /* 1개 아이템 배치 */
+        flex-basis: 100%;
+        /* 1개 아이템 배치 */
     }
 
     .cta-text {
-        font-size: 1.2rem; /* 24px */
+        font-size: 1.2rem;
+        /* 24px */
     }
 
     .sell-description {
-        font-size: 1.25rem; /* 20px */
+        font-size: 1.25rem;
+        /* 20px */
     }
 }
