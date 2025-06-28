@@ -90,16 +90,17 @@
             <ul class="pagination" style="justify-content: center;">
                 <li class="page-item" th:classappend="${inquiryPage.first} ? 'disabled'">
                     <a class="page-link"
-                        th:href="@{/products/{id}(id=${product.id}, page=${inquiryPage.number - 1})}">&laquo;</a>
+                        th:href="@{/products/{id}(id=${product.id}, inquiryPageable_page=${inquiryPage.number - 1})}">&laquo;</a>
                 </li>
                 <li class="page-item" th:each="pageNumber : ${#numbers.sequence(0, inquiryPage.totalPages - 1)}"
                     th:classappend="${pageNumber == inquiryPage.number} ? 'active'">
-                    <a class="page-link" th:href="@{/products/{id}(id=${product.id}, page=${pageNumber})}"
+                    <a class="page-link"
+                        th:href="@{/products/{id}(id=${product.id}, inquiryPageable_page=${pageNumber})}"
                         th:text="${pageNumber + 1}">1</a>
                 </li>
                 <li class="page-item" th:classappend="${inquiryPage.last} ? 'disabled'">
                     <a class="page-link"
-                        th:href="@{/products/{id}(id=${product.id}, page=${inquiryPage.number + 1})}">&raquo;</a>
+                        th:href="@{/products/{id}(id=${product.id}, inquiryPageable_page=${inquiryPage.number + 1})}">&raquo;</a>
                 </li>
             </ul>
         </nav>

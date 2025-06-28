@@ -1,11 +1,14 @@
 package com.creatorworks.nexus.product.controller;
 
 import java.security.Principal;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
@@ -15,18 +18,22 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.product.dto.ProductInquiryRequestDto;
 import com.creatorworks.nexus.product.dto.ProductPageResponse;
+import com.creatorworks.nexus.product.dto.ProductReviewRequestDto;
 import com.creatorworks.nexus.product.dto.ProductSaveRequest;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.entity.ProductInquiry;
+import com.creatorworks.nexus.product.entity.ProductReview;
 import com.creatorworks.nexus.product.repository.ProductInquiryRepository;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.service.ProductInquiryService;
+import com.creatorworks.nexus.product.service.ProductReviewService;
 import com.creatorworks.nexus.product.service.ProductService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,6 +47,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Controller
 @RequiredArgsConstructor
+@RequestMapping("/products")
 public class ProductController {
 
     // final 키워드와 @RequiredArgsConstructor에 의해, Spring이 자동으로 ProductService의 인스턴스를 주입해줍니다. (생성자 주입)
@@ -47,6 +55,7 @@ public class ProductController {
     private final ProductRepository productRepository;
     private final ProductInquiryRepository productInquiryRepository;
     private final ProductInquiryService productInquiryService;
+    private final ProductReviewService productReviewService;
     private final MemberRepository memberRepository;
 
     /**
@@ -92,24 +101,42 @@ public class ProductController {
      * 특정 상품의 상세 정보 페이지("/products/{id}")를 렌더링합니다.
      * @return 렌더링할 뷰의 이름 ("product/productDetail")
      */
-    @GetMapping("/products/{id}")
-    public String productDetail(@PathVariable("id") Long id, 
-                                @PageableDefault(size = 4, sort = "regTime", direction = Sort.Direction.DESC) Pageable pageable, 
+    @GetMapping("/{id}")
+    public String productDetail(@PathVariable("id") Long id,
+                                @Qualifier("inquiryPageable") @PageableDefault(size = 4, sort = "regTime", direction = Sort.Direction.DESC) Pageable inquiryPageable,
+                                @Qualifier("reviewPageable") @PageableDefault(size = 10, sort = "regTime", direction = Sort.Direction.DESC) Pageable reviewPageable,
                                 Principal principal,
                                 Model model) {
         Product product = productService.findProductById(id);
-        Page<ProductInquiry> inquiryPage = productInquiryService.findInquiriesByProduct(id, pageable);
 
-        // 현재 로그인한 사용자 정보 조회
+        // 문의 관련
+        Page<ProductInquiry> inquiryPage = productInquiryService.findInquiriesByProduct(id, inquiryPageable);
+
+        // 후기 관련
+        Page<ProductReview> reviewPage = productReviewService.findReviewsByProduct(id, reviewPageable);
+
+        // 현재 로그인한 사용자 정보 및 후기 작성 상태 조회
         Member currentMember = null;
+        boolean canWriteReview = false;
+        Optional<ProductReview> existingReview = Optional.empty();
+
         if (principal != null) {
             currentMember = memberRepository.findByEmail(principal.getName());
+            if(currentMember != null) {
+                // 후기 작성 가능 여부 확인
+                canWriteReview = productReviewService.hasUserPurchasedProduct(currentMember, product);
+                // 이미 작성한 후기가 있는지 확인
+                existingReview = productReviewService.findReviewByWriterAndProduct(currentMember, product);
+            }
         }
 
         model.addAttribute("product", product);
         model.addAttribute("inquiryPage", inquiryPage);
-        model.addAttribute("currentMember", currentMember); // 뷰로 전달
-        
+        model.addAttribute("reviewPage", reviewPage);
+        model.addAttribute("currentMember", currentMember);
+        model.addAttribute("canWriteReview", canWriteReview);
+        model.addAttribute("existingReview", existingReview.orElse(null));
+
         return "product/productDetail";
     }
 
@@ -166,7 +193,25 @@ public class ProductController {
         return "redirect:/products/" + id;
     }
 
-    @PostMapping("/products/{id}/inquiries")
+    @PostMapping("/{productId}/reviews")
+    public ResponseEntity<?> createReview(@PathVariable("productId") Long productId,
+                               @RequestBody ProductReviewRequestDto reviewDto,
+                               Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+        try {
+            String userEmail = principal.getName();
+            productReviewService.createReview(productId, reviewDto, userEmail);
+            return ResponseEntity.ok("후기가 성공적으로 등록되었습니다.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/inquiries")
     public String createInquiry(@PathVariable("id") Long productId,
                                 ProductInquiryRequestDto inquiryDto,
                                 Principal principal) {
@@ -177,7 +222,7 @@ public class ProductController {
         return "redirect:/products/" + productId;
     }
 
-    @PostMapping("/products/{productId}/inquiries/{inquiryId}/replies")
+    @PostMapping("/{productId}/inquiries/{inquiryId}/replies")
     public String createReply(@PathVariable("productId") Long productId,
                               @PathVariable("inquiryId") Long inquiryId,
                               ProductInquiryRequestDto inquiryDto,
@@ -187,5 +232,24 @@ public class ProductController {
         productInquiryService.createReply(productId, inquiryId, inquiryDto, userEmail);
 
         return "redirect:/products/" + productId;
+    }
+
+    // 후기 수정
+    @PutMapping("/reviews/{reviewId}")
+    public ResponseEntity<?> updateReview(@PathVariable("reviewId") Long reviewId,
+                                          @RequestBody ProductReviewRequestDto reviewDto,
+                                          Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+        try {
+            String userEmail = principal.getName();
+            productReviewService.updateReview(reviewId, reviewDto, userEmail);
+            return ResponseEntity.ok("후기가 성공적으로 수정되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
     }
 }

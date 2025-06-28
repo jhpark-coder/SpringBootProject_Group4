@@ -1,0 +1,455 @@
+/* inquiry_section.css */
+
+.inquiry-section {
+    max-width: 980px;
+    margin: 40px auto;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+.inquiry-section h3 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #333;
+}
+
+.inquiry-notice {
+    background-color: #f8f8f8;
+    padding: 20px;
+    border-radius: 4px;
+    margin-bottom: 30px;
+    font-size: 13px;
+    color: #666;
+}
+
+.inquiry-notice ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.inquiry-notice ul li {
+    position: relative;
+    padding-left: 15px;
+    margin-bottom: 8px;
+}
+
+.inquiry-notice ul li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: 13px;
+}
+
+.inquiry-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn-ask-question {
+    background-color: #fff;
+    color: #007bff;
+    border: 2px solid #007bff !important;
+    padding: 7px 18px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.search-box {
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 10px 40px 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.search-box button {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 40px;
+    height: 100%;
+    border: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23888' class='bi bi-search' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") no-repeat center center;
+    cursor: pointer;
+}
+
+.inquiry-list {
+    border-top: 2px solid #333;
+}
+
+.no-inquiries {
+    text-align: center;
+    padding: 50px 0;
+    color: #888;
+    border-bottom: 1px solid #ddd;
+}
+
+.inquiry-item {
+    border-bottom: 1px solid #ddd;
+}
+
+.inquiry-question,
+.inquiry-answer {
+    padding: 20px 15px;
+}
+
+.inquiry-answer {
+    background-color: #f9f9f9;
+    padding-left: 45px;
+    /* Indent for reply */
+    position: relative;
+}
+
+.inquiry-answer::before {
+    content: '└';
+    position: absolute;
+    left: 20px;
+    top: 20px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #888;
+}
+
+
+.inquiry-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.inquiry-header strong {
+    font-weight: bold;
+}
+
+.inquiry-header time {
+    color: #888;
+    margin-left: auto;
+}
+
+.inquiry-type-q,
+.inquiry-type-a {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: #fff;
+}
+
+.inquiry-type-q {
+    background-color: #555;
+}
+
+.inquiry-type-a {
+    background-color: #007bff;
+}
+
+.inquiry-content {
+    color: #333;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.reply-form-placeholder {
+    padding: 20px 15px;
+    text-align: right;
+}
+
+.btn-add-reply {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Styles for Review Buttons to match Inquiry buttons */
+.btn-write-review,
+.btn-edit-review {
+    background-color: #fff;
+    padding: 7px 18px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 2px solid #007bff;
+    color: #007bff;
+}
+
+.btn-edit-review {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+/* Pagination Styles */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.pagination {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination li {
+    margin: 0 2px;
+}
+
+.pagination li a {
+    display: block;
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    color: #007bff;
+    text-decoration: none;
+    background-color: #fff;
+    transition: background-color 0.2s, color 0.2s;
+    border-radius: 4px;
+}
+
+.pagination li a:hover {
+    background-color: #f5f5f5;
+    text-decoration: none;
+}
+
+.pagination li.active a {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #007bff;
+    cursor: default;
+}
+
+.pagination li.disabled a {
+    color: #aaa;
+    pointer-events: none;
+    cursor: default;
+    background-color: #f5f5f5;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none;
+    /* Default is hidden */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    animation: slide-down 0.3s ease-out;
+}
+
+@keyframes slide-down {
+    from {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    font-size: 20px;
+    margin: 0;
+}
+
+.close-modal-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    font-weight: 300;
+    line-height: 1;
+    cursor: pointer;
+    color: #888;
+}
+
+.modal-body .form-group {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.modal-body .form-group>* {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.modal-body .form-group>label {
+    margin-bottom: 8px;
+}
+
+.modal-body .form-group p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.modal-body .form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    resize: vertical;
+}
+
+.original-inquiry-content {
+    background-color: #f8f8f8;
+    border: 1px solid #eee;
+    padding: 10px;
+    border-radius: 4px;
+    max-height: 100px;
+    overflow-y: auto;
+    font-size: 14px;
+    color: #555;
+    white-space: pre-wrap;
+}
+
+.form-group-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-group-checkbox label {
+    font-weight: normal;
+    font-size: 14px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+.modal-footer p {
+    font-size: 12px;
+    color: #888;
+    margin: 0;
+}
+
+.modal-footer .btn-cancel {
+    background-color: #6c757d;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal-footer .btn-submit {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.inquiry-header .star-rating-display {
+    color: #ccc;
+    font-size: 16px;
+}
+
+.inquiry-header .star-rating-display .filled {
+    color: #ffc107;
+}
+
+/* Star Rating Input in Modal */
+.modal-body .star-rating-input {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.star-rating-input .star-rating-title {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.star-rating-input .stars {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: center;
+}
+
+.star-rating-input input[type="radio"] {
+    display: none;
+}
+
+.star-rating-input label.star {
+    font-size: 36px;
+    color: #ccc;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 0 5px;
+}
+
+.star-rating-input input[type="radio"]:checked~label.star,
+.star-rating-input label.star:hover,
+.star-rating-input label.star:hover~label.star {
+    color: #ffc107;
+}
+
+/* Specific fixes for review modal layout issues */
+#reviewModal .form-group,
+#reviewEditModal .form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+}
+
+/* Center align star rating section, overriding the general .form-group rule */
+#reviewModal .star-rating-input,
+#reviewEditModal .star-rating-input {
+    width: 100%;
+    align-items: center;
+}
