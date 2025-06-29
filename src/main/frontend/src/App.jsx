@@ -613,8 +613,9 @@ function App() {
    * @param {object} newSettings - 새로 저장될 설정 값들
    */
   const handleSettingsSave = (newSettings) => {
-    setProjectSettings(newSettings); // App 컴포넌트의 상태를 업데이트합니다.
+    setProjectSettings(newSettings);
     setIsSettingsModalOpen(false); // 모달을 닫습니다.
+    console.log("Updated project settings:", newSettings);
   };
 
   /**
@@ -625,144 +626,122 @@ function App() {
   };
 
   /**
-   * 에디터의 현재 내용을 HTML 문자열로 가져오는 헬퍼 함수입니다.
-   * @returns {string} - 에디터 내용의 HTML
+   * 에디터의 현재 내용을 HTML 문자열과 JSON 객체로 가져오는 헬퍼 함수입니다.
+   * @returns {{htmlContent: string, jsonContent: object}} - 에디터 내용의 HTML과 JSON
    */
   const getEditorContent = () => {
     if (!editor) {
-      return '';
+      return { htmlContent: '', jsonContent: null };
     }
-    return editor.getHTML();
+    return {
+      htmlContent: editor.getHTML(),
+      jsonContent: editor.getJSON(),
+    };
   };
 
   /**
-   * '저장' 버튼을 클릭했을 때 실행되는 이벤트 핸들러입니다.
-   * 에디터의 모든 내용을 취합하여 서버로 전송합니다.
-   * `async` 키워드는 이 함수가 비동기 작업을 포함하고 있음을 나타냅니다.
+   * 문서 저장/제출 함수
+   * 에디터 상단의 '저장' 또는 '제출' 버튼을 클릭하면 실행되는 핵심 함수입니다.
    */
   const handleSaveDocument = async () => {
-    if (!editor) return;
-
-    // 프로젝트 설정에서 판매 타입을 가져옵니다.
-    const { saleType } = projectSettings;
-
-    // 판매 타입이 설정되지 않았으면 사용자에게 알리고 설정 모달을 엽니다.
-    if (!saleType) {
-      alert("프로젝트 설정을 열어 판매 또는 경매 정보를 입력해주세요.");
-      setIsSettingsModalOpen(true);
+    // 1. 에디터의 현재 내용을 JSON과 HTML 형식으로 가져옵니다.
+    const { jsonContent, htmlContent } = getEditorContent();
+    if (!jsonContent || !htmlContent) {
+      console.error("Editor content is empty or invalid.");
+      alert('에디터 내용이 비어있어 저장할 수 없습니다.');
       return;
     }
 
-    // Tiptap 에디터의 내용을 JSON 형식과 HTML 형식으로 모두 가져옵니다.
-    const tiptapJson = editor.getJSON();
-    const htmlBackup = editor.getHTML();
+    // 2. 카테고리 정보 추출
+    const primaryCategory = projectSettings.tags.find(tag => Object.keys(CATEGORIES).includes(tag));
+    const secondaryCategory = projectSettings.tags.find(tag => primaryCategory && CATEGORIES[primaryCategory]?.includes(tag));
 
-    let url;         // 서버에 요청을 보낼 주소
-    let method;      // HTTP 요청 방식 (POST: 생성, PUT: 수정)
-    let requestData; // 서버에 보낼 데이터
-    let redirectUrl; // 저장이 완료된 후 이동할 페이지 주소
+    // 3. 판매 방식(saleType)에 따라 API URL과 전송할 데이터(payload)를 결정합니다.
+    let apiUrl = '';
+    let payload = {};
+    const method = id ? 'PUT' : 'POST'; // id가 있으면 수정(PUT), 없으면 생성(POST)
 
-    // 여러 데이터 소스에서 정보를 모아 서버에 보낼 공통 데이터를 구성합니다.
-    const commonData = {
-      name: projectSettings.title,
-      imageUrl: projectSettings.coverImage,
-      // 태그 중에서 대분류와 소분류를 찾아 할당합니다.
-      primaryCategory: projectSettings.tags.find(tag => Object.keys(CATEGORIES).includes(tag)),
-      secondaryCategory: projectSettings.tags.find(tag => !(Object.keys(CATEGORIES).includes(tag))),
-      tiptapJson: JSON.stringify(tiptapJson), // JSON 객체를 문자열로 변환하여 전송
-      htmlBackup: htmlBackup,
-      backgroundColor: editorStyles.backgroundColor,
-      fontFamily: editorStyles.fontFamily,
-      workDescription: projectSettings.workDescription || '',
-    };
-
-    // 현재 편집 모드인지(기존 글 수정) 확인합니다.
-    const isEditMode = editMode.startsWith('edit-');
-
-    // 판매 타입에 따라 요청할 URL, 방식, 보낼 데이터를 다르게 설정합니다.
-    if (saleType === 'sale') {
-      // 상품 판매일 경우
-      if (isEditMode && id) { // 수정 모드
-        url = `/api/products/${id}`;
-        method = 'PUT';
-      } else { // 생성 모드
-        url = '/api/products';
-        method = 'POST';
-      }
-      // 서버에 보낼 데이터: 공통 데이터에 가격 정보를 추가합니다.
-      requestData = {
-        ...commonData,
-        price: parseInt(projectSettings.salePrice),
+    if (projectSettings.saleType === 'sale') {
+      apiUrl = id ? `/api/products/${id}` : '/api/products';
+      payload = {
+        name: projectSettings.title,
+        tiptapJson: JSON.stringify(jsonContent),
+        description: htmlContent, // HTML 컨텐츠를 description으로 사용
+        price: projectSettings.salePrice,
+        imageUrl: projectSettings.coverImage,
+        primaryCategory: primaryCategory,
+        secondaryCategory: secondaryCategory,
+        workDescription: projectSettings.workDescription,
+        fontFamily: editorStyles.fontFamily,
+        backgroundColor: editorStyles.backgroundColor,
+        tags: projectSettings.tags, // 모든 태그 포함
       };
-      // 저장 후 이동할 URL을 정의하는 함수입니다.
-      redirectUrl = (responseId) => `http://localhost:8080/result/product/${responseId || id}`;
-    } else if (saleType === 'auction') {
-      // 경매일 경우
-      if (isEditMode && id) { // 수정 모드
-        url = `/api/auctions/${id}`;
-        method = 'PUT';
-      } else { // 생성 모드
-        url = '/api/auctions';
-        method = 'POST';
-      }
-      // 서버에 보낼 데이터: 공통 데이터에 경매 관련 정보를 추가합니다.
-      requestData = {
-        ...commonData,
-        auctionDuration: parseInt(projectSettings.auctionDuration.replace('일', '')),
-        startBidPrice: parseInt(projectSettings.startBidPrice),
-        buyNowPrice: parseInt(projectSettings.buyNowPrice),
+    } else if (projectSettings.saleType === 'auction') {
+      apiUrl = id ? `/api/auctions/${id}` : '/api/auctions';
+      // 경매 종료 시간 계산 (예: 7일을 더함)
+      const auctionDurationMap = { '1일': 1, '3일': 3, '7일': 7 };
+      const durationInDays = auctionDurationMap[projectSettings.auctionDuration] || 0;
+      const auctionEndTime = new Date();
+      auctionEndTime.setDate(auctionEndTime.getDate() + durationInDays);
+
+      payload = {
+        name: projectSettings.title,
+        tiptapJson: JSON.stringify(jsonContent),
+        description: htmlContent,
+        startBidPrice: projectSettings.startBidPrice,
+        buyNowPrice: projectSettings.buyNowPrice,
+        auctionEndTime: auctionEndTime.toISOString(),
+        imageUrl: projectSettings.coverImage,
+        primaryCategory: primaryCategory,
+        secondaryCategory: secondaryCategory,
+        workDescription: projectSettings.workDescription,
+        fontFamily: editorStyles.fontFamily,
+        backgroundColor: editorStyles.backgroundColor,
+        tags: projectSettings.tags, // 모든 태그 포함
       };
-      // 저장 후 이동할 URL을 정의하는 함수입니다.
-      redirectUrl = (responseId) => `http://localhost:8080/result/auction/${responseId || id}`;
     } else {
-      // 기존 저장 로직 (Editor) - 지금은 사용하지 않음
+      alert('판매 방식을 선택해주세요.');
       return;
     }
 
-    console.log('Edit mode:', editMode);
-    console.log('Is edit mode:', isEditMode);
-    console.log('Current ID:', id);
-    console.log('HTTP method:', method);
-    console.log('Target URL:', url);
-    console.log('Saving document with data:', requestData);
-
-    // `try...catch` 블록: 비동기 작업 중 발생할 수 있는 오류를 처리합니다.
+    // 4. 서버로 데이터 전송 (fetch API 사용)
     try {
-      // `await` 키워드는 `fetch` 작업이 완료될 때까지 기다리게 만듭니다.
-      const response = await fetch(url, {
+      const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+      const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+
+      if (csrfHeader && csrfToken) {
+        headers[csrfHeader] = csrfToken;
+      }
+
+      const response = await fetch(apiUrl, {
         method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestData), // 자바스크립트 객체를 JSON 문자열로 변환하여 body에 담아 전송
+        headers: headers,
+        body: JSON.stringify(payload),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-
-      // 서버 응답이 실패(ok가 아님)하면 에러를 발생시킵니다.
       if (!response.ok) {
+        // 서버 응답이 실패했을 경우, 에러 메시지를 좀 더 자세히 보여줍니다.
         const errorText = await response.text();
         console.error('Server error response:', errorText);
-        throw new Error(`저장에 실패했습니다 (${response.status}): ${errorText}`);
+        throw new Error(`서버 에러: ${response.status} ${response.statusText}`);
       }
 
-      // 서버로부터 저장된 객체의 ID를 응답으로 받습니다.
       const savedId = await response.json();
-      console.log('Document saved successfully with ID:', savedId);
+      console.log('저장 성공! ID:', savedId);
 
-      // 편집 모드일 때는 기존 ID 사용, 새 작성일 때는 응답받은 ID 사용
-      const finalId = isEditMode ? id : savedId;
-      // 저장이 완료되면 해당 결과 페이지로 이동시킵니다.
-      window.location.href = redirectUrl(finalId);
+      // 5. 저장 성공 후 결과 페이지로 이동합니다.
+      const resultUrl = projectSettings.saleType === 'sale'
+        ? `/products/${savedId}`
+        : `/auctions/${savedId}`;
+      window.location.href = resultUrl;
 
     } catch (error) {
-      console.error('Error saving document:', error);
-
-      // 네트워크 오류와 서버 응답 오류를 구분하여 더 친절한 알림을 보여줍니다.
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        alert('네트워크 오류가 발생했습니다. 서버가 실행 중인지 확인해주세요.');
-      } else {
-        alert(`저장 중 오류가 발생했습니다: ${error.message}`);
-      }
+      console.error('저장 실패:', error);
+      alert('문서 저장에 실패했습니다. 콘솔을 확인해주세요.');
     }
   };
 
@@ -892,7 +871,7 @@ function App() {
         )}
         {isPreviewModalOpen && (
           <Suspense fallback={<div>미리보기 모달 로딩 중...</div>}>
-            <PreviewModal isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} editorContent={getEditorContent()} styles={editorStyles} />
+            <PreviewModal isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} editorContent={getEditorContent().htmlContent} styles={editorStyles} />
           </Suspense>
         )}
         {isSpacerModalOpen && (

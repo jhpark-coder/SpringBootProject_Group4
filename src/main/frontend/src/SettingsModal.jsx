@@ -10,6 +10,15 @@ const CATEGORIES = {
     'Python': ['웹 개발', '데이터 분석', '머신러닝', '자동화'],
 };
 
+const RECOMMENDED_TAGS = {
+    '아트워크': ['#감성적인', '#풍경', '#인물', '#동물', '#흑백', '#빈티지', '#판타지', '#SF', '#일상', '#수채화', '#유화', '#디지털페인팅', '#펜드로잉', '#컨셉아트', '#캐리커처', '#웹툰', '#만화', '#스토리보드', '#배경아트', '#게임원화'],
+    '그래픽디자인': ['#미니멀리즘', '#모던', '#레트로', '#캘리그라피', '#산세리프', '#세리프', '#커버디자인', '#음악', '#아이덴티티', '#기업브랜딩', '#패키지디자인', '#포스터', '#리플렛', '#북커버', '#인포그래픽', '#UX/UI', '#아이콘', '#픽토그램', '#광고디자인', '#시각디자인'],
+    '캐릭터': ['#귀여운', '#실사체', '#SD캐릭터', '#애니메이션', '#게임캐릭터', '#웹툰캐릭터', '#오리지널캐릭터', '#몬스터', '#메카닉', '#이모티콘', '#버츄얼유튜버', '#ZBrush', '#Blender', '#Maya', '#Live2D', '#스파인', '#시트지', '#캐릭터시트', '#일러스트', '#컨셉디자인'],
+    'Java': ['#백엔드', '#웹개발', '#SpringBoot', '#SpringSecurity', '#JPA', '#Hibernate', '#QueryDSL', '#객체지향', '#디자인패턴', '#멀티스레딩', '#소켓프로그래밍', '#TCP/IP', '#HTTP', '#REST-API', '#자료구조', '#코딩테스트', '#JVM', '#GC', '#이펙티브자바', '#테스트코드'],
+    '프론트엔드': ['#웹퍼블리싱', '#반응형웹', '#CSS-in-JS', '#SASS', '#TypeScript', '#ES6+', '#상태관리', '#Redux', '#MobX', '#Vuex', '#Next_js', '#Nuxt_js', '#Webpack', '#Babel', '#웹소켓', '#PWA', '#웹접근성', '#웹표준', '#프로토타이핑', '#Figma'],
+    'Python': ['#Django', '#Flask', '#FastAPI', '#Pandas', '#NumPy', '#Matplotlib', '#Scikit-learn', '#TensorFlow', '#PyTorch', '#Jupyter', '#크롤링', '#웹스크레이핑', '#Selenium', '#BeautifulSoup', '#업무자동화', '#RPA', '#데이터시각화', '#딥러닝', '#자연어처리', '#컴퓨터비전'],
+};
+
 const AUCTION_DURATIONS = ['1일', '3일', '7일'];
 
 const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
@@ -22,6 +31,8 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
     const [buyNowPrice, setBuyNowPrice] = useState('');
     const [workDescription, setWorkDescription] = useState('');
     const [buyout_price, setBuyout_price] = useState('');
+    const [selectedTags, setSelectedTags] = useState([]);
+    const [tagInput, setTagInput] = useState('');
 
     // 에러 상태 추가
     const [errors, setErrors] = useState({});
@@ -39,6 +50,9 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
             setBuyNowPrice(initialSettings.buyNowPrice || '');
             setWorkDescription(initialSettings.workDescription || '');
             setBuyout_price(initialSettings.buyout_price || '');
+            // initialSettings에서 카테고리 태그를 제외한 순수 태그만 필터링하여 초기화
+            const initialPureTags = initialSettings.tags?.filter(tag => !CATEGORIES[initialSettings.primaryCategory]?.includes(tag) && tag !== initialSettings.primaryCategory) || [];
+            setSelectedTags(initialPureTags);
         }
     }, [isOpen, initialSettings]);
 
@@ -149,17 +163,20 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
     };
 
     const handleSecondaryCategoryClick = (subCategory) => {
-        const newTags = [primaryCategory];
-        const secondaryTags = currentSettings.tags.filter(tag => !Object.keys(CATEGORIES).includes(tag));
+        // 현재 선택된 2차 카테고리 찾기
+        const currentSecondaryCategory = currentSettings.tags.find(tag =>
+            primaryCategory && CATEGORIES[primaryCategory]?.includes(tag)
+        );
 
-        const index = secondaryTags.indexOf(subCategory);
-        if (index > -1) {
-            secondaryTags.splice(index, 1);
+        // 클릭된 2차 카테고리가 이미 선택된 상태이면 선택 해제, 아니면 새로 선택
+        if (currentSecondaryCategory === subCategory) {
+            // 선택 해제: 1차 카테고리만 남김
+            setCurrentSettings(prev => ({ ...prev, tags: [primaryCategory] }));
         } else {
-            secondaryTags.push(subCategory);
+            // 새로 선택: 1차 카테고리와 새 2차 카테고리
+            setCurrentSettings(prev => ({ ...prev, tags: [primaryCategory, subCategory] }));
         }
 
-        setCurrentSettings(prev => ({ ...prev, tags: [primaryCategory, ...secondaryTags] }));
         // 에러 제거
         if (errors.secondaryCategory) {
             setErrors(prev => ({ ...prev, secondaryCategory: '' }));
@@ -227,14 +244,41 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
         }
     };
 
+    const handleTagInputChange = (e) => {
+        setTagInput(e.target.value);
+    };
+
+    const handleTagKeyDown = (e) => {
+        if (e.key === 'Enter' && tagInput.trim() !== '') {
+            e.preventDefault();
+            addTag(tagInput.trim());
+            setTagInput('');
+        }
+    };
+
+    const addTag = (tag) => {
+        const newTag = tag.startsWith('#') ? tag : `#${tag}`;
+        if (!selectedTags.includes(newTag) && selectedTags.length < 5) {
+            setSelectedTags([...selectedTags, newTag]);
+        }
+    };
+
+    const removeTag = (tagToRemove) => {
+        setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
+    };
+
     const handleWorkDescriptionChange = (e) => {
         setWorkDescription(e.target.value);
     };
 
     const handleSave = () => {
         if (validateForm()) {
+            // 기존 카테고리 태그와 새로운 일반 태그를 합침
+            const allTags = [...currentSettings.tags, ...selectedTags];
+
             const updatedSettings = {
                 ...currentSettings,
+                tags: allTags, // 업데이트된 전체 태그
                 saleType,
                 salePrice: saleType === 'sale' ? salePrice : '',
                 auctionDuration: saleType === 'auction' ? auctionDuration : '',
@@ -294,10 +338,21 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
                                     id="work-description"
                                     value={workDescription}
                                     onChange={handleWorkDescriptionChange}
-                                    placeholder="작품에 대한 간단한 설명을 입력해주세요. (200자 이내)"
-                                    maxLength="200"
-                                    className="form-textarea"
+                                    placeholder="작품에 대한 추가적인 설명을 자유롭게 작성해주세요. (예: 제작 과정, 사용된 툴, 작품의 의미 등)"
+                                    className="work-description-textarea"
                                 />
+                            </div>
+
+                            <div className="form-group">
+                                <label>선택된 태그</label>
+                                <div className="selected-tags">
+                                    {selectedTags.map(tag => (
+                                        <div key={tag} className="tag-item">
+                                            {tag}
+                                            <button onClick={() => removeTag(tag)} className="remove-tag-btn">×</button>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                         <div className="right-column">
@@ -348,9 +403,10 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
                                 )}
                             </div>
 
-                            {currentSettings.tags && currentSettings.tags.length > 1 && (
-                                <div className="form-group">
-                                    <label>판매 방식</label>
+                            {/* 2차 카테고리가 선택되면 판매 방식 섹션 표시 */}
+                            {hasSecondaryCategory && (
+                                <div className="form-section">
+                                    <h3 className="section-title">판매 방식</h3>
                                     <div className="sale-type-group">
                                         <button
                                             className={`sale-type-button ${saleType === 'sale' ? 'active' : ''}`}
@@ -429,6 +485,36 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
                                             className={errors.buyNowPrice ? 'error' : ''}
                                         />
                                         {errors.buyNowPrice && <span className="error-message">{errors.buyNowPrice}</span>}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 태그 섹션 */}
+                            {hasSecondaryCategory && (
+                                <div className="form-section">
+                                    <h3 className="section-title">태그</h3>
+                                    <div className="tag-wrapper">
+                                        <div className="tag-input-container">
+                                            <input
+                                                type="text"
+                                                value={tagInput}
+                                                onChange={handleTagInputChange}
+                                                onKeyDown={handleTagKeyDown}
+                                                placeholder="태그를 입력하고 Enter (최대 5개)"
+                                                className="tag-input"
+                                                disabled={selectedTags.length >= 5}
+                                            />
+                                        </div>
+                                        <div className="recommended-tags-container">
+                                            <h4 className="recommended-tags-title">추천 태그</h4>
+                                            <div className="recommended-tags">
+                                                {RECOMMENDED_TAGS[primaryCategory]?.map(tag => (
+                                                    <button key={tag} onClick={() => addTag(tag)} className="recommended-tag-btn" disabled={selectedTags.length >= 5 || selectedTags.includes(tag)}>
+                                                        {tag}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )}

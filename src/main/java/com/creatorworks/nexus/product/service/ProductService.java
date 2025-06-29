@@ -13,7 +13,11 @@ import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.product.dto.ProductDto;
 import com.creatorworks.nexus.product.dto.ProductPageResponse;
 import com.creatorworks.nexus.product.dto.ProductSaveRequest;
+import com.creatorworks.nexus.product.entity.ItemTag;
 import com.creatorworks.nexus.product.entity.Product;
+import com.creatorworks.nexus.product.entity.ProductItemTag;
+import com.creatorworks.nexus.product.repository.ItemTagRepository;
+import com.creatorworks.nexus.product.repository.ProductItemTagRepository;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.specification.ProductSpecification;
 
@@ -32,6 +36,8 @@ public class ProductService {
     // 데이터베이스와 상호작용하는 ProductRepository를 주입받습니다.
     private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
+    private final ItemTagRepository itemTagRepository;
+    private final ProductItemTagRepository productItemTagRepository;
 
     /**
      * 특정 1차 카테고리에 속하는 중복되지 않는 2차 카테고리 목록을 조회합니다.
@@ -134,7 +140,9 @@ public class ProductService {
                 .fontFamily(request.getFontFamily())
                 .build();
         
-        return productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+        saveTags(savedProduct, request.getTags());
+        return savedProduct;
     }
 
     /**
@@ -164,6 +172,27 @@ public class ProductService {
         product.setBackgroundColor(request.getBackgroundColor());
         product.setFontFamily(request.getFontFamily());
 
+        productItemTagRepository.deleteAllByProductId(product.getId());
+        saveTags(product, request.getTags());
+
         return product; // 더티 체킹에 의해 변경 감지 후 업데이트됨
+    }
+
+    private void saveTags(Product product, List<String> tagNames) {
+        if (tagNames == null || tagNames.isEmpty()) {
+            return;
+        }
+
+        for (String tagName : tagNames) {
+            ItemTag itemTag = itemTagRepository.findByName(tagName)
+                    .orElseGet(() -> itemTagRepository.save(ItemTag.builder().name(tagName).build()));
+
+            ProductItemTag productItemTag = ProductItemTag.builder()
+                    .product(product)
+                    .itemTag(itemTag)
+                    .build();
+            
+            productItemTagRepository.save(productItemTag);
+        }
     }
 }
