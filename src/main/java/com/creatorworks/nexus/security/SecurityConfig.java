@@ -64,7 +64,7 @@ public class SecurityConfig {
                 .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel")
             )
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**").permitAll()
+                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/api/**", "/members/logout").permitAll()
                 .requestMatchers("/editor/**", "/editor").hasAnyRole("ADMIN", "SELLER")
                 .anyRequest().authenticated()
             )
@@ -102,7 +102,7 @@ public class SecurityConfig {
             )
             // 모든 요청을 허용합니다. (개발환경과 동일하게)
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**").permitAll()
+                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout").permitAll()
                 .requestMatchers("/editor/**", "/editor").hasAnyRole("ADMIN", "SELLER")
                 .anyRequest().authenticated()
             )

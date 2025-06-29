@@ -271,28 +271,165 @@ input[type="number"],
 
 .auction-settings .price-input-section {
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background-color: #fafafa;
 }
 
 .auction-settings .price-input-section label {
-    margin-bottom: 0;
-    flex-shrink: 0;
-    width: 100px;
-    white-space: nowrap;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #333;
 }
 
 .auction-settings .price-input-section input[type="number"] {
-    flex-grow: 1;
+    border-radius: 4px;
 }
 
 .error-message {
-    color: red;
+    color: #dc3545;
     font-size: 0.8rem;
+    margin-top: 4px;
 }
 
 input.error {
-    border-color: red;
+    border-color: #dc3545;
+}
+
+/* tag-wrapper가 이제 컨테이너 역할을 합니다. */
+.tag-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.work-description-textarea {
+    width: 100%;
+    height: 250px;
+    /* 충분한 높이 제공 */
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    resize: vertical;
+}
+
+/* 태그 입력창 컨테이너 */
+.tag-input-container {
+    position: relative;
+}
+
+.tag-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+    padding-right: 2.5rem;
+    /* 아이콘 공간 */
+}
+
+.tag-input:disabled {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+}
+
+/* 선택된 태그 목록 */
+.selected-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    min-height: 40px;
+    /* 태그가 없을 때도 높이 유지 */
+    border-radius: 4px;
+    background-color: #f8f9fa;
+}
+
+.tag-item {
+    display: flex;
+    align-items: center;
+    background-color: #007bff;
+    color: white;
+    border-radius: 15px;
+    padding: 5px 10px;
+    font-size: 0.85rem;
+}
+
+.remove-tag-btn {
+    margin-left: 8px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    opacity: 0.7;
+    padding: 0;
+}
+
+.remove-tag-btn:hover {
+    opacity: 1;
+}
+
+/* 추천 태그 */
+.recommended-tags-container {
+    margin-top: 1rem;
+    padding: 0.5rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background-color: #fafafa;
+}
+
+.recommended-tags-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #333;
+}
+
+.recommended-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.recommended-tag-btn {
+    padding: 0.4rem 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+}
+
+.recommended-tag-btn:hover {
+    background-color: #f0f0f0;
+    border-color: #bbb;
+}
+
+.recommended-tag-btn:disabled {
+    background-color: #e9ecef;
+    color: #adb5bd;
+    cursor: not-allowed;
+    border-color: #dee2e6;
+}
+
+.form-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eee;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 1.5rem;
 }

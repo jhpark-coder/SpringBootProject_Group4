@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -49,7 +48,6 @@ import lombok.RequiredArgsConstructor;
  */
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/products")
 public class ProductController {
 
     // final 키워드와 @RequiredArgsConstructor에 의해, Spring이 자동으로 ProductService의 인스턴스를 주입해줍니다. (생성자 주입)
@@ -60,19 +58,19 @@ public class ProductController {
     private final CategoryConfig categoryConfig;
 
     /**
-     * 그리드 뷰 페이지("/grid") 요청을 처리하여 'gridView.html' 뷰를 렌더링합니다.
+     * 그리드 뷰 페이지("/products/grid") 요청을 처리하여 'gridView.html' 뷰를 렌더링합니다.
      * @return 렌더링할 뷰의 이름 ("gridView")
      */
-    @GetMapping("/grid")
+    @GetMapping("/products/grid")
     public String gridView() {
         return "gridView";
     }
 
     /**
-     * 무한 스크롤 테스트용 그리드 뷰 페이지("/grid/test")를 렌더링합니다.
+     * 무한 스크롤 테스트용 그리드 뷰 페이지("/products/grid/test")를 렌더링합니다.
      * @return 렌더링할 뷰의 이름 ("gridViewTest")
      */
-    @GetMapping("/grid/test")
+    @GetMapping("/products/grid/test")
     public String gridViewTest(Model model, HttpServletRequest request) {
         // CSRF 토큰을 Model에 추가
         CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
@@ -84,7 +82,7 @@ public class ProductController {
 
     /**
      * 상품 목록 데이터를 JSON 형태로 반환하는 API 엔드포인트입니다. (무한 스크롤 기능에서 사용)
-     * @GetMapping("/api/products"): HTTP GET 요청을 이 메소드에 매핑합니다.
+     * @GetMapping: HTTP GET 요청을 이 메소드에 매핑합니다.
      * @ResponseBody: 이 어노테이션은 메소드의 반환값이 뷰 이름이 아니라,
      *                HTTP 응답 본문(Response Body)에 직접 작성되어야 함을 나타냅니다.
      *                객체를 반환하면 Spring이 자동으로 JSON으로 변환해줍니다.
@@ -102,7 +100,7 @@ public class ProductController {
      * 특정 상품의 상세 정보 페이지("/products/{id}")를 렌더링합니다.
      * @return 렌더링할 뷰의 이름 ("product/productDetail")
      */
-    @GetMapping("/{id}")
+    @GetMapping("/products/{id}")
     public String productDetail(@PathVariable("id") Long id,
                                 @Qualifier("inquiryPageable") @PageableDefault(size = 4, sort = "regTime", direction = Sort.Direction.DESC) Pageable inquiryPageable,
                                 @Qualifier("reviewPageable") @PageableDefault(size = 10, sort = "regTime", direction = Sort.Direction.DESC) Pageable reviewPageable,
@@ -159,7 +157,7 @@ public class ProductController {
 
     /**
      * 새로운 상품을 저장하는 API 엔드포인트입니다. (웹 에디터에서 사용)
-     * @PostMapping("/api/products"): HTTP POST 요청을 처리합니다.
+     * @PostMapping: HTTP POST 요청을 처리합니다.
      * @RequestBody: 요청 본문의 JSON 데이터를 ProductSaveRequest 객체로 자동 변환합니다.
      * @param request 상품 저장에 필요한 데이터 (상품명, 에디터 내용 등).
      * @return 저장된 상품의 고유 ID.
@@ -167,14 +165,15 @@ public class ProductController {
     @PostMapping("/api/products")
     @ResponseBody
     public Long saveProduct(@RequestBody ProductSaveRequest request, Principal principal) {
-        String userEmail = principal.getName();
+        // 개발 환경에서는 principal이 null일 수 있으므로, 임시 사용자 정보를 사용합니다.
+        String userEmail = (principal != null) ? principal.getName() : "author@test.com"; // 임시 이메일
         Product saved = productService.saveProduct(request, userEmail);
         return saved.getId();
     }
 
     /**
      * 기존 상품의 정보를 수정하는 API 엔드포인트입니다. (웹 에디터에서 사용)
-     * @PutMapping("/api/products/{id}"): HTTP PUT 요청을 처리하며, 주로 리소스 전체를 수정할 때 사용됩니다.
+     * @PutMapping("/{id}"): HTTP PUT 요청을 처리하며, 주로 리소스 전체를 수정할 때 사용됩니다.
      * @param id 수정할 상품의 ID.
      * @param request 상품 수정에 필요한 데이터.
      * @return 수정된 상품의 고유 ID.
@@ -182,11 +181,9 @@ public class ProductController {
     @PutMapping("/api/products/{id}")
     @ResponseBody
     public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody ProductSaveRequest request, Principal principal) {
-        if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
+        // 개발 환경에서는 principal이 null일 수 있으므로, 임시 사용자 정보를 사용합니다.
+        String userEmail = (principal != null) ? principal.getName() : "author@test.com"; // 임시 이메일
         try {
-            String userEmail = principal.getName();
             Product updated = productService.updateProduct(id, request, userEmail);
             return ResponseEntity.ok(updated.getId());
         } catch (IllegalStateException | IllegalArgumentException e) {
@@ -200,13 +197,13 @@ public class ProductController {
      * @param id 결과를 확인할 상품의 ID.
      * @return 상품 상세 페이지로의 리다이렉트 경로.
      */
-    @GetMapping("/result/product/{id}")
+    @GetMapping("/products/result/{id}")
     public String productResultRedirect(@PathVariable Long id) {
         // 상세 페이지 URL로 리다이렉트
         return "redirect:/products/" + id;
     }
 
-    @PostMapping("/{productId}/reviews")
+    @PostMapping("/products/{productId}/reviews")
     public ResponseEntity<?> createReview(@PathVariable("productId") Long productId,
                                @RequestBody ProductReviewRequestDto reviewDto,
                                Principal principal) {
@@ -227,7 +224,7 @@ public class ProductController {
         }
     }
 
-    @PostMapping("/{id}/inquiries")
+    @PostMapping("/products/{id}/inquiries")
     public String createInquiry(@PathVariable("id") Long productId,
                                 ProductInquiryRequestDto inquiryDto,
                                 Principal principal) {
@@ -238,7 +235,7 @@ public class ProductController {
         return "redirect:/products/" + productId;
     }
 
-    @PostMapping("/{productId}/inquiries/{inquiryId}/replies")
+    @PostMapping("/products/{productId}/inquiries/{inquiryId}/replies")
     public String createReply(@PathVariable("productId") Long productId,
                               @PathVariable("inquiryId") Long inquiryId,
                               ProductInquiryRequestDto inquiryDto,
@@ -251,7 +248,7 @@ public class ProductController {
     }
 
     // 후기 수정
-    @PutMapping("/reviews/{reviewId}")
+    @PutMapping("/products/reviews/{reviewId}")
     public ResponseEntity<?> updateReview(@PathVariable("reviewId") Long reviewId,
                                           @RequestBody ProductReviewRequestDto reviewDto,
                                           Principal principal) {
@@ -280,7 +277,7 @@ public class ProductController {
      * @param model 뷰에 데이터를 전달하기 위한 모델 객체
      * @return 렌더링할 뷰의 이름 ("product/category_grid")
      */
-    @GetMapping("/category/{categoryName}")
+    @GetMapping("/products/category/{categoryName}")
     public String categoryGridView(@PathVariable String categoryName,
                                    @RequestParam(value = "page", defaultValue = "1") int page,
                                    @RequestParam(value = "secondary", defaultValue = "all") String secondaryCategory,

@@ -83,7 +83,7 @@ public class DataInitializer {
 
             // 상품 데이터 생성 (필요한 경우)
             if (productRepository.count() == 0) {
-                System.out.println("개발 환경: 테스트용 상품 데이터 5000개를 생성합니다.");
+                System.out.println("개발 환경: 테스트용 상품 데이터 100개를 생성합니다.");
 
                 String[] primaryCategories = {"artwork", "graphic-design", "character", "java", "frontend", "python"};
                 String[][] secondaryCategories = {
@@ -95,7 +95,7 @@ public class DataInitializer {
                     {"웹 개발", "데이터 분석", "머신러닝", "자동화"}
                 };
 
-                for (int i = 1; i <= 5000; i++) {
+                for (int i = 1; i <= 100; i++) {
                     String name = "샘플 상품 " + i;
                     int price = (int) (Math.random() * 90000) + 10000; // 10,000 ~ 99,999원
                     String description = "이것은 " + i + "번째 멋진 샘플 상품입니다. 품질이 아주 좋습니다.";
@@ -109,7 +109,7 @@ public class DataInitializer {
                     Product product = Product.builder()
                             .author(author)
                             .name(name)
-                            .price(price)
+                            .price((long) price)
                             .description(description)
                             .imageUrl(imageUrl)
                             .workDescription("이 작품은 특별한 영감을 받아 제작되었습니다.")

@@ -1,6 +1,8 @@
 package com.creatorworks.nexus.product.entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.creatorworks.nexus.global.BaseEntity;
 import com.creatorworks.nexus.member.entity.Member;
@@ -14,16 +16,19 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString(exclude = {"author", "reviews", "inquiries", "itemTags"})
 public class Product extends BaseEntity implements Serializable {
 
     @Id
@@ -35,7 +40,7 @@ public class Product extends BaseEntity implements Serializable {
     private Member author;
 
     private String name;
-    private int price;
+    private Long price;
     @Column(columnDefinition = "TEXT")
     private String description;
     @Column(columnDefinition = "TEXT")
@@ -49,8 +54,14 @@ public class Product extends BaseEntity implements Serializable {
     private String backgroundColor;
     private String fontFamily;
 
+    @OneToMany(mappedBy = "product", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
+    private List<ProductInquiry> inquiries = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
+    private List<ProductItemTag> itemTags = new ArrayList<>();
+
     @Builder
-    public Product(Member author, String name, int price, String description, String workDescription, String tiptapJson, String imageUrl, String primaryCategory, String secondaryCategory, String backgroundColor, String fontFamily) {
+    public Product(Member author, String name, Long price, String description, String workDescription, String tiptapJson, String imageUrl, String primaryCategory, String secondaryCategory, String backgroundColor, String fontFamily) {
         this.author = author;
         this.name = name;
         this.price = price;
@@ -62,5 +73,14 @@ public class Product extends BaseEntity implements Serializable {
         this.secondaryCategory = secondaryCategory;
         this.backgroundColor = backgroundColor;
         this.fontFamily = fontFamily;
+    }
+
+    public void addReview(ProductReview review) {
+        // Implementation of addReview method
+    }
+
+    public void addInquiry(ProductInquiry inquiry) {
+        this.inquiries.add(inquiry);
+        inquiry.setProduct(this);
     }
 }
