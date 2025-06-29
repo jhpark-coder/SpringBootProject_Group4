@@ -1,8 +1,13 @@
 package com.creatorworks.nexus.product.repository;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.creatorworks.nexus.product.entity.Product;
 
@@ -10,7 +15,7 @@ import com.creatorworks.nexus.product.entity.Product;
  * @Repository 어노테이션이 없어도 JpaRepository를 상속하면 Spring이 자동으로 Repository Bean으로 등록해줍니다.
  * 이 인터페이스는 상품(Product) 엔티티에 대한 데이터베이스 작업을 처리합니다.
  */
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
     // JpaRepository<Product, Long> 인터페이스를 상속받는 것만으로도,
     // 기본적인 CRUD(Create, Read, Update, Delete) 메소드들을 자동으로 사용할 수 있습니다.
     //
@@ -27,4 +32,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // Spring Data JPA가 메소드 이름을 분석하여 자동으로 쿼리를 생성해줍니다.
 
     Page<Product> findAll(Pageable pageable);
+
+    /**
+     * 특정 1차 카테고리에 속하는 중복되지 않는 2차 카테고리 목록을 조회합니다.
+     * @param primaryCategory 1차 카테고리 이름
+     * @return 2차 카테고리 이름의 리스트
+     */
+    @Query("SELECT DISTINCT p.secondaryCategory FROM Product p WHERE p.primaryCategory = :primaryCategory")
+    List<String> findDistinctSecondaryCategoryByPrimaryCategory(@Param("primaryCategory") String primaryCategory);
 }

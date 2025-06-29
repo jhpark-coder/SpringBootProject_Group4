@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import com.creatorworks.nexus.product.dto.ProductPageResponse;
 import com.creatorworks.nexus.product.dto.ProductSaveRequest;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.repository.ProductRepository;
+import com.creatorworks.nexus.product.specification.ProductSpecification;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +32,41 @@ public class ProductService {
     // 데이터베이스와 상호작용하는 ProductRepository를 주입받습니다.
     private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
+
+    /**
+     * 특정 1차 카테고리에 속하는 중복되지 않는 2차 카테고리 목록을 조회합니다.
+     * @param primaryCategory 1차 카테고리 이름
+     * @return 2차 카테고리 이름의 리스트
+     */
+    public List<String> findDistinctSecondaryCategories(String primaryCategory) {
+        return productRepository.findDistinctSecondaryCategoryByPrimaryCategory(primaryCategory);
+    }
+    
+    /**
+     * 카테고리와 페이징 정보를 기반으로 상품 목록을 조회합니다.
+     * @param primaryCategory 1차 카테고리
+     * @param secondaryCategory 2차 카테고리
+     * @param pageable 페이징 정보
+     * @return 페이징된 상품 응답 DTO
+     */
+    public ProductPageResponse findAllProducts(String primaryCategory, String secondaryCategory, Pageable pageable) {
+        Specification<Product> spec = Specification.where(ProductSpecification.byCategory(primaryCategory, secondaryCategory));
+        Page<Product> productPage = productRepository.findAll(spec, pageable);
+
+        List<ProductDto> productDtos = productPage.getContent().stream()
+                .map(ProductDto::new)
+                .toList();
+
+        return new ProductPageResponse(
+                productDtos,
+                productPage.getNumber(),
+                productPage.getTotalPages(),
+                productPage.getTotalElements(),
+                productPage.getSize(),
+                productPage.isFirst(),
+                productPage.isLast()
+        );
+    }
 
     /**
      * 페이징 처리된 모든 상품 목록을 조회합니다.

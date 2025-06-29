@@ -83,13 +83,28 @@ public class DataInitializer {
 
             // 상품 데이터 생성 (필요한 경우)
             if (productRepository.count() == 0) {
-                System.out.println("개발 환경: 테스트용 상품 데이터 100개를 생성합니다.");
-                for (int i = 1; i <= 100; i++) {
+                System.out.println("개발 환경: 테스트용 상품 데이터 5000개를 생성합니다.");
+
+                String[] primaryCategories = {"artwork", "graphic-design", "character", "java", "frontend", "python"};
+                String[][] secondaryCategories = {
+                    {"포토그라피", "일러스트레이션", "스케치", "코믹스"},
+                    {"타이포그라피", "앨범아트", "로고", "브랜딩", "편집디자인"},
+                    {"카툰", "팬아트", "2D 캐릭터", "3D 모델링"},
+                    {"Spring/JPA", "네트워크", "알고리즘", "코어 자바"},
+                    {"HTML/CSS", "JavaScript", "React/Vue", "UI/UX"},
+                    {"웹 개발", "데이터 분석", "머신러닝", "자동화"}
+                };
+
+                for (int i = 1; i <= 5000; i++) {
                     String name = "샘플 상품 " + i;
                     int price = (int) (Math.random() * 90000) + 10000; // 10,000 ~ 99,999원
                     String description = "이것은 " + i + "번째 멋진 샘플 상품입니다. 품질이 아주 좋습니다.";
-                    // picsum.photos를 사용해 각기 다른 이미지를 보여줍니다.
                     String imageUrl = "https://picsum.photos/id/" + i + "/400/400";
+
+                    int categoryIndex = (i - 1) % primaryCategories.length;
+                    String pCategory = primaryCategories[categoryIndex];
+                    String[] sCategories = secondaryCategories[categoryIndex];
+                    String sCategory = sCategories[((i - 1) / primaryCategories.length) % sCategories.length];
 
                     Product product = Product.builder()
                             .author(author)
@@ -98,7 +113,8 @@ public class DataInitializer {
                             .description(description)
                             .imageUrl(imageUrl)
                             .workDescription("이 작품은 특별한 영감을 받아 제작되었습니다.")
-                            .primaryCategory("디지털 아트")
+                            .primaryCategory(pCategory)
+                            .secondaryCategory(sCategory)
                             .build();
 
                     productRepository.save(product);

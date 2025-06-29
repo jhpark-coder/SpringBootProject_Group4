@@ -1,10 +1,12 @@
 package com.creatorworks.nexus.product.controller;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.creatorworks.nexus.config.CategoryConfig;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.product.dto.ProductInquiryRequestDto;
@@ -54,6 +57,7 @@ public class ProductController {
     private final ProductInquiryService productInquiryService;
     private final ProductReviewService productReviewService;
     private final MemberRepository memberRepository;
+    private final CategoryConfig categoryConfig;
 
     /**
      * 그리드 뷰 페이지("/grid") 요청을 처리하여 'gridView.html' 뷰를 렌더링합니다.
@@ -266,5 +270,63 @@ public class ProductController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    /**
+     * 카테고리별 상품 그리드 뷰 페이지를 렌더링합니다.
+     * @param categoryName 1차 카테고리 이름 (예: "artwork", "java")
+     * @param page URL로 전달되는 페이지 번호 (1부터 시작)
+     * @param secondaryCategory 2차 카테고리 이름 (필수 아님)
+     * @param model 뷰에 데이터를 전달하기 위한 모델 객체
+     * @return 렌더링할 뷰의 이름 ("product/category_grid")
+     */
+    @GetMapping("/category/{categoryName}")
+    public String categoryGridView(@PathVariable String categoryName,
+                                   @RequestParam(value = "page", defaultValue = "1") int page,
+                                   @RequestParam(value = "secondary", defaultValue = "all") String secondaryCategory,
+                                   Model model) {
+
+        // 1. 초기 상품 데이터 로드 (페이지의 첫 16개)
+        // URL의 page 파라미터(uiPage)는 1부터 시작, 100개 단위. API 페이지는 16개 단위.
+        long itemsPerApiPage = 16;
+        long apiPagesPerUiPage = 6; // 16 * 6 = 96개, 약 100개
+        long initialApiPage = (page - 1) * apiPagesPerUiPage;
+
+        Pageable initialPageable = PageRequest.of((int)initialApiPage, (int)itemsPerApiPage, Sort.by(Sort.Direction.DESC, "regTime"));
+        ProductPageResponse initialProductPage = productService.findAllProducts(categoryName, secondaryCategory, initialPageable);
+
+        // 2. 전체 2차 카테고리 목록 조회 (버튼용)
+        List<String> secondaryCategories = categoryConfig.getSecondaryCategories(categoryName);
+        
+        // 3. 페이지네이션 계산 (전체 아이템 수 / 페이지당 아이템 100개)
+        long totalItems = initialProductPage.getTotalElements();
+        long itemsPerUiPage = itemsPerApiPage * apiPagesPerUiPage;
+        long totalPages = (totalItems == 0) ? 1 : (long) Math.ceil((double) totalItems / itemsPerUiPage);
+
+        // 4. 뷰에 데이터 전달
+        model.addAttribute("primaryCategory", categoryName);
+        model.addAttribute("secondaryCategory", secondaryCategory); // 현재 선택된 2차 카테고리
+        model.addAttribute("secondaryCategories", secondaryCategories);
+        model.addAttribute("initialProductPage", initialProductPage);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+
+        return "product/category_grid";
+    }
+
+    /**
+     * 카테고리별 상품 목록 데이터를 JSON 형태로 반환하는 API 엔드포인트입니다.
+     * @param primaryCategory 1차 카테고리
+     * @param secondaryCategory 2차 카테고리 (필수 아님)
+     * @param pageable 페이징 정보
+     * @return 페이징 처리된 상품 데이터
+     */
+    @GetMapping("/api/products/category")
+    @ResponseBody
+    public ProductPageResponse getProductsByCategory(
+            @RequestParam("primary") String primaryCategory,
+            @RequestParam(value = "secondary", required = false, defaultValue = "all") String secondaryCategory,
+            Pageable pageable) {
+        return productService.findAllProducts(primaryCategory, secondaryCategory, pageable);
     }
 }
