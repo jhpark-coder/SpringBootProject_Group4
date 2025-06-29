@@ -1,0 +1,187 @@
+/* category_grid.css */
+
+.category-grid-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+.category-header {
+    margin-bottom: 40px;
+}
+
+.category-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.secondary-category-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.secondary-category-nav li a {
+    display: inline-block;
+    padding: 8px 20px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.secondary-category-nav li a:hover {
+    background-color: #f0f0f0;
+    border-color: #ccc;
+}
+
+.secondary-category-nav li a.active {
+    background-color: #333;
+    color: #fff;
+    border-color: #333;
+}
+
+
+/* Product Grid Styles to match main.css */
+#product-grid.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -10px;
+    /* Match gutter spacing */
+    margin-right: -10px;
+    /* Match gutter spacing */
+}
+
+/* Overriding .col-md-3 if necessary, or just using grid-item */
+.grid-item {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    color: #000000;
+    margin-bottom: 30px;
+    /* Add some space between rows */
+    padding: 0 10px;
+    /* Gutter spacing */
+    flex-basis: 25%;
+    /* 4 items per row */
+    min-width: 280px;
+}
+
+.grid-item a {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.item-image-placeholder {
+    width: 100%;
+    padding-top: 100%;
+    /* 1:1 Aspect Ratio */
+    background-color: #f5f5f5;
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    /* Rounded corners for the image */
+}
+
+.item-info {
+    padding: 15px 5px;
+    /* Adjust padding */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    /* Pushes info to the bottom */
+}
+
+.author-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.author-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #ddd;
+}
+
+.author-name {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.subscribe-btn {
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 25px;
+    /* Rounded button */
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.subscribe-btn:hover {
+    background-color: #0056b3;
+}
+
+/* 로딩 스피너 및 페이지네이션 버튼 스타일 */
+#loading-spinner p {
+    font-size: 1.2rem;
+    color: #555;
+}
+
+#pagination-controls .btn {
+    padding: 10px 30px;
+    font-size: 1.1rem;
+    background-color: #333;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+#pagination-controls .btn:hover {
+    background-color: #555;
+}
+
+/* 페이지네이션 컨트롤 추가 스타일 */
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 40px;
+}
+
+.page-btn {
+    padding: 8px 16px;
+    font-size: 1rem;
+    background-color: #f0f0f0;
+    color: #333;
+    text-decoration: none;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.page-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.current-page-display {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #555;
+}
