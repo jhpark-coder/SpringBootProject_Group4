@@ -1,14 +1,10 @@
 package com.creatorworks.nexus.security;
 
-import com.creatorworks.nexus.member.service.MemberService;
-import com.creatorworks.nexus.member.service.SocialMemberService;
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -16,12 +12,13 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
+import com.creatorworks.nexus.member.service.SocialMemberService;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * @Configuration: 이 클래스가 Spring의 설정 파일임을 나타냅니다.
@@ -34,7 +31,6 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final MemberService memberService;
     private final SocialMemberService socialMemberService;
     private final CustomOAuth2LoginSuccessHandler customOAuth2LoginSuccessHandler;
 
@@ -80,7 +76,7 @@ public class SecurityConfig {
                 .permitAll()
             )
             .logout(logout -> logout
-                .logoutRequestMatcher(new AntPathRequestMatcher("/members/logout"))
+                .logoutUrl("/members/logout")
                 .logoutSuccessUrl("/")
                 .permitAll()
             )
@@ -89,7 +85,7 @@ public class SecurityConfig {
                 .successHandler(customOAuth2LoginSuccessHandler)
             )
             .headers(headers -> headers
-                .frameOptions().disable());
+                .frameOptions(frameOptions -> frameOptions.disable()));
         return http.build();
     }
     
@@ -120,7 +116,7 @@ public class SecurityConfig {
             )
             // 로그아웃 설정
             .logout(logout -> logout
-                .logoutRequestMatcher(new AntPathRequestMatcher("/members/logout"))
+                .logoutUrl("/members/logout")
                 .logoutSuccessUrl("/")
                 .permitAll()
             )
@@ -131,16 +127,8 @@ public class SecurityConfig {
             )
             // H2 콘솔을 위한 헤더 설정
             .headers(headers -> headers
-                .frameOptions().disable());
+                .frameOptions(frameOptions -> frameOptions.disable()));
         return http.build();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(passwordEncoder());
-        provider.setUserDetailsService(memberService);
-        return new ProviderManager(provider);
     }
 
     // CORS 설정을 위한 Bean

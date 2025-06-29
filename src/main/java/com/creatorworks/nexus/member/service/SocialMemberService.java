@@ -1,13 +1,5 @@
 package com.creatorworks.nexus.member.service;
 
-import com.creatorworks.nexus.member.constant.Role;
-import org.springframework.stereotype.Service;
-import com.creatorworks.nexus.member.dto.OAuthAttributesDto;
-import com.creatorworks.nexus.member.dto.SessionMemberDto;
-import com.creatorworks.nexus.member.dto.SessionMemberFormDto;
-import com.creatorworks.nexus.member.entity.Member;
-import com.creatorworks.nexus.member.repository.MemberRepository;
-import jakarta.servlet.http.HttpSession;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -18,6 +10,16 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Service;
+
+import com.creatorworks.nexus.member.constant.Role;
+import com.creatorworks.nexus.member.dto.OAuthAttributesDto;
+import com.creatorworks.nexus.member.dto.SessionMemberDto;
+import com.creatorworks.nexus.member.dto.SessionMemberFormDto;
+import com.creatorworks.nexus.member.entity.Member;
+import com.creatorworks.nexus.member.repository.MemberRepository;
+
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -99,29 +101,22 @@ public class SocialMemberService implements OAuth2UserService<OAuth2UserRequest,
             return memberRepository.save(member);
         } else {
             // 기존 회원 정보 업데이트 (OAuth 정보가 더 최신인 경우)
-            boolean updated = false;
-            
             if (attributes.getName() != null && (member.getName() == null || member.getName().isEmpty())) {
                 member.setName(attributes.getName());
-                updated = true;
             }
             if (attributes.getGender() != null && (member.getGender() == null || member.getGender().isEmpty())) {
                 member.setGender(attributes.getGender());
-                updated = true;
             }
             if (attributes.getBirthYear() != null && (member.getBirthYear() == null || member.getBirthYear().isEmpty())) {
                 member.setBirthYear(attributes.getBirthYear());
-                updated = true;
             }
             if (attributes.getBirthMonth() != null && (member.getBirthMonth() == null || member.getBirthMonth().isEmpty())) {
                 member.setBirthMonth(attributes.getBirthMonth());
-                updated = true;
             }
             if (attributes.getBirthDay() != null && (member.getBirthDay() == null || member.getBirthDay().isEmpty())) {
                 member.setBirthDay(attributes.getBirthDay());
-                updated = true;
             }
-            return member;
+            return memberRepository.save(member);
         }
     }
 

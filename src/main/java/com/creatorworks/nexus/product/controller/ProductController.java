@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.creatorworks.nexus.member.entity.Member;
@@ -30,8 +31,6 @@ import com.creatorworks.nexus.product.dto.ProductSaveRequest;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.entity.ProductInquiry;
 import com.creatorworks.nexus.product.entity.ProductReview;
-import com.creatorworks.nexus.product.repository.ProductInquiryRepository;
-import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.service.ProductInquiryService;
 import com.creatorworks.nexus.product.service.ProductReviewService;
 import com.creatorworks.nexus.product.service.ProductService;
@@ -52,8 +51,6 @@ public class ProductController {
 
     // final 키워드와 @RequiredArgsConstructor에 의해, Spring이 자동으로 ProductService의 인스턴스를 주입해줍니다. (생성자 주입)
     private final ProductService productService;
-    private final ProductRepository productRepository;
-    private final ProductInquiryRepository productInquiryRepository;
     private final ProductInquiryService productInquiryService;
     private final ProductReviewService productReviewService;
     private final MemberRepository memberRepository;
@@ -105,6 +102,7 @@ public class ProductController {
     public String productDetail(@PathVariable("id") Long id,
                                 @Qualifier("inquiryPageable") @PageableDefault(size = 4, sort = "regTime", direction = Sort.Direction.DESC) Pageable inquiryPageable,
                                 @Qualifier("reviewPageable") @PageableDefault(size = 10, sort = "regTime", direction = Sort.Direction.DESC) Pageable reviewPageable,
+                                @RequestParam(value = "reviewKeyword", required = false) String reviewKeyword,
                                 Principal principal,
                                 Model model) {
         Product product = productService.findProductById(id);
@@ -113,7 +111,8 @@ public class ProductController {
         Page<ProductInquiry> inquiryPage = productInquiryService.findInquiriesByProduct(id, inquiryPageable);
 
         // 후기 관련
-        Page<ProductReview> reviewPage = productReviewService.findReviewsByProduct(id, reviewPageable);
+        Page<ProductReview> reviewPage = productReviewService.findReviewsByProduct(id, reviewKeyword, reviewPageable);
+        double averageRating = productReviewService.getAverageRating(id);
 
         // 현재 로그인한 사용자 정보 및 후기 작성 상태 조회
         Member currentMember = null;
@@ -133,6 +132,8 @@ public class ProductController {
         model.addAttribute("product", product);
         model.addAttribute("inquiryPage", inquiryPage);
         model.addAttribute("reviewPage", reviewPage);
+        model.addAttribute("averageRating", averageRating);
+        model.addAttribute("reviewKeyword", reviewKeyword);
         model.addAttribute("currentMember", currentMember);
         model.addAttribute("canWriteReview", canWriteReview);
         model.addAttribute("existingReview", existingReview.orElse(null));
@@ -176,10 +177,18 @@ public class ProductController {
      */
     @PutMapping("/api/products/{id}")
     @ResponseBody
-    public Long updateProduct(@PathVariable Long id, @RequestBody ProductSaveRequest request, Principal principal) {
-        // TODO: principal을 사용하여 권한 검증 로직을 서비스 계층에 추가해야 함.
-        Product updated = productService.updateProduct(id, request);
-        return updated.getId();
+    public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody ProductSaveRequest request, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+        try {
+            String userEmail = principal.getName();
+            Product updated = productService.updateProduct(id, request, userEmail);
+            return ResponseEntity.ok(updated.getId());
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            // 서비스 계층에서 발생한 예외(권한 없음, 잘못된 ID 등) 처리
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
     }
 
     /**
@@ -201,8 +210,11 @@ public class ProductController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
         }
         try {
-            String userEmail = principal.getName();
-            productReviewService.createReview(productId, reviewDto, userEmail);
+            Member currentMember = memberRepository.findByEmail(principal.getName());
+            if (currentMember == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+            }
+            productReviewService.createReview(productId, reviewDto, currentMember);
             return ResponseEntity.ok("후기가 성공적으로 등록되었습니다.");
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
@@ -243,13 +255,16 @@ public class ProductController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
         }
         try {
-            String userEmail = principal.getName();
-            productReviewService.updateReview(reviewId, reviewDto, userEmail);
-            return ResponseEntity.ok("후기가 성공적으로 수정되었습니다.");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            Member currentMember = memberRepository.findByEmail(principal.getName());
+            if (currentMember == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+            }
+            productReviewService.updateReview(reviewId, reviewDto, currentMember);
+            return ResponseEntity.ok().body("후기가 성공적으로 수정되었습니다.");
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }
