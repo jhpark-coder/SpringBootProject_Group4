@@ -1,5 +1,7 @@
 package com.creatorworks.nexus.product.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.creatorworks.nexus.product.entity.Product;
@@ -23,4 +25,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // 만약 복잡한 쿼리가 필요하다면, 이 인터페이스 안에 다음과 같이 메소드를 선언할 수 있습니다.
     // 예: findByName(String productName);
     // Spring Data JPA가 메소드 이름을 분석하여 자동으로 쿼리를 생성해줍니다.
+
+    Page<Product> findAll(Pageable pageable);
 }

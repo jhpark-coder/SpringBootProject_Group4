@@ -32,21 +32,23 @@ public class ProductReviewService {
      * 특정 상품의 후기 목록을 조회합니다.
      */
     @Transactional(readOnly = true)
-    public Page<ProductReview> findReviewsByProduct(Long productId, Pageable pageable) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 상품을 찾을 수 없습니다. id=" + productId));
-        return productReviewRepository.findByProduct(product, pageable);
+    public Page<ProductReview> findReviewsByProduct(Long productId, String keyword, Pageable pageable) {
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            return productReviewRepository.findByProductIdAndCommentContaining(productId, keyword, pageable);
+        }
+        return productReviewRepository.findAllByProductId(productId, pageable);
     }
 
     /**
      * 특정 사용자가 특정 상품을 구매했는지 확인합니다.
      */
     @Transactional(readOnly = true)
-    public boolean hasUserPurchasedProduct(Member user, Product product) {
-        if (user == null || product == null) {
+    public boolean hasUserPurchasedProduct(Member member, Product product) {
+        if (member == null || product == null) {
             return false;
         }
-        return orderRepository.existsByBuyerAndProduct(user, product);
+        // OrderRepository를 사용하여 구매 이력 확인
+        return orderRepository.existsByBuyerAndProduct(member, product);
     }
 
     /**
@@ -63,54 +65,44 @@ public class ProductReviewService {
     /**
      * 새로운 후기를 생성합니다.
      */
-    public void createReview(Long productId, ProductReviewRequestDto requestDto, String userEmail) {
-        Member writer = memberRepository.findByEmail(userEmail);
-        if (writer == null) {
-            throw new IllegalArgumentException("해당 사용자를 찾을 수 없습니다. email=" + userEmail);
-        }
-
+    public void createReview(Long productId, ProductReviewRequestDto requestDto, Member member) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 상품을 찾을 수 없습니다. id=" + productId));
+                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
 
-        // 사용자가 이 상품을 구매했는지 확인
-        if (!hasUserPurchasedProduct(writer, product)) {
+        if (!hasUserPurchasedProduct(member, product)) {
             throw new IllegalStateException("상품을 구매한 사용자만 후기를 작성할 수 있습니다.");
         }
 
-        // 이미 작성한 후기가 있는지 확인
-        productReviewRepository.findByWriterAndProduct(writer, product).ifPresent(review -> {
-            throw new IllegalStateException("이미 후기를 작성했습니다. 수정 기능을 이용해주세요.");
-        });
+        if (productReviewRepository.existsByWriterAndProduct(member, product)) {
+            throw new IllegalStateException("이미 이 상품에 대한 리뷰를 작성했습니다.");
+        }
 
         ProductReview review = ProductReview.builder()
                 .product(product)
-                .writer(writer)
+                .writer(member)
                 .rating(requestDto.getRating())
                 .comment(requestDto.getComment())
                 .build();
-
         productReviewRepository.save(review);
     }
 
     /**
      * 기존 후기를 수정합니다.
      */
-    public void updateReview(Long reviewId, ProductReviewRequestDto requestDto, String userEmail) {
-        Member writer = memberRepository.findByEmail(userEmail);
-        if (writer == null) {
-            throw new IllegalArgumentException("해당 사용자를 찾을 수 없습니다.");
-        }
-
+    public void updateReview(Long reviewId, ProductReviewRequestDto reviewDto, Member currentMember) {
         ProductReview review = productReviewRepository.findById(reviewId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 후기를 찾을 수 없습니다. id=" + reviewId));
+                .orElseThrow(() -> new IllegalArgumentException("해당 후기를 찾을 수 없습니다."));
 
-        // 후기 작성자 본인인지 확인
-        if (!review.getWriter().equals(writer)) {
+        if (!review.getWriter().equals(currentMember)) {
             throw new IllegalStateException("후기를 수정할 권한이 없습니다.");
         }
 
-        review.setRating(requestDto.getRating());
-        review.setComment(requestDto.getComment());
-        // BaseEntity의 @LastModifiedDate가 자동으로 수정 시간을 업데이트합니다.
+        review.update(reviewDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Double getAverageRating(Long productId) {
+        Double average = productReviewRepository.findAverageRatingByProductId(productId);
+        return average == null ? 0.0 : average;
     }
 } 

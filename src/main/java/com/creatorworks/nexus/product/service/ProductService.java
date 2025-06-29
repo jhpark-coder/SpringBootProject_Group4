@@ -107,10 +107,14 @@ public class ProductService {
      * @return 정보가 수정된 후의 상품(Product) 객체.
      */
     @Transactional
-    public Product updateProduct(Long id, ProductSaveRequest request) {
-        Product product = productRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid product Id:" + id));
+    public Product updateProduct(Long id, ProductSaveRequest request, String userEmail) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid product Id:" + id));
         
-        // TODO: 상품 수정 권한 체크 (로그인한 사용자가 상품의 author와 동일한지 확인)
+        // 상품 수정 권한 체크 (로그인한 사용자가 상품의 author와 동일한지 확인)
+        if (!product.getAuthor().getEmail().equals(userEmail)) {
+            throw new IllegalStateException("상품을 수정할 권한이 없습니다.");
+        }
 
         product.setName(request.getName());
         product.setPrice(request.getPrice());

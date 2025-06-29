@@ -1,26 +1,25 @@
 package com.creatorworks.nexus.member.dto;
 
-import lombok.Getter;
-import lombok.Builder;
-
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import com.creatorworks.nexus.member.constant.Role;
 import com.creatorworks.nexus.member.entity.Member;
 
-import java.util.HashMap;
+import lombok.Builder;
+import lombok.Getter;
 
 @Getter
 public class OAuthAttributesDto {
-    private Map<String, Object> attributes;
-    private String nameAttributeKey;
-    private String email;
-    private String name;
-    private String gender;
-    private String birthYear;
-    private String birthMonth;
-    private String birthDay;
+    private final Map<String, Object> attributes;
+    private final String nameAttributeKey;
+    private final String email;
+    private final String name;
+    private final String gender;
+    private final String birthYear;
+    private final String birthMonth;
+    private final String birthDay;
 
     @Builder
     public OAuthAttributesDto(Map<String, Object> attributes, String nameAttributeKey, String email, 
@@ -57,6 +56,7 @@ public class OAuthAttributesDto {
     }
 
     // 카카오 생성자
+    @SuppressWarnings("unchecked")
     private static OAuthAttributesDto ofKakao(String userNameAttributeName, Map<String, Object> attributes) {
         Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
         Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
@@ -74,6 +74,7 @@ public class OAuthAttributesDto {
     }
 
     // 네이버 생성자
+    @SuppressWarnings("unchecked")
     private static OAuthAttributesDto ofNaver(String userNameAttributeName, Map<String, Object> attributes) {
         Map<String, Object> response = (Map<String, Object>) attributes.get("response");
 

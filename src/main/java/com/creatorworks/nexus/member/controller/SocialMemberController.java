@@ -1,14 +1,13 @@
 package com.creatorworks.nexus.member.controller;
 
-import com.creatorworks.nexus.member.dto.OAuthAttributesDto;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.creatorworks.nexus.member.dto.SessionMemberDto;
+import com.creatorworks.nexus.member.dto.OAuthAttributesDto;
 import com.creatorworks.nexus.member.dto.SessionMemberFormDto;
 import com.creatorworks.nexus.member.service.SocialMemberService;
 
@@ -27,7 +26,7 @@ public class SocialMemberController {
     public String socialMemberForm(Model model) {
         // 세션에서 추가 정보 입력 필요 여부 확인
         Boolean needsAdditionalInfo = (Boolean) httpSession.getAttribute("needsAdditionalInfo");
-        OAuthAttributesDto attributes = (OAuthAttributesDto)httpSession.getAttribute("temp_oauth_attributes");;
+        OAuthAttributesDto attributes = (OAuthAttributesDto)httpSession.getAttribute("temp_oauth_attributes");
         if (needsAdditionalInfo == null || !needsAdditionalInfo) {
             // 추가 정보가 필요하지 않으면 메인 페이지로 리다이렉트
             return "redirect:/";

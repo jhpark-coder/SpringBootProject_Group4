@@ -6,7 +6,7 @@
     <section class="inquiry-section">
 
         <div class="inquiry-section-header">
-            <h3>상품문의</h3>
+            <h3>상품 문의 <span class="count" th:text="${inquiryPage.totalElements}">0</span></h3>
             <button class="btn-ask-question" sec:authorize="isAuthenticated()">문의하기</button>
         </div>
 

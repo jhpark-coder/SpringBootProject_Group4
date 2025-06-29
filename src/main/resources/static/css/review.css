@@ -11,7 +11,12 @@
     font-weight: bold;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 2px solid #333;
+}
+
+.inquiry-section h3 .count {
+    color: #007bff;
+    font-weight: bold;
+    margin-left: 8px;
 }
 
 .inquiry-notice {
@@ -48,6 +53,10 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+}
+
+.inquiry-section-header>div:last-child {
+    margin-left: auto;
 }
 
 .btn-ask-question {
@@ -392,8 +401,8 @@
 }
 
 .inquiry-header .star-rating-display {
-    color: #ccc;
     font-size: 16px;
+    color: #ffd700;
 }
 
 .inquiry-header .star-rating-display .filled {
@@ -420,21 +429,20 @@
     justify-content: center;
 }
 
-.star-rating-input input[type="radio"] {
+.star-rating-input .stars input[type="radio"] {
     display: none;
 }
 
-.star-rating-input label.star {
-    font-size: 36px;
-    color: #ccc;
+.star-rating-input .stars label {
+    font-size: 2.5rem;
+    color: #ddd;
     cursor: pointer;
     transition: color 0.2s;
-    padding: 0 5px;
 }
 
-.star-rating-input input[type="radio"]:checked~label.star,
-.star-rating-input label.star:hover,
-.star-rating-input label.star:hover~label.star {
+.star-rating-input .stars label:hover,
+.star-rating-input .stars label:hover~label,
+.star-rating-input .stars input[type="radio"]:checked~label {
     color: #ffc107;
 }
 
@@ -445,11 +453,31 @@
     flex-direction: column;
     align-items: flex-start;
     width: 100%;
+    align-items: center;
 }
 
-/* Center align star rating section, overriding the general .form-group rule */
-#reviewModal .star-rating-input,
-#reviewEditModal .star-rating-input {
-    width: 100%;
+.average-rating-display {
+    display: flex;
     align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.average-rating-display .star-rating-display {
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+}
+
+.average-rating-display .star-rating-display .empty {
+    color: #ddd;
+}
+
+.average-rating-display .star-rating-display .filled {
+    color: #ffc107;
+}
+
+.average-rating-display strong {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #333;
 }

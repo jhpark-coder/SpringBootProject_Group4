@@ -1,20 +1,33 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<div th:fragment="reviewSection(product, reviewPage, canWriteReview, existingReview)">
+<div th:fragment="reviewSection(product, reviewPage, canWriteReview, existingReview, averageRating, reviewKeyword)">
     <link rel="stylesheet" th:href="@{/css/review.css}">
     <section class="inquiry-section">
         <div class="inquiry-section-header">
-            <h3>상품 후기 <span th:text="${reviewPage.totalElements}">0</span></h3>
+            <h3>상품 후기 <span class="count" th:text="${reviewPage.totalElements}">0</span></h3>
             <div th:if="${canWriteReview}">
                 <button th:if="${existingReview == null}" class="btn-write-review">후기 남기기</button>
                 <button th:if="${existingReview != null}" class="btn-edit-review">후기 수정하기</button>
             </div>
-            <div th:unless="${canWriteReview}" class="inquiry-notice"
-                style="margin-bottom: 0; text-align: center; width: 100%;">
-                <p style="margin: 0;">상품을 구매한 사용자만 후기를 작성할 수 있습니다.</p>
-            </div>
         </div>
+        <div class="average-rating-display" th:if="${reviewPage.totalElements > 0}">
+            <div class="star-rating-display">
+                <span th:each="i : ${#numbers.sequence(1, 5)}"
+                    th:classappend="${i <= T(java.lang.Math).round(averageRating)} ? 'filled' : 'empty'"
+                    th:text="'★'"></span>
+            </div>
+            <strong th:text="${#numbers.formatDecimal(averageRating, 1, 1)}">0.0</strong>
+        </div>
+
+        <div th:unless="${canWriteReview}" class="inquiry-notice">
+            <p style="margin: 0;">상품을 구매한 사용자만 후기를 작성할 수 있습니다.</p>
+        </div>
+
+        <form th:action="@{/products/{id}(id=${product.id})}" method="get" class="search-box">
+            <input type="text" name="reviewKeyword" placeholder="후기 내용을 검색해보세요." th:value="${reviewKeyword}">
+            <button type="submit"></button>
+        </form>
 
         <div class="inquiry-list">
             <div th:if="${reviewPage.empty}" class="no-inquiries">
@@ -25,9 +38,9 @@
                     <div class="inquiry-header">
                         <strong th:text="${review.writer.name}"></strong>
                         <div class="star-rating-display" th:with="rating=${review.rating}">
-                            <span th:each="i : ${#numbers.sequence(1, 5)}" th:class="${i <= rating} ? 'filled'">★</span>
+                            <span th:each="i : ${#numbers.sequence(1, 5)}" th:text="${i <= rating} ? '★' : '☆'"
+                                th:class="${i <= rating} ? 'filled'"></span>
                         </div>
-                        <div class="review-author" th:text="${review.writer.name}"></div>
                         <div class="review-date" th:text="${#temporals.format(review.regTime, 'yyyy-MM-dd')}"></div>
                     </div>
                     <div class="inquiry-content">
@@ -70,15 +83,15 @@
                         <div class="star-rating-title">상품은 만족스러우셨나요?</div>
                         <div class="stars">
                             <input type="radio" id="5-stars" name="rating" value="5" required /><label for="5-stars"
-                                class="star">&#9733;</label>
+                                class="star">★</label>
                             <input type="radio" id="4-stars" name="rating" value="4" /><label for="4-stars"
-                                class="star">&#9733;</label>
+                                class="star">★</label>
                             <input type="radio" id="3-stars" name="rating" value="3" /><label for="3-stars"
-                                class="star">&#9733;</label>
+                                class="star">★</label>
                             <input type="radio" id="2-stars" name="rating" value="2" /><label for="2-stars"
-                                class="star">&#9733;</label>
+                                class="star">★</label>
                             <input type="radio" id="1-star" name="rating" value="1" /><label for="1-star"
-                                class="star">&#9733;</label>
+                                class="star">★</label>
                         </div>
                     </div>
                     <div class="form-group">
@@ -108,19 +121,19 @@
                         <div class="stars">
                             <input type="radio" id="edit-5-stars" name="rating" value="5"
                                 th:checked="${existingReview.rating == 5}" required /><label for="edit-5-stars"
-                                class="star">&#9733;</label>
+                                class="star">★</label>
                             <input type="radio" id="edit-4-stars" name="rating" value="4"
                                 th:checked="${existingReview.rating == 4}" /><label for="edit-4-stars"
-                                class="star">&#9733;</label>
+                                class="star">★</label>
                             <input type="radio" id="edit-3-stars" name="rating" value="3"
                                 th:checked="${existingReview.rating == 3}" /><label for="edit-3-stars"
-                                class="star">&#9733;</label>
+                                class="star">★</label>
                             <input type="radio" id="edit-2-stars" name="rating" value="2"
                                 th:checked="${existingReview.rating == 2}" /><label for="edit-2-stars"
-                                class="star">&#9733;</label>
+                                class="star">★</label>
                             <input type="radio" id="edit-1-star" name="rating" value="1"
                                 th:checked="${existingReview.rating == 1}" /><label for="edit-1-star"
-                                class="star">&#9733;</label>
+                                class="star">★</label>
                         </div>
                     </div>
                     <div class="form-group">
@@ -228,7 +241,8 @@
         }
 
         function updateReview(reviewId) {
-            const ratingElement = document.querySelector('#reviewEditForm input[name="rating"]:checked');
+            const form = document.getElementById('reviewEditForm');
+            const ratingElement = form.querySelector('input[name="rating"]:checked');
             if (!ratingElement) {
                 alert('별점을 선택해주세요.');
                 return;
@@ -244,11 +258,11 @@
             };
 
             const headers = {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             };
             headers[csrfHeader] = csrfToken;
 
-            fetch(`/products/reviews/${reviewId}`, {
+            fetch('/products/reviews/' + reviewId, {
                 method: 'PUT',
                 headers: headers,
                 body: JSON.stringify(reviewData)
@@ -258,7 +272,11 @@
                         alert('후기가 성공적으로 수정되었습니다.');
                         window.location.reload();
                     } else {
-                        response.text().then(text => alert('후기 수정 실패: ' + text));
+                        response.json().then(data => {
+                            alert('후기 수정 실패: ' + (data.message || '알 수 없는 오류'));
+                        }).catch(() => {
+                            response.text().then(text => alert('후기 수정 실패: ' + text));
+                        });
                     }
                 })
                 .catch(error => {
