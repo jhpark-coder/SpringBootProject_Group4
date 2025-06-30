@@ -1,6 +1,7 @@
 package com.creatorworks.nexus.product.controller;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,9 +37,15 @@ import com.creatorworks.nexus.product.entity.ProductReview;
 import com.creatorworks.nexus.product.service.ProductInquiryService;
 import com.creatorworks.nexus.product.service.ProductReviewService;
 import com.creatorworks.nexus.product.service.ProductService;
+import com.creatorworks.nexus.util.tiptap.TipTapDocument;
+import com.creatorworks.nexus.util.tiptap.TipTapNode;
+import com.creatorworks.nexus.util.tiptap.TipTapRenderer;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @Controller: 이 클래스가 Spring MVC의 컨트롤러임을 나타냅니다.
@@ -48,6 +55,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Controller
 @RequiredArgsConstructor
+@Slf4j
 public class ProductController {
 
     // final 키워드와 @RequiredArgsConstructor에 의해, Spring이 자동으로 ProductService의 인스턴스를 주입해줍니다. (생성자 주입)
@@ -56,6 +64,8 @@ public class ProductController {
     private final ProductReviewService productReviewService;
     private final MemberRepository memberRepository;
     private final CategoryConfig categoryConfig;
+    private final TipTapRenderer tipTapRenderer;
+    private final ObjectMapper objectMapper;
 
     /**
      * 그리드 뷰 페이지("/products/grid") 요청을 처리하여 'gridView.html' 뷰를 렌더링합니다.
@@ -119,19 +129,62 @@ public class ProductController {
         // 현재 로그인한 사용자 정보 및 후기 작성 상태 조회
         Member currentMember = null;
         boolean canWriteReview = false;
+        boolean canViewContent = false; // 컨텐츠 열람 가능 여부
         Optional<ProductReview> existingReview = Optional.empty();
 
         if (principal != null) {
             currentMember = memberRepository.findByEmail(principal.getName());
             if(currentMember != null) {
-                // 후기 작성 가능 여부 확인
+                // 1. 실제 구매 여부를 확인하여 후기 작성 권한 설정
                 canWriteReview = productReviewService.hasUserPurchasedProduct(currentMember, product);
-                // 이미 작성한 후기가 있는지 확인
-                existingReview = productReviewService.findReviewByWriterAndProduct(currentMember, product);
+
+                // 2. 작성자 본인인지 확인 (ID를 직접 비교하여 안정성 확보)
+                boolean isAuthor = product.getAuthor() != null && currentMember.getId().equals(product.getAuthor().getId());
+
+                // 3. 컨텐츠 열람 권한 설정 (구매자 또는 관리자 또는 작성자)
+                canViewContent = canWriteReview || isAuthor || currentMember.getRole() == com.creatorworks.nexus.member.constant.Role.ADMIN;
+
+                // 4. 이미 작성한 후기가 있는지 확인
+                if (canWriteReview) {
+                    existingReview = productReviewService.findReviewByWriterAndProduct(currentMember, product);
+                }
+            }
+        }
+        
+        // Tiptap JSON 컨텐츠 처리
+        String contentHtml = "";
+        String tiptapJson = product.getTiptapJson();
+        if (tiptapJson != null && !tiptapJson.isEmpty()) {
+            try {
+                log.info("Processing tiptapJson for product ID {}: {}", id, tiptapJson);
+                TipTapDocument document = objectMapper.readValue(tiptapJson, TipTapDocument.class);
+                List<TipTapNode> nodesToRender = document.getContent();
+
+                if (!canViewContent) { // isPurchased 대신 canViewContent 사용
+                    int paywallIndex = -1;
+                    for (int i = 0; i < nodesToRender.size(); i++) {
+                        if ("paywall".equals(nodesToRender.get(i).getType())) {
+                            paywallIndex = i;
+                            break;
+                        }
+                    }
+                    if (paywallIndex != -1) {
+                        // subList가 반환하는 view 대신 새로운 리스트를 생성하여 안정성을 높입니다.
+                        nodesToRender = new ArrayList<>(nodesToRender.subList(0, paywallIndex));
+                    }
+                }
+
+                contentHtml = tipTapRenderer.render(nodesToRender);
+
+            } catch (JsonProcessingException e) {
+                // JSON 파싱 실패 시 로깅 또는 예외 처리
+                // 여기서는 간단히 빈 문자열로 대체
+                contentHtml = "<p>콘텐츠를 불러오는 데 실패했습니다.</p>";
             }
         }
 
         model.addAttribute("product", product);
+        model.addAttribute("contentHtml", contentHtml); // 렌더링된 HTML 추가
         model.addAttribute("inquiryPage", inquiryPage);
         model.addAttribute("reviewPage", reviewPage);
         model.addAttribute("averageRating", averageRating);
