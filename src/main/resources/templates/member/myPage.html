@@ -1,10 +1,144 @@
-<!DOCTYPE html>
-<html lang="en">
+<html layout:decorate="~{fragment/layout}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/myPage.css}">
+    </th:block>
 </head>
 <body>
+<div layout:fragment="content" class="page-container">
+    <!-- 1. 왼쪽 고정 메뉴 (사이드바) -->
+    <aside class="profile-sidebar">
+        <div class="profile-pic"></div>
+        <h2 class="profile-name">홍길동 님</h2>
 
+        <div class="button-group">
+            <a href="#" class="btn btn-outline">찜목록</a>
+            <a href="#" class="btn btn-outline">구독목록</a>
+        </div>
+
+        <a href="#" class="btn btn-solid">개인정보수정</a>
+        <a href="#" class="btn btn-solid">알림내역</a>
+        <a href="#" class="btn btn-solid">구매내역</a>
+        <a href="#" class="btn btn-solid">참여중인 경매</a>
+    </aside>
+
+    <!-- 2. 오른쪽 메인 콘텐츠 -->
+    <main class="main-content">
+        <!-- 최근 구매/본 태그 차트 섹션 -->
+        <section class="content-section chart-section">
+            <div class="chart-item">
+                <h3>최근 구매한 작품 태그</h3>
+                <div class="chart-placeholder"></div>
+            </div>
+            <div class="chart-item">
+                <h3>최근 가장 많이 본 작가</h3>
+                <div class="chart-placeholder"></div>
+            </div>
+        </section>
+
+        <!-- 최근 구매한 작품 그리드 섹션 -->
+        <section class="content-section">
+            <header class="section-header">
+                <h2>최근 구매한 작품</h2>
+                <a href="#" class="see-more-link">더 보러가기 »</a>
+            </header>
+            <div class="product-grid">
+                <!-- 상품 카드는 3개 이상 추가될 수 있습니다. -->
+                <article class="product-card">
+                    <div class="product-image-placeholder"></div>
+                    <div class="product-info">
+                        <div class="author-info">
+                            <div class="author-avatar"></div>
+                            <span>작가이름이 들어감</span>
+                        </div>
+                        <a href="#" class="subscribe-btn">Subscribe</a>
+                    </div>
+                </article>
+                <article class="product-card">
+                    <div class="product-image-placeholder"></div>
+                    <div class="product-info">
+                        <div class="author-info">
+                            <div class="author-avatar"></div>
+                            <span>다른 작가 이름</span>
+                        </div>
+                        <a href="#" class="subscribe-btn">Subscribe</a>
+                    </div>
+                </article>
+                <article class="product-card">
+                    <div class="product-image-placeholder"></div>
+                    <div class="product-info">
+                        <div class="author-info">
+                            <div class="author-avatar"></div>
+                            <span>또 다른 작가</span>
+                        </div>
+                        <a href="#" class="subscribe-btn">Subscribe</a>
+                    </div>
+                </article>
+                <article class="product-card">
+                    <div class="product-image-placeholder"></div>
+                    <div class="product-info">
+                        <div class="author-info">
+                            <div class="author-avatar"></div>
+                            <span>새롭게 다른 작가</span>
+                        </div>
+                        <a href="#" class="subscribe-btn">Subscribe</a>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- 최근 열람한 작품 그리드 섹션 -->
+        <section class="content-section">
+            <header class="section-header">
+                <h2>최근 열람한 작품</h2>
+                <a href="#" class="see-more-link">더 보러가기 »</a>
+            </header>
+            <div class="product-grid">
+                <article class="product-card">
+                    <div class="product-image-placeholder"></div>
+                    <div class="product-info">
+                        <div class="author-info">
+                            <div class="author-avatar"></div>
+                            <span>열람한 작가 이름</span>
+                        </div>
+                        <a href="#" class="subscribe-btn">Subscribe</a>
+                    </div>
+                </article>
+                <article class="product-card">
+                    <div class="product-image-placeholder"></div>
+                    <div class="product-info">
+                        <div class="author-info">
+                            <div class="author-avatar"></div>
+                            <span>두번째 열람 작가</span>
+                        </div>
+                        <a href="#" class="subscribe-btn">Subscribe</a>
+                    </div>
+                </article>
+                <article class="product-card">
+                    <div class="product-image-placeholder"></div>
+                    <div class="product-info">
+                        <div class="author-info">
+                            <div class="author-avatar"></div>
+                            <span>세번째 열람 작가</span>
+                        </div>
+                        <a href="#" class="subscribe-btn">Subscribe</a>
+                    </div>
+                </article>
+                <article class="product-card">
+                    <div class="product-image-placeholder"></div>
+                    <div class="product-info">
+                        <div class="author-info">
+                            <div class="author-avatar"></div>
+                            <span>네번째 열람 작가</span>
+                        </div>
+                        <a href="#" class="subscribe-btn">Subscribe</a>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+</div>
 </body>
 </html>
