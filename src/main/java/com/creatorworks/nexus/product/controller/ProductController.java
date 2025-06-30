@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.creatorworks.nexus.member.entity.Member;
+import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.product.dto.ProductSaveRequest;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.service.ProductService;
-import com.creatorworks.nexus.product.service.WishlistService;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpSession;
@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductController {
 
     private final ProductService productService;
-    private final WishlistService wishlistService;
+    private final MemberRepository memberRepository;
 
     @PostConstruct
     public void init() {
@@ -87,22 +87,12 @@ public class ProductController {
                 isLiked = productService.isLikedByUser(id, loginUser.getUsername());
             }
             
-            // 찜하기 상태 확인
-            boolean isWished = false;
-            long wishCount = 0;
-            if (loginUser != null) {
-                isWished = wishlistService.isWished(loginUser.getId(), id);
-                wishCount = wishlistService.getProductWishCount(id);
-            }
-            
             model.addAttribute("product", product);
             model.addAttribute("heartCount", heartCount);
             model.addAttribute("loginUser", loginUser);
             model.addAttribute("isLiked", isLiked);
-            model.addAttribute("isWished", isWished);
-            model.addAttribute("wishCount", wishCount);
             
-            System.out.println("상품 상세 페이지 로드 - 상품 ID: " + id + ", 좋아요 수: " + heartCount + ", 좋아요 상태: " + isLiked + ", 찜하기 수: " + wishCount + ", 찜하기 상태: " + isWished);
+            System.out.println("상품 상세 페이지 로드 - 상품 ID: " + id + ", 좋아요 수: " + heartCount + ", 좋아요 상태: " + isLiked);
             
             return "product/productDetail";
         } catch (IllegalArgumentException e) {
@@ -296,6 +286,136 @@ public class ProductController {
             Map<String, Object> response = new HashMap<>();
             response.put("error", "테스트 상품 생성 실패: " + e.getMessage());
             return response;
+        }
+    }
+
+    // 테스트용 임시 로그인 API (여러 사용자)
+    @PostMapping("/api/test/login/{userId}")
+    @ResponseBody
+    public Map<String, Object> testLoginWithUser(@PathVariable Long userId, HttpSession session) {
+        System.out.println("=== 테스트용 임시 로그인 (사용자 ID: " + userId + ") ===");
+        
+        try {
+            // 기존 사용자 확인
+            Member existingUser = memberRepository.findByUsername("testuser" + userId).orElse(null);
+            if (existingUser == null) {
+                // 새 테스트 사용자 생성
+                Member testUser = new Member();
+                testUser.setUsername("testuser" + userId);
+                testUser.setEmail("test" + userId + "@example.com");
+                testUser.setPassword("password123"); // 테스트용 비밀번호
+                testUser.setNickname("테스트 사용자 " + userId);
+                
+                // 데이터베이스에 저장
+                existingUser = memberRepository.save(testUser);
+                System.out.println("새 테스트 사용자 생성: " + existingUser.getUsername() + " (ID: " + existingUser.getId() + ")");
+            } else {
+                System.out.println("기존 테스트 사용자 사용: " + existingUser.getUsername() + " (ID: " + existingUser.getId() + ")");
+            }
+            
+            // 세션에 로그인 정보 저장
+            session.setAttribute("loginUser", existingUser);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "테스트용 로그인 완료 (사용자 ID: " + existingUser.getId() + ")");
+            response.put("username", existingUser.getUsername());
+            response.put("userId", existingUser.getId());
+            response.put("nickname", existingUser.getNickname());
+            
+            System.out.println("테스트 사용자 로그인: " + existingUser.getUsername());
+            return response;
+            
+        } catch (Exception e) {
+            System.out.println("테스트 사용자 로그인 실패: " + e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", "테스트 사용자 로그인 실패");
+            errorResponse.put("message", e.getMessage());
+            return errorResponse;
+        }
+    }
+
+    // 테스트용 로그아웃 API
+    @PostMapping("/api/test/logout")
+    @ResponseBody
+    public Map<String, Object> testLogout(HttpSession session) {
+        System.out.println("=== 테스트용 로그아웃 ===");
+        
+        session.removeAttribute("loginUser");
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "테스트용 로그아웃 완료");
+        
+        System.out.println("테스트 사용자 로그아웃");
+        return response;
+    }
+
+    // 테스트용 로그인 상태 확인 API
+    @GetMapping("/api/test/login-status")
+    @ResponseBody
+    public Map<String, Object> testLoginStatus(HttpSession session) {
+        Member loginUser = (Member) session.getAttribute("loginUser");
+        
+        Map<String, Object> response = new HashMap<>();
+        if (loginUser != null) {
+            response.put("loggedIn", true);
+            response.put("username", loginUser.getUsername());
+            response.put("userId", loginUser.getId());
+        } else {
+            response.put("loggedIn", false);
+        }
+        
+        return response;
+    }
+
+    // 테스트용 소셜 기능 페이지
+    @GetMapping("/test-social")
+    public String testSocialPage() {
+        return "test-social";
+    }
+
+    // 테스트용 임시 로그인 API (기본)
+    @PostMapping("/api/test/login")
+    @ResponseBody
+    public Map<String, Object> testLogin(HttpSession session) {
+        return testLoginWithUser(1L, session);
+    }
+
+    // 구독 통계 확인 API
+    @GetMapping("/api/test/follow-stats/{creatorId}")
+    @ResponseBody
+    public Map<String, Object> getFollowStats(@PathVariable Long creatorId) {
+        System.out.println("=== 구독 통계 확인 ===");
+        System.out.println("작가 ID: " + creatorId);
+        
+        try {
+            // 임시로 Member 객체 생성
+            Member creator = new Member();
+            creator.setId(creatorId);
+            
+            // 팔로워 수 계산 (실제로는 MemberFollowService 사용)
+            // 여기서는 간단히 데이터베이스에서 직접 조회
+            Map<String, Object> response = new HashMap<>();
+            response.put("creatorId", creatorId);
+            response.put("creatorName", "테스트 작가 " + creatorId);
+            response.put("followerCount", 0); // 실제로는 계산 필요
+            response.put("followingCount", 0); // 실제로는 계산 필요
+            response.put("timestamp", System.currentTimeMillis());
+            response.put("status", "success");
+            
+            System.out.println("구독 통계 결과: " + response);
+            return response;
+            
+        } catch (Exception e) {
+            System.out.println("구독 통계 확인 중 오류: " + e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "구독 통계 확인 실패");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("creatorId", creatorId);
+            errorResponse.put("status", "error");
+            return errorResponse;
         }
     }
 }
