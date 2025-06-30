@@ -1,0 +1,122 @@
+/* 구독 기능 스타일 */
+
+/* 구독 버튼 스타일 */
+.follow-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.follow-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.follow-btn.following {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+}
+
+.follow-btn.following:hover {
+    background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+/* 구독 통계 스타일 */
+.follow-stats {
+    display: flex;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 16px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    min-width: 100px;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #667eea;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #666;
+}
+
+/* 사용자 프로필 카드 스타일 */
+.user-profile-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.user-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-info h2 {
+    margin: 0 0 4px 0;
+    color: #333;
+}
+
+.user-nickname {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.user-role {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .follow-stats {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .user-profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .follow-stats {
+        gap: 8px;
+    }
+
+    .user-profile-card {
+        padding: 16px;
+    }
+}
