@@ -1,0 +1,276 @@
+/* 기본 & 폰트 설정 */
+:root {
+    --primary-blue: #0071DE;
+    --light-gray: #D9D9D9;
+    --text-light: #FFFFFF;
+    --text-dark: #000000;
+}
+
+body {
+    margin: 0;
+    font-family: 'Noto Sans KR', sans-serif;
+    background-color: #fff;
+    /* 이미지의 검은 배경 대신 콘텐츠가 잘 보이도록 밝은 회색으로 설정 */
+}
+
+/* 전체 페이지 컨테이너 */
+.page-container {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+    /* 사이드바와 메인 콘텐츠 사이 간격 */
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    /* 페이지 좌우, 상하 여백 */
+}
+
+/* 1. 왼쪽 프로필 사이드바 */
+.profile-sidebar {
+    /* 레이아웃 */
+    flex-basis: 200px;
+    /* 기본 너비 */
+    flex-shrink: 0;
+    /* 화면이 줄어도 너비 유지 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 25px;
+
+    /* 스크롤 따라가기(Sticky) */
+    position: sticky;
+    top: 10rem;
+    /* 화면 상단에서 40px 떨어진 위치에 고정 */
+    align-self: flex-start;
+    /* sticky를 위해 부모 높이에 맞춰 늘어나지 않도록 함 */
+    max-height: calc(100vh - 80px);
+
+    /* 디자인 */
+    background: var(--primary-blue);
+    color: var(--text-light);
+    border-radius: 15px;
+    height: fit-content;
+    /* 내용물 높이에 맞춤 */
+}
+
+.profile-pic {
+    width: 150px;
+    height: 150px;
+    background-color: var(--light-gray);
+    border-radius: 50%;
+}
+
+.profile-name {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+/* 버튼 공통 스타일 */
+.btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 280px;
+    height: 50px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
+.btn-outline {
+    border: 2px solid var(--text-light);
+    color: var(--text-light);
+    flex-grow: 1;
+    /* button-group 안에서 공간을 동일하게 차지 */
+}
+
+.btn-solid {
+    background-color: var(--text-light);
+    color: var(--text-dark);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 280px;
+}
+
+/* 2. 오른쪽 메인 콘텐츠 */
+.main-content {
+    flex-grow: 1;
+    /* 남은 공간을 모두 차지 */
+    display: flex;
+    flex-direction: column;
+    gap: 60px;
+    /* 콘텐츠 섹션 간의 세로 간격 */
+    min-width: 0;
+    /* flex 자식 요소가 부모를 넘어가지 않게 함 */
+}
+
+.content-section {
+    width: 100%;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.section-header h2 {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin: 0;
+    color: var(--text-dark);
+}
+
+.see-more-link {
+    font-size: 1rem;
+    color: var(--text-dark);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+/* 차트 섹션 */
+.chart-section {
+    display: flex;
+    gap: 30px;
+}
+
+.chart-item {
+    flex: 1;
+    /* 공간을 균등하게 나눔 */
+}
+
+.chart-item h3 {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.chart-placeholder {
+    width: 100%;
+    height: 350px;
+    background-color: var(--light-gray);
+    border-radius: 10px;
+}
+
+/* 상품 그리드 */
+.product-grid {
+    display: flex;
+    flex-wrap: wrap;
+    /* 아이템이 넘치면 다음 줄로 */
+    gap: 20px;
+}
+
+.product-card {
+    /* 유연한 너비 설정: 4열 기준 */
+    /* 100% 너비를 4로 나누고, 틈새(gap) 공간을 뺀 값 */
+    /* 20px(gap) * 3/4 = 15px */
+    flex-basis: calc(25% - 15px);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.product-image-placeholder {
+    width: 100%;
+    padding-top: 100%;
+    /* 1:1 비율의 정사각형 */
+    background-color: var(--light-gray);
+    border-radius: 10px;
+}
+
+.product-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 5px;
+}
+
+.author-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.author-avatar {
+    width: 30px;
+    height: 30px;
+    background-color: var(--light-gray);
+    border-radius: 50%;
+}
+
+.subscribe-btn {
+    background-color: var(--primary-blue);
+    color: var(--text-light);
+    padding: 10px 20px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* 반응형 디자인 (Media Queries) */
+
+/* 태블릿 사이즈 - 상품 그리드를 2열로 변경 */
+@media (max-width: 1200px) {
+    .product-card {
+        /*flex-basis: calc(33.333% - 14px); */
+    }
+
+    .chart-section {
+        flex-direction: column;
+    }
+}
+
+/* 모바일 사이즈 - 전체 레이아웃을 세로로 변경 */
+@media (max-width: 992px) {
+    .page-container {
+        flex-direction: column;
+    }
+
+    .profile-sidebar {
+        position: static;
+        /* sticky 해제 */
+        width: 100%;
+        max-width: 500px;
+        /* 모바일에서 너무 커지지 않도록 */
+        margin: 0 auto;
+        box-sizing: border-box;
+    }
+
+    .product-card {
+        /* 화면 너비에 따라 2열 또는 1열로 보이도록 조정 가능 */
+        flex-basis: calc(50% - 10px);
+    }
+}
+
+@media (max-width: 600px) {
+    .product-card {
+        flex-basis: 100%;
+        /* 1열 기준 */
+    }
+
+    .profile-name,
+    .section-header h2 {
+        font-size: 24px;
+    }
+
+    .btn {
+        font-size: 16px;
+    }
+}
