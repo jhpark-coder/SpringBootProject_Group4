@@ -1,6 +1,9 @@
 package com.creatorworks.nexus.product.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,13 +18,17 @@ import com.creatorworks.nexus.product.dto.ProductPageResponse;
 import com.creatorworks.nexus.product.dto.ProductSaveRequest;
 import com.creatorworks.nexus.product.entity.ItemTag;
 import com.creatorworks.nexus.product.entity.Product;
+import com.creatorworks.nexus.product.entity.ProductHeart;
 import com.creatorworks.nexus.product.entity.ProductItemTag;
 import com.creatorworks.nexus.product.repository.ItemTagRepository;
+import com.creatorworks.nexus.product.repository.ProductHeartRepository;
 import com.creatorworks.nexus.product.repository.ProductItemTagRepository;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.specification.ProductSpecification;
 
 import lombok.RequiredArgsConstructor;
+
+import java.util.HashMap;
 
 /**
  * @Service: 이 클래스가 비즈니스 로직을 처리하는 서비스 계층의 컴포넌트임을 Spring에 알립니다.
@@ -38,6 +45,7 @@ public class ProductService {
     private final MemberRepository memberRepository;
     private final ItemTagRepository itemTagRepository;
     private final ProductItemTagRepository productItemTagRepository;
+    private final ProductHeartRepository productHeartRepository;
 
     /**
      * 특정 1차 카테고리에 속하는 중복되지 않는 2차 카테고리 목록을 조회합니다.
@@ -194,5 +202,71 @@ public class ProductService {
             
             productItemTagRepository.save(productItemTag);
         }
+    }
+
+    /**
+     * 상품에 대한 좋아요를 토글(추가/삭제)합니다.
+     * @param productId 상품 ID
+     * @param userEmail 사용자 이메일
+     * @return 좋아요가 추가되면 true, 삭제되면 false를 반환합니다.
+     */
+    @Transactional
+    public boolean toggleHeart(Long productId, String userEmail) {
+        Product product = findProductById(productId);
+        Member member = memberRepository.findByEmail(userEmail);
+        if (member == null) {
+            throw new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userEmail);
+        }
+
+        Optional<ProductHeart> existingHeart = productHeartRepository.findByMemberIdAndProductId(member.getId(), productId);
+
+        if (existingHeart.isPresent()) {
+            // 좋아요 취소
+            productHeartRepository.delete(existingHeart.get());
+            return false;
+        } else {
+            // 좋아요 추가
+            ProductHeart heart = new ProductHeart();
+            heart.setMember(member);
+            heart.setProduct(product);
+            productHeartRepository.save(heart);
+            return true;
+        }
+    }
+
+    /**
+     * 특정 사용자가 상품에 좋아요를 눌렀는지 확인합니다.
+     * @param productId 상품 ID
+     * @param userEmail 사용자 이메일
+     * @return 좋아요를 눌렀으면 true, 아니면 false
+     */
+    public boolean isLikedByUser(Long productId, String userEmail) {
+        Member member = memberRepository.findByEmail(userEmail);
+        if (member == null) {
+            return false;
+        }
+        return productHeartRepository.findByMemberIdAndProductId(member.getId(), productId).isPresent();
+    }
+
+    /**
+     * 특정 상품의 총 좋아요 개수를 조회합니다.
+     * @param productId 상품 ID
+     * @return 좋아요 개수
+     */
+    public long getHeartCount(Long productId) {
+        return productHeartRepository.countByProductId(productId);
+    }
+
+    /**
+     * 여러 상품의 좋아요 개수를 한 번에 조회합니다.
+     * @param productIds 상품 ID 리스트
+     * @return 상품 ID를 키로, 좋아요 개수를 값으로 갖는 Map
+     */
+    public Map<Long, Long> getHeartCountsForProducts(List<Long> productIds) {
+        Map<Long, Long> heartCounts = new HashMap<>();
+        for (Long productId : productIds) {
+            heartCounts.put(productId, getHeartCount(productId));
+        }
+        return heartCounts;
     }
 }

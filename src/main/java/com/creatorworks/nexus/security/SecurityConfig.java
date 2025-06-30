@@ -15,6 +15,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.creatorworks.nexus.member.service.SocialMemberService;
 
@@ -76,7 +77,7 @@ public class SecurityConfig {
                 .permitAll()
             )
             .logout(logout -> logout
-                .logoutUrl("/members/logout")
+                .logoutRequestMatcher(new AntPathRequestMatcher("/members/logout"))
                 .logoutSuccessUrl("/")
                 .permitAll()
             )
@@ -116,7 +117,7 @@ public class SecurityConfig {
             )
             // 로그아웃 설정
             .logout(logout -> logout
-                .logoutUrl("/members/logout")
+                .logoutRequestMatcher(new AntPathRequestMatcher("/members/logout"))
                 .logoutSuccessUrl("/")
                 .permitAll()
             )
