@@ -30,6 +30,11 @@ public class Category {
     @Column(nullable = false, unique = true)
     private String name;
 
+    //20250630 차트를 위해 추가
+    @Column(nullable = false)
+    private String color;
+    //여기까지
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Category parent;

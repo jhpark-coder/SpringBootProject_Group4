@@ -49,6 +49,11 @@ public class Product extends BaseEntity implements Serializable {
     private String tiptapJson;
     @Lob
     private String imageUrl;
+    //20250630 차트를 위해 작성
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+    //여기까지
     private String primaryCategory;
     private String secondaryCategory;
     private String backgroundColor;
