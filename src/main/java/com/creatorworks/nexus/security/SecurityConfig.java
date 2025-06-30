@@ -42,7 +42,7 @@ public class SecurityConfig {
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().requestMatchers(
             "/favicon.ico", "/css/**", "/js/**", "/assets/**", 
-            "/uploads/**", "/h2-console/**", "/img/**", "/.well-known/**");
+            "/uploads/**", "/h2-console/**", "/img/**", "/.well-known/**", "/ws/**");
     }
 
     /**
