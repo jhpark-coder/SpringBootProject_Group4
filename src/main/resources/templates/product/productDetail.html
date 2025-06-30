@@ -3,6 +3,8 @@
     layout:decorate="~{fragment/layout}">
 
 <th:block layout:fragment="css">
+    <link rel="stylesheet" th:href="@{/css/review.css}">
+    <link rel="stylesheet" th:href="@{/css/inquiry.css}">
     <style>
         /* 기본 스타일 */
         .product-detail-page * {
@@ -192,8 +194,17 @@
         }
 
         .like-btn.liked {
-            background: #ffc107;
-            color: #333;
+            background-color: #dc3545;
+            /* 빨간색 */
+            border-color: #dc3545;
+            color: white;
+            /* 글자색 흰색 */
+        }
+
+        .like-btn.liked .fa-heart {
+            color: white;
+            font-weight: 900;
+            /* 채워진 하트로 보이게 */
         }
 
         .continue-btn {
@@ -251,11 +262,20 @@
             </div>
 
             <div class="sidebar-actions">
-                <button class="like-btn">
-                    <i class="far fa-heart"></i> <!-- Font Awesome icon -->
-                    <!-- TODO: 좋아요 기능 구현 후 동적으로 처리 필요 -->
-                    <span class="like-count">0</span>
+                <!-- 로그인한 사용자를 위한 좋아요 버튼 -->
+                <button class="like-btn" th:data-product-id="${product.id}" th:classappend="${isLiked} ? 'liked'"
+                    th:onclick="|toggleLike(${product.id})|" sec:authorize="isAuthenticated()">
+                    <i class="far fa-heart"></i>
+                    <span class="like-count" th:text="${heartCount}">0</span>
                 </button>
+
+                <!-- 비로그인 사용자를 위한 버튼 -->
+                <button class="like-btn" onclick="alert('로그인이 필요합니다.'); location.href='/member/login';"
+                    sec:authorize="!isAuthenticated()">
+                    <i class="far fa-heart"></i>
+                    <span class="like-count" th:text="${heartCount}">0</span>
+                </button>
+
                 <button class="continue-btn" th:text="${product.price == 0} ? '무료로 계속보기' : (*{price} + '원 계속보기')">
                     11111원 계속보기
                 </button>
@@ -295,5 +315,11 @@
 </div>
 
 <div th:replace="~{fragments/footer :: footer}"></div>
+
+<th:block layout:fragment="script">
+    <script th:src="@{/js/review.js}"></script>
+    <script th:src="@{/js/inquiry.js}"></script>
+    <script th:src="@{/js/heartFollow.js}"></script>
+</th:block>
 
 </html>

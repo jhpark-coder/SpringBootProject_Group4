@@ -3,6 +3,7 @@ package com.creatorworks.nexus.product.controller;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -126,6 +127,11 @@ public class ProductController {
         Page<ProductReview> reviewPage = productReviewService.findReviewsByProduct(id, reviewKeyword, reviewPageable);
         double averageRating = productReviewService.getAverageRating(id);
 
+        // --- 좋아요 관련 로직 추가 ---
+        long heartCount = productService.getHeartCount(id);
+        boolean isLiked = false;
+        // ---
+
         // 현재 로그인한 사용자 정보 및 후기 작성 상태 조회
         Member currentMember = null;
         boolean canWriteReview = false;
@@ -135,6 +141,10 @@ public class ProductController {
         if (principal != null) {
             currentMember = memberRepository.findByEmail(principal.getName());
             if(currentMember != null) {
+                // --- 좋아요 상태 확인 로직 추가 ---
+                isLiked = productService.isLikedByUser(id, principal.getName());
+                // ---
+
                 // 1. 실제 구매 여부를 확인하여 후기 작성 권한 설정
                 canWriteReview = productReviewService.hasUserPurchasedProduct(currentMember, product);
 
@@ -192,6 +202,10 @@ public class ProductController {
         model.addAttribute("currentMember", currentMember);
         model.addAttribute("canWriteReview", canWriteReview);
         model.addAttribute("existingReview", existingReview.orElse(null));
+        // --- 좋아요 관련 모델 속성 추가 ---
+        model.addAttribute("heartCount", heartCount);
+        model.addAttribute("isLiked", isLiked);
+        // ---
 
         return "product/productDetail";
     }
@@ -378,5 +392,62 @@ public class ProductController {
             @RequestParam(value = "secondary", required = false, defaultValue = "all") String secondaryCategory,
             Pageable pageable) {
         return productService.findAllProducts(primaryCategory, secondaryCategory, pageable);
+    }
+
+    // --- 좋아요 관련 API 추가 ---
+
+    /**
+     * 상품에 대한 '좋아요'를 토글(추가/삭제)합니다.
+     * @param id 상품 ID
+     * @param principal 현재 로그인한 사용자 정보
+     * @return 좋아요 상태와 개수를 담은 응답
+     */
+    @PostMapping("/api/products/{id}/heart")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> toggleHeart(@PathVariable Long id, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "로그인이 필요합니다."));
+        }
+        
+        String userEmail = principal.getName();
+        boolean isLiked = productService.toggleHeart(id, userEmail);
+        long heartCount = productService.getHeartCount(id);
+        
+        Map<String, Object> response = Map.of("isLiked", isLiked, "heartCount", heartCount);
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 특정 상품의 '좋아요' 상태와 개수를 조회합니다.
+     * @param id 상품 ID
+     * @param principal 현재 로그인한 사용자 정보
+     * @return 좋아요 상태와 개수를 담은 응답
+     */
+    @GetMapping("/api/products/{id}/heart/status")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getHeartStatus(@PathVariable Long id, Principal principal) {
+        long heartCount = productService.getHeartCount(id);
+        boolean isLiked = false;
+        
+        if (principal != null) {
+            isLiked = productService.isLikedByUser(id, principal.getName());
+        }
+        
+        Map<String, Object> response = Map.of("isLiked", isLiked, "heartCount", heartCount);
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 특정 상품의 '좋아요' 개수만 조회합니다.
+     * @param id 상품 ID
+     * @return 좋아요 개수를 담은 응답
+     */
+    @GetMapping("/api/products/{id}/heart/count")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getHeartCount(@PathVariable Long id) {
+        long heartCount = productService.getHeartCount(id);
+        return ResponseEntity.ok(Map.of("heartCount", heartCount));
     }
 }

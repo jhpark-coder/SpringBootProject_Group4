@@ -1,16 +1,23 @@
 .site-footer {
     display: flex;
-    flex-direction: column; /* 내부 아이템을 세로로 쌓음 */
-    justify-content: center; /* 세로축 중앙 정렬 */
-    align-items: center;     /* 가로축 중앙 정렬 */
-    
-    width: 100%; /* 화면 너비를 꽉 채움 */
-    padding: 50px 20px; /* 상하 50px, 좌우 20px의 여백으로 높이와 공간 확보 */
-    box-sizing: border-box; /* padding이 width에 포함되도록 설정 */
-    
+    flex-direction: column;
+    /* 내부 아이템을 세로로 쌓음 */
+    justify-content: center;
+    /* 세로축 중앙 정렬 */
+    align-items: center;
+    /* 가로축 중앙 정렬 */
+
+    width: 100%;
+    /* 화면 너비를 꽉 채움 */
+    padding: 50px 20px;
+    /* 상하 50px, 좌우 20px의 여백으로 높이와 공간 확보 */
+    box-sizing: border-box;
+    /* padding이 width에 포함되도록 설정 */
+
     background-color: #0071DE;
     color: #FFFFFF;
-    text-align: center; /* 내부 텍스트 기본 중앙 정렬 */
+    text-align: center;
+    /* 내부 텍스트 기본 중앙 정렬 */
 }
 
 /* 
@@ -21,8 +28,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px; /* 로고와 사이트 이름 사이의 간격 */
-    margin-bottom: 30px; /* 아래 copyright와의 간격 */
+    gap: 20px;
+    /* 로고와 사이트 이름 사이의 간격 */
+    margin-bottom: 30px;
+    /* 아래 copyright와의 간격 */
 }
 
 /* 로고 스타일 */
@@ -36,13 +45,16 @@
 .site-name {
     font-size: 18px;
     font-weight: 500;
-    margin: 0; /* p 태그의 기본 마진 제거 */
+    margin: 0;
+    /* p 태그의 기본 마진 제거 */
 }
 
 /* 저작권 정보 스타일 */
 .copyright {
     font-size: 16px;
     font-weight: 500;
-    margin: 0; /* p 태그의 기본 마진 제거 */
-    opacity: 0.9; /* 텍스트를 살짝 연하게 하여 구분감 부여 */
+    margin: 0;
+    /* p 태그의 기본 마진 제거 */
+    opacity: 0.9;
+    /* 텍스트를 살짝 연하게 하여 구분감 부여 */
 }

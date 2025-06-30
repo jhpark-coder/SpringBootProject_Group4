@@ -9,6 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class MyPageController {
     @GetMapping("/my-page")
     public String myPage() {
-        return "myPage"; // myPage.html 템플릿을 보여줌
+        return "member/myPage"; // myPage.html 템플릿을 보여줌
     }
 }
