@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="chat" class="chat-container" id="chat-container">
+    <div class="chat-header">
+        <div class="title-wrapper">
+            <h5>상담사 연결</h5>
+            <small id="replying-to"></small>
+        </div>
+        <button type="button" class="btn-close" id="close-chat-btn"></button>
+    </div>
+    <div class="chat-body">
+        <div class="chat-message received">
+            <p>안녕하세요! 무엇을 도와드릴까요? 상담사 연결을 원하시면 아래에 메시지를 남겨주세요.</p>
+        </div>
+    </div>
+    <div class="chat-footer">
+        <input type="text" id="chat-input" class="form-control" placeholder="메시지 입력...">
+        <button class="btn btn-primary" id="send-chat-btn">전송</button>
+    </div>
+</div>
+
+</html>

@@ -10,6 +10,13 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <!-- WebSocket and STOMP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
     <style>
         /* 기본적으로 JS 경고만 보여주고, 콘텐츠와 방어막은 숨김 */
         .content-wrapper,
@@ -28,6 +35,142 @@
 
         body[data-sentinel-state="alive"] #javascript-warning {
             display: none;
+        }
+
+        /* Floating Chat Button */
+        .chat-btn {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #007bff;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        /* Chat Container */
+        .chat-container {
+            display: none;
+            /* Initially hidden */
+            position: fixed;
+            bottom: 120px;
+            right: 40px;
+            width: 350px;
+            height: 500px;
+            border-radius: 15px;
+            background-color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 15px;
+            background-color: #007bff;
+            color: white;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header .title-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header #replying-to {
+            font-size: 0.8em;
+            font-weight: normal;
+            display: none;
+            /* Initially hidden */
+        }
+
+        .chat-header h5 {
+            margin: 0;
+        }
+
+        .chat-body {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+            display: flex;
+        }
+
+        .chat-message.sent {
+            justify-content: flex-end;
+        }
+
+        .chat-message.received {
+            justify-content: flex-start;
+        }
+
+        .chat-message p {
+            margin: 0;
+            padding: 10px 15px;
+            border-radius: 20px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .chat-message.sent p {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .chat-message.received p {
+            background-color: #e9ecef;
+            color: #333;
+        }
+
+        .chat-message.event-message {
+            justify-content: center;
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .chat-message.event-message p {
+            background-color: #f0f0f0;
+            color: #666;
+            font-size: 0.9em;
+            font-style: italic;
+            padding: 5px 10px;
+        }
+
+        .sender-name {
+            font-size: 0.8em;
+            color: #555;
+            margin-bottom: 4px;
+            margin-left: 5px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .chat-footer {
+            padding: 15px;
+            display: flex;
+            border-top: 1px solid #ddd;
+        }
+
+        .chat-footer input {
+            flex-grow: 1;
+            margin-right: 10px;
         }
     </style>
 
@@ -80,6 +223,14 @@
     <!-- JS 비활성화 시 활성화될 투명 방어막 -->
     <div id="click-blocker-overlay"></div>
 
+    <!-- Chat Button -->
+    <div class="chat-btn">
+        <i class="fas fa-comments"></i>
+    </div>
+
+    <!-- Chat Window -->
+    <div th:replace="~{fragment/chat::chat}"></div>
+
     <div th:replace="~{fragment/footer::footer}"></div>
 
     <!-- 1. 코어 JS 라이브러리 (jQuery 등) -->
@@ -87,6 +238,150 @@
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
 
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var currentUser = {
+            username: null,
+            roles: []
+        };
+        /*[# th:if="${#authorization.expression('isAuthenticated()')}"]*/
+        currentUser = {
+            username: /*[[${#authentication.name}]]*/ 'user',
+            roles: /*[[${#authentication.authorities.![authority]}]]*/['ROLE_USER']
+        };
+        /*[/]*/
+        /*]]>*/
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            let stompClient = null;
+            let username = currentUser.username || 'guest' + Math.floor(Math.random() * 1000);
+            let isAdmin = currentUser.roles.includes('ROLE_ADMIN') || currentUser.roles.includes('ROLE_SELLER');
+            let currentRecipient = null;
+
+            function connect() {
+                const socket = new SockJS('/ws');
+                stompClient = window.Stomp.over(socket);
+                stompClient.connect({}, onConnected, onError);
+            }
+
+            function onConnected() {
+                // 관리자는 모든 문의가 오는 공용 토픽을 구독합니다.
+                if (isAdmin) {
+                    stompClient.subscribe('/topic/admin', onMessageReceived);
+                }
+                // 모든 사용자는(관리자 포함) 자신과 관련된 1:1 메시지를 받기 위해 개인 토픽을 구독합니다.
+                stompClient.subscribe('/topic/messages/' + username, onMessageReceived);
+
+                // 서버에 사용자 접속 알림 (관리자들에게만 전송됨)
+                stompClient.send("/app/chat.addUser", {}, JSON.stringify({ sender: username, type: 'JOIN' }));
+            }
+
+            function onError(error) {
+                console.error('WebSocket connection error:', error);
+            }
+
+            function onMessageReceived(payload) {
+                const message = JSON.parse(payload.body);
+                const chatBody = $('.chat-body');
+
+                let messageElement;
+                if (message.type === 'JOIN') {
+                    // 관리자 화면에만 입장 메시지 표시
+                    if (isAdmin) {
+                        messageElement = createMessageElement(message.content, 'event-message', null);
+                    }
+                } else { // CHAT
+                    const messageType = message.sender === username ? 'sent' : 'received';
+                    messageElement = createMessageElement(message.content, messageType, message.sender);
+                }
+
+                if (messageElement) {
+                    // 중복 방지 로직을 화면에 그리기 직전에 수행
+                    const existingMsg = chatBody.find(`[data-sender='${message.sender}'][data-content='${message.content}']`);
+                    if (existingMsg.length > 0) {
+                        // 매우 짧은 시간 내에 도착한 동일 메시지는 무시
+                        const timeDiff = Date.now() - (existingMsg.data('timestamp') || 0);
+                        if (timeDiff < 500) return;
+                    }
+
+                    $(messageElement).attr('data-sender', message.sender);
+                    $(messageElement).attr('data-content', message.content);
+                    $(messageElement).attr('data-timestamp', Date.now());
+
+                    chatBody.append(messageElement);
+                    chatBody.scrollTop(chatBody[0].scrollHeight);
+                }
+            }
+
+            function createMessageElement(text, type, sender) {
+                const messageContainer = $('<div>').addClass('chat-message').addClass(type);
+                // 고유 ID 생성 (단순 중복 방지용)
+                messageContainer.attr('id', `msg-${sender}-${text.length}-${Date.now()}`);
+
+                if (sender && type === 'received') {
+                    const senderText = $('<span>').addClass('sender-name').text(sender);
+                    messageContainer.append(senderText);
+
+                    if (isAdmin) {
+                        senderText.on('click', function () {
+                            currentRecipient = sender;
+                            $('#replying-to').text('To: ' + sender);
+                        });
+                    }
+                }
+                const messageParagraph = $('<p>').text(text);
+                messageContainer.append(messageParagraph);
+                return messageContainer;
+            }
+
+            function sendMessage(event) {
+                event.preventDefault();
+                const messageInput = $('#chat-input');
+                const messageContent = messageInput.val().trim();
+
+                if (messageContent && stompClient) {
+                    const chatMessage = {
+                        sender: username,
+                        content: messageContent,
+                        type: 'CHAT'
+                    };
+
+                    if (isAdmin && currentRecipient) {
+                        chatMessage.recipient = currentRecipient;
+                    }
+
+                    stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+                    messageInput.val('');
+                }
+            }
+
+            // --- 나머지 이벤트 핸들러는 동일 ---
+            $('.chat-btn').on('click', function () {
+                const chatContainer = $('#chat-container');
+                if (chatContainer.is(':hidden')) {
+                    chatContainer.css('display', 'flex');
+                    if (!stompClient) {
+                        connect();
+                    }
+                } else {
+                    chatContainer.hide();
+                }
+            });
+
+            $('#close-chat-btn').on('click', function () {
+                $('#chat-container').hide();
+                $('#replying-to').text('');
+                currentRecipient = null;
+            });
+
+            $('#send-chat-btn').on('click', sendMessage);
+            $('#chat-input').on('keypress', function (e) {
+                if (e.which === 13) { sendMessage(e); }
+            });
+        });
+    </script>
     <!-- 2. 각 페이지의 개별 스크립트 -->
     <th:block layout:fragment="script"></th:block>
 
