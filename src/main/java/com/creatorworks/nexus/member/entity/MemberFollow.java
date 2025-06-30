@@ -3,30 +3,31 @@ package com.creatorworks.nexus.member.entity;
 import com.creatorworks.nexus.global.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.NoArgsConstructor;
+import lombok.AccessLevel;
+import lombok.Builder;
 
 @Getter
-@Setter
-@NoArgsConstructor
-@Table(name="member_follow")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@Table(name = "member_follow")
 public class MemberFollow extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 팔로우하는 사람 (follower)
+    // 구독을 하는 사용자 (외래 키: follower_id)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "follower_id", nullable = false)
+    @JoinColumn(name = "follower_id")
     private Member follower;
 
-    // 팔로우받는 사람 (following)
+    // 구독을 받는 사용자 (외래 키: following_id)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "following_id", nullable = false)
+    @JoinColumn(name = "following_id")
     private Member following;
 
+    @Builder
     public MemberFollow(Member follower, Member following) {
         this.follower = follower;
         this.following = following;

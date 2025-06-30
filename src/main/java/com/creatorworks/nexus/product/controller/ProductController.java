@@ -372,8 +372,14 @@ public class ProductController {
 
     // 테스트용 소셜 기능 페이지
     @GetMapping("/test-social")
-    public String testSocialPage() {
+    public String testSocial() {
         return "test-social";
+    }
+
+    // 로그인 없이 팔로우 기능 테스트 페이지
+    @GetMapping("/test-follow-no-login")
+    public String testFollowNoLogin() {
+        return "test-follow-no-login";
     }
 
     // 테스트용 임시 로그인 API (기본)

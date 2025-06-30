@@ -23,36 +23,45 @@ public class MemberFollowService {
 
     /**
      * 팔로우/언팔로우 토글
-     * @param followerId 팔로우하는 사용자 ID
-     * @param followingId 팔로우받는 사용자 ID
+     * @param fromUserId 팔로우하는 사용자 ID
+     * @param toUserId 팔로우받는 사용자 ID
      * @return 팔로우 상태 (true: 팔로우됨, false: 언팔로우됨)
      */
     @Transactional
-    public boolean toggleFollow(Long followerId, Long followingId) {
-        // 자기 자신을 팔로우할 수 없음
-        if (followerId.equals(followingId)) {
-            throw new IllegalArgumentException("자기 자신을 팔로우할 수 없습니다.");
-        }
-
-        Member follower = memberRepository.findById(followerId)
+    public Map<String, Object> toggleFollow(Long fromUserId, Long toUserId) {
+        // 1. 사용자 엔티티 조회
+        Member fromUser = memberRepository.findById(fromUserId)
                 .orElseThrow(() -> new IllegalArgumentException("팔로우하는 사용자를 찾을 수 없습니다."));
         
-        Member following = memberRepository.findById(followingId)
+        Member toUser = memberRepository.findById(toUserId)
                 .orElseThrow(() -> new IllegalArgumentException("팔로우받는 사용자를 찾을 수 없습니다."));
 
-        // 기존 팔로우 관계 확인
-        Optional<MemberFollow> existingFollow = memberFollowRepository.findByFollowerAndFollowing(follower, following);
+        // 2. 기존 구독 관계 확인
+        Optional<MemberFollow> follow = memberFollowRepository.findByFollowerAndFollowing(fromUser, toUser);
 
-        if (existingFollow.isPresent()) {
-            // 팔로우 관계가 있으면 삭제 (언팔로우)
-            memberFollowRepository.delete(existingFollow.get());
-            return false;
+        boolean isFollowing;
+        if (follow.isPresent()) {
+            // 3-1. 구독 관계가 있으면 삭제 (구독 취소)
+            memberFollowRepository.delete(follow.get());
+            isFollowing = false;
         } else {
-            // 팔로우 관계가 없으면 생성 (팔로우)
-            MemberFollow newFollow = new MemberFollow(follower, following);
+            // 3-2. 구독 관계가 없으면 생성 및 저장 (구독)
+            MemberFollow newFollow = MemberFollow.builder()
+                    .follower(fromUser)
+                    .following(toUser)
+                    .build();
             memberFollowRepository.save(newFollow);
-            return true;
+            isFollowing = true;
         }
+
+        // 4. 최신 팔로워 수 계산
+        long followerCount = memberFollowRepository.countByFollowing(toUser);
+
+        // 5. 결과 반환
+        Map<String, Object> result = new HashMap<>();
+        result.put("isFollowing", isFollowing);
+        result.put("followerCount", followerCount);
+        return result;
     }
 
     /**

@@ -358,8 +358,8 @@
                     <span class="author-name" th:text="${product.creatorName ?: '익명 작가'}">작가이름이 들어가</span>
                 </div>
                 <button class="follow-btn" 
-                        data-follow-user-id="1"
-                        onclick="toggleFollow(1)">
+                        th:data-follow-user-id="${product.creator != null ? product.creator.id : 1}"
+                        th:onclick="'toggleFollow(' + ${product.creator != null ? product.creator.id : 1} + ')'">
                     팔로우
                 </button>
             </div>

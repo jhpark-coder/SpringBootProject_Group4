@@ -27,6 +27,47 @@
     box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
 }
 
+/* 본인 구독 버튼 비활성화 스타일 */
+.follow-btn.disabled {
+    background-color: #f8f9fa !important;
+    color: #6c757d !important;
+    border-color: #dee2e6 !important;
+    cursor: not-allowed !important;
+    opacity: 0.5 !important;
+}
+
+.follow-btn.disabled:hover {
+    background-color: #f8f9fa !important;
+    color: #6c757d !important;
+    border-color: #dee2e6 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* 본인 구독 버튼에 툴팁 추가 */
+.follow-btn.disabled::after {
+    content: "자기 자신을 구독할 수 없습니다";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 1000;
+}
+
+.follow-btn.disabled:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
 /* 구독 통계 스타일 */
 .follow-stats {
     display: flex;
