@@ -22,18 +22,52 @@
             font-family: inherit;
         }
 
-        /* --- 메인 컨텐츠 --- */
-        .main-content {
-            display: flex;
-            justify-content: center;
+        /* --- 메인 컨텐츠 그리드 레이아웃 --- */
+        .main-content-grid {
+            display: grid;
+            grid-template-areas:
+                "main sidebar"
+                "description description";
+            grid-template-columns: 1fr 320px;
+            /* 사이드바 고정 너비 */
             gap: 40px;
             max-width: 1200px;
             margin: 40px auto;
             padding: 0 20px;
         }
 
+        .artwork-main {
+            grid-area: main;
+            max-width: 100%;
+        }
+
+        .sidebar {
+            grid-area: sidebar;
+            width: 320px;
+            /* 고정 너비 */
+            height: fit-content;
+        }
+
+        .description-section {
+            grid-area: description;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        /* --- 기존 메인 컨텐츠 스타일 (이제 사용되지 않음) --- */
+        .main-content {
+            /* display: flex; */
+            /* 비활성화 */
+            /* justify-content: center; */
+            /* gap: 40px; */
+            /* max-width: 1200px; */
+            /* margin: 40px auto; */
+            /* padding: 0 20px; */
+        }
+
         .artwork-section {
-            flex: 2;
+            /* flex: 2; */
+            /* 비활성화 */
             display: flex;
             flex-direction: column;
             gap: 24px;
@@ -55,27 +89,37 @@
             display: block;
         }
 
-        .description-section {
-            border-top: 1px solid #eee;
-            padding-top: 20px;
+        /* Tiptap 컨텐츠 스타일 */
+        .tiptap-content .photo-grid-wrapper {
+            display: grid;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .tiptap-content .grid-1-cols {
+            grid-template-columns: 1fr;
+        }
+
+        .tiptap-content .grid-2-cols {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .tiptap-content .grid-3-cols {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .tiptap-content .grid-4-cols {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .tiptap-content .photo-grid-wrapper .grid-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            object-fit: cover;
         }
 
         /* --- 사이드바 --- */
-        .sidebar {
-            flex: 1;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 22px 20px;
-            height: fit-content;
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-            background: #fff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            min-width: 270px;
-            max-width: 320px;
-        }
-
         .sidebar .author-info {
             display: flex;
             justify-content: space-between;
@@ -178,24 +222,16 @@
 
 <div layout:fragment="content" class="product-detail-page">
 
-    <main class="main-content" th:object="${product}">
+    <div class="main-content-grid">
         <!-- Artwork Section -->
-        <section class="artwork-section">
+        <main class="artwork-main" th:object="${product}">
             <h1 th:text="*{name}">작품 제목</h1>
             <img th:src="*{imageUrl}" alt="Artwork Image" class="artwork-image"
                 onerror="this.onerror=null; this.src='/images/placeholder.png';">
-
-            <div class="description-section">
-                <h2>작품 설명</h2>
-                <p
-                    th:text="*{workDescription != null and !workDescription.trim().isEmpty()} ? *{workDescription} : '작품에 대한 설명이 아직 준비되지 않았습니다.'">
-                    여기에 작품에 대한 상세 설명이 들어갑니다.
-                </p>
-            </div>
-        </section>
+        </main>
 
         <!-- Sidebar Section -->
-        <aside class="sidebar">
+        <aside class="sidebar" th:object="${product}">
             <div class="author-info">
                 <div class="author-profile">
                     <img class="author-pfp" alt="author profile picture">
@@ -211,23 +247,42 @@
             </div>
 
             <div class="description">
-                <p th:text="*{description}">여기에 작가의 말이 들어갑니다. 이 작품을 만들게 된 계기나 작품에 대한 간단한 소개를 포함할 수 있습니다.</p>
+                <p th:text="*{workDescription}">여기에 작가의 말이 들어갑니다. 이 작품을 만들게 된 계기나 작품에 대한 간단한 소개를 포함할 수 있습니다.</p>
             </div>
 
             <div class="sidebar-actions">
                 <button class="like-btn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path
-                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-                        </path>
-                    </svg>
-                    <span class="like-count">1.2k</span> <!-- 좋아요 수는 동적으로 처리 필요 -->
+                    <i class="far fa-heart"></i> <!-- Font Awesome icon -->
+                    <!-- TODO: 좋아요 기능 구현 후 동적으로 처리 필요 -->
+                    <span class="like-count">0</span>
                 </button>
-                <button class="continue-btn" th:text="|*{price}원 계속보기|">가격 원 계속보기</button>
+                <button class="continue-btn" th:text="${product.price == 0} ? '무료로 계속보기' : (*{price} + '원 계속보기')">
+                    11111원 계속보기
+                </button>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn">공유</button>
+                <button class="action-btn">보관</button>
+                <button class="action-btn">신고</button>
+            </div>
+
+            <div class="extra-info">
+                <span>최초 등록일: <span th:text="*{#temporals.format(regTime, 'yyyy-MM-dd')}">2023.01.01</span></span>
+                <span>최종 업데이트: <span th:text="*{#temporals.format(updateTime, 'yyyy-MM-dd')}">2023.01.01</span></span>
             </div>
         </aside>
-    </main>
+
+        <!-- Description Section (Full Width) -->
+        <section class="description-section" th:object="${product}">
+            <h2>작품 설명</h2>
+            <div class="tiptap-content"
+                th:styleappend="|background-color: ${product.backgroundColor}; font-family: ${product.fontFamily};|"
+                th:utext="${contentHtml}">
+                <!-- Tiptap 에디터로 작성된 본문 컨텐츠가 여기에 렌더링됩니다. -->
+            </div>
+        </section>
+    </div>
 
     <!-- Review Section -->
     <div
