@@ -385,10 +385,19 @@
 <body data-sentinel-state="alive">
     <div th:replace="~{fragment/header::header}"></div>
     <div th:replace="~{fragment/header::category-nav}"></div>
-
-    <!-- JS 비활성화 경고 메시지 -->
+    <noscript>
+        <div id="javascript-warning"
+            style="padding: 16px 0; text-align: center; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 1.1rem;">
+            <h2 style="font-size: 1.3rem; margin-bottom: 0.5rem;">JavaScript 활성화가 필요합니다.</h2>
+            <p style="margin: 0;">이 사이트의 전체 기능을 이용하려면 브라우저 설정에서 JavaScript를 활성화해주세요.</p>
+        </div>
+        <style>
+            .content-wrapper, #click-blocker-overlay { display: none !important; }
+        </style>
+    </noscript>
+    <!-- JS 비활성화 경고 메시지 (JS가 켜져 있을 때만 필요) -->
     <div id="javascript-warning"
-        style="padding: 40px; text-align: center; background: #fff3cd; color: #856404; border: 1px solid #ffeeba;">
+        style="padding: 40px; text-align: center; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; display: none;">
         <h2>JavaScript 활성화가 필요합니다.</h2>
         <p>이 사이트의 전체 기능을 이용하려면 브라우저 설정에서 JavaScript를 활성화해주세요.</p>
     </div>
