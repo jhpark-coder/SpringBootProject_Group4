@@ -239,9 +239,9 @@ public class ProductController {
      */
     @GetMapping("/api/products/{id}")
     @ResponseBody
-    public ResponseEntity<Product> getProductById(@PathVariable("id") Long id) {
+    public ResponseEntity<ProductDto> getProductById(@PathVariable("id") Long id) {
         Product product = productService.findProductById(id);
-        return ResponseEntity.ok(product);
+        return ResponseEntity.ok(new ProductDto(product));
     }
 
     @GetMapping("/api/products/popular")

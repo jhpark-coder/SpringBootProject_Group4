@@ -49,12 +49,42 @@ const PreviewModal = ({ isOpen, onClose, editorContent, styles }) => {
 
             photoGrids.forEach(gridElement => {
                 try {
-                    const layout = JSON.parse(gridElement.getAttribute('data-layout') || '[]');
-                    const items = JSON.parse(gridElement.getAttribute('data-items') || '[]');
+                    // 저장된 레이아웃 정보 파싱
+                    let savedLayouts = {};
+                    const layoutsData = gridElement.getAttribute('data-layouts');
+                    if (layoutsData) {
+                        try {
+                            savedLayouts = JSON.parse(layoutsData);
+                        } catch (e) {
+                            console.warn('Failed to parse saved layouts:', e);
+                        }
+                    }
+
+                    const items = Array.from(gridElement.querySelectorAll('.grid-item img')).map(img => ({
+                        src: img.getAttribute('src'),
+                        alt: img.getAttribute('alt'),
+                    }));
 
                     if (items.length > 0) {
-                        const maxX = Math.max(...layout.map(l => l.x + l.w), 4);
-                        const maxY = Math.max(...layout.map(l => l.y + l.h), 4);
+                        // 저장된 레이아웃이 있으면 사용, 없으면 기본 레이아웃 생성
+                        let layout = [];
+                        let maxX = 4, maxY = 4;
+
+                        if (savedLayouts.lg && savedLayouts.lg.length > 0) {
+                            layout = savedLayouts.lg;
+                            maxX = Math.max(...layout.map(l => l.x + l.w), 4);
+                            maxY = Math.max(...layout.map(l => l.y + l.h), 4);
+                        } else {
+                            // 기본 레이아웃 생성 (2열 그리드)
+                            const columnCount = 2;
+                            layout = items.map((item, i) => {
+                                const x = (i % columnCount) * 6;
+                                const y = Math.floor(i / columnCount);
+                                return { i: i.toString(), x, y, w: 6, h: 2 };
+                            });
+                            maxX = Math.max(...layout.map(l => l.x + l.w), 4);
+                            maxY = Math.max(...layout.map(l => l.y + l.h), 4);
+                        }
 
                         gridElement.style.position = 'relative';
                         gridElement.style.width = `${maxX * 50}px`;
@@ -66,7 +96,7 @@ const PreviewModal = ({ isOpen, onClose, editorContent, styles }) => {
 
                         // 이미지들 추가
                         items.forEach((item, index) => {
-                            const layoutItem = layout.find(l => l.i === item.id) || { x: 0, y: 0, w: 2, h: 2 };
+                            const layoutItem = layout.find(l => l.i === index.toString()) || { x: 0, y: 0, w: 2, h: 2 };
 
                             const itemDiv = document.createElement('div');
                             itemDiv.className = 'preview-grid-item';

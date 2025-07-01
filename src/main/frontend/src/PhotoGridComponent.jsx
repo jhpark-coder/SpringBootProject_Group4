@@ -8,7 +8,11 @@ import _ from 'lodash';
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const PhotoGridComponent = ({ node, updateAttributes, editor }) => {
-    const { items = [], layout: initialLayout } = node.attrs;
+    const { items = [], layout: initialLayout, savedLayouts = {} } = node.attrs;
+    
+    // 디버깅: 저장된 레이아웃 정보 확인
+    console.log("PhotoGridComponent - node.attrs:", node.attrs);
+    console.log("PhotoGridComponent - savedLayouts:", savedLayouts);
     const [isComponentMounted, setIsComponentMounted] = useState(false);
     const [currentLayout, setCurrentLayout] = useState([]);
     const [isDraggable, setIsDraggable] = useState(true);
@@ -35,21 +39,33 @@ const PhotoGridComponent = ({ node, updateAttributes, editor }) => {
             const itemWidth = Math.floor(breakpointCols / columnCount);
 
             layouts[breakpoint] = items.map((item, i) => {
-                const x = (i % columnCount) * itemWidth;
-                const y = Math.floor(i / columnCount);
-
-                return {
-                    i: i.toString(),
-                    x: x,
-                    y: y,
-                    w: itemWidth,
-                    h: 2,
-                    ...item.layout
-                };
+                // 저장된 레이아웃이 있으면 사용, 없으면 기본값 사용
+                const savedItemLayout = savedLayouts[breakpoint] && savedLayouts[breakpoint].find(l => l.i === i.toString());
+                
+                if (savedItemLayout) {
+                    return {
+                        i: i.toString(),
+                        x: savedItemLayout.x,
+                        y: savedItemLayout.y,
+                        w: savedItemLayout.w,
+                        h: savedItemLayout.h,
+                    };
+                } else {
+                    // 기본 레이아웃 생성
+                    const x = (i % columnCount) * itemWidth;
+                    const y = Math.floor(i / columnCount);
+                    return {
+                        i: i.toString(),
+                        x: x,
+                        y: y,
+                        w: itemWidth,
+                        h: 2,
+                    };
+                }
             });
         });
         return layouts;
-    }, [items, initialLayout]);
+    }, [items, initialLayout, savedLayouts]);
 
     const initialLayoutsRef = useRef(generateLayouts());
 
@@ -62,19 +78,20 @@ const PhotoGridComponent = ({ node, updateAttributes, editor }) => {
         initialLayoutsRef.current = generateLayouts();
     }, [generateLayouts]);
 
-    const debouncedUpdate = useCallback(_.debounce((newLayout) => {
+    const debouncedUpdate = useCallback(_.debounce((newLayouts) => {
         // Only update if layout has actually changed
-        if (!_.isEqual(newLayout, currentLayout)) {
-            // console.log("Updating attributes with new layout:", newLayout);
-            // updateAttributes({ layout: newLayout });
+        if (!_.isEqual(newLayouts, savedLayouts)) {
+            console.log("Updating attributes with new layouts:", newLayouts);
+            updateAttributes({ savedLayouts: newLayouts });
         }
-    }, 500), [updateAttributes, currentLayout]);
+    }, 500), [updateAttributes, savedLayouts]);
 
     const handleLayoutChange = (layout, layouts) => {
         if (isComponentMounted) {
-            // console.log("Layout changed:", layout);
+            console.log("Layout changed:", layout);
+            console.log("All layouts:", layouts);
             setCurrentLayout(layout);
-            debouncedUpdate(layout);
+            debouncedUpdate(layouts);
         }
     };
 
