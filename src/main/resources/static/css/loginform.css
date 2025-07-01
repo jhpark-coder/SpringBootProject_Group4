@@ -80,7 +80,7 @@
 }
 .btn-submit { background-color: #0071DE ; } /* 로그인 */
 .btn-secondary { background-color: #37AAC0; } /* 비밀번호 찾기 */
-.btn-primary { background-color: #006583; } /* 회원가입 */
+.btn-primary { background-color: #0071DE ; } /* 회원가입 */
 
 
 /* 소셜 로그인 섹션 */
