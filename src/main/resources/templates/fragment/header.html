@@ -30,6 +30,7 @@
                         <li><a href="#">Contact Us</a></li>
                         <li><a href="#">Auction</a></li>
                         <li sec:authorize="isAuthenticated()"><a href="/User/my-page">MyPage</a></li>
+                        <li sec:authorize="hasRole('ROLE_SELLER')"><a href="/seller/dashboard">SellerPage</a></li>
                         <li sec:authorize="isAnonymous()">
                             <a href="/members/login">Login</a>
                         </li>

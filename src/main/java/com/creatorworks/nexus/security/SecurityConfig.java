@@ -5,6 +5,8 @@ import java.util.Arrays;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -38,6 +40,17 @@ public class SecurityConfig {
     // @Value("${file.upload-dir}")
     // private String uploadDir;
     
+    //20250701 User < seller가 모든 권한 포함
+    @Bean
+    public RoleHierarchy roleHierarchy() {
+        RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
+        // ADMIN은 SELLER의 권한을, SELLER는 USER의 권한을 포함한다는 규칙을 정의합니다.
+        // 줄바꿈(\n)으로 여러 규칙을 정의할 수 있습니다.
+        roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_SELLER\n" +
+                "ROLE_SELLER > ROLE_USER");
+        return roleHierarchy;
+    }
+
     // 정적 리소스는 보안 필터 체인을 완전히 무시하도록 설정
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
@@ -62,12 +75,14 @@ public class SecurityConfig {
             // CSRF 보호를 활성화하고, 토큰을 JS가 읽을 수 있는 쿠키로 생성합니다.
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**")
+                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**", "/api/follow/**")
             )
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/api/**", "/members/logout").permitAll()
+                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout").permitAll()
                 .requestMatchers("/editor/**", "/editor").hasAnyRole("ADMIN", "SELLER")
                 .requestMatchers("/api/korean/**", "/api/keyword/**").permitAll()
+                .requestMatchers("/api/follow/**").authenticated()
+                .requestMatchers("/api/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(formLogin -> formLogin
@@ -100,13 +115,15 @@ public class SecurityConfig {
             // CSRF 보호를 활성화하고, 토큰을 JS가 읽을 수 있는 쿠키로 생성합니다.
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**")
+                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**", "/api/follow/**")
             )
             // 모든 요청을 허용합니다. (개발환경과 동일하게)
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout").permitAll()
                 .requestMatchers("/editor/**", "/editor").hasAnyRole("ADMIN", "SELLER")
                 .requestMatchers("/api/korean/**", "/api/keyword/**").permitAll()
+                .requestMatchers("/api/follow/**").authenticated()
+                .requestMatchers("/api/**").permitAll()
                 .anyRequest().authenticated()
             )
             // 폼 로그인 설정

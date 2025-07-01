@@ -10,7 +10,7 @@ body {
     padding: 2rem;
     background-color: #fff;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     height: auto !important;
     min-height: 90vh;
 }
@@ -87,12 +87,30 @@ body {
     gap: 10px;
     margin: 1.5rem 0;
 }
-.result-content .photo-grid-wrapper.grid-2-cols { grid-template-columns: repeat(2, 1fr); }
-.result-content .photo-grid-wrapper.grid-3-cols { grid-template-columns: repeat(3, 1fr); }
-.result-content .photo-grid-wrapper.grid-4-cols { grid-template-columns: repeat(4, 1fr); }
-.result-content .photo-grid-wrapper.grid-5-cols { grid-template-columns: repeat(5, 1fr); }
-.result-content .photo-grid-wrapper.grid-1-2-cols { grid-template-columns: 2fr 1fr; }
-.result-content .photo-grid-wrapper.grid-2-1-cols { grid-template-columns: 1fr 2fr; }
+
+.result-content .photo-grid-wrapper.grid-2-cols {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.result-content .photo-grid-wrapper.grid-3-cols {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.result-content .photo-grid-wrapper.grid-4-cols {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.result-content .photo-grid-wrapper.grid-5-cols {
+    grid-template-columns: repeat(5, 1fr);
+}
+
+.result-content .photo-grid-wrapper.grid-1-2-cols {
+    grid-template-columns: 2fr 1fr;
+}
+
+.result-content .photo-grid-wrapper.grid-2-1-cols {
+    grid-template-columns: 1fr 2fr;
+}
 
 
 .result-content .grid-item {
@@ -106,13 +124,15 @@ body {
     height: 100%;
     object-fit: cover;
     display: block;
-    margin: 0; /* Override default margin for images inside grid */
+    margin: 0;
+    /* Override default margin for images inside grid */
 }
 
 /* Iframe (Embed) Styles */
 .result-content .iframe-wrapper {
     position: relative;
-    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    padding-bottom: 56.25%;
+    /* 16:9 aspect ratio */
     height: 0;
     overflow: hidden;
     background-color: #000;
@@ -132,6 +152,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: calc(100vh - 4rem); /* Viewport height minus potential header/footer */
+    min-height: calc(100vh - 4rem);
+    /* Viewport height minus potential header/footer */
     font-size: 1.2rem;
-} 
+}

@@ -1,16 +1,20 @@
 package com.creatorworks.nexus.product.controller;
 
 import java.security.Principal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +32,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.creatorworks.nexus.config.CategoryConfig;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.member.service.MemberFollowService;
 import com.creatorworks.nexus.product.dto.ProductDto;
 import com.creatorworks.nexus.product.dto.ProductInquiryRequestDto;
 import com.creatorworks.nexus.product.dto.ProductPageResponse;
@@ -68,6 +73,8 @@ public class ProductController {
     private final CategoryConfig categoryConfig;
     private final TipTapRenderer tipTapRenderer;
     private final ObjectMapper objectMapper;
+    private final MemberFollowService memberFollowService;
+    private final RedisTemplate<String, String> redisTemplate;
 
     /**
      * 그리드 뷰 페이지("/products/grid") 요청을 처리하여 'gridView.html' 뷰를 렌더링합니다.
@@ -119,8 +126,8 @@ public class ProductController {
                                 @RequestParam(value = "reviewKeyword", required = false) String reviewKeyword,
                                 Principal principal,
                                 Model model) {
-        Product product = productService.findProductById(id);
-
+        Product product = productService.findProductByIdAndIncrementView(id);
+        
         // 문의 관련
         Page<ProductInquiry> inquiryPage = productInquiryService.findInquiriesByProduct(id, inquiryPageable);
 
@@ -137,6 +144,7 @@ public class ProductController {
         Member currentMember = null;
         boolean canWriteReview = false;
         boolean canViewContent = false; // 컨텐츠 열람 가능 여부
+        boolean isFollowing = false; // 팔로우 상태
         Optional<ProductReview> existingReview = Optional.empty();
 
         if (principal != null) {
@@ -145,6 +153,44 @@ public class ProductController {
                 // --- 좋아요 상태 확인 로직 추가 ---
                 isLiked = productService.isLikedByUser(id, principal.getName());
                 // ---
+
+                // --- 팔로우 상태 확인 로직 추가 ---
+                if (product.getAuthor() != null) {
+                    isFollowing = memberFollowService.isFollowing(currentMember.getId(), product.getAuthor().getId());
+                }
+                // ---
+
+                // ==============================================================
+                //      ★★★  20250701 최근 본 상품을 위한 로직 추가 ★★★
+                // ==============================================================
+                // --- ★★★ Redis 기록 로직 전체를 아래 코드로 교체 ★★★ ---
+                // 1. 개인별 최근 본 상품 기록 (기존 로직)
+                String memberId = currentMember.getId().toString();
+                String productIdStr = String.valueOf(id);
+                double score = System.currentTimeMillis();
+                String userViewHistoryKey = "viewHistory:" + memberId;
+                redisTemplate.opsForZSet().add(userViewHistoryKey, productIdStr, score);
+                Long userHistorySize = redisTemplate.opsForZSet().zCard(userViewHistoryKey);
+                if (userHistorySize != null && userHistorySize > 100) {
+                    redisTemplate.opsForZSet().removeRange(userViewHistoryKey, 0, userHistorySize - 101);
+                }
+                log.info("사용자 ID {}의 최근 본 상품 기록 추가/업데이트: 상품 ID {}", memberId, id);
+
+                // 2. 카테고리별 조회수 통계 기록 (새로운 로직)
+                if (product.getPrimaryCategory() != null && product.getSecondaryCategory() != null) {
+                    // 오늘 날짜 키 (예: "categoryViewCount:2025-07-01")
+                    String dailyCountKey = "categoryViewCount:" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+                    // "primary:secondary" 형태의 멤버 (예: "artwork:포토그라피")
+                    String categoryMember = product.getPrimaryCategory() + ":" + product.getSecondaryCategory();
+
+                    // 해당 카테고리 멤버의 점수를 1 증가시킴
+                    redisTemplate.opsForZSet().incrementScore(dailyCountKey, categoryMember, 1);
+                    // 7일이 지난 데이터는 자동으로 사라지도록 TTL(Time To Live) 설정
+                    redisTemplate.expire(dailyCountKey, 8, TimeUnit.DAYS);
+
+                    log.info("카테고리 조회수 증가: Key='{}', Member='{}'", dailyCountKey, categoryMember);
+                }
+                // =======================================================
 
                 // 1. 실제 구매 여부를 확인하여 후기 작성 권한 설정
                 canWriteReview = productReviewService.hasUserPurchasedProduct(currentMember, product);
@@ -206,6 +252,9 @@ public class ProductController {
         // --- 좋아요 관련 모델 속성 추가 ---
         model.addAttribute("heartCount", heartCount);
         model.addAttribute("isLiked", isLiked);
+        // ---
+        // --- 팔로우 관련 모델 속성 추가 ---
+        model.addAttribute("isFollowing", isFollowing);
         // ---
         
         // --- 태그 정보 추가 ---

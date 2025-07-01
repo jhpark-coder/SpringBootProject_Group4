@@ -1,0 +1,120 @@
+/* sellerDashboard.css */
+
+/* 구매자 통계 차트를 감싸는 그룹 */
+.buyer-stats-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 성별/나이대별 작은 차트 아이템 */
+.sub-chart-item {
+    flex: 1;
+}
+
+.sub-chart-item h3 {
+    font-size: 1.2rem;
+    /* h3 폰트 크기 살짝 줄임 */
+}
+
+/* 작은 차트를 위한 플레이스홀더 */
+.chart-placeholder-small {
+    width: 100%;
+    height: 155px;
+    /* 기존 chart-placeholder 높이의 절반보다 약간 작게 */
+    border-radius: 10px;
+}
+
+/* 판매자 대시보드의 상품 카드 정보 스타일 */
+.product-info-seller {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+}
+
+.product-name-seller {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-dark);
+    /* 이름이 길어지면 ...으로 표시 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 판매량 뱃지 스타일 */
+.sales-count-badge {
+    background-color: var(--primary-blue);
+    color: var(--text-light);
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 20px;
+    flex-shrink: 0;
+    /* 뱃지 크기가 줄어들지 않도록 함 */
+}
+
+/* 경매 그리드 및 카드 스타일 */
+.auction-grid {
+    display: grid;
+    /* 2열 그리드, 반응형으로 조정 가능 */
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+}
+
+.auction-card {
+    display: flex;
+    gap: 20px;
+    border: 1px solid var(--light-gray);
+    border-radius: 15px;
+    padding: 20px;
+    align-items: center;
+}
+
+.auction-image-placeholder {
+    width: 150px;
+    height: 150px;
+    flex-shrink: 0;
+    background-color: var(--light-gray);
+    border-radius: 10px;
+    background-size: cover;
+    background-position: center;
+}
+
+.auction-info-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.timer-tag {
+    align-self: flex-start;
+    /* 왼쪽 정렬 */
+    background-color: #f0f0f0;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.auction-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.auction-price-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.current-bid {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+}

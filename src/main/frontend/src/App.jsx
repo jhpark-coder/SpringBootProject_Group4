@@ -19,6 +19,7 @@ import Underline from '@tiptap/extension-underline'; // 밑줄 기능을 Tiptap�
 import Link from '@tiptap/extension-link'; // 링크 기능을 Tiptap에 추가하기 위해 가져옵니다.
 import TextAlign from '@tiptap/extension-text-align'; // 텍스트 정렬 기능을 Tiptap에 추가하기 위해 가져옵니다.
 import TextStyle from '@tiptap/extension-text-style'; // 텍스트 스타일(예: 색상)을 다루기 위한 확장입니다.
+import FontFamily from '@tiptap/extension-font-family'; // 폰트 패밀리 확장 기능
 import { mergeAttributes, Extension } from '@tiptap/core'; // Tiptap 확장 기능을 직접 만들 때 필요한 도구들입니다.
 import Iframe from './Iframe.jsx'; // 유튜브 영상 등을 삽입하기 위한 Iframe 노드입니다.
 import VideoNode from './VideoNode.jsx'; // 비디오 파일을 위한 커스텀 노드입니다.
@@ -281,25 +282,27 @@ function App() {
   const editor = useEditor({
     // 에디터에서 사용할 확장 기능들을 배열로 등록합니다. 여기에 등록해야 해당 기능을 쓸 수 있습니다.
     extensions: [
-      StarterKit,      // 기본 기능(단락, 볼드, 헤딩 등) 모음
-      CustomImage,     // 커스텀 이미지 기능
-      Underline,       // 밑줄 기능
-      Link.configure({ openOnClick: false }), // 링크 기능 (클릭 시 바로 이동하지 않도록 설정)
-      TextAlign.configure({ // 텍스트 정렬 기능
-        types: ['heading', 'paragraph', 'image', 'videoPlayer', 'iframe', 'audio'], // 정렬을 적용할 요소 타입들
-        addCssClasses: true, // 정렬 시 CSS 클래스를 추가
+      StarterKit.configure({
+        // StarterKit의 기본 코드블록 대신 우리가 만든 커스텀 노드를 사용하기 위해 비활성화합니다.
+        codeBlock: false,
       }),
-      TextStyle.configure({ // 텍스트 스타일 확장
-        HTMLAttributes: {
-          class: 'custom-text-style',
-        },
+      Underline,
+      Link.configure({
+        openOnClick: false, // 링크를 클릭했을 때 바로 열리지 않도록 설정합니다.
       }),
-      FontSize,        // 위에서 직접 만든 글자 크기 기능
-      Iframe,          // Iframe(유튜브 등) 삽입 기능
-      VideoNode,       // 비디오 파일 삽입 기능
-      AudioNode,       // 오디오 파일 삽입 기능
-      PhotoGridNode,   // 포토 그리드 삽입 기능
-      PaywallNode,     // 유료 콘텐츠 영역 기능
+      TextAlign.configure({
+        // 'heading', 'paragraph' 타입에만 텍스트 정렬을 허용합니다.
+        types: ['heading', 'paragraph'],
+      }),
+      TextStyle, // 텍스트 스타일(색상 등) 확장 기능입니다.
+      FontFamily, // 폰트 패밀리 확장 기능입니다.
+      FontSize, // 직접 만든 글자 크기 확장 기능입니다.
+      CustomImage, // 직접 만든 이미지 노드입니다.
+      Iframe,
+      VideoNode,
+      AudioNode,
+      PhotoGridNode,
+      PaywallNode,
       CodeBlockNode.configure({ lowlight }), // 코드 블록 기능 (구문 강조 포함)
       SpacerNode,      // 공백 삽입 기능
     ],
@@ -751,6 +754,11 @@ function App() {
    */
   const handleStyleChange = (newStyles) => {
     setEditorStyles(newStyles); // App 컴포넌트의 에디터 스타일 상태를 업데이트합니다.
+
+    // 에디터가 존재하고 폰트 패밀리가 변경되었다면, 에디터의 모든 콘텐츠에 새 폰트를 적용합니다.
+    if (editor && newStyles.fontFamily) {
+      editor.chain().focus().selectAll().setFontFamily(newStyles.fontFamily).run();
+    }
 
     // Google Fonts 로딩 (스타일 변경 시)
     if (newStyles.fontFamily) {

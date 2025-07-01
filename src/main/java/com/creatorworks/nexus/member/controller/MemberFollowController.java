@@ -1,5 +1,6 @@
 package com.creatorworks.nexus.member.controller;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.creatorworks.nexus.member.entity.Member;
+import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.member.service.MemberFollowService;
 
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -25,22 +26,30 @@ import lombok.RequiredArgsConstructor;
 public class MemberFollowController {
 
     private final MemberFollowService memberFollowService;
+    private final MemberRepository memberRepository;
 
     /**
      * 팔로우/언팔로우 토글 API
+     *
      * @param followingId 팔로우할 사용자 ID
-     * @param session HTTP 세션
+     * @param principal Spring Security Principal
      * @return 팔로우 상태 정보
      */
     @PostMapping("/{followingId}")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> toggleFollow(@PathVariable Long followingId, HttpSession session) {
-        Member loginUser = (Member) session.getAttribute("loginUser");
-        
+    public ResponseEntity<Map<String, Object>> toggleFollow(@PathVariable Long followingId, Principal principal) {
+        if (principal == null) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", true);
+            errorResponse.put("message", "로그인이 필요합니다.");
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+
+        Member loginUser = memberRepository.findByEmail(principal.getName());
         if (loginUser == null) {
             Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "로그인이 필요합니다.");
-            errorResponse.put("message", "팔로우 기능을 사용하려면 로그인이 필요합니다.");
+            errorResponse.put("error", true);
+            errorResponse.put("message", "사용자 정보를 찾을 수 없습니다.");
             return ResponseEntity.badRequest().body(errorResponse);
         }
 
@@ -50,6 +59,7 @@ public class MemberFollowController {
             long followingCount = memberFollowService.getFollowingCount(followingId);
 
             Map<String, Object> response = new HashMap<>();
+            response.put("error", false);
             response.put("isFollowing", isFollowing);
             response.put("followerCount", followerCount);
             response.put("followingCount", followingCount);
@@ -58,7 +68,7 @@ public class MemberFollowController {
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "팔로우 실패");
+            errorResponse.put("error", true);
             errorResponse.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse);
         }
@@ -66,21 +76,30 @@ public class MemberFollowController {
 
     /**
      * 팔로우 상태 확인 API
+     *
      * @param followingId 확인할 사용자 ID
-     * @param session HTTP 세션
+     * @param principal Spring Security Principal
      * @return 팔로우 상태 정보
      */
     @GetMapping("/{followingId}/status")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> getFollowStatus(@PathVariable Long followingId, HttpSession session) {
-        Member loginUser = (Member) session.getAttribute("loginUser");
-        
-        if (loginUser == null) {
+    public ResponseEntity<Map<String, Object>> getFollowStatus(@PathVariable Long followingId, Principal principal) {
+        if (principal == null) {
             Map<String, Object> response = new HashMap<>();
             response.put("isFollowing", false);
             response.put("followerCount", memberFollowService.getFollowerCount(followingId));
             response.put("followingCount", memberFollowService.getFollowingCount(followingId));
             response.put("message", "로그인이 필요합니다.");
+            return ResponseEntity.ok(response);
+        }
+
+        Member loginUser = memberRepository.findByEmail(principal.getName());
+        if (loginUser == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("isFollowing", false);
+            response.put("followerCount", memberFollowService.getFollowerCount(followingId));
+            response.put("followingCount", memberFollowService.getFollowingCount(followingId));
+            response.put("message", "사용자 정보를 찾을 수 없습니다.");
             return ResponseEntity.ok(response);
         }
 
@@ -98,6 +117,7 @@ public class MemberFollowController {
 
     /**
      * 사용자의 팔로워 목록 조회 API
+     *
      * @param memberId 사용자 ID
      * @return 팔로워 목록
      */
@@ -110,6 +130,7 @@ public class MemberFollowController {
 
     /**
      * 사용자의 팔로잉 목록 조회 API
+     *
      * @param memberId 사용자 ID
      * @return 팔로잉 목록
      */
@@ -122,6 +143,7 @@ public class MemberFollowController {
 
     /**
      * 사용자의 팔로우 통계 조회 API
+     *
      * @param memberId 사용자 ID
      * @return 팔로우 통계 정보
      */
@@ -134,6 +156,7 @@ public class MemberFollowController {
 
     /**
      * 팔로워 목록 페이지
+     *
      * @param memberId 사용자 ID
      * @param model 모델
      * @return 팔로워 목록 페이지
@@ -142,16 +165,17 @@ public class MemberFollowController {
     public String getFollowersPage(@PathVariable Long memberId, Model model) {
         List<Member> followers = memberFollowService.getFollowers(memberId);
         long followerCount = memberFollowService.getFollowerCount(memberId);
-        
+
         model.addAttribute("followers", followers);
         model.addAttribute("followerCount", followerCount);
         model.addAttribute("memberId", memberId);
-        
+
         return "member/followers";
     }
 
     /**
      * 팔로잉 목록 페이지
+     *
      * @param memberId 사용자 ID
      * @param model 모델
      * @return 팔로잉 목록 페이지
@@ -160,11 +184,11 @@ public class MemberFollowController {
     public String getFollowingsPage(@PathVariable Long memberId, Model model) {
         List<Member> followings = memberFollowService.getFollowings(memberId);
         long followingCount = memberFollowService.getFollowingCount(memberId);
-        
+
         model.addAttribute("followings", followings);
         model.addAttribute("followingCount", followingCount);
         model.addAttribute("memberId", memberId);
-        
+
         return "member/followings";
     }
-} 
+}
