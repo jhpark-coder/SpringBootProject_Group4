@@ -1,0 +1,696 @@
+
+        /* 기본 스타일 */
+        .product-detail-page * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        .product-detail-page a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .product-detail-page button {
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+        }
+
+        /* --- 메인 컨텐츠 그리드 레이아웃 --- */
+        .main-content-grid {
+            display: grid;
+            grid-template-areas:
+                "main sidebar"
+                "description description";
+            grid-template-columns: 1fr 320px;
+            /* 사이드바 고정 너비 */
+            gap: 40px;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .artwork-main {
+            grid-area: main;
+            max-width: 100%;
+        }
+
+        .sidebar {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 24px 20px 18px 20px;
+            width: 320px;
+            margin-top: 16px;
+        }
+
+        .description-section {
+            grid-area: description;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        /* --- 기존 메인 컨텐츠 스타일 (이제 사용되지 않음) --- */
+        .main-content {
+            /* display: flex; */
+            /* 비활성화 */
+            /* justify-content: center; */
+            /* gap: 40px; */
+            /* max-width: 1200px; */
+            /* margin: 40px auto; */
+            /* padding: 0 20px; */
+        }
+
+        .artwork-section {
+            /* flex: 2; */
+            /* 비활성화 */
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-width: 700px;
+        }
+
+        .artwork-section h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 0;
+        }
+
+        .artwork-image {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #d9d9d9;
+            border-radius: 8px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Tiptap 컨텐츠 스타일 */
+        .tiptap-content .photo-grid-wrapper {
+            position: relative;
+            margin: 20px 0;
+            min-height: 200px;
+        }
+
+        /* 저장된 레이아웃이 적용된 경우 (position: absolute) */
+        .tiptap-content .photo-grid-wrapper .grid-item[style*="position: absolute"] {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        }
+
+        /* 기본 그리드 레이아웃 (저장된 레이아웃이 없는 경우) */
+        .tiptap-content .photo-grid-wrapper.grid-2-cols {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .tiptap-content .photo-grid-wrapper.grid-3-cols {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .tiptap-content .photo-grid-wrapper.grid-4-cols {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .tiptap-content .photo-grid-wrapper.grid-1-2-cols {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+        }
+
+        .tiptap-content .photo-grid-wrapper.grid-2-1-cols {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
+        }
+
+        .tiptap-content .photo-grid-wrapper .grid-item {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        }
+
+        .tiptap-content .photo-grid-wrapper .grid-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .tiptap-content .photo-grid-wrapper.grid-2-cols,
+            .tiptap-content .photo-grid-wrapper.grid-3-cols,
+            .tiptap-content .photo-grid-wrapper.grid-4-cols,
+            .tiptap-content .photo-grid-wrapper.grid-1-2-cols,
+            .tiptap-content .photo-grid-wrapper.grid-2-1-cols {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+        }
+
+        /* Tiptap 컨텐츠 내 hr 태그 스타일 */
+        .tiptap-content hr {
+            border: none;
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 20px 0;
+        }
+
+        /* Tiptap 컨텐츠 기본 스타일 */
+        .tiptap-content {
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .tiptap-content p {
+            margin: 0 0 16px 0;
+        }
+
+        .tiptap-content h1,
+        .tiptap-content h2,
+        .tiptap-content h3,
+        .tiptap-content h4,
+        .tiptap-content h5,
+        .tiptap-content h6 {
+            margin: 24px 0 16px 0;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .tiptap-content ul,
+        .tiptap-content ol {
+            margin: 16px 0;
+            padding-left: 24px;
+        }
+
+        .tiptap-content li {
+            margin: 8px 0;
+        }
+
+        .tiptap-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+
+        .tiptap-content video,
+        .tiptap-content audio {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+
+        .tiptap-content iframe {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+
+        .tiptap-content pre {
+            background-color: #f5f5f5;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+
+        .tiptap-content code {
+            background-color: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* 에디터와 동일한 스타일을 위한 추가 스타일 */
+        .tiptap-content {
+            /* 에디터와 동일한 기본 스타일 */
+            font-family: inherit;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* 텍스트 정렬 스타일 */
+        .tiptap-content .has-text-align-left {
+            text-align: left;
+        }
+
+        .tiptap-content .has-text-align-center {
+            text-align: center;
+        }
+
+        .tiptap-content .has-text-align-right {
+            text-align: right;
+        }
+
+        /* 미디어 요소들의 정렬 스타일 */
+        .tiptap-content .image-wrapper,
+        .tiptap-content .video-wrapper,
+        .tiptap-content .iframe-wrapper,
+        .tiptap-content .audio-wrapper {
+            margin: 16px 0;
+        }
+
+        .tiptap-content .image-wrapper.has-text-align-left,
+        .tiptap-content .video-wrapper.has-text-align-left,
+        .tiptap-content .iframe-wrapper.has-text-align-left,
+        .tiptap-content .audio-wrapper.has-text-align-left {
+            margin-left: 0;
+            margin-right: auto;
+        }
+
+        .tiptap-content .image-wrapper.has-text-align-center,
+        .tiptap-content .video-wrapper.has-text-align-center,
+        .tiptap-content .iframe-wrapper.has-text-align-center,
+        .tiptap-content .audio-wrapper.has-text-align-center {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .tiptap-content .image-wrapper.has-text-align-right,
+        .tiptap-content .video-wrapper.has-text-align-right,
+        .tiptap-content .iframe-wrapper.has-text-align-right,
+        .tiptap-content .audio-wrapper.has-text-align-right {
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        /* 스페이서 컴포넌트 스타일 */
+        .tiptap-content [data-type="spacer"] {
+            margin: 1rem 0;
+        }
+
+        /* 코드 블록 스타일 개선 */
+        .tiptap-content pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            font-family: inherit;
+        }
+
+        /* 링크 스타일 */
+        .tiptap-content a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .tiptap-content a:hover {
+            text-decoration: underline;
+        }
+
+        /* 강조 텍스트 스타일 */
+        .tiptap-content strong {
+            font-weight: 600;
+        }
+
+        .tiptap-content em {
+            font-style: italic;
+        }
+
+        .tiptap-content u {
+            text-decoration: underline;
+        }
+
+        .tiptap-content s {
+            text-decoration: line-through;
+        }
+
+        /* --- 사이드바 리디자인 (예시와 동일하게) --- */
+        .sidebar-bg {
+            background: #f7fafd;
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .sidebar-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+            padding: 28px 22px 20px 22px;
+            width: 320px;
+            margin-top: 32px;
+            margin-right: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .sidebar-card .author-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .sidebar-card .author-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-card .author-pfp {
+            width: 48px;
+            height: 48px;
+            background: #e0e0e0;
+            border-radius: 50%;
+        }
+
+        .sidebar-card .author-name {
+            font-weight: 700;
+            font-size: 17px;
+            color: #222;
+        }
+
+        .sidebar-card .subscribe-btn {
+            background: #0096ff;
+            color: #fff;
+            padding: 7px 20px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            box-shadow: none;
+            transition: background 0.2s;
+        }
+
+        .sidebar-card .subscribe-btn:hover {
+            background: #0074e9;
+        }
+
+        .sidebar-card .stats-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            border: none;
+            padding: 0;
+        }
+
+        .sidebar-card .stat-item {
+            text-align: center;
+        }
+
+        .sidebar-card .stat-item span {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .sidebar-card .stat-item strong {
+            font-size: 16px;
+            color: #222;
+            font-weight: 700;
+        }
+
+        .sidebar-card .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-bottom: 12px;
+        }
+
+        .sidebar-card .tag-btn {
+            background: #f5f6fa;
+            border: none;
+            border-radius: 16px;
+            padding: 5px 16px;
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .sidebar-card .description {
+            font-size: 14px;
+            color: #444;
+            margin-bottom: 18px;
+            border: none;
+            padding: 0;
+        }
+
+        .sidebar-card .sidebar-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .sidebar-card .purchase-btn {
+            flex: 1 1 0;
+            background: #0074e9;
+            color: #fff;
+            padding: 11px 0;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 700;
+            text-align: center;
+            border: none;
+            box-shadow: none;
+            transition: background 0.2s;
+        }
+
+        .sidebar-card .purchase-btn:hover {
+            background: #005bb5;
+        }
+
+        .sidebar-card .like-btn {
+            background: #fff;
+            border: #ffd600;
+            color: #ffffff;
+            min-width: 48px;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: 44px;
+            height: 44px;
+            box-shadow: 0 1px 2px rgba(255, 193, 7, 0.08);
+            transition: background 0.2s color 0.2s;
+        }
+
+        .sidebar-card .like-btn.liked {
+            background: #ff4d4f;
+            color: #fff;
+        }
+
+        .sidebar-card .like-btn.liked .fa-heart {
+            color: #fff;
+        }
+
+        .sidebar-card .fa-heart {
+            font-size: 20px;
+        }
+
+        .sidebar-card .like-count {
+            font-weight: bold;
+            margin-left: 2px;
+            font-size: 15px;
+        }
+
+        .sidebar-card .action-buttons {
+            display: flex;
+            gap: 14px;
+            font-size: 14px;
+            color: #444;
+            margin-bottom: 12px;
+        }
+
+        .sidebar-card .action-btn {
+            background: none;
+            color: #444;
+            padding: 0;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .sidebar-card .extra-info {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .continue-btn {
+            background: #007bff;
+            color: #fff;
+            flex-grow: 1;
+            padding: 12px 0;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+
+        .no-js-message {
+            text-align: center;
+            padding: 100px 20px;
+            color: #ff0000;
+            font-size: 18px;
+            background-color: #fff5f5;
+            border: 2px solid #ffcccc;
+            border-radius: 10px;
+            margin: 50px auto;
+            max-width: 600px;
+        }
+
+        /* --- 그림1 목표 디자인 완전 동일하게 --- */
+        .sidebar-goalcard {
+            background: #fff;
+            border: 1.5px solid #1ea7fd;
+            border-radius: 14px;
+            box-shadow: none;
+            padding: 28px 22px 22px 22px;
+            width: 320px;
+            margin: 40px auto 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            height: 320px;
+        }
+
+        .sidebar-goalcard.has-tags {
+            height: 400px;
+        }
+
+        .sidebar-goalcard .author-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .sidebar-goalcard .author-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-goalcard .author-pfp {
+            width: 44px;
+            height: 44px;
+            background: #e0e0e0;
+            border-radius: 50%;
+        }
+
+        .sidebar-goalcard .author-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: #222;
+        }
+
+        .sidebar-goalcard .subscribe-btn {
+            background: #0096ff;
+            color: #fff;
+            padding: 7px 20px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            box-shadow: none;
+            transition: background 0.2s;
+        }
+
+        .sidebar-goalcard .subscribe-btn:hover {
+            background: #0074e9;
+        }
+
+        .sidebar-goalcard .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .sidebar-goalcard .tag-btn {
+            background: #fff;
+            border: 1.5px solid #7ed6f9;
+            border-radius: 16px;
+            padding: 6px 18px;
+            font-size: 14px;
+            color: #1ea7fd;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-goalcard .description {
+            font-size: 15px;
+            color: #222;
+            margin-bottom: 22px;
+            border: none;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .sidebar-goalcard .sidebar-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 0;
+        }
+
+        .sidebar-goalcard .like-btn {
+            background: #fff;
+            border: 2px solid #ffd600;
+            color: #ffd600;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .sidebar-goalcard .like-btn.liked {
+            background: #ffd600;
+            color: #fff;
+            border-color: #ffd600;
+        }
+
+        .sidebar-goalcard .like-btn .fa-thumbs-up {
+            font-size: 22px;
+        }
+
+        .sidebar-goalcard .like-count {
+            font-weight: 700;
+            font-size: 17px;
+            margin-left: 6px;
+            color: #222;
+        }
+
+        .sidebar-goalcard .purchase-btn {
+            flex: 1 1 0;
+            background: #ffd600;
+            color: #fff;
+            padding: 0 0;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: 700;
+            text-align: center;
+            border: none;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: none;
+            transition: background 0.2s;
+        }
+
+        .sidebar-goalcard .purchase-btn:hover {
+            background: #ffe066;
+        }
+
+        /* savedLayouts 적용 시: 12열 Grid로 배치 */
+        .tiptap-content .photo-grid-wrapper[data-layouts] {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-auto-rows: 100px;
+            gap: 10px;
+        }

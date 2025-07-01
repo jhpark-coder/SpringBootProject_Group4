@@ -16,6 +16,9 @@ export default Node.create({
             layout: {
                 default: '2-cols',
             },
+            savedLayouts: {
+                default: {},
+            },
         };
     },
 
@@ -29,23 +32,41 @@ export default Node.create({
                         alt: img.getAttribute('alt'),
                     }));
                     const layout = dom.className.split(' ').find(cls => cls.includes('-cols')) || '2-cols';
-                    return { items, layout };
+                    
+                    // 저장된 레이아웃 정보 파싱
+                    let savedLayouts = {};
+                    try {
+                        const layoutData = dom.getAttribute('data-layouts');
+                        if (layoutData) {
+                            savedLayouts = JSON.parse(layoutData);
+                        }
+                    } catch (e) {
+                        console.warn('Failed to parse saved layouts:', e);
+                    }
+                    
+                    return { items, layout, savedLayouts };
                 }
             },
         ];
     },
 
     renderHTML({ node, HTMLAttributes }) {
-        const { items = [], layout } = node.attrs;
+        const { items = [], layout, savedLayouts = {} } = node.attrs;
 
         let layoutClass = 'grid-2-cols'; // Default class
         if (typeof layout === 'string') {
             layoutClass = layout.startsWith('grid-') ? layout : `grid-${layout}`;
         }
 
+        const attributes = mergeAttributes(HTMLAttributes, { 
+            'data-type': 'photo-grid', 
+            class: `photo-grid-wrapper ${layoutClass}`,
+            'data-layouts': JSON.stringify(savedLayouts)
+        });
+
         return [
             'div',
-            mergeAttributes(HTMLAttributes, { 'data-type': 'photo-grid', class: `photo-grid-wrapper ${layoutClass}` }),
+            attributes,
             ...items.map(item => [
                 'div',
                 { class: 'grid-item' },

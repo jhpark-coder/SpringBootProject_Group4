@@ -29,6 +29,7 @@ import com.creatorworks.nexus.product.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 /**
  * @Service: 이 클래스가 비즈니스 로직을 처리하는 서비스 계층의 컴포넌트임을 Spring에 알립니다.
@@ -116,10 +117,12 @@ public class ProductService {
      * @return 찾아낸 상품(Product) 객체.
      * @throws IllegalArgumentException 해당 ID의 상품이 존재하지 않을 경우 예외를 발생시킵니다.
      */
+    @Transactional
     public Product findProductById(Long id) {
-        // Repository에서 ID로 상품을 찾고, 만약 없다면(.orElseThrow) 예외를 던집니다.
-        return productRepository.findById(id)
+        Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid product Id:" + id));
+        product.setViewCount(product.getViewCount() + 1);
+        return product;
     }
 
     /**
@@ -133,6 +136,11 @@ public class ProductService {
         if (author == null) {
             throw new IllegalArgumentException("작성자 정보를 찾을 수 없습니다: " + userEmail);
         }
+
+        // 카테고리 저장 디버그 로그
+        System.out.println("🔍 상품 저장 - primaryCategory: '" + request.getPrimaryCategory() + "'");
+        System.out.println("🔍 상품 저장 - secondaryCategory: '" + request.getSecondaryCategory() + "'");
+        System.out.println("🔍 상품 저장 - tags: " + request.getTags());
 
         Product product = Product.builder()
                 .author(author)
@@ -168,6 +176,13 @@ public class ProductService {
         if (!product.getAuthor().getEmail().equals(userEmail)) {
             throw new IllegalStateException("상품을 수정할 권한이 없습니다.");
         }
+
+        // 카테고리 수정 디버그 로그
+        System.out.println("🔍 상품 수정 - 기존 primaryCategory: '" + product.getPrimaryCategory() + "'");
+        System.out.println("🔍 상품 수정 - 기존 secondaryCategory: '" + product.getSecondaryCategory() + "'");
+        System.out.println("🔍 상품 수정 - 새로운 primaryCategory: '" + request.getPrimaryCategory() + "'");
+        System.out.println("🔍 상품 수정 - 새로운 secondaryCategory: '" + request.getSecondaryCategory() + "'");
+        System.out.println("🔍 상품 수정 - 새로운 tags: " + request.getTags());
 
         product.setName(request.getName());
         product.setPrice(request.getPrice());
@@ -268,5 +283,12 @@ public class ProductService {
             heartCounts.put(productId, getHeartCount(productId));
         }
         return heartCounts;
+    }
+
+    public List<ProductDto> findTop3PopularProducts(String secondaryCategory) {
+        List<Product> products = productRepository.findTop3BySecondaryCategoryOrderByViewCountDesc(secondaryCategory);
+        return products.stream()
+                       .map(ProductDto::new)
+                       .collect(Collectors.toList());
     }
 }

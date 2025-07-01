@@ -1,234 +1,23 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
     layout:decorate="~{fragment/layout}">
-
+<!-- jQuery -->
+<head>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js" ></script>
+<!-- iamport.payment.js -->
+<script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.1.8.js"></script>
+</head>
 <th:block layout:fragment="css">
+    <link rel="stylesheet" th:href="@{/css/productdetall.css}">
     <link rel="stylesheet" th:href="@{/css/review.css}">
     <link rel="stylesheet" th:href="@{/css/inquiry.css}">
-    <style>
-        /* 기본 스타일 */
-        .product-detail-page * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+    <th:block th:if="${product.fontFamily != null && !#strings.isEmpty(product.fontFamily)}">
+        <th:block th:with="cleanFont=${#strings.replace(#strings.substringBefore(product.fontFamily, ','), ' ', '+')}">
+            <link th:href="@{'https://fonts.googleapis.com/css2?family=' + ${cleanFont} + ':wght@400;700&display=swap'}" rel="stylesheet">
+            <style th:utext="|.tiptap-content { font-family: ${product.fontFamily} !important; }|"></style>
+        </th:block>
+    </th:block>
 
-        .product-detail-page a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .product-detail-page button {
-            cursor: pointer;
-            border: none;
-            font-family: inherit;
-        }
-
-        /* --- 메인 컨텐츠 그리드 레이아웃 --- */
-        .main-content-grid {
-            display: grid;
-            grid-template-areas:
-                "main sidebar"
-                "description description";
-            grid-template-columns: 1fr 320px;
-            /* 사이드바 고정 너비 */
-            gap: 40px;
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        .artwork-main {
-            grid-area: main;
-            max-width: 100%;
-        }
-
-        .sidebar {
-            grid-area: sidebar;
-            width: 320px;
-            /* 고정 너비 */
-            height: fit-content;
-        }
-
-        .description-section {
-            grid-area: description;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
-        }
-
-        /* --- 기존 메인 컨텐츠 스타일 (이제 사용되지 않음) --- */
-        .main-content {
-            /* display: flex; */
-            /* 비활성화 */
-            /* justify-content: center; */
-            /* gap: 40px; */
-            /* max-width: 1200px; */
-            /* margin: 40px auto; */
-            /* padding: 0 20px; */
-        }
-
-        .artwork-section {
-            /* flex: 2; */
-            /* 비활성화 */
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            max-width: 700px;
-        }
-
-        .artwork-section h1 {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 0;
-        }
-
-        .artwork-image {
-            width: 100%;
-            aspect-ratio: 4/3;
-            background: #d9d9d9;
-            border-radius: 8px;
-            object-fit: cover;
-            display: block;
-        }
-
-        /* Tiptap 컨텐츠 스타일 */
-        .tiptap-content .photo-grid-wrapper {
-            display: grid;
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .tiptap-content .grid-1-cols {
-            grid-template-columns: 1fr;
-        }
-
-        .tiptap-content .grid-2-cols {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .tiptap-content .grid-3-cols {
-            grid-template-columns: repeat(3, 1fr);
-        }
-
-        .tiptap-content .grid-4-cols {
-            grid-template-columns: repeat(4, 1fr);
-        }
-
-        .tiptap-content .photo-grid-wrapper .grid-item img {
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
-            object-fit: cover;
-        }
-
-        /* --- 사이드바 --- */
-        .sidebar .author-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .sidebar .author-profile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .sidebar .author-pfp {
-            width: 40px;
-            height: 40px;
-            background: #e0e0e0;
-            border-radius: 50%;
-        }
-
-        .sidebar .author-name {
-            font-weight: bold;
-            font-size: 15px;
-        }
-
-        .sidebar .subscribe-btn {
-            background: #007bff;
-            color: #fff;
-            padding: 7px 16px;
-            border-radius: 5px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .sidebar .tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .sidebar .tag-btn {
-            background: #f0f0f0;
-            border: 1px solid #ddd;
-            border-radius: 15px;
-            padding: 5px 12px;
-            font-size: 12px;
-            color: #555;
-        }
-
-        .sidebar .description {
-            font-size: 14px;
-            color: #555;
-            line-height: 1.6;
-            border-top: 1px solid #eee;
-            padding-top: 15px;
-        }
-
-        .sidebar-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .like-btn {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            background: #f0f0f0;
-            padding: 8px 12px;
-            border-radius: 8px;
-        }
-
-        .like-btn.liked {
-            background-color: #dc3545;
-            /* 빨간색 */
-            border-color: #dc3545;
-            color: white;
-            /* 글자색 흰색 */
-        }
-
-        .like-btn.liked .fa-heart {
-            color: white;
-            font-weight: 900;
-            /* 채워진 하트로 보이게 */
-        }
-
-        .continue-btn {
-            background: #007bff;
-            color: #fff;
-            flex-grow: 1;
-            padding: 12px 0;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 8px;
-        }
-
-        .no-js-message {
-            text-align: center;
-            padding: 100px 20px;
-            color: #ff0000;
-            font-size: 18px;
-            background-color: #fff5f5;
-            border: 2px solid #ffcccc;
-            border-radius: 10px;
-            margin: 50px auto;
-            max-width: 600px;
-        }
-    </style>
 </th:block>
 
 <div layout:fragment="content" class="product-detail-page">
@@ -242,62 +31,58 @@
         </main>
 
         <!-- Sidebar Section -->
-        <aside class="sidebar" th:object="${product}">
+        <aside class="sidebar-goalcard" th:classappend="${#lists.isEmpty(tagNames)} ? '' : 'has-tags'"
+            th:object="${product}">
             <div class="author-info">
                 <div class="author-profile">
                     <img class="author-pfp" alt="author profile picture">
                     <span class="author-name" th:text="*{author.name}">작가 이름</span>
                 </div>
-                <button class="subscribe-btn">구독하기</button>
-            </div>
+                <button class="subscribe-btn" onclick="toggleFollow()">Subscribe</button>
 
+            </div>
             <div class="tags">
-                <button class="tag-btn" th:text="*{primaryCategory}">주 카테고리</button>
-                <button class="tag-btn" th:if="*{secondaryCategory != null}" th:text="*{secondaryCategory}">부
-                    카테고리</button>
+                <button class="tag-btn" th:text="*{primaryCategory}">카테고리</button>
+                <button class="tag-btn" th:if="*{secondaryCategory != null and !#strings.isEmpty(secondaryCategory)}"
+                    th:text="*{secondaryCategory}">부 카테고리</button>
+                <button class="tag-btn" th:each="tagName : ${tagNames}" th:text="${tagName}">태그</button>
             </div>
-
             <div class="description">
-                <p th:text="*{workDescription}">여기에 작가의 말이 들어갑니다. 이 작품을 만들게 된 계기나 작품에 대한 간단한 소개를 포함할 수 있습니다.</p>
+                <p th:text="*{workDescription}">여기에 설명이 들어갑니다.</p>
             </div>
-
             <div class="sidebar-actions">
-                <!-- 로그인한 사용자를 위한 좋아요 버튼 -->
+                <!-- 좋아요 버튼 (왼쪽, 엄지척, 노란색) -->
                 <button class="like-btn" th:data-product-id="${product.id}" th:classappend="${isLiked} ? 'liked'"
                     th:onclick="|toggleLike(${product.id})|" sec:authorize="isAuthenticated()">
-                    <i class="far fa-heart"></i>
+                    <i class="fa fa-thumbs-up"></i>
                     <span class="like-count" th:text="${heartCount}">0</span>
                 </button>
-
-                <!-- 비로그인 사용자를 위한 버튼 -->
+                <!-- 비로그인용 -->
                 <button class="like-btn" onclick="alert('로그인이 필요합니다.'); location.href='/member/login';"
                     sec:authorize="!isAuthenticated()">
-                    <i class="far fa-heart"></i>
+                    <i class="fa fa-thumbs-up"></i>
                     <span class="like-count" th:text="${heartCount}">0</span>
                 </button>
-
-                <button class="continue-btn" th:text="${product.price == 0} ? '무료로 계속보기' : (*{price} + '원 계속보기')">
-                    11111원 계속보기
+                <!-- 구매 버튼 (오른쪽, 노란색, pill형) -->
+                <button onclick="requestPay()"
+                        class="purchase-btn"
+                        th:text="${product.price != null} ? ${product.price} + 'P로 계속보기' : '구매하기'">
+                    즉시구매
                 </button>
-            </div>
-
-            <div class="action-buttons">
-                <button class="action-btn">공유</button>
-                <button class="action-btn">보관</button>
-                <button class="action-btn">신고</button>
-            </div>
-
-            <div class="extra-info">
-                <span>최초 등록일: <span th:text="*{#temporals.format(regTime, 'yyyy-MM-dd')}">2023.01.01</span></span>
-                <span>최종 업데이트: <span th:text="*{#temporals.format(updateTime, 'yyyy-MM-dd')}">2023.01.01</span></span>
-            </div>
+            <th:block
+                th:if="${currentMember != null and product.author != null and currentMember.id == product.author.id}">
+                <a th:href="@{'/editor/product/' + ${product.id}}"
+                    style="display:block;width:100%;margin-top:24px;padding:12px 0;background:#222;color:#fff;text-align:center;border-radius:8px;font-weight:600;font-size:16px;">
+                    글 수정하기
+                </a>
+            </th:block>
         </aside>
 
         <!-- Description Section (Full Width) -->
         <section class="description-section" th:object="${product}">
             <h2>작품 설명</h2>
             <div class="tiptap-content"
-                th:styleappend="|background-color: ${product.backgroundColor}; font-family: ${product.fontFamily};|"
+                th:styleappend="|background-color: ${product.backgroundColor};|"
                 th:utext="${contentHtml}">
                 <!-- Tiptap 에디터로 작성된 본문 컨텐츠가 여기에 렌더링됩니다. -->
             </div>
@@ -317,8 +102,6 @@
 <div th:replace="~{fragments/footer :: footer}"></div>
 
 <th:block layout:fragment="script">
-    <script th:src="@{/js/review.js}"></script>
-    <script th:src="@{/js/inquiry.js}"></script>
     <script th:src="@{/js/heartFollow.js}"></script>
 </th:block>
 

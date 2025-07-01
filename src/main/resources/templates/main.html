@@ -37,30 +37,15 @@
                     새로운 작품들
                 </h2>
 
-                <div class="row" th:if="${productPage != null and !productPage.products.isEmpty()}">
-                    <!-- th:each를 사용하여 상품 목록을 동적으로 생성 -->
-                    <div th:each="product : ${productPage.products}" class="col-md-3">
-                        <article class="grid-item">
-                            <a th:href="@{/products/{id}(id=${product.id})}">
-                                <div class="item-image-placeholder"
-                                    th:style="'background-image: url(\'' + ${product.imageUrl} + '\'); background-size: cover; background-position: center;'">
-                                </div>
-                            </a>
-                            <div class="item-info">
-                                <div class="author-info">
-                                    <div class="author-avatar"></div>
-                                    <span class="author-name" th:text="${product.authorName}">작가 이름</span>
-                                </div>
-                                <!-- 구독 기능은 추후 구현 -->
-                                <a href="#" class="btn subscribe-btn">Subscribe</a>
-                            </div>
-                        </article>
-                    </div>
+                <div class="row" id="main-product-grid">
+                    <!-- JS로만 상품 리스트를 동적으로 렌더링합니다. -->
                 </div>
                 <!-- 상품이 없을 경우 메시지 -->
                 <div th:if="${productPage == null or productPage.products.isEmpty()}"
-                    style="width:100%; text-align: center; padding: 4rem 0;">
-                    <p style="font-size: 1.2rem; color: #555;">등록된 상품이 없습니다.</p>
+                    style="width:100%; text-align: center; padding: 4rem 0; display:none;">
+                    <p style="font-size: 1.2rem; color: #555;">
+                        등록된 상품이 없습니다.
+                    </p>
                 </div>
             </div>
         </section>
@@ -79,7 +64,7 @@
             <div class="container sell-recommend-content">
                 <div class="sell-image-placeholder"></div>
                 <div class="sell-text-content">
-                    <p class="sell-description">창의적인 디자인 아트웍부터 논리적인 자바 코드구조까지 <br>정당한 비용을 받고 공유해보세요!</p>
+                    <p class="sell-description">창의적인 디자인 아트워크부터 논리적인 자바 코드구조까지 <br>정당한 비용을 받고 공유해보세요!</p>
                     <a href="#" class="btn">작가 등록하기</a>
                 </div>
             </div>
@@ -87,6 +72,10 @@
 
         <!-- 페이지네이션은 새로운 디자인에 포함되지 않으므로 제거됩니다. -->
     </div>
+
+    <th:block layout:fragment="script">
+        <script th:src="@{/js/main.js}"></script>
+    </th:block>
 </body>
 
 </html>

@@ -1,5 +1,7 @@
 package com.creatorworks.nexus.config;
 
+import java.util.List;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +14,9 @@ import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.order.entity.Order;
 import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.entity.Product;
+import com.creatorworks.nexus.product.entity.ProductHeart;
 import com.creatorworks.nexus.product.repository.ProductRepository;
+import com.creatorworks.nexus.product.repository.ProductHeartRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,6 +29,7 @@ public class DataInitializer {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final OrderRepository orderRepository;
+    private final ProductHeartRepository productHeartRepository;
 
     @Bean
     public CommandLineRunner initData() {
@@ -87,7 +92,7 @@ public class DataInitializer {
 
                 String[] primaryCategories = {"artwork", "graphic-design", "character", "java", "frontend", "python"};
                 String[][] secondaryCategories = {
-                    {"포토그라피", "일러스트레이션", "스케치", "코믹스"},
+                    {"포토그래피", "일러스트레이션", "스케치", "코믹스"},
                     {"타이포그라피", "앨범아트", "로고", "브랜딩", "편집디자인"},
                     {"카툰", "팬아트", "2D 캐릭터", "3D 모델링"},
                     {"Spring/JPA", "네트워크", "알고리즘", "코어 자바"},
@@ -95,16 +100,27 @@ public class DataInitializer {
                     {"웹 개발", "데이터 분석", "머신러닝", "자동화"}
                 };
 
+                // 간단한 키워드 배열
+                String[] keywords = {"Java", "Spring", "React", "Python", "디자인", "일러스트", "캐릭터", "웹개발"};
+
                 for (int i = 1; i <= 100; i++) {
-                    String name = "샘플 상품 " + i;
-                    int price = (int) (Math.random() * 90000) + 10000; // 10,000 ~ 99,999원
-                    String description = "이것은 " + i + "번째 멋진 샘플 상품입니다. 품질이 아주 좋습니다.";
-                    String imageUrl = "https://picsum.photos/id/" + i + "/400/400";
+                    // 진행 상황 출력 (매 25개마다)
+                    if (i % 25 == 0) {
+                        System.out.println("상품 데이터 생성 진행률: " + i + "/100");
+                    }
 
                     int categoryIndex = (i - 1) % primaryCategories.length;
                     String pCategory = primaryCategories[categoryIndex];
                     String[] sCategories = secondaryCategories[categoryIndex];
                     String sCategory = sCategories[((i - 1) / primaryCategories.length) % sCategories.length];
+
+                    String keyword = keywords[i % keywords.length];
+                    String name = keyword + " 프로젝트 " + i;
+                    int price = (int) (Math.random() * 90000) + 10000;
+                    long viewCount = (long) (Math.random() * 10000) + 1;
+                    String description = "이것은 " + keyword + "를 활용한 " + i + "번째 프로젝트입니다.";
+                    String workDescription = keyword + " 기술을 사용하여 제작된 고품질 작품입니다.";
+                    String imageUrl = "https://picsum.photos/id/" + (i % 100) + "/400/400";
 
                     Product product = Product.builder()
                             .author(author)
@@ -112,27 +128,96 @@ public class DataInitializer {
                             .price((long) price)
                             .description(description)
                             .imageUrl(imageUrl)
-                            .workDescription("이 작품은 특별한 영감을 받아 제작되었습니다.")
+                            .workDescription(workDescription)
                             .primaryCategory(pCategory)
                             .secondaryCategory(sCategory)
                             .build();
-
+                    
+                    product.setViewCount(viewCount);
                     productRepository.save(product);
                 }
-                 System.out.println("상품 데이터 생성이 완료되었습니다.");
-            }
-
-            // 임시 구매 데이터 생성 (usertest가 product1을 구매)
-            Product product1 = productRepository.findById(1L).orElse(null);
-            if (user != null && product1 != null) {
-                if (!orderRepository.existsByBuyerAndProduct(user, product1)) {
-                    Order testOrder = Order.builder()
+                
+                System.out.println("상품 데이터 100개 생성이 완료되었습니다!");
+                
+                // 테스트용 추가 사용자 계정들 생성
+                System.out.println("테스트용 좋아요/구매 데이터 생성을 시작합니다...");
+                
+                Member[] testUsers = new Member[5];
+                for (int i = 0; i < 5; i++) {
+                    String email = "testuser" + (i+1) + "@test.com";
+                    Member testUser = memberRepository.findByEmail(email);
+                    if (testUser == null) {
+                        testUser = Member.builder()
+                                .email(email)
+                                .name("테스트유저" + (i+1))
+                                .password(passwordEncoder.encode("password"))
+                                .role(Role.USER)
+                                .gender("N/A")
+                                .birthYear("N/A")
+                                .birthMonth("N/A")
+                                .birthDay("N/A")
+                                .build();
+                        memberRepository.save(testUser);
+                    }
+                    testUsers[i] = testUser;
+                }
+                
+                // 모든 Product에 대해 랜덤 좋아요/구매 데이터 생성
+                List<Product> allProducts = productRepository.findAll();
+                int totalHearts = 0;
+                int totalOrders = 0;
+                
+                for (Product product : allProducts) {
+                    // 랜덤 좋아요 생성 (0~4명이 좋아요)
+                    int heartCount = (int)(Math.random() * 5);
+                    for (int i = 0; i < heartCount; i++) {
+                        Member randomUser = testUsers[(int)(Math.random() * testUsers.length)];
+                        
+                        // 중복 좋아요 방지 체크
+                        if (productHeartRepository.findByMemberIdAndProductId(randomUser.getId(), product.getId()).isEmpty()) {
+                            ProductHeart heart = new ProductHeart();
+                            heart.setMember(randomUser);
+                            heart.setProduct(product);
+                            productHeartRepository.save(heart);
+                            totalHearts++;
+                        }
+                    }
+                    
+                    // 랜덤 구매 생성 (0~2명이 구매)
+                    int purchaseCount = (int)(Math.random() * 3);
+                    for (int i = 0; i < purchaseCount; i++) {
+                        Member randomUser = testUsers[(int)(Math.random() * testUsers.length)];
+                        
+                        // 중복 구매 방지 체크
+                        if (!orderRepository.existsByBuyerAndProduct(randomUser, product)) {
+                            Order order = Order.builder()
+                                    .buyer(randomUser)
+                                    .product(product)
+                                    .build();
+                            orderRepository.save(order);
+                            totalOrders++;
+                        }
+                    }
+                }
+                
+                System.out.println("🎉 테스트 데이터 생성 완료!");
+                System.out.println("📊 생성된 좋아요 수: " + totalHearts + "개");
+                System.out.println("📊 생성된 구매 수: " + totalOrders + "개");
+                
+                // usertest@test.com이 상품1을 구매하도록 보장
+                Product product1 = productRepository.findById(1L).orElse(null);
+                if (product1 != null && !orderRepository.existsByBuyerAndProduct(user, product1)) {
+                    Order userTestOrder = Order.builder()
                             .buyer(user)
                             .product(product1)
                             .build();
-                    orderRepository.save(testOrder);
-                    System.out.println("초기 데이터: usertest가 샘플 상품 1을 구매한 것으로 처리");
+                    orderRepository.save(userTestOrder);
+                    System.out.println("🛒 usertest@test.com이 상품1번을 구매하도록 설정했습니다!");
+                    totalOrders++;
                 }
+                
+                System.out.println("📊 최종 구매 수: " + totalOrders + "개");
+                System.out.println("📊 이제 키워드 검색에서 정렬 테스트가 가능합니다!");
             }
 
             System.out.println("데이터 초기화 작업이 완료되었습니다.");
