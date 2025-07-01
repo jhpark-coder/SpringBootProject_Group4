@@ -3,6 +3,7 @@ package com.creatorworks.nexus.util.tiptap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.HtmlUtils;
@@ -136,7 +137,7 @@ public class TipTapRenderer {
                     }
 
                     if (textAlign != null) {
-                        return "<div style=\"text-align:" + textAlign + ";\">" + imgTag + "</div>";
+                        return "<div class=\"image-wrapper has-text-align-" + textAlign + "\" style=\"text-align:" + textAlign + ";\">" + imgTag + "</div>";
                     }
                     
                     return imgTag;
@@ -240,21 +241,80 @@ public class TipTapRenderer {
                 if (gridAttrs != null && gridAttrs.get("items") instanceof List) {
                     List<Map<String, String>> items = (List<Map<String, String>>) gridAttrs.get("items");
                     String layout = gridAttrs.getOrDefault("layout", "2-cols").toString();
+                    Map<String, Object> savedLayouts = (Map<String, Object>) gridAttrs.getOrDefault("savedLayouts", new HashMap<>());
                     
                     String layoutClass = layout.startsWith("grid-") ? layout : "grid-" + layout;
 
                     StringBuilder itemsHtml = new StringBuilder();
-                    for (Map<String, String> item : items) {
+                    for (int i = 0; i < items.size(); i++) {
+                        final int index = i;
+                        Map<String, String> item = items.get(i);
                         String src = item.get("src");
                         if (src == null || src.isEmpty()) {
                             continue;
                         }
                         String alt = item.getOrDefault("alt", "");
-                        itemsHtml.append("<div class=\"grid-item\"><img src=\"").append(HtmlUtils.htmlEscape(src))
-                                 .append("\" alt=\"").append(HtmlUtils.htmlEscape(alt)).append("\"></div>");
+                        
+                        // 저장된 레이아웃 정보에서 해당 아이템의 위치/크기 가져오기
+                        StringBuilder itemStyle = new StringBuilder();
+                        if (savedLayouts.containsKey("lg")) {
+                            List<Map<String, Object>> lgLayout = (List<Map<String, Object>>) savedLayouts.get("lg");
+                            Map<String, Object> itemLayout = lgLayout.stream()
+                                .filter(l -> l.get("i").equals(String.valueOf(index)))
+                                .findFirst()
+                                .orElse(null);
+                            
+                            if (itemLayout != null) {
+                                int x = ((Number) itemLayout.get("x")).intValue();
+                                int y = ((Number) itemLayout.get("y")).intValue();
+                                int w = ((Number) itemLayout.get("w")).intValue();
+                                int h = ((Number) itemLayout.get("h")).intValue();
+                                itemStyle.append("grid-column: ").append(x + 1).append(" / span ").append(w).append(";");
+                                itemStyle.append("grid-row: ").append(y + 1).append(" / span ").append(h).append(";");
+                            }
+                        }
+                        
+                        itemsHtml.append("<div class=\"grid-item\"");
+                        if (itemStyle.length() > 0) {
+                            itemsHtml.append(" style=\"").append(HtmlUtils.htmlEscape(itemStyle.toString())).append("\"");
+                        }
+                        itemsHtml.append("><img src=\"")
+                                 .append(HtmlUtils.htmlEscape(src))
+                                 .append("\" alt=\"").append(HtmlUtils.htmlEscape(alt)).append("\"");
+                        
+                        // 기존 width/height 처리 (호환성을 위해 유지)
+                        String width = item.getOrDefault("width", "");
+                        String height = item.getOrDefault("height", "");
+                        StringBuilder style = new StringBuilder();
+                        if (!width.isEmpty()) {
+                            if (width.matches(".*[a-zA-Z%]$")) {
+                                style.append("width:").append(HtmlUtils.htmlEscape(width)).append(";");
+                            } else {
+                                style.append("width:").append(HtmlUtils.htmlEscape(width)).append("px;");
+                            }
+                        }
+                        if (!height.isEmpty()) {
+                            if (height.matches(".*[a-zA-Z%]$")) {
+                                style.append("height:").append(HtmlUtils.htmlEscape(height)).append(";");
+                            } else {
+                                style.append("height:").append(HtmlUtils.htmlEscape(height)).append("px;");
+                            }
+                        }
+                        if (style.length() > 0) {
+                            itemsHtml.append(" style=\"").append(style).append("\"");
+                        }
+                        itemsHtml.append("></div>");
                     }
                     
-                    return "<div class=\"photo-grid-wrapper " + HtmlUtils.htmlEscape(layoutClass) + "\">" + itemsHtml.toString() + "</div>";
+                    // 저장된 레이아웃 정보를 data-layouts 속성으로 추가
+                    StringBuilder wrapperAttrs = new StringBuilder();
+                    wrapperAttrs.append("class=\"photo-grid-wrapper ").append(HtmlUtils.htmlEscape(layoutClass)).append("\"");
+                    if (!savedLayouts.isEmpty()) {
+                        wrapperAttrs.append(" data-layouts=\"").append(HtmlUtils.htmlEscape(savedLayouts.toString())).append("\"");
+                    }
+                    
+                    // wrapper 는 CSS Grid 로 표시. 별도 width/height 필요없음
+                    return "<div " + wrapperAttrs.toString() + ">" + itemsHtml.toString() + "</div>";
                 }
                 return "";
             // TODO: 필요시 다른 노드(codeBlock, Iframe 등) 타입 추가
