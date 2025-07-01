@@ -10,13 +10,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface MemberOrderRepository extends JpaRepository<MemberOrder, Long> {
-    @Query("SELECT com.creatorworks.nexus.member.dto.MonthlyCategoryPurchaseDTO(" +
+    // MemberOrderRepository.java
+    // MemberOrderRepository.java
+    @Query("SELECT new com.creatorworks.nexus.member.dto.MonthlyCategoryPurchaseDTO(" +
             "    YEAR(o.orderDate), MONTH(o.orderDate), " +
-            "    p.category.name, p.category.color, COUNT(o)) " +
-            "FROM MemberOrder o JOIN o.product p " +
-            "WHERE o.member.id = :memberId AND o.orderDate BETWEEN :startDate AND :endDate " +
-            "GROUP BY YEAR(o.orderDate), MONTH(o.orderDate), p.category.name, p.category.color " +
-            "ORDER BY YEAR(o.orderDate), MONTH(o.orderDate), p.category.name")
+            "    p.primaryCategory, COUNT(o)) " + // secondaryCategory 조회 제거
+            "FROM Order o JOIN o.product p " +
+            "WHERE o.buyer.id = :memberId AND o.orderDate BETWEEN :startDate AND :endDate " +
+            "GROUP BY YEAR(o.orderDate), MONTH(o.orderDate), p.primaryCategory " + // secondaryCategory 그룹핑 제거
+            "ORDER BY YEAR(o.orderDate), MONTH(o.orderDate), p.primaryCategory")
     List<MonthlyCategoryPurchaseDTO> findMonthlyCategoryPurchases(
             @Param("memberId") Long memberId,
             @Param("startDate") LocalDateTime startDate,

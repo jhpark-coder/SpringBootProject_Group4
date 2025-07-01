@@ -1,10 +1,22 @@
 package com.creatorworks.nexus.member.controller;
 
+import com.creatorworks.nexus.member.dto.CustomUserDetails;
 import com.creatorworks.nexus.member.dto.MonthlyCategoryPurchaseDTO;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberOrderRepository;
 import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.order.repository.OrderRepository;
+import com.creatorworks.nexus.order.entity.Order;
+import com.creatorworks.nexus.product.entity.Product;
+import com.creatorworks.nexus.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Controller;
@@ -14,7 +26,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -26,69 +40,202 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class MyPageController {
 
+    private static final Logger log = LoggerFactory.getLogger(MyPageController.class);
+
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ProductRepository productRepository;
     private final MemberOrderRepository memberOrderRepository;
     private final MemberRepository memberRepository;
+    private final OrderRepository orderRepository;
 
     @GetMapping("/my-page")
-    public String myPage(@AuthenticationPrincipal User user, Model model) {
+    public String myPage(@AuthenticationPrincipal CustomUserDetails customUserDetails, Model model) {
         // 1. 현재 로그인한 사용자의 ID를 안전하게 가져오기
-        Member currentMember = memberRepository.findByEmail(user.getUsername());
-            if (currentMember == null) {
+            if (customUserDetails == null) {
                 throw new IllegalStateException("회원 정보를 찾을 수 없습니다.");
             }
+        Member currentMember = memberRepository.findByEmail(customUserDetails.getUsername());
+
+
+
         Long currentMemberId = currentMember.getId();
 
         // 2. 차트 데이터 조회 기간 설정 (최근 6개월)
         LocalDateTime endDate = LocalDateTime.now();
         LocalDateTime startDate = endDate.minusMonths(6).withDayOfMonth(1).toLocalDate().atStartOfDay();
 
+        // --- 디버깅 로그 추가 ---
+        log.info("차트 데이터 조회 시작. 사용자 ID: {}, 기간: {} ~ {}", currentMemberId, startDate, endDate);
+        // -------------------------
+
         // 3. DB에서 월별/카테고리별 구매 데이터 조회
         List<MonthlyCategoryPurchaseDTO> purchases = memberOrderRepository.findMonthlyCategoryPurchases(currentMemberId, startDate, endDate);
+
+        // --- ★★★★★ 여기가 가장 중요! 조회된 결과 크기 확인 ★★★★★ ---
+        log.info("DB 조회 완료. 조회된 구매 기록 건수: {}", purchases.size());
+        // purchases 리스트의 실제 내용을 보고 싶다면:
+        // purchases.forEach(p -> log.info("  - {}", p));
+        // -----------------------------------------------------------
 
         // 4. Chart.js 데이터 구조로 가공
         List<String> labels = Stream.iterate(startDate.toLocalDate(), date -> date.plusMonths(1))
                 .limit(6)
                 .map(date -> date.getMonthValue() + "월")
                 .collect(Collectors.toList());
+        // =================================================================
+        // 4-1. 모든 primaryCategory의 목록을 중복 없이 가져와 정렬합니다.
+        List<String> categories = purchases.stream()
+                .map(MonthlyCategoryPurchaseDTO::primaryCategory)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
 
-        Map<String, String> categoryColorMap = purchases.stream()
-                .collect(Collectors.toMap(
-                        MonthlyCategoryPurchaseDTO::categoryName,
-                        MonthlyCategoryPurchaseDTO::categoryColor,
-                        (existing, replacement) -> existing
-                ));
+// 4-2. 카테고리별로 랜덤 색상을 지정합니다. (더 예쁜 색상 팔레트를 사용해도 좋습니다)
+        Map<String, String> categoryColorMap = new HashMap<>();
+        List<String> colors = List.of("#4E79A7", "#F28E2B", "#E15759", "#76B7B2", "#59A14F", "#EDC948");
+        for (int i = 0; i < categories.size(); i++) {
+            categoryColorMap.put(categories.get(i), colors.get(i % colors.size()));
+        }
 
-        List<String> categories = new ArrayList<>(categoryColorMap.keySet());
-        Collections.sort(categories);
-
+// 4-3. 최종 datasets를 만듭니다.
         List<Map<String, Object>> datasets = new ArrayList<>();
         for (String categoryName : categories) {
             Map<String, Object> dataset = new LinkedHashMap<>();
-            dataset.put("label", categoryName);
+            dataset.put("label", categoryName); // 범례 이름
 
-            List<Long> data = new ArrayList<>();
-            for (int monthIndex = 0; monthIndex < 6; monthIndex++) {
-                LocalDate targetDate = startDate.plusMonths(monthIndex).toLocalDate();
+            // 6개월치 데이터를 담을 리스트 (초기값은 모두 0)
+            List<Long> data = new ArrayList<>(Collections.nCopies(6, 0L));
 
-                long count = purchases.stream()
-                        .filter(p -> p.categoryName().equals(categoryName) &&
-                                p.year() == targetDate.getYear() &&
-                                p.month() == targetDate.getMonthValue())
-                        .mapToLong(MonthlyCategoryPurchaseDTO::count)
-                        .findFirst()
-                        .orElse(0L);
-                data.add(count);
-            }
+            // 해당 카테고리의 구매 기록만 필터링
+            purchases.stream()
+                    .filter(p -> p.primaryCategory().equals(categoryName))
+                    .forEach(p -> {
+                        // 월(month) 정보를 인덱스로 변환 (예: 1월->0, 2월->1 ...)
+                        int monthIndex = p.month() - 1; // 1월은 0번째 인덱스
+                        if (monthIndex >= 0 && monthIndex < 6) {
+                            data.set(monthIndex, p.count()); // 해당 월의 데이터 업데이트
+                        }
+                    });
 
             dataset.put("data", data);
-            dataset.put("backgroundColor", categoryColorMap.get(categoryName));
-
+            dataset.put("backgroundColor", categoryColorMap.get(categoryName)); // 카테고리별 색상
             datasets.add(dataset);
         }
+
+// ----------------------------------------------------
 
         // 5. 최종 데이터를 Model에 담아 View로 전달
         model.addAttribute("chartLabels", labels);
         model.addAttribute("chartDatasets", datasets);
+
+        // --- 디버깅 로그 추가 ---
+        log.info("프론트로 전달될 Datasets 건수: {}", datasets.size());
+        // -------------------------
+
+        // ==========================================================
+        //      ★★★ 최근 구매 상품 목록 조회 로직 추가 ★★★
+        // ==========================================================
+
+        // 1. 페이징 정보 생성: 0번째 페이지에서 4개의 항목을 가져온다.
+        Pageable topFour = PageRequest.of(0, 4);
+
+        // 2. DB에서 최근 구매한 주문 4개를 가져온다.
+        List<Order> recentOrders = orderRepository.findByBuyerOrderByOrderDateDesc(currentMember, topFour);
+
+        // 3. Order 목록에서 Product 목록만 추출한다.
+        //    (ProductDto를 사용하면 더 좋습니다. 여기서는 간단히 Product 엔티티를 그대로 사용합니다)
+        List<Product> recentProducts = recentOrders.stream()
+                .map(Order::getProduct) // 각 Order 객체에서 Product를 꺼냄
+                .collect(Collectors.toList());
+
+        // 4. Model에 'recentProducts'라는 이름으로 담아서 View로 전달한다.
+        model.addAttribute("recentProducts", recentProducts);
+
+        // ==========================================================
+        //      ★★★ Redis 최근 본 상품 - 순서 보장 로직으로 수정 ★★★
+        // ==========================================================
+
+        // 1. 현재 사용자의 최근 본 상품 키를 생성
+        String key = "viewHistory:" + currentMember.getId().toString();
+
+        // 2. Redis에서 score가 높은 순(최신순)으로 상품 ID를 10개 가져옴
+        Set<String> recentProductIdsStr = redisTemplate.opsForZSet().reverseRange(key, 0, 9);
+
+        // 3. 만약 조회된 ID가 있다면 처리
+        if (recentProductIdsStr != null && !recentProductIdsStr.isEmpty()) {
+            // 3-1. 문자열 ID 목록을 Long 타입 ID 목록으로 변환
+            List<Long> recentProductIds = recentProductIdsStr.stream()
+                    .map(Long::parseLong)
+                    .collect(Collectors.toList());
+
+            // 3-2. ID 목록으로 DB에서 상품 정보들을 한 번에 조회(IN 쿼리)
+            List<Product> unorderedProducts = productRepository.findAllById(recentProductIds);
+
+            // 3-3. ★★★ DB에서 가져온 상품들을 Redis에서 가져온 ID 순서(최신순)로 재정렬 ★★★
+            Map<Long, Product> productMap = unorderedProducts.stream()
+                    .collect(Collectors.toMap(Product::getId, product -> product));
+
+            List<Product> sortedProducts = recentProductIds.stream()
+                    .map(productMap::get)
+                    .filter(java.util.Objects::nonNull) // 혹시 DB에서 삭제된 상품이 있을 경우를 대비
+                    .collect(Collectors.toList());
+
+            // 3-4. 구매하지 않은 상품만 필터링하고 4개로 제한
+            List<Product> recentViewedProducts = sortedProducts.stream()
+                    .filter(product -> !orderRepository.existsByBuyerAndProduct(currentMember, product))
+                    .limit(4)
+                    .collect(Collectors.toList());
+
+            // 3-5. Model에 담아서 View로 전달
+            model.addAttribute("recentViewedProducts", recentViewedProducts);
+        } else {
+            // 조회된 상품이 없으면 빈 리스트를 전달
+            model.addAttribute("recentViewedProducts", Collections.emptyList());
+        }
+
+        // ==========================================================
+
+
+        // ==========================================================
+        //      ★★★ 카테고리 통계 조회/가공 로직 추가 ★★★
+        // ==========================================================
+        Map<String, Long> totalCounts = new HashMap<>();
+
+        // 1. 최근 7일간의 모든 카테고리 조회수를 합산
+        for (int i = 0; i < 7; i++) {
+            String dailyCountKey = "categoryViewCount:" + LocalDate.now().minusDays(i).format(DateTimeFormatter.ISO_LOCAL_DATE);
+            Set<ZSetOperations.TypedTuple<String>> dailyTuples = redisTemplate.opsForZSet().rangeWithScores(dailyCountKey, 0, -1);
+
+            if (dailyTuples != null) {
+                for (ZSetOperations.TypedTuple<String> tuple : dailyTuples) {
+                    String categoryMember = tuple.getValue();
+                    long count = tuple.getScore().longValue();
+                    totalCounts.merge(categoryMember, count, Long::sum);
+                }
+            }
+        }
+
+        // 2. Primary Category별로 데이터 가공
+        Map<String, Long> primaryCategoryCounts = totalCounts.entrySet().stream()
+                .collect(Collectors.groupingBy(
+                        entry -> entry.getKey().split(":")[0], // "artwork:포토그라피" -> "artwork"
+                        Collectors.summingLong(Map.Entry::getValue)
+                ));
+
+        // 3. Secondary Category별로 데이터 가공 (primary를 key로 가짐)
+        Map<String, Map<String, Long>> secondaryCategoryData = totalCounts.entrySet().stream()
+                .collect(Collectors.groupingBy(
+                        entry -> entry.getKey().split(":")[0], // "artwork"
+                        Collectors.toMap(
+                                entry -> entry.getKey().split(":")[1], // "포토그라피"
+                                Map.Entry::getValue
+                        )
+                ));
+
+        model.addAttribute("primaryCategoryData", primaryCategoryCounts);
+        model.addAttribute("secondaryCategoryData", secondaryCategoryData);
+        // ==========================================================
+
 
         return "member/myPage"; // myPage.html 템플릿을 보여줌
     }

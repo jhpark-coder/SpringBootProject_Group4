@@ -16,6 +16,11 @@ import com.creatorworks.nexus.product.repository.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 @Configuration
 @Profile("dev") // 'dev' 프로필이 활성화될 때만 이 설정이 적용됩니다.
 @RequiredArgsConstructor
@@ -122,19 +127,163 @@ public class DataInitializer {
                  System.out.println("상품 데이터 생성이 완료되었습니다.");
             }
 
-            // 임시 구매 데이터 생성 (usertest가 product1을 구매)
-            Product product1 = productRepository.findById(1L).orElse(null);
-            if (user != null && product1 != null) {
-                if (!orderRepository.existsByBuyerAndProduct(user, product1)) {
-                    Order testOrder = Order.builder()
-                            .buyer(user)
-                            .product(product1)
-                            .build();
-                    orderRepository.save(testOrder);
-                    System.out.println("초기 데이터: usertest가 샘플 상품 1을 구매한 것으로 처리");
+//            // 임시 구매 데이터 생성 (usertest가 product1을 구매)
+//            Product product1 = productRepository.findById(1L).orElse(null);
+//            if (user != null && product1 != null) {
+//                if (!orderRepository.existsByBuyerAndProduct(user, product1)) {
+//                    Order testOrder = Order.builder()
+//                            .buyer(user)
+//                            .product(product1)
+//                            .build();
+//                    orderRepository.save(testOrder);
+//                    System.out.println("초기 데이터: usertest가 샘플 상품 1을 구매한 것으로 처리");
+//                }
+//            }
+            // 임시 구매 데이터 생성 (usertest가 최근 6개월간 다양한 상품을 구매)
+            //20250701 차트 마이페이지 테스트를 위해 생성
+            System.out.println("개발 환경: 차트 테스트를 위한 임시 구매 기록을 생성합니다.");
+            if (user != null) {
+                if (orderRepository.countByBuyer(user) == 0) {
+
+                    List<Long> productIdsToBuy = List.of(1L, 5L, 10L, 21L, 35L, 50L, 62L);
+
+                    // 기준 날짜를 2025년 6월 15일로 고정!
+                    LocalDateTime baseDate = LocalDateTime.of(2025, 6, 15, 10, 30);
+
+                    for (int i = 0; i < productIdsToBuy.size(); i++) {
+                        Long productId = productIdsToBuy.get(i);
+                        Product productToBuy = productRepository.findById(productId).orElse(null);
+
+                        if (productToBuy != null) {
+                            // 기준 날짜로부터 i개월 전으로 주문 날짜를 설정 (모두 2025년 내에 위치하게 됨)
+                            int monthsToGoBack = i % 6;
+                            LocalDateTime fixedOrderDate = baseDate.minusMonths(monthsToGoBack);
+
+                            Order testOrder = Order.builder()
+                                    .buyer(user)
+                                    .product(productToBuy)
+                                    .orderDate(fixedOrderDate) // 고정된 2025년 날짜를 사용
+                                    .build();
+
+                            orderRepository.save(testOrder);
+                            System.out.printf("초기 데이터: usertest가 %s 날짜로 상품 ID %d (%s)를 구매 처리\n",
+                                    fixedOrderDate.toLocalDate().toString(), productId, productToBuy.getPrimaryCategory());
+                        }
+                    }
+                } else {
+                    System.out.println("이미 구매 기록이 존재하므로, 추가 생성하지 않습니다.");
+                }
+            }if (user != null) {
+                if (orderRepository.countByBuyer(user) == 0) {
+
+                    List<Long> productIdsToBuy = List.of(1L, 5L, 10L, 21L, 35L, 50L, 62L);
+
+                    // 기준 날짜를 2025년 6월 15일로 고정!
+                    LocalDateTime baseDate = LocalDateTime.of(2025, 6, 15, 10, 30);
+
+                    for (int i = 0; i < productIdsToBuy.size(); i++) {
+                        Long productId = productIdsToBuy.get(i);
+                        Product productToBuy = productRepository.findById(productId).orElse(null);
+
+                        if (productToBuy != null) {
+                            // 기준 날짜로부터 i개월 전으로 주문 날짜를 설정 (모두 2025년 내에 위치하게 됨)
+                            int monthsToGoBack = i % 6;
+                            LocalDateTime fixedOrderDate = baseDate.minusMonths(monthsToGoBack);
+
+                            Order testOrder = Order.builder()
+                                    .buyer(user)
+                                    .product(productToBuy)
+                                    .orderDate(fixedOrderDate) // 고정된 2025년 날짜를 사용
+                                    .build();
+
+                            orderRepository.save(testOrder);
+                            System.out.printf("초기 데이터: usertest가 %s 날짜로 상품 ID %d (%s)를 구매 처리\n",
+                                    fixedOrderDate.toLocalDate().toString(), productId, productToBuy.getPrimaryCategory());
+                        }
+                    }
+                } else {
+                    System.out.println("이미 구매 기록이 존재하므로, 추가 생성하지 않습니다.");
                 }
             }
+            // ==========================================================
+            //      ★★★ 판매자 대시보드 테스트용 데이터 생성 ★★★
+            // ==========================================================
+            System.out.println("개발 환경: 판매자 대시보드용 테스트 데이터 생성을 시작합니다.");
 
+            // 1. 테스트용 가상 구매자 목록 생성
+            List<Member> virtualBuyers = new ArrayList<>();
+            // 이미 생성된 user도 구매자 목록에 포함
+            if (user != null) {
+                virtualBuyers.add(user);
+            }
+
+            // (이름, 이메일, 성별, 출생년도) 정보로 가상 구매자 10명 추가 생성
+            String[][] buyerInfos = {
+                    {"김이십", "buyer1@test.com", "Male", "1998"},
+                    {"박삼순", "buyer2@test.com", "Female", "1991"},
+                    {"최일구", "buyer3@test.com", "Male", "2005"},
+                    {"이삼십", "buyer4@test.com", "Female", "1994"},
+                    {"정사오", "buyer5@test.com", "Male", "1988"},
+                    {"강이팔", "buyer6@test.com", "Female", "1999"},
+                    {"조칠뜨", "buyer7@test.com", "Male", "1977"},
+                    {"윤일일", "buyer8@test.com", "Female", "2011"},
+                    {"장삼삼", "buyer9@test.com", "Male", "1993"},
+                    {"임영영", "buyer10@test.com", "Female", "2001"}
+            };
+
+            for (String[] info : buyerInfos) {
+                Member buyer = memberRepository.findByEmail(info[1]);
+                if (buyer == null) {
+                    buyer = Member.builder()
+                            .name(info[0])
+                            .email(info[1])
+                            .password(passwordEncoder.encode("password"))
+                            .role(Role.USER)
+                            .gender(info[2])
+                            .birthYear(info[3])
+                            .birthMonth("01").birthDay("01") // 생일은 임의로 통일
+                            .build();
+                    memberRepository.save(buyer);
+                    virtualBuyers.add(buyer);
+                }
+            }
+            System.out.println("가상 구매자 " + virtualBuyers.size() + "명 준비 완료.");
+            // 2. 작가(author)의 상품 목록 가져오기
+            List<Product> authorProducts = productRepository.findByAuthor(author);
+
+            // 3. 작가의 상품에 대해 가상 구매 기록 50건 생성
+            if (!authorProducts.isEmpty() && orderRepository.countByProductAuthor(author) < 50) {
+                int ordersToCreate = 50;
+                for (int i = 0; i < ordersToCreate; i++) {
+                    // 무작위 구매자 선택
+                    Member randomBuyer = virtualBuyers.get((int) (Math.random() * virtualBuyers.size()));
+                    // 무작위 상품 선택
+                    Product randomProduct = authorProducts.get((int) (Math.random() * authorProducts.size()));
+                    // 무작위 구매 날짜 (최근 12개월 이내)
+                    LocalDateTime randomOrderDate;
+                    // 5건은 "이번 달" 데이터로 강제 생성
+                    if (i < 5) {
+                        // 이번 달 1일 ~ 오늘 사이의 랜덤한 날짜
+                        int dayOfMonth = (int) (Math.random() * LocalDate.now().getDayOfMonth()) + 1;
+                        randomOrderDate = LocalDate.now().withDayOfMonth(dayOfMonth).atTime(10, 0);
+                    } else {
+                        // 나머지는 기존처럼 최근 12개월 내 랜덤 날짜
+                        randomOrderDate = LocalDateTime.now().minusDays((long) (Math.random() * 365));
+                    }
+
+                    // 중복 구매는 허용한다고 가정하고 바로 생성
+                    Order saleRecord = Order.builder()
+                            .buyer(randomBuyer)
+                            .product(randomProduct)
+                            .orderDate(randomOrderDate)
+                            .build();
+                    orderRepository.save(saleRecord);
+                }
+                System.out.println("작가(" + author.getName() + ")의 상품에 대한 판매 기록 " + ordersToCreate + "건 생성 완료.");
+            } else {
+                System.out.println("이미 작가의 판매 기록이 충분하거나 판매할 상품이 없어, 추가 생성하지 않습니다.");
+            }
+            // ==========================================================
             System.out.println("데이터 초기화 작업이 완료되었습니다.");
         };
     }

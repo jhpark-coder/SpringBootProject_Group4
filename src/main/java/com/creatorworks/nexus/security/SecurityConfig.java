@@ -5,6 +5,8 @@ import java.util.Arrays;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -37,7 +39,17 @@ public class SecurityConfig {
 
     // @Value("${file.upload-dir}")
     // private String uploadDir;
-    
+
+    //20250701 User < seller가 모든 권한 포함
+    @Bean
+    public RoleHierarchy roleHierarchy() {
+        RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
+        // ADMIN은 SELLER의 권한을, SELLER는 USER의 권한을 포함한다는 규칙을 정의합니다.
+        // 줄바꿈(\n)으로 여러 규칙을 정의할 수 있습니다.
+        roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_SELLER\n" +
+                "ROLE_SELLER > ROLE_USER");
+        return roleHierarchy;
+    }
     // 정적 리소스는 보안 필터 체인을 완전히 무시하도록 설정
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
@@ -66,7 +78,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/api/**", "/members/logout").permitAll()
-                .requestMatchers("/editor/**", "/editor").hasAnyRole("ADMIN", "SELLER")
+                .requestMatchers("/editor/**", "/editor", "/seller/**").hasAnyRole("ADMIN", "SELLER")
                 .anyRequest().authenticated()
             )
             .formLogin(formLogin -> formLogin

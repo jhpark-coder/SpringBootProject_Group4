@@ -1,6 +1,8 @@
 package com.creatorworks.nexus.product.controller;
 
 import java.security.Principal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -67,6 +70,7 @@ public class ProductController {
     private final CategoryConfig categoryConfig;
     private final TipTapRenderer tipTapRenderer;
     private final ObjectMapper objectMapper;
+    private final RedisTemplate<String, String> redisTemplate;
 
     /**
      * 그리드 뷰 페이지("/products/grid") 요청을 처리하여 'gridView.html' 뷰를 렌더링합니다.
@@ -160,7 +164,43 @@ public class ProductController {
                 }
             }
         }
-        
+
+
+        // ==============================================================
+        //      ★★★  20250701 최근 본 상품을 위한 로직 추가 ★★★
+        // ==============================================================
+        // --- ★★★ Redis 기록 로직 전체를 아래 코드로 교체 ★★★ ---
+        if (currentMember != null) { // 로그인한 사용자인지 확인
+            // 1. 개인별 최근 본 상품 기록 (기존 로직)
+            String memberId = currentMember.getId().toString();
+            String productIdStr = String.valueOf(id);
+            double score = System.currentTimeMillis();
+            String userViewHistoryKey = "viewHistory:" + memberId;
+            redisTemplate.opsForZSet().add(userViewHistoryKey, productIdStr, score);
+            Long userHistorySize = redisTemplate.opsForZSet().zCard(userViewHistoryKey);
+            if (userHistorySize != null && userHistorySize > 100) {
+                redisTemplate.opsForZSet().removeRange(userViewHistoryKey, 0, userHistorySize - 101);
+            }
+            log.info("사용자 ID {}의 최근 본 상품 기록 추가/업데이트: 상품 ID {}", memberId, id);
+
+            // 2. 카테고리별 조회수 통계 기록 (새로운 로직)
+            if (product.getPrimaryCategory() != null && product.getSecondaryCategory() != null) {
+                // 오늘 날짜 키 (예: "categoryViewCount:2025-07-01")
+                String dailyCountKey = "categoryViewCount:" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+                // "primary:secondary" 형태의 멤버 (예: "artwork:포토그라피")
+                String categoryMember = product.getPrimaryCategory() + ":" + product.getSecondaryCategory();
+
+                // 해당 카테고리 멤버의 점수를 1 증가시킴
+                redisTemplate.opsForZSet().incrementScore(dailyCountKey, categoryMember, 1);
+                // 7일이 지난 데이터는 자동으로 사라지도록 TTL(Time To Live) 설정
+                redisTemplate.expire(dailyCountKey, 8, java.util.concurrent.TimeUnit.DAYS);
+
+                log.info("카테고리 조회수 증가: Key='{}', Member='{}'", dailyCountKey, categoryMember);
+            }
+        }
+        // =======================================================
+
+
         // Tiptap JSON 컨텐츠 처리
         String contentHtml = "";
         String tiptapJson = product.getTiptapJson();

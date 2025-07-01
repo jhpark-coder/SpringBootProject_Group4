@@ -2,6 +2,7 @@ package com.creatorworks.nexus.product.repository;
 
 import java.util.List;
 
+import com.creatorworks.nexus.member.entity.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -40,4 +41,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
      */
     @Query("SELECT DISTINCT p.secondaryCategory FROM Product p WHERE p.primaryCategory = :primaryCategory")
     List<String> findDistinctSecondaryCategoryByPrimaryCategory(@Param("primaryCategory") String primaryCategory);
+
+    // ★★★ 특정 작가(판매자)의 모든 상품을 조회하는 메서드 추가 ★★★
+    List<Product> findByAuthor(Member author);
 }

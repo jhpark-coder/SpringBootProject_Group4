@@ -1,10 +1,208 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+<html layout:decorate="~{fragment/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
 
+<head>
+    <th:block layout:fragment="css">
+        <!-- 기존 myPage.css를 재활용하고, 판매자 페이지 전용 CSS를 추가합니다. -->
+        <link rel="stylesheet" th:href="@{/css/myPage.css}">
+        <link rel="stylesheet" th:href="@{/css/sellerPage.css}">
+    </th:block>
+</head>
+
+<body>
+<div layout:fragment="content" class="page-container">
+    <!-- 1. 왼쪽 고정 메뉴 (사이드바) - 내용은 판매자용으로 변경 -->
+    <aside class="profile-sidebar">
+        <div class="profile-pic"></div>
+        <!-- th:text를 사용하여 실제 판매자 이름으로 변경 -->
+        <h2 class="profile-name" th:text="${Name} + ' 님'">판매자 이름 님</h2>
+
+        <!-- 판매자용 버튼들 -->
+        <a th:href="@{/seller/products}" class="btn btn-solid">작품 관리</a>
+        <a th:href="@{/seller/stats}" class="btn btn-solid">판매 통계</a>
+        <a th:href="@{/seller/reviews}" class="btn btn-solid">내 작품 후기</a>
+        <a th:href="@{/seller/inquiries}" class="btn btn-solid">내 작품 문의</a>
+        <a th:href="@{/seller/auctions}" class="btn btn-solid">경매 관리</a>
+        <a th:href="@{/members/edit}" class="btn btn-outline" style="margin-top: 20px;">개인정보수정</a>
+    </aside>
+
+    <!-- 2. 오른쪽 메인 콘텐츠 -->
+    <main class="main-content">
+        <!-- 통계 차트 섹션 -->
+        <section class="content-section chart-section">
+            <!-- 월별 판매 현황 차트 -->
+            <div class="chart-item">
+                <h3>월별 판매 현황</h3>
+                <div class="chart-placeholder">
+                    <canvas id="monthlySalesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 구매자 통계 (성별/나이) -->
+            <div class="chart-item buyer-stats-group">
+                <div class="sub-chart-item">
+                    <h3>구매한 성별 비율</h3>
+                    <div class="chart-placeholder-small">
+                        <canvas id="genderRatioChart"></canvas>
+                    </div>
+                </div>
+                <div class="sub-chart-item">
+                    <h3>구매한 나이대 비율</h3>
+                    <div class="chart-placeholder-small">
+                        <canvas id="ageRatioChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 이번 달 가장 많이 팔린 작품 섹션 -->
+        <section class="content-section">
+            <header class="section-header">
+                <h2>이번 달 가장 많이 팔린 작품</h2>
+                <a href="#" class="see-more-link">더 보러가기 »</a>
+            </header>
+            <!-- ========================================================== -->
+            <!--      ★★★  가장많이 팔린 상품 ★★★-->
+            <!-- ========================================================== -->
+            <div class="product-grid" th:if="${topSellingProducts != null and !topSellingProducts.isEmpty()}">
+                <article th:each="product : ${topSellingProducts}" class="product-card">
+                    <!-- 상품 상세 페이지로 링크 -->
+                    <a th:href="@{/products/{id}(id=${product.id})}">
+                        <div class="product-image-placeholder" th:style="'background-image: url(\'' + ${product.imageUrl} + '\');'"></div>
+                    </a>
+                    <div class="product-info-seller">
+                        <!-- 작품 이름 출력 -->
+                        <span class="product-name-seller" th:text="${product.name}">작품의 이름이 들어갑니다</span>
+                        <!-- 판매량 뱃지 출력 -->
+                        <span class="sales-count-badge" th:text="${product.salesCount}">2300</span>
+                    </div>
+                </article>
+            </div>
+            <!-- 상품이 없을 경우 메시지 -->
+            <div th:if="${topSellingProducts == null or topSellingProducts.isEmpty()}">
+                <p>이번 달에 판매된 상품이 없습니다.</p>
+            </div>
+            <!-- ========================================================== -->
+        </section>
+
+        <!-- 진행 중인 경매 섹션 -->
+        <section class="content-section">
+            <header class="section-header">
+                <h2>진행 중인 경매</h2>
+                <a href="#" class="see-more-link">더 보러가기 »</a>
+            </header>
+            <div class="auction-grid">
+                <!-- (임시) 경매 아이템. 이 부분은 컨트롤러에서 받은 데이터로 th:each를 사용합니다. -->
+                <article class="auction-card" th:each="auction : ${ongoingAuctions}">
+                    <div class="auction-image-placeholder" th:style="'background-image: url(\'' + ${auction.imageUrl} + '\');'"></div>
+                    <div class="auction-info-wrapper">
+                        <div class="timer-tag">
+                            남은 시간 : <span class="timer" th:text="${auction.remainingTime}">17:20:27</span>
+                        </div>
+                        <p class="auction-title" th:text="${auction.name}">작품의 제목이 들어갈 겁니다.</p>
+                        <div class="auction-price-info">
+                            <span>현재 최고 입찰가</span>
+                            <span class="current-bid" th:text="${#numbers.formatDecimal(auction.currentBid, 0, 'COMMA', 0, 'POINT')} + ' $'">200,000 $</span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+</div>
+<!-- ========================================================== -->
+<th:block layout:fragment="script">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+            document.addEventListener("DOMContentLoaded", function() {
+                // 서버에서 데이터 가져오기
+                const monthlySales = /*[[${monthlySalesData}]]*/ [];
+                const genderRatio = /*[[${genderRatioData}]]*/ [];
+                const ageRatio = /*[[${ageRatioData}]]*/ [];
+
+
+            // 1. 월별 판매 현황 (선 그래프) - 수정된 로직
+            const salesCtx = document.getElementById('monthlySalesChart');
+            if (salesCtx && monthlySales && Object.keys(monthlySales).length > 0) {
+                // Map의 key들(예: "2024-07")을 라벨로 사용
+                const labels = Object.keys(monthlySales).map(key => {
+                    const parts = key.split('-');
+                    return parts[0] + '년 ' + parseInt(parts[1], 10) + '월';
+                });
+                // Map의 value들을 데이터로 사용
+                const data = Object.values(monthlySales);
+
+                new Chart(salesCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '월별 판매 건수',
+                            data: data,
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)', // 영역 색상 추가
+                            fill: true, // 라인 아래 영역 채우기
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                // Y축 눈금이 정수로만 표시되도록 함
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+                // 2. 구매자 성별 비율 (원형 그래프)
+                const genderCtx = document.getElementById('genderRatioChart');
+                if (genderCtx && genderRatio.length > 0) {
+                    const labels = genderRatio.map(item => item.gender);
+                    const data = genderRatio.map(item => item.count);
+
+                    new Chart(genderCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: '성별',
+                                data: data,
+                                backgroundColor: ['#4E79A7', '#F28E2B', '#E15759']
+                            }]
+                        },
+                        options: { plugins: { legend: { position: 'right' }}}
+                    });
+                }
+
+                // 3. 구매자 나이대 비율 (막대 그래프)
+                const ageCtx = document.getElementById('ageRatioChart');
+                if (ageCtx && ageRatio.length > 0) {
+                     const labels = ageRatio.map(item => item.ageGroup);
+                     const data = ageRatio.map(item => item.count);
+
+                     new Chart(ageCtx, {
+                         type: 'bar',
+                         data: {
+                             labels: labels,
+                             datasets: [{
+                                 label: '나이대별 구매자 수',
+                                 data: data,
+                                 backgroundColor: '#76B7B2'
+                             }]
+                         },
+                         options: { plugins: { legend: { display: false }}}
+                     });
+                }
+            });
+        /*]]>*/
+    </script>
+</th:block>
 </body>
 </html>
