@@ -98,6 +98,7 @@ public class DataInitializer {
                 for (int i = 1; i <= 100; i++) {
                     String name = "샘플 상품 " + i;
                     int price = (int) (Math.random() * 90000) + 10000; // 10,000 ~ 99,999원
+                    long viewCount = (long) (Math.random() * 10000) + 1; // 1 ~ 10000 조회수
                     String description = "이것은 " + i + "번째 멋진 샘플 상품입니다. 품질이 아주 좋습니다.";
                     String imageUrl = "https://picsum.photos/id/" + i + "/400/400";
 
@@ -116,6 +117,8 @@ public class DataInitializer {
                             .primaryCategory(pCategory)
                             .secondaryCategory(sCategory)
                             .build();
+                    
+                    product.setViewCount(viewCount);
 
                     productRepository.save(product);
                 }

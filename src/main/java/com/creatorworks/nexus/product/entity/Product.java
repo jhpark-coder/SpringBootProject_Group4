@@ -54,6 +54,9 @@ public class Product extends BaseEntity implements Serializable {
     private String backgroundColor;
     private String fontFamily;
 
+    @Column(nullable = false, columnDefinition = "bigint default 0")
+    private long viewCount = 0L;
+
     @OneToMany(mappedBy = "product", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
     private List<ProductInquiry> inquiries = new ArrayList<>();
 
@@ -73,6 +76,7 @@ public class Product extends BaseEntity implements Serializable {
         this.secondaryCategory = secondaryCategory;
         this.backgroundColor = backgroundColor;
         this.fontFamily = fontFamily;
+        this.viewCount = 0L;
     }
 
     public void addReview(ProductReview review) {

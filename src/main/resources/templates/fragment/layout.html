@@ -16,12 +16,17 @@
     <!-- WebSocket and STOMP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    
+    <!-- Chat Buttons Controller -->
+    <script src="/js/chat-buttons.js"></script>
 
     <style>
         /* 기본적으로 JS 경고만 보여주고, 콘텐츠와 방어막은 숨김 */
         .content-wrapper,
         #click-blocker-overlay {
-            display: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease-in-out;
         }
 
         #javascript-warning {
@@ -30,18 +35,28 @@
 
         /* sentinel.js의 심장박동 신호가 있을 때만 콘텐츠를 보여줌 */
         body[data-sentinel-state="alive"] .content-wrapper {
-            display: block;
+            opacity: 1;
+            visibility: visible;
         }
 
         body[data-sentinel-state="alive"] #javascript-warning {
             display: none;
         }
 
+        /* Hide floating buttons by default using visibility/opacity */
+        .chatbot-btn, .chat-btn {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transition: opacity 0.3s ease-in-out;
+            position: fixed !important; /* 강제로 fixed 적용 */
+            z-index: 9999; /* 더 높은 z-index 적용 */
+        }
+
         /* Floating Chat Button */
         .chat-btn {
-            position: fixed;
-            bottom: 40px;
-            right: 40px;
+            bottom: 40px !important;
+            right: 40px !important;
             width: 60px;
             height: 60px;
             border-radius: 50%;
@@ -53,7 +68,23 @@
             font-size: 24px;
             cursor: pointer;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
+        }
+
+        /* Chatbot Button */
+        .chatbot-btn {
+            bottom: 120px !important;
+            right: 40px !important;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #28a745;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         /* Chat Container */
@@ -172,6 +203,153 @@
             flex-grow: 1;
             margin-right: 10px;
         }
+
+        /* Chatbot Container */
+        .chatbot-container {
+            display: none;
+            position: fixed;
+            bottom: 200px;
+            right: 40px;
+            width: 350px;
+            height: 500px;
+            border-radius: 15px;
+            background-color: #f0f2f5;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chatbot-header {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .chatbot-header .header-title {
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+        
+        .chatbot-header .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        .chatbot-body {
+            padding: 15px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        
+        .chat-bubble {
+            background-color: #fff;
+            padding: 12px 15px;
+            border-radius: 0 12px 12px 12px;
+            max-width: 85%;
+            align-self: flex-start;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .chat-bubble p {
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .user-choice-bubble {
+            align-self: flex-end;
+            background-color: #FEE500;
+            color: #191919;
+            padding: 8px 15px;
+            border-radius: 12px 12px 0 12px;
+            max-width: 75%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .user-choice-bubble p {
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .chatbot-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+            align-items: flex-end;
+        }
+        
+        .chatbot-option-btn {
+            background-color: #fff;
+            border: 1px solid #d1d1d1;
+            color: #333;
+            border-radius: 25px;
+            padding: 8px 20px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .chatbot-option-btn:hover {
+            background-color: #f1f1f1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chatbot-option-btn i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+            color: #007bff;
+        }
+
+        .product-recommend-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            padding: 10px;
+            gap: 10px;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s;
+        }
+
+        .product-recommend-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .product-recommend-card img {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .product-recommend-card .info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .product-recommend-card .info .name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .product-recommend-card .info .author,
+        .product-recommend-card .info .price {
+            font-size: 12px;
+            color: #666;
+        }
     </style>
 
     <script>
@@ -204,7 +382,7 @@
     <th:block layout:fragment="css"></th:block>
 </head>
 
-<body>
+<body data-sentinel-state="alive">
     <div th:replace="~{fragment/header::header}"></div>
     <div th:replace="~{fragment/header::category-nav}"></div>
 
@@ -223,14 +401,27 @@
     <!-- JS 비활성화 시 활성화될 투명 방어막 -->
     <div id="click-blocker-overlay"></div>
 
-    <!-- Chat Button -->
-    <div class="chat-btn">
-        <i class="fas fa-comments"></i>
-    </div>
-
-    <!-- Chat Window -->
+    <!-- 상담원 채팅 모달 -->
     <div th:replace="~{fragment/chat::chat}"></div>
 
+    <!-- 챗봇 모달 -->
+    <div class="chatbot-container" id="chatbot-container">
+        <div class="chatbot-header">
+            <span class="header-title">Nexus 챗봇</span>
+            <button type="button" class="btn-close" id="close-chatbot-btn"></button>
+        </div>
+        <div class="chatbot-body">
+            <div class="chat-bubble">
+                <p>안녕하세요! Nexus에 오신 것을 환영합니다. 무엇을 도와드릴까요?</p>
+            </div>
+            <div class="chatbot-options">
+                <button class="chatbot-option-btn" data-option="category"><i class="fas fa-box"></i> 카테고리 추천</button>
+                <button class="chatbot-option-btn" data-option="keyword"><i class="fas fa-truck"></i> 키워드 추천</button>
+                <button class="chatbot-option-btn" data-option="faq"><i class="fas fa-headset"></i> 자주 묻는 질문</button>
+            </div>
+        </div>
+    </div>
+    
     <div th:replace="~{fragment/footer::footer}"></div>
 
     <!-- 1. 코어 JS 라이브러리 (jQuery 등) -->
@@ -382,14 +573,47 @@
             });
         });
     </script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const chatbotBtn = document.querySelector(".chatbot-btn");
+            const chatbotContainer = document.getElementById("chatbot-container");
+            const closeChatbotBtn = document.getElementById("close-chatbot-btn");
+
+            if (chatbotBtn) {
+                chatbotBtn.addEventListener("click", () => {
+                    const isDisplayed = chatbotContainer.style.display === "flex";
+                    chatbotContainer.style.display = isDisplayed ? "none" : "flex";
+                });
+            }
+
+            if(closeChatbotBtn) {
+                closeChatbotBtn.addEventListener("click", () => {
+                    chatbotContainer.style.display = "none";
+                });
+            }
+        });
+    </script>
+
     <!-- 2. 각 페이지의 개별 스크립트 -->
     <th:block layout:fragment="script"></th:block>
+
+       <!-- (기존의 다른 script 태그들...) -->
 
     <!-- 추가 보안 스크립트 (토스트 알림, 드래그 방지 등) -->
     <script th:src="@{/js/security.js}"></script>
 
     <!-- 우클릭 방지 및 JS 비활성화 감지를 위한 보이지 않는 감시탑(iframe) -->
+    <!-- body 태그가 닫히기 직전에 로드하여, parent.document.body가 항상 존재하도록 보장 -->
     <iframe th:src="@{/sentinel}" style="display:none; width:0; height:0;" title="sentinel"></iframe>
+
+    <div class="chatbot-btn">
+        <i class="fas fa-robot"></i>
+    </div>
+    <div class="chat-btn">
+        <i class="fas fa-comments"></i>
+    </div>
+
 </body>
 
 </html>

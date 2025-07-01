@@ -29,6 +29,7 @@ import com.creatorworks.nexus.product.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 /**
  * @Service: 이 클래스가 비즈니스 로직을 처리하는 서비스 계층의 컴포넌트임을 Spring에 알립니다.
@@ -116,10 +117,12 @@ public class ProductService {
      * @return 찾아낸 상품(Product) 객체.
      * @throws IllegalArgumentException 해당 ID의 상품이 존재하지 않을 경우 예외를 발생시킵니다.
      */
+    @Transactional
     public Product findProductById(Long id) {
-        // Repository에서 ID로 상품을 찾고, 만약 없다면(.orElseThrow) 예외를 던집니다.
-        return productRepository.findById(id)
+        Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid product Id:" + id));
+        product.setViewCount(product.getViewCount() + 1);
+        return product;
     }
 
     /**
@@ -268,5 +271,12 @@ public class ProductService {
             heartCounts.put(productId, getHeartCount(productId));
         }
         return heartCounts;
+    }
+
+    public List<ProductDto> findTop3PopularProducts(String secondaryCategory) {
+        List<Product> products = productRepository.findTop3BySecondaryCategoryOrderByViewCountDesc(secondaryCategory);
+        return products.stream()
+                       .map(ProductDto::new)
+                       .collect(Collectors.toList());
     }
 }
