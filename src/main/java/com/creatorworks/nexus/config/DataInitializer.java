@@ -15,8 +15,8 @@ import com.creatorworks.nexus.order.entity.Order;
 import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.entity.ProductHeart;
-import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.repository.ProductHeartRepository;
+import com.creatorworks.nexus.product.repository.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -103,7 +103,7 @@ public class DataInitializer {
                 // 간단한 키워드 배열
                 String[] keywords = {"Java", "Spring", "React", "Python", "디자인", "일러스트", "캐릭터", "웹개발"};
 
-                for (int i = 1; i <= 100; i++) {
+                for (int i = 1; i <= 1000; i++) {
                     // 진행 상황 출력 (매 25개마다)
                     if (i % 25 == 0) {
                         System.out.println("상품 데이터 생성 진행률: " + i + "/100");
