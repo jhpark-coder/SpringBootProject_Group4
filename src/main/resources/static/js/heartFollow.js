@@ -116,10 +116,53 @@ document.addEventListener('DOMContentLoaded', function () {
         if (userId) {
             loadFollowStats(userId);
         }
+
     });
 });
 
 // 전역 함수로 등록
 window.toggleFollow = toggleFollow;
 window.toggleLike = toggleLike;
-window.loadFollowStats = loadFollowStats; 
+window.loadFollowStats = loadFollowStats;
+
+//function requestPay() {
+//    IMP.init("imp20067661"); // 실제 가맹점 코드로 바꿔주세요
+//
+//    IMP.request_pay({
+//        pg: "html5_inicis",         // 결제 대행사
+//        pay_method: "card",         // 결제 수단
+//        merchantuid: "order" + new Date().getTime(), // 주문번호 (고유해야 함)
+//        name: "상품명",
+//        amount: 1000                // 결제 금액 (원 단위)
+//    }, function (rsp) {
+//        if (rsp.success) {
+//            alert("결제 성공!");
+//            console.log(rsp);
+//        } else {
+//            alert("결제 실패: " + rsp.error_msg);
+//        }
+//    });
+//}
+function requestPay() {
+    const productName = $("#productName").val();
+    const productAmount = parseInt($("#productAmount").val(), 10);
+
+    IMP.init("imp20067661");
+
+    IMP.request_pay({
+        pg: "html5_inicis",
+        pay_method: "card",
+        merchantuid: "order" + new Date().getTime(),
+        name: productName,
+        amount: 100
+    }, function (rsp) {
+        if (rsp.success) {
+            alert("결제 성공!");
+        } else {
+            alert("결제 실패: " + rsp.error_msg);
+        }
+    });
+}
+//$("#productName").val();
+//productName 이 부분은 상품명 id값 변경
+//금액도 동일
