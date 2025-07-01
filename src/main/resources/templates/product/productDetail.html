@@ -44,10 +44,12 @@
         }
 
         .sidebar {
-            grid-area: sidebar;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 24px 20px 18px 20px;
             width: 320px;
-            /* 고정 너비 */
-            height: fit-content;
+            margin-top: 16px;
         }
 
         .description-section {
@@ -121,128 +123,174 @@
             object-fit: cover;
         }
 
-        /* --- 사이드바 --- */
-        .sidebar .author-info {
+        /* --- 사이드바 리디자인 (예시와 동일하게) --- */
+        .sidebar-bg {
+            background: #f7fafd;
+            min-height: 100vh;
+            width: 100%;
             display: flex;
+            justify-content: flex-end;
+        }
+        .sidebar-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+            padding: 28px 22px 20px 22px;
+            width: 320px;
+            margin-top: 32px;
+            margin-right: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .sidebar-card .author-info {
+            display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
+            margin-bottom: 14px;
         }
-
-        .sidebar .author-profile {
+        .sidebar-card .author-profile {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
-
-        .sidebar .author-pfp {
-            width: 40px;
-            height: 40px;
+        .sidebar-card .author-pfp {
+            width: 48px;
+            height: 48px;
             background: #e0e0e0;
             border-radius: 50%;
         }
-
-        .sidebar .author-name {
-            font-weight: bold;
-            font-size: 15px;
+        .sidebar-card .author-name {
+            font-weight: 700;
+            font-size: 17px;
+            color: #222;
         }
-
-        .sidebar .subscribe-btn {
-            background: #007bff;
+        .sidebar-card .subscribe-btn {
+            background: #0096ff;
             color: #fff;
-            padding: 7px 16px;
-            border-radius: 5px;
-            font-size: 14px;
-            font-weight: 500;
+            padding: 7px 20px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            box-shadow: none;
+            transition: background 0.2s;
         }
-
-        .sidebar .tags {
+        .sidebar-card .subscribe-btn:hover {
+            background: #0074e9;
+        }
+        .sidebar-card .stats-info {
             display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin: 20px 0;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            border: none;
+            padding: 0;
         }
-
-        .sidebar .stats-info {
-            display: flex;
-            justify-content: space-around;
-            padding: 15px 0;
-            margin: 20px 0;
-            border-top: 1px solid #eee;
-            border-bottom: 1px solid #eee;
-        }
-
-        .sidebar .stat-item {
+        .sidebar-card .stat-item {
             text-align: center;
         }
-
-        .sidebar .stat-item span {
-            display: block;
+        .sidebar-card .stat-item span {
             font-size: 13px;
             color: #888;
         }
-
-        .sidebar .stat-item strong {
+        .sidebar-card .stat-item strong {
             font-size: 16px;
-            font-weight: bold;
-            color: #333;
+            color: #222;
+            font-weight: 700;
         }
-
-        .sidebar .tag-btn {
-            background: #f0f0f0;
-            border: 1px solid #ddd;
-            border-radius: 15px;
-            padding: 5px 12px;
-            font-size: 12px;
-            color: #555;
-        }
-
-        .sidebar .description {
-            font-size: 14px;
-            color: #555;
-            line-height: 1.6;
-            border-top: 1px solid #eee;
-            padding-top: 15px;
-        }
-
-        .sidebar-actions {
-            margin: 20px 0;
+        .sidebar-card .tags {
             display: flex;
-            gap: 10px;
-            align-items: center;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-bottom: 12px;
         }
-
-        .purchase-btn {
-            flex-grow: 1;
-            background: #007bff;
-            color: #fff;
-            padding: 12px;
-            text-align: center;
-            border-radius: 5px;
-            font-size: 16px;
+        .sidebar-card .tag-btn {
+            background: #f5f6fa;
+            border: none;
+            border-radius: 16px;
+            padding: 5px 16px;
+            font-size: 12px;
+            color: #666;
             font-weight: 500;
         }
-
-        .like-btn {
+        .sidebar-card .description {
+            font-size: 14px;
+            color: #444;
+            margin-bottom: 18px;
+            border: none;
+            padding: 0;
+        }
+        .sidebar-card .sidebar-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .sidebar-card .purchase-btn {
+            flex: 1 1 0;
+            background: #0074e9;
+            color: #fff;
+            padding: 11px 0;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 700;
+            text-align: center;
+            border: none;
+            box-shadow: none;
+            transition: background 0.2s;
+        }
+        .sidebar-card .purchase-btn:hover {
+            background: #005bb5;
+        }
+        .sidebar-card .like-btn {
+            background: #fff;
+            border: #ffd600;
+            color: #ffffff;
+            min-width: 48px;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 18px;
             display: flex;
             align-items: center;
-            gap: 5px;
-            background: #f0f0f0;
-            padding: 8px 12px;
-            border-radius: 8px;
+            gap: 4px;
+            width: 44px;
+            height: 44px;
+            box-shadow: 0 1px 2px rgba(255,193,7,0.08);
+            transition: background 0.2s color 0.2s;
         }
-
-        .like-btn.liked {
-            background-color: #dc3545;
-            /* 빨간색 */
-            border-color: #dc3545;
-            color: white;
-            /* 글자색 흰색 */
+        .sidebar-card .like-btn.liked {
+            background: #ff4d4f;
+            color: #fff;
         }
-
-        .like-btn.liked .fa-heart {
-            color: white;
-            font-weight: 900;
-            /* 채워진 하트로 보이게 */
+        .sidebar-card .like-btn.liked .fa-heart {
+            color: #fff;
+        }
+        .sidebar-card .fa-heart {
+            font-size: 20px;
+        }
+        .sidebar-card .like-count {
+            font-weight: bold;
+            margin-left: 2px;
+            font-size: 15px;
+        }
+        .sidebar-card .action-buttons {
+            display: flex;
+            gap: 14px;
+            font-size: 14px;
+            color: #444;
+            margin-bottom: 12px;
+        }
+        .sidebar-card .action-btn {
+            background: none;
+            color: #444;
+            padding: 0;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .sidebar-card .extra-info {
+            font-size: 13px;
+            color: #888;
         }
 
         .continue-btn {
@@ -266,6 +314,136 @@
             margin: 50px auto;
             max-width: 600px;
         }
+
+        /* --- 그림1 목표 디자인 완전 동일하게 --- */
+        .sidebar-goalcard {
+            background: #fff;
+            border: 1.5px solid #1ea7fd;
+            border-radius: 14px;
+            box-shadow: none;
+            padding: 28px 22px 22px 22px;
+            width: 320px;
+            margin: 40px auto 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            height: 320px;
+        }
+        .sidebar-goalcard.has-tags {
+            height: 400px;
+        }
+        .sidebar-goalcard .author-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .sidebar-goalcard .author-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .sidebar-goalcard .author-pfp {
+            width: 44px;
+            height: 44px;
+            background: #e0e0e0;
+            border-radius: 50%;
+        }
+        .sidebar-goalcard .author-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: #222;
+        }
+        .sidebar-goalcard .subscribe-btn {
+            background: #0096ff;
+            color: #fff;
+            padding: 7px 20px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            box-shadow: none;
+            transition: background 0.2s;
+        }
+        .sidebar-goalcard .subscribe-btn:hover {
+            background: #0074e9;
+        }
+        .sidebar-goalcard .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+        .sidebar-goalcard .tag-btn {
+            background: #fff;
+            border: 1.5px solid #7ed6f9;
+            border-radius: 16px;
+            padding: 6px 18px;
+            font-size: 14px;
+            color: #1ea7fd;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .sidebar-goalcard .description {
+            font-size: 15px;
+            color: #222;
+            margin-bottom: 22px;
+            border: none;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .sidebar-goalcard .sidebar-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 0;
+        }
+        .sidebar-goalcard .like-btn {
+            background: #fff;
+            border: 2px solid #ffd600;
+            color: #ffd600;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            transition: background 0.2s, color 0.2s;
+        }
+        .sidebar-goalcard .like-btn.liked {
+            background: #ffd600;
+            color: #fff;
+            border-color: #ffd600;
+        }
+        .sidebar-goalcard .like-btn .fa-thumbs-up {
+            font-size: 22px;
+        }
+        .sidebar-goalcard .like-count {
+            font-weight: 700;
+            font-size: 17px;
+            margin-left: 6px;
+            color: #222;
+        }
+        .sidebar-goalcard .purchase-btn {
+            flex: 1 1 0;
+            background: #ffd600;
+            color: #fff;
+            padding: 0 0;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: 700;
+            text-align: center;
+            border: none;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: none;
+            transition: background 0.2s;
+        }
+        .sidebar-goalcard .purchase-btn:hover {
+            background: #ffe066;
+        }
     </style>
 </th:block>
 
@@ -280,55 +458,37 @@
         </main>
 
         <!-- Sidebar Section -->
-        <aside class="sidebar" th:object="${product}">
+        <aside class="sidebar-goalcard"
+            th:classappend="${#lists.isEmpty(tagNames)} ? '' : 'has-tags'"
+            th:object="${product}">
             <div class="author-info">
                 <div class="author-profile">
                     <img class="author-pfp" alt="author profile picture">
                     <span class="author-name" th:text="*{author.name}">작가 이름</span>
                 </div>
-                <button class="subscribe-btn">구독하기</button>
+                <button class="subscribe-btn">Subscribe</button>
             </div>
-
-            <!-- 통계 정보 (좋아요, 조회수, 구매수) -->
-            <div class="stats-info">
-                <div class="stat-item">
-                    <span>좋아요</span>
-                    <strong id="heart-count" th:text="${heartCount}">0</strong>
-                </div>
-                <div class="stat-item">
-                    <span>조회수</span>
-                    <strong th:text="${product.viewCount}">0</strong>
-                </div>
-                <div class="stat-item">
-                    <span>구매수</span>
-                    <strong>(미구현)</strong>
-                </div>
-            </div>
-            
             <div class="tags">
-                <button class="tag-btn" th:text="*{primaryCategory}">주 카테고리</button>
+                <button class="tag-btn" th:text="*{primaryCategory}">카테고리</button>
                 <button class="tag-btn" th:if="*{secondaryCategory != null and !#strings.isEmpty(secondaryCategory)}" th:text="*{secondaryCategory}">부 카테고리</button>
-                <!-- 실제 태그들 표시 -->
                 <button class="tag-btn" th:each="tagName : ${tagNames}" th:text="${tagName}">태그</button>
             </div>
-
             <div class="description">
-                <p th:text="*{workDescription}">여기에 작가의 말이 들어갑니다. 이 작품을 만들게 된 계기나 작품에 대한 간단한 소개를 포함할 수 있습니다.</p>
+                <p th:text="*{workDescription}">여기에 설명이 들어갑니다.</p>
             </div>
-
             <div class="sidebar-actions">
-                <a href="#" class="purchase-btn">구매하기</a>
-            </div>
-
-            <div class="action-buttons">
-                <button class="action-btn">공유</button>
-                <button class="action-btn">보관</button>
-                <button class="action-btn">신고</button>
-            </div>
-
-            <div class="extra-info">
-                <span>최초 등록일: <span th:text="*{#temporals.format(regTime, 'yyyy-MM-dd')}">2023.01.01</span></span>
-                <span>최종 업데이트: <span th:text="*{#temporals.format(updateTime, 'yyyy-MM-dd')}">2023.01.01</span></span>
+                <!-- 좋아요 버튼 (왼쪽, 엄지척, 노란색) -->
+                <button class="like-btn" th:data-product-id="${product.id}" th:classappend="${isLiked} ? 'liked'" th:onclick="|toggleLike(${product.id})|" sec:authorize="isAuthenticated()">
+                    <i class="fa fa-thumbs-up"></i>
+                    <span class="like-count" th:text="${heartCount}">0</span>
+                </button>
+                <!-- 비로그인용 -->
+                <button class="like-btn" onclick="alert('로그인이 필요합니다.'); location.href='/member/login';" sec:authorize="!isAuthenticated()">
+                    <i class="fa fa-thumbs-up"></i>
+                    <span class="like-count" th:text="${heartCount}">0</span>
+                </button>
+                <!-- 구매 버튼 (오른쪽, 노란색, pill형) -->
+                <a href="#" class="purchase-btn" th:text="${product.price} != null ? ${product.price} + 'P로 계속보기' : '구매하기'">30P로 계속보기</a>
             </div>
         </aside>
 

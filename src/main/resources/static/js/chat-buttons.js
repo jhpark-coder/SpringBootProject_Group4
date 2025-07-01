@@ -56,12 +56,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 카테고리 데이터
     const categories = {
-        "Artwork": ["포토그라피", "일러스트레이션", "스케치", "코믹스"],
-        "Graphic-Design": ["타이포그라피", "앨범아트", "로고", "브랜딩", "편집디자인"],
+        "Artwork": ["포토그래피", "일러스트레이션", "스케치", "코믹스"],
+        "Graphic-Design": ["타이포그래피", "앨범아트", "로고", "브랜딩", "편집디자인"],
         "Character": ["카툰", "팬아트", "2D 캐릭터", "3D 모델링"],
-        "Java": ["Spring/JPA", "네트워크", "알고리즘", "코어 자바"],
         "Frontend": ["HTML/CSS", "JavaScript", "React/Vue", "UI/UX"],
-        "Python": ["웹 개발", "데이터 분석", "머신러닝", "자동화"]
+        "Python": ["웹 개발", "데이터 분석", "머신러닝", "자동화"],
+        "Java": ["Spring/JPA", "네트워크", "알고리즘", "코어 자바"],
     };
     
     // Store the initial HTML for reset
