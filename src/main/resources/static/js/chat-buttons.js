@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
         scrollChatToBottom();
     }
 
-    function appendBotResponse(title, options, showBackButton) {
+    function appendBotResponse(title, options, showBackButton, callback) {
         const botResponseContainer = document.createElement('div');
         botResponseContainer.className = 'bot-response';
 
@@ -155,6 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setUniformButtonWidths(botResponseContainer);
             scrollChatToBottom();
             addOptionClickListeners();
+            if (typeof callback === 'function') callback();
         }, 600);
     }
     
@@ -242,6 +243,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 showPrimaryCategories(); 
                 break;
             case 'keyword':
+                appendBotResponse('원하시는 키워드들을 적어주세요', [], false, showKeywordInput);
+                break;
             case 'faq':
                 appendBotResponse("해당 기능은 현재 준비 중입니다.", [], true);
                 break;
@@ -255,6 +258,177 @@ document.addEventListener('DOMContentLoaded', function() {
                 chatbotContainer.style.display = 'none';
                 break;
         }
+    }
+
+    function showKeywordInput() {
+        // 기존 옵션 제거
+        const optionsContainer = chatbotBody.querySelector('.chatbot-options');
+        if (optionsContainer) optionsContainer.remove();
+        // 입력창 추가
+        const inputDiv = document.createElement('div');
+        inputDiv.style.marginTop = '10px';
+        inputDiv.style.display = 'flex';
+        inputDiv.style.gap = '8px';
+        inputDiv.innerHTML = `
+            <input type="text" class="chatbot-keyword-input" placeholder="키워드를 입력하세요" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ccc; font-size:14px;">
+            <button class="chatbot-keyword-btn" style="padding:8px 16px; border-radius:6px; background:#007bff; color:#fff; border:none;">입력</button>
+        `;
+        chatbotBody.appendChild(inputDiv);
+        const input = inputDiv.querySelector('input');
+        const btn = inputDiv.querySelector('button');
+        input.focus();
+        // 엔터/버튼 입력 처리
+        function submitKeyword() {
+            const value = input.value.trim();
+            console.log('[DEBUG] 키워드 입력값:', value);
+            
+            if (!value) {
+                console.log('[DEBUG] 입력값이 비어있음');
+                return;
+            }
+            
+            if (value.length > 200) {
+                appendBotResponse('입력 텍스트가 너무 깁니다. 200자 이내로 입력해주세요.', [], true);
+                return;
+            }
+            
+            inputDiv.remove();
+            appendUserMessage(value);
+            
+            // 로딩 메시지 표시
+            appendBotResponse('키워드를 분석하고 있습니다...', [], false);
+            
+            // 1. 명사 추출 API 호출
+            console.log('[DEBUG] 명사 추출 API 호출 시작');
+            fetch('/api/korean/nouns', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: value })
+            })
+            .then(response => {
+                console.log('[DEBUG] 명사 추출 응답 상태:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(nouns => {
+                console.log('[DEBUG] 명사 추출 결과:', nouns);
+                console.log('[DEBUG] 명사 개수:', nouns ? nouns.length : 'null');
+                
+                if (!Array.isArray(nouns)) {
+                    console.error('[ERROR] 명사 추출 결과가 배열이 아님:', typeof nouns);
+                    appendBotResponse('키워드 분석 결과가 올바르지 않습니다.', [], true);
+                    return;
+                }
+                
+                if (nouns.length === 0) {
+                    console.log('[DEBUG] 추출된 명사가 없음');
+                    appendBotResponse('의미있는 키워드(명사)를 추출하지 못했습니다. 다른 키워드로 시도해보세요.', [], true);
+                    return;
+                }
+                
+                // 2. 추천 API 호출
+                console.log('[DEBUG] 키워드 추천 API 호출 시작. 키워드:', nouns);
+                fetch('/api/keyword/recommend', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keywords: nouns })
+                })
+                .then(response => {
+                    console.log('[DEBUG] 키워드 추천 응답 상태:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('[DEBUG] 키워드 추천 결과:', data);
+                    
+                    if (!data || typeof data !== 'object') {
+                        console.error('[ERROR] 추천 결과가 객체가 아님:', typeof data);
+                        appendBotResponse('추천 결과를 처리하는 중 오류가 발생했습니다.', [], true);
+                        return;
+                    }
+                    
+                    const products = data.products || [];
+                    console.log('[DEBUG] 추천 상품 개수:', products.length);
+                    
+                    if (!Array.isArray(products)) {
+                        console.error('[ERROR] products가 배열이 아님:', typeof products);
+                        appendBotResponse('추천 결과 형식이 올바르지 않습니다.', [], true);
+                        return;
+                    }
+                    
+                    if (products.length === 0) {
+                        const retryOptions = [
+                            { key: 'keyword', text: '다른 키워드로 검색', icon: '<i class="fas fa-search"></i>' },
+                            { key: 'back', text: '처음으로', icon: '<i class="fas fa-arrow-left"></i>' }
+                        ];
+                        appendBotResponse(`"${nouns.join(', ')}" 키워드와 관련된 작품을 찾지 못했습니다. 다른 키워드로 시도해보세요.`, retryOptions, false);
+                        return;
+                    }
+                    
+                    appendBotResponse(`"${nouns.join(', ')}" 키워드로 ${products.length}개의 추천 작품을 찾았습니다!`, [], false);
+                    
+                    // 카드 형태로 출력
+                    const cardsHtml = products.map((product, index) => {
+                        // 안전한 데이터 처리
+                        const safeProduct = {
+                            id: product.id || 0,
+                            name: product.name || '제목 없음',
+                            authorName: product.authorName || '작가 미상',
+                            imageUrl: product.imageUrl || '/static/images/default-product.jpg',
+                            description: product.description || '',
+                            tags: Array.isArray(product.tags) ? product.tags : [],
+                            score: product.score || 0
+                        };
+                        
+                        console.log(`[DEBUG] 상품 ${index + 1}:`, safeProduct);
+                        
+                        return `
+                            <a href="/products/${safeProduct.id}" class="product-recommend-card">
+                                <img src="${safeProduct.imageUrl}" alt="${safeProduct.name}" onerror="this.src='/static/images/default-product.jpg'">
+                                <div class="info">
+                                    <span class="name">${safeProduct.name}</span>
+                                    <span class="author">${safeProduct.authorName}</span>
+                                    <span class="desc">${safeProduct.description}</span>
+                                    <span class="tags">${safeProduct.tags.join(', ')}</span>
+                                    <span class="score">추천점수: ${safeProduct.score}</span>
+                                </div>
+                            </a>
+                        `;
+                    }).join('');
+                    
+                    setTimeout(() => {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = cardsHtml;
+                        while (tempDiv.firstChild) {
+                            chatbotBody.appendChild(tempDiv.firstChild);
+                        }
+                        
+                        // 추가 옵션 제공
+                        const continueOptions = [
+                            { key: 'yes_restart', text: '다른 키워드로 검색', icon: '<i class="fas fa-search"></i>' },
+                            { key: 'no_close', text: '종료', icon: '<i class="fas fa-times"></i>' }
+                        ];
+                        appendBotResponse("다른 키워드로 더 검색해보시겠어요?", continueOptions, false);
+                        
+                        scrollChatToBottom();
+                    }, 800);
+                })
+                .catch((err) => {
+                    console.error('[ERROR] 키워드 추천 API 오류:', err);
+                    appendBotResponse(`추천 결과 조회 중 오류가 발생했습니다: ${err.message}`, [], true);
+                });
+            })
+            .catch((err) => {
+                console.error('[ERROR] 명사 추출 API 오류:', err);
+                appendBotResponse(`키워드 분석 중 오류가 발생했습니다: ${err.message}`, [], true);
+            });
+        }
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') submitKeyword(); });
+        btn.addEventListener('click', submitKeyword);
     }
 
     function addOptionClickListeners() {
