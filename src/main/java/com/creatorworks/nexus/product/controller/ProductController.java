@@ -207,6 +207,27 @@ public class ProductController {
         model.addAttribute("heartCount", heartCount);
         model.addAttribute("isLiked", isLiked);
         // ---
+        
+        // --- 태그 정보 추가 ---
+        List<String> allTagNames = product.getItemTags().stream()
+                .map(productItemTag -> productItemTag.getItemTag().getName())
+                .toList();
+        
+        // 카테고리를 제외한 순수 태그만 필터링
+        List<String> pureTagNames = allTagNames.stream()
+                .filter(tagName -> !tagName.equals(product.getPrimaryCategory()))
+                .filter(tagName -> !tagName.equals(product.getSecondaryCategory()))
+                .toList();
+        
+        model.addAttribute("tagNames", pureTagNames);
+        
+        // 카테고리 및 태그 디버그 로그
+        log.debug("🔍 상품 {} 정보:", id);
+        log.debug("  - primaryCategory: '{}'", product.getPrimaryCategory());
+        log.debug("  - secondaryCategory: '{}'", product.getSecondaryCategory());
+        log.debug("  - 전체 태그 목록: {}", allTagNames);
+        log.debug("  - 순수 태그 목록: {}", pureTagNames);
+        // ---
 
         return "product/productDetail";
     }

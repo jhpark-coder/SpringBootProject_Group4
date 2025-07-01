@@ -28,7 +28,7 @@ import lombok.ToString;
 @Setter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@ToString(exclude = {"author", "reviews", "inquiries", "itemTags"})
+@ToString(exclude = {"author", "inquiries", "itemTags"})
 public class Product extends BaseEntity implements Serializable {
 
     @Id

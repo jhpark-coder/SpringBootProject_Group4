@@ -4,6 +4,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
 import com.creatorworks.nexus.product.entity.Product;
+import java.util.List;
+import jakarta.persistence.criteria.Predicate;
 
 public class ProductSpecification {
 

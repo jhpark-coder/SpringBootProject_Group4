@@ -137,6 +137,11 @@ public class ProductService {
             throw new IllegalArgumentException("작성자 정보를 찾을 수 없습니다: " + userEmail);
         }
 
+        // 카테고리 저장 디버그 로그
+        System.out.println("🔍 상품 저장 - primaryCategory: '" + request.getPrimaryCategory() + "'");
+        System.out.println("🔍 상품 저장 - secondaryCategory: '" + request.getSecondaryCategory() + "'");
+        System.out.println("🔍 상품 저장 - tags: " + request.getTags());
+
         Product product = Product.builder()
                 .author(author)
                 .name(request.getName())
@@ -171,6 +176,13 @@ public class ProductService {
         if (!product.getAuthor().getEmail().equals(userEmail)) {
             throw new IllegalStateException("상품을 수정할 권한이 없습니다.");
         }
+
+        // 카테고리 수정 디버그 로그
+        System.out.println("🔍 상품 수정 - 기존 primaryCategory: '" + product.getPrimaryCategory() + "'");
+        System.out.println("🔍 상품 수정 - 기존 secondaryCategory: '" + product.getSecondaryCategory() + "'");
+        System.out.println("🔍 상품 수정 - 새로운 primaryCategory: '" + request.getPrimaryCategory() + "'");
+        System.out.println("🔍 상품 수정 - 새로운 secondaryCategory: '" + request.getSecondaryCategory() + "'");
+        System.out.println("🔍 상품 수정 - 새로운 tags: " + request.getTags());
 
         product.setName(request.getName());
         product.setPrice(request.getPrice());

@@ -307,8 +307,9 @@
             
             <div class="tags">
                 <button class="tag-btn" th:text="*{primaryCategory}">주 카테고리</button>
-                <button class="tag-btn" th:if="*{secondaryCategory != null}" th:text="*{secondaryCategory}">부
-                    카테고리</button>
+                <button class="tag-btn" th:if="*{secondaryCategory != null and !#strings.isEmpty(secondaryCategory)}" th:text="*{secondaryCategory}">부 카테고리</button>
+                <!-- 실제 태그들 표시 -->
+                <button class="tag-btn" th:each="tagName : ${tagNames}" th:text="${tagName}">태그</button>
             </div>
 
             <div class="description">
@@ -355,8 +356,6 @@
 <div th:replace="~{fragments/footer :: footer}"></div>
 
 <th:block layout:fragment="script">
-    <script th:src="@{/js/review.js}"></script>
-    <script th:src="@{/js/inquiry.js}"></script>
     <script th:src="@{/js/heartFollow.js}"></script>
 </th:block>
 

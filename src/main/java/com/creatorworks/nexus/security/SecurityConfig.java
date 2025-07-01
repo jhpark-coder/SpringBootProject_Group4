@@ -62,11 +62,12 @@ public class SecurityConfig {
             // CSRF 보호를 활성화하고, 토큰을 JS가 읽을 수 있는 쿠키로 생성합니다.
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel")
+                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**")
             )
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/api/**", "/members/logout").permitAll()
                 .requestMatchers("/editor/**", "/editor").hasAnyRole("ADMIN", "SELLER")
+                .requestMatchers("/api/korean/**", "/api/keyword/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(formLogin -> formLogin
@@ -99,12 +100,13 @@ public class SecurityConfig {
             // CSRF 보호를 활성화하고, 토큰을 JS가 읽을 수 있는 쿠키로 생성합니다.
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel")
+                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**")
             )
             // 모든 요청을 허용합니다. (개발환경과 동일하게)
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout").permitAll()
                 .requestMatchers("/editor/**", "/editor").hasAnyRole("ADMIN", "SELLER")
+                .requestMatchers("/api/korean/**", "/api/keyword/**").permitAll()
                 .anyRequest().authenticated()
             )
             // 폼 로그인 설정
