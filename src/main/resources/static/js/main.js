@@ -17,31 +17,9 @@ $(document).ready(function () {
         });
     }
 
-    // 콘텐츠를 삽입할 위치와 경고 메시지 요소
-    const contentPlaceholder = $('#main-content-placeholder');
-
-    if (contentPlaceholder.length === 0) {
-        console.error('필수 DOM 요소(placeholder)를 찾을 수 없습니다.');
-        return;
-    }
-
-    // 1. 서버에서 메인 콘텐츠의 HTML 구조를 가져옴
-    $.get("/main-content", function (html) {
-        // 2. 가져온 HTML을 placeholder에 삽입
-        contentPlaceholder.html(html);
-
-        // 3. 동적으로 삽입된 콘텐츠 내부의 상품 그리드에 상품 목록을 채움
-        loadProducts();
-    }).fail(function (error) {
-        console.error('메인 콘텐츠를 가져오는 중 오류 발생:', error);
-        contentPlaceholder.html('<p style="color: red; text-align: center;">페이지를 로드할 수 없습니다. 잠시 후 다시 시도해주세요.</p>');
-    });
-
-    /**
-     * 상품 목록을 API에서 가져와 그리드에 렌더링하는 함수
-     */
+    // 상품 목록을 API에서 가져와 그리드에 렌더링하는 함수
     function loadProducts() {
-        const gridContainer = $('.grid-container');
+        const gridContainer = $('#main-product-grid');
         if (gridContainer.length === 0) {
             console.error('상품 그리드 컨테이너를 찾을 수 없습니다.');
             return;
@@ -49,10 +27,10 @@ $(document).ready(function () {
 
         gridContainer.html('<p>상품 목록을 불러오는 중입니다...</p>');
 
-        $.getJSON("/api/products")
+        $.getJSON("/api/products?page=0&size=4&sort=regTime,DESC")
             .done(function (pageResponse) {
-                const products = pageResponse.content;
-                gridContainer.empty(); // 로딩 메시지 제거
+                const products = pageResponse.content || pageResponse.products || pageResponse || [];
+                gridContainer.empty();
 
                 if (!products || products.length === 0) {
                     gridContainer.html('<p>표시할 상품이 없습니다.</p>');
@@ -61,20 +39,22 @@ $(document).ready(function () {
 
                 products.forEach(function (product) {
                     const productItem = `
-                        <article class="grid-item">
-                            <div class="item-image-placeholder">
-                               <a href="/products/${product.id}">
-                                 <img src="${product.imageUrl || '/images/placeholder.png'}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover;">
-                               </a>
-                            </div>
-                            <div class="item-info">
-                                <div class="author-info">
-                                    <div class="author-avatar"></div>
-                                    <span class="author-name">${product.name}</span>
+                        <div class="col-md-3">
+                            <article class="grid-item">
+                                <a href="/products/${product.id}">
+                                    <div class="item-image-placeholder"
+                                        style="background-image: url('${product.imageUrl || '/images/placeholder.png'}'); background-size: cover; background-position: center; width: 100%; height: 200px; border-radius: 8px;"></div>
+                                </a>
+                                <div class="item-info">
+                                    <div class="author-info">
+                                        <div class="author-avatar"></div>
+                                        <span class="author-name">${product.authorName || '작가 이름'}</span>
+                                    </div>
+                                    <a href="#" class="btn subscribe-btn">Subscribe</a>
                                 </div>
-                                <a href="#" class="btn subscribe-btn">Subscribe</a>
-                            </div>
-                        </article>`;
+                            </article>
+                        </div>
+                    `;
                     gridContainer.append(productItem);
                 });
             })
@@ -83,4 +63,7 @@ $(document).ready(function () {
                 gridContainer.html(`<p style="color: red;">데이터를 불러오는데 실패했습니다.</p>`);
             });
     }
+
+    // 페이지 로드 시 바로 실행
+    loadProducts();
 }); 
