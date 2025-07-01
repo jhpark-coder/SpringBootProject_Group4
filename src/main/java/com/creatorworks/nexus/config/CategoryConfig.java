@@ -19,6 +19,7 @@ public class CategoryConfig {
         categoryMap.put("character", List.of("카툰", "팬아트", "2D 캐릭터", "3D 모델링"));
         categoryMap.put("frontend", List.of("HTML/CSS", "JavaScript", "React/Vue", "UI/UX"));
         categoryMap.put("python", List.of("웹 개발", "데이터 분석", "머신러닝", "자동화"));
+        categoryMap.put("java", List.of("Spring/JPA", "네트워크", "알고리즘", "코어 자바"));
         categories = Collections.unmodifiableMap(categoryMap);
     }
 

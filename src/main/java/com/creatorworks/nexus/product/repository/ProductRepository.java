@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.product.entity.Product;
 
 /**
@@ -42,4 +43,11 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<String> findDistinctSecondaryCategoryByPrimaryCategory(@Param("primaryCategory") String primaryCategory);
 
     List<Product> findTop3BySecondaryCategoryOrderByViewCountDesc(String secondaryCategory);
+    
+    /**
+     * 특정 작가가 작성한 모든 상품을 조회합니다.
+     * @param author 작가
+     * @return 해당 작가의 상품 목록
+     */
+    List<Product> findByAuthor(Member author);
 }

@@ -117,8 +117,20 @@ public class ProductService {
      * @return 찾아낸 상품(Product) 객체.
      * @throws IllegalArgumentException 해당 ID의 상품이 존재하지 않을 경우 예외를 발생시킵니다.
      */
-    @Transactional
     public Product findProductById(Long id) {
+        // Repository에서 ID로 상품을 찾고, 만약 없다면(.orElseThrow) 예외를 던집니다.
+        return productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid product Id:" + id));
+    }
+
+    /**
+     * 상품 조회와 동시에 조회수를 증가시킵니다. (상품 상세 페이지 조회 시 사용)
+     * @param id 조회할 상품의 ID.
+     * @return 찾아낸 상품(Product) 객체.
+     * @throws IllegalArgumentException 해당 ID의 상품이 존재하지 않을 경우 예외를 발생시킵니다.
+     */
+    @Transactional
+    public Product findProductByIdAndIncrementView(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid product Id:" + id));
         product.setViewCount(product.getViewCount() + 1);

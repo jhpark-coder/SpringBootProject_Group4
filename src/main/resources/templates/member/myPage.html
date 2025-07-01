@@ -1,5 +1,5 @@
 <html layout:decorate="~{fragment/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-    xmlns:th="http://www.thymeleaf.org">
+    xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <th:block layout:fragment="css">
@@ -12,7 +12,7 @@
         <!-- 1. 왼쪽 고정 메뉴 (사이드바) -->
         <aside class="profile-sidebar">
             <div class="profile-pic"></div>
-            <h2 class="profile-name">홍길동 님</h2>
+            <h2 class="profile-name" th:text="${Name} + ' 님'" sec:authentication="name">홍길동 님</h2>
 
             <div class="button-group">
                 <a href="#" class="btn btn-outline">찜목록</a>
@@ -30,12 +30,18 @@
             <!-- 최근 구매/본 태그 차트 섹션 -->
             <section class="content-section chart-section">
                 <div class="chart-item">
-                    <h3>최근 구매한 작품 태그</h3>
-                    <div class="chart-placeholder"></div>
+                    <h3>월별 구매 현황</h3>
+                    <div class="chart-placeholder">
+                        <canvas id="monthlyPurchaseChart"></canvas>
+                    </div>
                 </div>
                 <div class="chart-item">
-                    <h3>최근 가장 많이 본 작가</h3>
-                    <div class="chart-placeholder"></div>
+                    <h3 id="pieChartTitle">최근 본 카테고리</h3>
+                    <div class="chart-placeholder">
+                        <canvas id="categoryPieChart"></canvas>
+                        <button id="backToPrimaryBtn" class="btn btn-solid" hidden
+                            style="margin-top: 10px;">돌아가기</button>
+                    </div>
                 </div>
             </section>
 
@@ -45,48 +51,36 @@
                     <h2>최근 구매한 작품</h2>
                     <a href="#" class="see-more-link">더 보러가기 »</a>
                 </header>
-                <div class="product-grid">
-                    <!-- 상품 카드는 3개 이상 추가될 수 있습니다. -->
-                    <article class="product-card">
-                        <div class="product-image-placeholder"></div>
+
+                <div class="product-grid" th:if="${recentProducts != null and !recentProducts.isEmpty()}">
+                    <!-- th:each를 사용하여 최근 구매 상품 목록을 동적으로 생성 -->
+                    <article th:each="product : ${recentProducts}" class="product-card">
+                        <a th:href="@{/products/{id}(id=${product.id})}">
+                            <div class="product-image-placeholder"
+                                th:style="'background-image: url(\'' + ${product.imageUrl} + '\');'">
+                            </div>
+                        </a>
                         <div class="product-info">
                             <div class="author-info">
                                 <div class="author-avatar"></div>
-                                <span>작가이름이 들어감</span>
+                                <!-- product.author.name 으로 작가 이름에 접근 -->
+                                <span th:text="${product.author.name}">작가 이름</span>
                             </div>
-                            <a href="#" class="subscribe-btn">Subscribe</a>
+                            <!-- 로그인한 경우이고 본인이 아닌 작가일 때만 Subscribe 버튼 표시 -->
+                            <button class="subscribe-btn"
+                                th:if="${product.author != null and product.author.email != #authentication.name}"
+                                th:onclick="|toggleFollow(${product.author.id})|"
+                                sec:authorize="isAuthenticated()">Subscribe</button>
+                            <!-- 비로그인인 경우 -->
+                            <button class="subscribe-btn" th:if="${product.author != null}"
+                                onclick="alert('로그인이 필요합니다.'); location.href='/members/login';"
+                                sec:authorize="!isAuthenticated()">Subscribe</button>
                         </div>
                     </article>
-                    <article class="product-card">
-                        <div class="product-image-placeholder"></div>
-                        <div class="product-info">
-                            <div class="author-info">
-                                <div class="author-avatar"></div>
-                                <span>다른 작가 이름</span>
-                            </div>
-                            <a href="#" class="subscribe-btn">Subscribe</a>
-                        </div>
-                    </article>
-                    <article class="product-card">
-                        <div class="product-image-placeholder"></div>
-                        <div class="product-info">
-                            <div class="author-info">
-                                <div class="author-avatar"></div>
-                                <span>또 다른 작가</span>
-                            </div>
-                            <a href="#" class="subscribe-btn">Subscribe</a>
-                        </div>
-                    </article>
-                    <article class="product-card">
-                        <div class="product-image-placeholder"></div>
-                        <div class="product-info">
-                            <div class="author-info">
-                                <div class="author-avatar"></div>
-                                <span>새롭게 다른 작가</span>
-                            </div>
-                            <a href="#" class="subscribe-btn">Subscribe</a>
-                        </div>
-                    </article>
+                </div>
+                <!-- 구매 기록이 없을 경우 보여줄 메시지 (선택 사항) -->
+                <div th:if="${recentProducts == null or recentProducts.isEmpty()}">
+                    <p>최근 구매한 작품이 없습니다.</p>
                 </div>
             </section>
 
@@ -96,51 +90,142 @@
                     <h2>최근 열람한 작품</h2>
                     <a href="#" class="see-more-link">더 보러가기 »</a>
                 </header>
-                <div class="product-grid">
-                    <article class="product-card">
-                        <div class="product-image-placeholder"></div>
+                <div class="product-grid" th:if="${recentViewedProducts != null and !recentViewedProducts.isEmpty()}">
+                    <!-- th:each를 사용하여 최근 열람 상품 목록을 동적으로 생성 -->
+                    <article th:each="product : ${recentViewedProducts}" class="product-card">
+                        <a th:href="@{/products/{id}(id=${product.id})}">
+                            <div class="product-image-placeholder"
+                                th:style="'background-image: url(\'' + ${product.imageUrl} + '\');'">
+                            </div>
+                        </a>
                         <div class="product-info">
                             <div class="author-info">
                                 <div class="author-avatar"></div>
-                                <span>열람한 작가 이름</span>
+                                <!-- product.author.name 으로 작가 이름에 접근 -->
+                                <span th:text="${product.author.name}">작가 이름</span>
                             </div>
-                            <a href="#" class="subscribe-btn">Subscribe</a>
+                            <!-- 로그인한 경우이고 본인이 아닌 작가일 때만 Subscribe 버튼 표시 -->
+                            <button class="subscribe-btn"
+                                th:if="${product.author != null and product.author.email != #authentication.name}"
+                                th:onclick="|toggleFollow(${product.author.id})|"
+                                sec:authorize="isAuthenticated()">Subscribe</button>
+                            <!-- 비로그인인 경우 -->
+                            <button class="subscribe-btn" th:if="${product.author != null}"
+                                onclick="alert('로그인이 필요합니다.'); location.href='/members/login';"
+                                sec:authorize="!isAuthenticated()">Subscribe</button>
                         </div>
                     </article>
-                    <article class="product-card">
-                        <div class="product-image-placeholder"></div>
-                        <div class="product-info">
-                            <div class="author-info">
-                                <div class="author-avatar"></div>
-                                <span>두번째 열람 작가</span>
-                            </div>
-                            <a href="#" class="subscribe-btn">Subscribe</a>
-                        </div>
-                    </article>
-                    <article class="product-card">
-                        <div class="product-image-placeholder"></div>
-                        <div class="product-info">
-                            <div class="author-info">
-                                <div class="author-avatar"></div>
-                                <span>세번째 열람 작가</span>
-                            </div>
-                            <a href="#" class="subscribe-btn">Subscribe</a>
-                        </div>
-                    </article>
-                    <article class="product-card">
-                        <div class="product-image-placeholder"></div>
-                        <div class="product-info">
-                            <div class="author-info">
-                                <div class="author-avatar"></div>
-                                <span>네번째 열람 작가</span>
-                            </div>
-                            <a href="#" class="subscribe-btn">Subscribe</a>
-                        </div>
-                    </article>
+                </div>
+                <!-- 열람 기록이 없을 경우 보여줄 메시지 (선택 사항) -->
+                <div th:if="${recentViewedProducts == null or recentViewedProducts.isEmpty()}">
+                    <p>최근 열람한 작품이 없습니다.</p>
                 </div>
             </section>
         </main>
     </div>
+    <!-- ========================================================== -->
+    <!--      페이지별 스크립트 영역 (가장 이상적인 위치)         -->
+    <!-- ========================================================== -->
+    <th:block layout:fragment="script">
+        <!-- 1. Chart.js 라이브러리 로드 -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <!-- 2. 팔로우 기능 스크립트 추가 -->
+        <script th:src="@{/js/heartFollow.js}"></script>
+
+        <!-- 3. 차트를 그리는 스크립트 -->
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            document.addEventListener("DOMContentLoaded", function () {
+
+                // ================= 월별 구매 차트 ==================
+                const monthlyPurchaseCtx = document.getElementById('monthlyPurchaseChart');
+                if (monthlyPurchaseCtx) {
+                    const chartLabels = /*[[${chartLabels}]]*/[];
+                    const chartDatasets = /*[[${chartDatasets}]]*/[];
+
+                    new Chart(monthlyPurchaseCtx.getContext('2d'), {
+                        type: 'bar',
+                        data: { labels: chartLabels, datasets: chartDatasets },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: { display: true, text: '최근 6개월간 카테고리별 구매량', font: { size: 18 } },
+                                legend: { position: 'top' }
+                            },
+                            scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+                            animation: { duration: 1500, easing: 'easeInOutQuad' }
+                        }
+                    });
+                }
+
+                // ================= 카테고리 파이 차트 =================
+                const primaryData = /*[[${primaryCategoryData}]]*/ {};
+                const secondaryData = /*[[${secondaryCategoryData}]]*/ {};
+                const pieChartCanvas = document.getElementById('categoryPieChart');
+                const pieChartTitle = document.getElementById('pieChartTitle');
+                const backButton = document.getElementById('backToPrimaryBtn');
+                let pieChart;
+
+                function createChartData(sourceData) {
+                    const labels = Object.keys(sourceData);
+                    const data = Object.values(sourceData);
+                    const colors = labels.map(() => '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0'));
+                    return {
+                        labels: labels,
+                        datasets: [{ data: data, backgroundColor: colors }]
+                    };
+                }
+
+                function updateChart(chart, newData, newTitle) {
+                    chart.data = createChartData(newData);
+                    if (chart.options.plugins.title) chart.options.plugins.title.text = newTitle;
+                    pieChartTitle.textContent = newTitle; // h3 태그의 텍스트도 직접 변경
+                    chart.update('active');
+                }
+
+                if (pieChartCanvas && primaryData && Object.keys(primaryData).length > 0) {
+                    const initialChartData = createChartData(primaryData);
+
+                    pieChart = new Chart(pieChartCanvas.getContext('2d'), {
+                        type: 'pie',
+                        data: initialChartData,
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: { display: true, text: '최근 7일간 많이 본 카테고리', font: { size: 16 } },
+                                legend: { position: 'bottom' },
+                            },
+                            animation: {
+                                duration: 1500,
+                                easing: 'easeInOutQuad',
+                                animateRotate: true,
+                                animateScale: true
+                            },
+                            // ★★★ 올바른 문법으로 수정된 onClick ★★★
+                            onClick: (event, elements) => {
+                                if (elements.length > 0) {
+                                    const clickedIndex = elements[0].index;
+                                    const clickedLabel = pieChart.data.labels[clickedIndex];
+
+                                    if (secondaryData[clickedLabel] && backButton.hidden) {
+                                        updateChart(pieChart, secondaryData[clickedLabel], `'${clickedLabel}' 상세 카테고리`);
+                                        backButton.hidden = false;
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    backButton.addEventListener('click', () => {
+                        updateChart(pieChart, primaryData, '최근 7일간 많이 본 카테고리');
+                        backButton.hidden = true;
+                    });
+                }
+            });
+            /*]]>*/
+        </script>
+    </th:block>
 </body>
 
 </html>
