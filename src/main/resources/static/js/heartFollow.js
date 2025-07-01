@@ -15,7 +15,7 @@ function toggleFollow(userId) {
                 return;
             }
 
-            // 구독 버튼 상태 업데이트
+            // 구독 버튼 상태 업데이트 (기존 방식)
             const followButton = document.querySelector(`[data-follow-user-id="${userId}"]`);
             if (followButton) {
                 if (data.isFollowing) {
@@ -26,6 +26,36 @@ function toggleFollow(userId) {
                     followButton.textContent = '구독하기';
                 }
             }
+
+            // productDetail 페이지의 Subscribe 버튼 상태 업데이트 (새로운 방식)
+            const subscribeButtons = document.querySelectorAll('.subscribe-btn');
+            subscribeButtons.forEach(button => {
+                const onclickAttr = button.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes(`toggleFollow(${userId})`)) {
+                    if (data.isFollowing) {
+                        button.textContent = 'Following';
+                        button.classList.add('following');
+                    } else {
+                        button.textContent = 'Subscribe';
+                        button.classList.remove('following');
+                    }
+                }
+            });
+
+            // 마이페이지의 Subscribe 버튼들 상태 업데이트 (onclick 속성으로 구분)
+            const myPageSubscribeButtons = document.querySelectorAll('.product-card .subscribe-btn');
+            myPageSubscribeButtons.forEach(button => {
+                const onclickAttr = button.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes(`toggleFollow(${userId})`)) {
+                    if (data.isFollowing) {
+                        button.textContent = 'Following';
+                        button.classList.add('following');
+                    } else {
+                        button.textContent = 'Subscribe';
+                        button.classList.remove('following');
+                    }
+                }
+            });
 
             // 팔로워 수 업데이트
             const followerCountElement = document.querySelector(`[data-follower-count="${userId}"]`);
