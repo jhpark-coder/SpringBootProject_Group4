@@ -159,6 +159,32 @@
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
+            margin: 20px 0;
+        }
+
+        .sidebar .stats-info {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            margin: 20px 0;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sidebar .stat-item {
+            text-align: center;
+        }
+
+        .sidebar .stat-item span {
+            display: block;
+            font-size: 13px;
+            color: #888;
+        }
+
+        .sidebar .stat-item strong {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
         }
 
         .sidebar .tag-btn {
@@ -179,9 +205,21 @@
         }
 
         .sidebar-actions {
+            margin: 20px 0;
             display: flex;
             gap: 10px;
             align-items: center;
+        }
+
+        .purchase-btn {
+            flex-grow: 1;
+            background: #007bff;
+            color: #fff;
+            padding: 12px;
+            text-align: center;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 500;
         }
 
         .like-btn {
@@ -251,6 +289,22 @@
                 <button class="subscribe-btn">구독하기</button>
             </div>
 
+            <!-- 통계 정보 (좋아요, 조회수, 구매수) -->
+            <div class="stats-info">
+                <div class="stat-item">
+                    <span>좋아요</span>
+                    <strong id="heart-count" th:text="${heartCount}">0</strong>
+                </div>
+                <div class="stat-item">
+                    <span>조회수</span>
+                    <strong th:text="${product.viewCount}">0</strong>
+                </div>
+                <div class="stat-item">
+                    <span>구매수</span>
+                    <strong>(미구현)</strong>
+                </div>
+            </div>
+            
             <div class="tags">
                 <button class="tag-btn" th:text="*{primaryCategory}">주 카테고리</button>
                 <button class="tag-btn" th:if="*{secondaryCategory != null}" th:text="*{secondaryCategory}">부
@@ -262,23 +316,7 @@
             </div>
 
             <div class="sidebar-actions">
-                <!-- 로그인한 사용자를 위한 좋아요 버튼 -->
-                <button class="like-btn" th:data-product-id="${product.id}" th:classappend="${isLiked} ? 'liked'"
-                    th:onclick="|toggleLike(${product.id})|" sec:authorize="isAuthenticated()">
-                    <i class="far fa-heart"></i>
-                    <span class="like-count" th:text="${heartCount}">0</span>
-                </button>
-
-                <!-- 비로그인 사용자를 위한 버튼 -->
-                <button class="like-btn" onclick="alert('로그인이 필요합니다.'); location.href='/member/login';"
-                    sec:authorize="!isAuthenticated()">
-                    <i class="far fa-heart"></i>
-                    <span class="like-count" th:text="${heartCount}">0</span>
-                </button>
-
-                <button class="continue-btn" th:text="${product.price == 0} ? '무료로 계속보기' : (*{price} + '원 계속보기')">
-                    11111원 계속보기
-                </button>
+                <a href="#" class="purchase-btn">구매하기</a>
             </div>
 
             <div class="action-buttons">

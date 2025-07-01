@@ -33,7 +33,9 @@
     // 콘텐츠를 숨기는 함수
     function hideContent() {
         try {
-            parentWindow.document.body.dataset.sentinelState = 'dead';
+            if (parentWindow.document.body) {
+                parentWindow.document.body.dataset.sentinelState = 'dead';
+            }
         } catch (e) { /* 부모 창 접근 불가 시 무시 */ }
     }
 
@@ -43,14 +45,35 @@
         deathTimer = setTimeout(hideContent, 2000); // 2초 내 응답 없으면 죽음으로 간주
 
         try {
-            parentWindow.document.body.dataset.sentinelState = 'alive'; // 살아있다는 신호 전송
+            if (parentWindow.document.body) {
+                parentWindow.document.body.dataset.sentinelState = 'alive'; // 살아있다는 신호 전송
+            }
         } catch (e) {
-            clearInterval(heartbeatInterval);
+            // 부모 창 접근 불가 에러가 발생해도 인터벌을 멈추지 않습니다.
         }
     }
 
-    // 스크립트 로드 즉시 첫 신호를 보내 1초 딜레이를 없애고, 그 후 주기적으로 신호 전송
-    heartbeat();
-    const heartbeatInterval = setInterval(heartbeat, 1000);
+    // 부모 창의 body가 렌더링될 때까지 기다렸다가 심장박동을 시작하는 함수
+    function startWhenReady() {
+        if (!parentWindow.document.body) {
+            // body가 아직 없으면, 브라우저의 다음 페인트 주기에 다시 시도
+            parentWindow.requestAnimationFrame(startWhenReady);
+        } else {
+            // body가 준비되었으므로, 심장박동을 즉시 시작하고 1초 간격으로 반복
+            heartbeat();
+            const heartbeatInterval = setInterval(heartbeat, 1000);
+
+            // 인터벌 에러 시 clearInterval을 호출하지 않도록 try-catch 재정의
+            try {
+                // 이 try 블록은 setInterval이 반환한 ID를 클로저로 잡고 있습니다.
+                // 부모 창 탐색 에러가 발생해도, 지역 heartbeatInterval 변수는 영향을 받지 않습니다.
+            } catch(e) {
+                 // 여기서 clearInterval을 호출하면 안 됩니다.
+            }
+        }
+    }
+
+    // 부모 창의 렌더링이 준비되기를 기다렸다가 로직을 시작
+    startWhenReady();
 
 })(); 

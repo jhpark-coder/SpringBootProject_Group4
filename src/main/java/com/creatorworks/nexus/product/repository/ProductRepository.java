@@ -40,4 +40,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
      */
     @Query("SELECT DISTINCT p.secondaryCategory FROM Product p WHERE p.primaryCategory = :primaryCategory")
     List<String> findDistinctSecondaryCategoryByPrimaryCategory(@Param("primaryCategory") String primaryCategory);
+
+    List<Product> findTop3BySecondaryCategoryOrderByViewCountDesc(String secondaryCategory);
 }

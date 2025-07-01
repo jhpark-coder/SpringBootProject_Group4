@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.creatorworks.nexus.config.CategoryConfig;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.product.dto.ProductDto;
 import com.creatorworks.nexus.product.dto.ProductInquiryRequestDto;
 import com.creatorworks.nexus.product.dto.ProductPageResponse;
 import com.creatorworks.nexus.product.dto.ProductReviewRequestDto;
@@ -220,6 +221,13 @@ public class ProductController {
     public ResponseEntity<Product> getProductById(@PathVariable("id") Long id) {
         Product product = productService.findProductById(id);
         return ResponseEntity.ok(product);
+    }
+
+    @GetMapping("/api/products/popular")
+    @ResponseBody
+    public ResponseEntity<List<ProductDto>> getPopularProducts(@RequestParam("secondaryCategory") String secondaryCategory) {
+        List<ProductDto> popularProducts = productService.findTop3PopularProducts(secondaryCategory);
+        return ResponseEntity.ok(popularProducts);
     }
 
     /**
