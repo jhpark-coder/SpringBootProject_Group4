@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redis 접속 제한 테스트</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .info-section {
+            background: #e8f4fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .info-section h3 {
+            color: #0066cc;
+            margin-top: 0;
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+        }
+
+        .test-section h3 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .result-area {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-success {
+            background-color: #28a745;
+        }
+
+        .status-error {
+            background-color: #dc3545;
+        }
+
+        .status-warning {
+            background-color: #ffc107;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #007bff;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.warning {
+            background-color: #ffc107;
+        }
+
+        .progress-fill.danger {
+            background-color: #dc3545;
+        }
+
+        .attack-simulation {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .attack-simulation h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .log-area {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔒 Redis 접속 제한 테스트 페이지</h1>
+
+        <!-- 정보 섹션 -->
+        <div class="info-section">
+            <h3>📊 현재 설정 정보</h3>
+            <p><strong>클라이언트 IP:</strong> <span th:text="${clientIp}">127.0.0.1</span></p>
+            <p><strong>현재 시간:</strong> <span th:text="${currentTime}">2025-01-01 12:00:00</span></p>
+            <p><strong>제한 설정:</strong> 분당 10회, 시간당 100회 (테스트용)</p>
+            <p><strong>적용 범위:</strong> 모든 API 엔드포인트 (/api/*)</p>
+        </div>
+
+        <!-- 기본 테스트 섹션 -->
+        <div class="test-section">
+            <h3>🧪 기본 테스트</h3>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="testSingleRequest()">단일 요청 테스트</button>
+                <button class="btn btn-success" onclick="checkStatus()">상태 확인</button>
+                <button class="btn btn-warning" onclick="resetCounter()">카운터 리셋</button>
+                <button class="btn btn-info" onclick="checkRedisStatus()">Redis 상태 확인</button>
+            </div>
+            <div class="result-area" id="basicResult">결과가 여기에 표시됩니다...</div>
+        </div>
+
+        <!-- 진행률 표시 -->
+        <div class="test-section">
+            <h3>📈 요청 진행률</h3>
+            <div>
+                <span class="status-indicator status-success"></span>
+                <span>분당 제한: <span id="minuteProgress">0</span>/10</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="minuteProgressBar" style="width: 0%"></div>
+                </div>
+            </div>
+            <div>
+                <span class="status-indicator status-success"></span>
+                <span>시간당 제한: <span id="hourProgress">0</span>/100</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="hourProgressBar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 공격 시뮬레이션 -->
+        <div class="attack-simulation">
+            <h3>⚔️ 가상 공격 시뮬레이션</h3>
+            <p>실제 공격 상황을 시뮬레이션하여 접속 제한 기능이 제대로 작동하는지 테스트합니다.</p>
+
+            <div class="input-group">
+                <label for="requestCount">요청 횟수:</label>
+                <input type="number" id="requestCount" value="100" min="1" max="1000">
+            </div>
+
+            <div class="input-group">
+                <label for="requestDelay">요청 간격 (밀리초):</label>
+                <input type="number" id="requestDelay" value="50" min="10" max="1000">
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-danger" onclick="startAttackSimulation()">공격 시뮬레이션 시작</button>
+                <button class="btn btn-warning" onclick="stopAttackSimulation()">중지</button>
+                <button class="btn btn-success" onclick="clearLog()">로그 지우기</button>
+            </div>
+
+            <div class="log-area" id="attackLog">공격 시뮬레이션 로그가 여기에 표시됩니다...</div>
+        </div>
+    </div>
+
+    <script>
+        let attackInterval = null;
+        let currentRequestCount = 0;
+
+        // 단일 요청 테스트
+        async function testSingleRequest() {
+            try {
+                const response = await fetch('/api/test/rate-limit');
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('basicResult').textContent =
+                        `✅ 요청 성공!\n` +
+                        `IP: ${data.clientIp}\n` +
+                        `분당: ${data.minuteCount}/${data.limitPerMinute}\n` +
+                        `시간당: ${data.hourCount}/${data.limitPerHour}\n` +
+                        `시간: ${data.timestamp}`;
+
+                    currentRequestCount = data.hourCount;
+                    updateProgress();
+                } else {
+                    document.getElementById('basicResult').textContent =
+                        `❌ 요청 차단됨!\n` +
+                        `IP: ${data.clientIp}\n` +
+                        `에러: ${data.error}\n` +
+                        `시간: ${data.timestamp}`;
+                }
+            } catch (error) {
+                document.getElementById('basicResult').textContent =
+                    `❌ 요청 실패!\n` +
+                    `에러: ${error.message}\n` +
+                    `접속 제한에 걸렸을 가능성이 있습니다.`;
+            }
+        }
+
+        // 상태 확인
+        async function checkStatus() {
+            try {
+                const response = await fetch('/api/test/rate-limit/status');
+                const data = await response.json();
+
+                document.getElementById('basicResult').textContent =
+                    `📊 현재 상태\n` +
+                    `IP: ${data.clientIp}\n` +
+                    `분당: ${data.minuteCount}/${data.limitPerMinute} (남은 횟수: ${data.minuteRemaining})\n` +
+                    `시간당: ${data.hourCount}/${data.limitPerHour} (남은 횟수: ${data.hourRemaining})\n` +
+                    `시간: ${data.timestamp}`;
+
+                currentRequestCount = data.hourCount;
+                updateProgress();
+            } catch (error) {
+                document.getElementById('basicResult').textContent =
+                    `❌ 상태 확인 실패!\n` +
+                    `에러: ${error.message}`;
+            }
+        }
+
+        // 카운터 리셋
+        async function resetCounter() {
+            try {
+                const response = await fetch('/api/test/rate-limit/reset', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                document.getElementById('basicResult').textContent =
+                    `🔄 카운터 리셋 완료!\n` +
+                    `메시지: ${data.message}\n` +
+                    `시간: ${data.timestamp}`;
+
+                currentRequestCount = 0;
+                updateProgress();
+            } catch (error) {
+                document.getElementById('basicResult').textContent =
+                    `❌ 리셋 실패!\n` +
+                    `에러: ${error.message}`;
+            }
+        }
+
+        // Redis 상태 확인
+        async function checkRedisStatus() {
+            try {
+                const response = await fetch('/api/test/redis-status');
+                const data = await response.json();
+
+                document.getElementById('basicResult').textContent =
+                    `🔍 Redis 상태 확인\n` +
+                    `상태: ${data.status}\n` +
+                    `메시지: ${data.message}\n` +
+                    `테스트 결과: ${data.testResult || 'N/A'}\n` +
+                    `시간: ${data.timestamp}`;
+            } catch (error) {
+                document.getElementById('basicResult').textContent =
+                    `❌ Redis 상태 확인 실패!\n` +
+                    `에러: ${error.message}`;
+            }
+        }
+
+        // 진행률 업데이트
+        function updateProgress() {
+            const minuteProgress = Math.min(currentRequestCount, 10);
+            const hourProgress = Math.min(currentRequestCount, 100);
+
+            const minutePercent = (minuteProgress / 10) * 100;
+            const hourPercent = (hourProgress / 100) * 100;
+
+            document.getElementById('minuteProgress').textContent = minuteProgress;
+            document.getElementById('hourProgress').textContent = hourProgress;
+
+            const minuteBar = document.getElementById('minuteProgressBar');
+            const hourBar = document.getElementById('hourProgressBar');
+
+            minuteBar.style.width = minutePercent + '%';
+            hourBar.style.width = hourPercent + '%';
+
+            // 색상 변경
+            if (minutePercent >= 80) {
+                minuteBar.className = 'progress-fill danger';
+            } else if (minutePercent >= 60) {
+                minuteBar.className = 'progress-fill warning';
+            } else {
+                minuteBar.className = 'progress-fill';
+            }
+
+            if (hourPercent >= 80) {
+                hourBar.className = 'progress-fill danger';
+            } else if (hourPercent >= 60) {
+                hourBar.className = 'progress-fill warning';
+            } else {
+                hourBar.className = 'progress-fill';
+            }
+        }
+
+        // 공격 시뮬레이션 시작
+        function startAttackSimulation() {
+            const requestCount = parseInt(document.getElementById('requestCount').value);
+            const requestDelay = parseInt(document.getElementById('requestDelay').value);
+
+            if (attackInterval) {
+                clearInterval(attackInterval);
+            }
+
+            let currentCount = 0;
+            const logArea = document.getElementById('attackLog');
+
+            logArea.textContent = '🚀 공격 시뮬레이션 시작...\n';
+
+            attackInterval = setInterval(async () => {
+                if (currentCount >= requestCount) {
+                    clearInterval(attackInterval);
+                    logArea.textContent += '✅ 시뮬레이션 완료!\n';
+                    return;
+                }
+
+                try {
+                    const startTime = Date.now();
+                    const response = await fetch('/api/test/rate-limit');
+                    const endTime = Date.now();
+                    const responseTime = endTime - startTime;
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        logArea.textContent += `[${new Date().toLocaleTimeString()}] ✅ 성공 (${responseTime}ms) - 분당:${data.minuteCount}/${data.limitPerMinute}, 시간당:${data.hourCount}/${data.limitPerHour}\n`;
+                        currentRequestCount = data.hourCount;
+                    } else {
+                        const data = await response.json();
+                        logArea.textContent += `[${new Date().toLocaleTimeString()}] ❌ 차단됨 (${response.status}) - ${data.error}\n`;
+                    }
+                } catch (error) {
+                    logArea.textContent += `[${new Date().toLocaleTimeString()}] ❌ 오류: ${error.message}\n`;
+                }
+
+                currentCount++;
+                updateProgress();
+
+                // 로그 스크롤
+                logArea.scrollTop = logArea.scrollHeight;
+            }, requestDelay);
+        }
+
+        // 공격 시뮬레이션 중지
+        function stopAttackSimulation() {
+            if (attackInterval) {
+                clearInterval(attackInterval);
+                attackInterval = null;
+                document.getElementById('attackLog').textContent += '⏹️ 시뮬레이션 중지됨\n';
+            }
+        }
+
+        // 로그 지우기
+        function clearLog() {
+            document.getElementById('attackLog').textContent = '로그가 지워졌습니다...\n';
+        }
+
+        // 페이지 로드 시 초기 상태 확인
+        window.onload = function () {
+            checkStatus();
+        };
+    </script>
+</body>
+
+</html>

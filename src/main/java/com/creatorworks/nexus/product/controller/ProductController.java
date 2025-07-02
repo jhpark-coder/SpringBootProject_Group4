@@ -18,7 +18,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,13 +43,13 @@ import com.creatorworks.nexus.product.entity.ProductReview;
 import com.creatorworks.nexus.product.service.ProductInquiryService;
 import com.creatorworks.nexus.product.service.ProductReviewService;
 import com.creatorworks.nexus.product.service.ProductService;
+import com.creatorworks.nexus.product.service.RecentlyViewedProductRedisService;
 import com.creatorworks.nexus.util.tiptap.TipTapDocument;
 import com.creatorworks.nexus.util.tiptap.TipTapNode;
 import com.creatorworks.nexus.util.tiptap.TipTapRenderer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,6 +74,7 @@ public class ProductController {
     private final ObjectMapper objectMapper;
     private final MemberFollowService memberFollowService;
     private final RedisTemplate<String, String> redisTemplate;
+    private final RecentlyViewedProductRedisService recentlyViewedProductRedisService;
 
 
 
@@ -143,23 +143,15 @@ public class ProductController {
                 //      ★★★  20250701 최근 본 상품을 위한 로직 추가 ★★★
                 // ==============================================================
                 // --- ★★★ Redis 기록 로직 전체를 아래 코드로 교체 ★★★ ---
-                // 1. 개인별 최근 본 상품 기록 (기존 로직)
-                String memberId = currentMember.getId().toString();
-                String productIdStr = String.valueOf(id);
-                double score = System.currentTimeMillis();
-                String userViewHistoryKey = "viewHistory:" + memberId;
-                redisTemplate.opsForZSet().add(userViewHistoryKey, productIdStr, score);
-                Long userHistorySize = redisTemplate.opsForZSet().zCard(userViewHistoryKey);
-                if (userHistorySize != null && userHistorySize > 100) {
-                    redisTemplate.opsForZSet().removeRange(userViewHistoryKey, 0, userHistorySize - 101);
-                }
-                log.info("사용자 ID {}의 최근 본 상품 기록 추가/업데이트: 상품 ID {}", memberId, id);
+                // 1. 개인별 최근 본 상품 기록 (서비스 사용)
+                recentlyViewedProductRedisService.addProductToHistory(currentMember.getId(), id);
+                log.info("사용자 ID {}의 최근 본 상품 기록 추가 (서비스 호출): 상품 ID {}", currentMember.getId(), id);
 
                 // 2. 카테고리별 조회수 통계 기록 (새로운 로직)
                 if (product.getPrimaryCategory() != null && product.getSecondaryCategory() != null) {
                     // 오늘 날짜 키 (예: "categoryViewCount:2025-07-01")
                     String dailyCountKey = "categoryViewCount:" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
-                    // "primary:secondary" 형태의 멤버 (예: "artwork:포토그라피")
+                    // "primary:secondary" 형태의 멤버 (예: "artwork:포토그래피")
                     String categoryMember = product.getPrimaryCategory() + ":" + product.getSecondaryCategory();
 
                     // 해당 카테고리 멤버의 점수를 1 증가시킴

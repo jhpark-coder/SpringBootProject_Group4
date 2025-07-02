@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +35,7 @@ import com.creatorworks.nexus.order.entity.Order;
 import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.repository.ProductRepository;
+import com.creatorworks.nexus.product.service.RecentlyViewedProductRedisService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -47,6 +49,7 @@ public class MyPageController {
 
     private static final Logger log = LoggerFactory.getLogger(MyPageController.class);
 
+    private final RecentlyViewedProductRedisService recentlyViewedProductRedisService;
     private final RedisTemplate<String, String> redisTemplate;
     private final ProductRepository productRepository;
     private final MemberOrderRepository memberOrderRepository;
@@ -54,12 +57,29 @@ public class MyPageController {
     private final OrderRepository orderRepository;
 
     @GetMapping("/my-page")
-    public String myPage(@AuthenticationPrincipal CustomUserDetails customUserDetails, Model model) {
+    public String myPage(@AuthenticationPrincipal Object principal, Model model) {
         // 1. 현재 로그인한 사용자의 ID를 안전하게 가져오기
-            if (customUserDetails == null) {
-                throw new IllegalStateException("회원 정보를 찾을 수 없습니다.");
-            }
-        Member currentMember = memberRepository.findByEmail(customUserDetails.getUsername());
+        String email = null;
+        
+        if (principal instanceof CustomUserDetails) {
+            // 일반 로그인 사용자
+            CustomUserDetails customUserDetails = (CustomUserDetails) principal;
+            email = customUserDetails.getUsername();
+        } else if (principal instanceof OAuth2User) {
+            // 소셜 로그인 사용자
+            OAuth2User oauth2User = (OAuth2User) principal;
+            email = oauth2User.getAttribute("email");
+        }
+        
+        if (email == null) {
+            throw new IllegalStateException("회원 정보를 찾을 수 없습니다.");
+        }
+        
+        Member currentMember = memberRepository.findByEmail(email);
+        
+        if (currentMember == null) {
+            throw new IllegalStateException("회원 정보를 찾을 수 없습니다.");
+        }
 
 
 
@@ -157,44 +177,33 @@ public class MyPageController {
         model.addAttribute("recentProducts", recentProducts);
 
         // ==========================================================
-        //      ★★★ Redis 최근 본 상품 - 순서 보장 로직으로 수정 ★★★
+        //      ★★★ Redis 최근 본 상품 - 서비스 사용 로직으로 수정 ★★★
         // ==========================================================
 
-        // 1. 현재 사용자의 최근 본 상품 키를 생성
-        String key = "viewHistory:" + currentMember.getId().toString();
+        // 1. 서비스 호출하여 최근 본 상품 ID 목록을 10개 가져옴
+        List<Long> recentProductIds = recentlyViewedProductRedisService.getRecentlyViewedProductIds(currentMemberId, 10);
 
-        // 2. Redis에서 score가 높은 순(최신순)으로 상품 ID를 10개 가져옴
-        Set<String> recentProductIdsStr = redisTemplate.opsForZSet().reverseRange(key, 0, 9);
-
-        // 3. 만약 조회된 ID가 있다면 처리
-        if (recentProductIdsStr != null && !recentProductIdsStr.isEmpty()) {
-            // 3-1. 문자열 ID 목록을 Long 타입 ID 목록으로 변환
-            List<Long> recentProductIds = recentProductIdsStr.stream()
-                    .map(Long::parseLong)
-                    .collect(Collectors.toList());
-
-            // 3-2. ID 목록으로 DB에서 상품 정보들을 한 번에 조회(IN 쿼리)
+        if (!recentProductIds.isEmpty()) {
+            // 2. ID 목록으로 DB에서 상품 정보들을 한 번에 조회(IN 쿼리)
             List<Product> unorderedProducts = productRepository.findAllById(recentProductIds);
 
-            // 3-3. ★★★ DB에서 가져온 상품들을 Redis에서 가져온 ID 순서(최신순)로 재정렬 ★★★
+            // 3. DB에서 가져온 상품들을 Redis에서 가져온 ID 순서(최신순)로 재정렬
             Map<Long, Product> productMap = unorderedProducts.stream()
                     .collect(Collectors.toMap(Product::getId, product -> product));
 
             List<Product> sortedProducts = recentProductIds.stream()
                     .map(productMap::get)
-                    .filter(java.util.Objects::nonNull) // 혹시 DB에서 삭제된 상품이 있을 경우를 대비
+                    .filter(java.util.Objects::nonNull)
                     .collect(Collectors.toList());
 
-            // 3-4. 구매하지 않은 상품만 필터링하고 4개로 제한
+            // 4. 구매하지 않은 상품만 필터링하고 4개로 제한
             List<Product> recentViewedProducts = sortedProducts.stream()
                     .filter(product -> !orderRepository.existsByBuyerAndProduct(currentMember, product))
                     .limit(4)
                     .collect(Collectors.toList());
 
-            // 3-5. Model에 담아서 View로 전달
             model.addAttribute("recentViewedProducts", recentViewedProducts);
         } else {
-            // 조회된 상품이 없으면 빈 리스트를 전달
             model.addAttribute("recentViewedProducts", Collections.emptyList());
         }
 
@@ -223,7 +232,7 @@ public class MyPageController {
         // 2. Primary Category별로 데이터 가공
         Map<String, Long> primaryCategoryCounts = totalCounts.entrySet().stream()
                 .collect(Collectors.groupingBy(
-                        entry -> entry.getKey().split(":")[0], // "artwork:포토그라피" -> "artwork"
+                        entry -> entry.getKey().split(":")[0], // "artwork:포토그래피" -> "artwork"
                         Collectors.summingLong(Map.Entry::getValue)
                 ));
 
@@ -232,7 +241,7 @@ public class MyPageController {
                 .collect(Collectors.groupingBy(
                         entry -> entry.getKey().split(":")[0], // "artwork"
                         Collectors.toMap(
-                                entry -> entry.getKey().split(":")[1], // "포토그라피"
+                                entry -> entry.getKey().split(":")[1], // "포토그래피"
                                 Map.Entry::getValue
                         )
                 ));

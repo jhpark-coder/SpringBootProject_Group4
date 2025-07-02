@@ -1,6 +1,7 @@
 package com.creatorworks.nexus.product.repository;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -50,4 +51,52 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
      * @return 해당 판매자의 상품 목록
      */
     List<Product> findBySeller(Member seller);
+
+    // =================================================================================
+    // MainPageService에서 사용하는 메서드들 (추가 및 수정된 부분)
+    // =================================================================================
+
+    /**
+     * ID 목록에 포함된 Product 리스트를 조회합니다.
+     * JPA 기본 메서드이지만 순서를 보장하고 명시적으로 사용하기 위해 선언합니다.
+     */
+    List<Product> findByIdIn(List<Long> ids);
+
+    /**
+     * [삭제 및 대체됨] findRecommendedProducts는 아래의 findRecommendedProductsByInterest로 대체되었습니다.
+     * Collection<Object[]> 대신 Collection<List<Object>>를 받고, 정렬 기준이 추가되었습니다.
+     */
+    // @Query(...)
+    // List<Product> findRecommendedProducts(...);
+
+    /**
+     * [추가/수정] 로그인 사용자의 관심 카테고리(좋아요, 조회 기반)와 일치하는 상품들을 추천합니다.
+     * 특정 상품 목록(구매, 조회, 좋아요)은 추천에서 제외합니다.
+     * @param categoryPairs (primaryCategory, secondaryCategory) 형태의 리스트 Set
+     * @param excludedProductIds 제외할 상품 ID 목록
+     * @param pageable 페이징 정보
+     * @return 추천 상품 목록
+     */
+    /**
+     * [추가] 1차 또는 2차 카테고리 목록에 포함되는 상품을 조회합니다.
+     * @param primaryCategories 1차 카테고리 목록
+     * @param secondaryCategories 2차 카테고리 목록
+     * @param excludedProductIds 제외할 상품 ID
+     * @param pageable 페이징
+     * @return 상품 리스트
+     */
+    @Query("SELECT p FROM Product p WHERE (p.primaryCategory IN :primaryCategories OR p.secondaryCategory IN :secondaryCategories) AND p.id NOT IN :excludedProductIds ORDER BY p.id DESC")
+    List<Product> findByCategoriesAndExcludeIds(
+            @Param("primaryCategories") Set<String> primaryCategories,
+            @Param("secondaryCategories") Set<String> secondaryCategories,
+            @Param("excludedProductIds") List<Long> excludedProductIds,
+            Pageable pageable);
+
+    /**
+     * [추가] ID 목록에 포함되지 않는 상품들을 페이징하여 조회합니다. (인기 상품으로 채울 때 사용)
+     * @param ids 제외할 상품 ID 목록
+     * @param pageable 페이징 정보
+     * @return 상품 Page
+     */
+    Page<Product> findByIdNotIn(List<Long> ids, Pageable pageable);
 }
