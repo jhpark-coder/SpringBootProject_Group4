@@ -101,7 +101,7 @@ public class DataInitializer {
                     {"웹 개발", "데이터 분석", "머신러닝", "자동화"}
                 };
 
-                for (int i = 1; i <= 100; i++) {
+                for (int i = 1; i <= 2000; i++) {
                     String name = "샘플 상품 " + i;
                     int price = (int) (Math.random() * 90000) + 10000; // 10,000 ~ 99,999원
                     String description = "이것은 " + i + "번째 멋진 샘플 상품입니다. 품질이 아주 좋습니다.";
@@ -246,7 +246,7 @@ public class DataInitializer {
 
             // ====================== 후기 / 문의 테스트 데이터 =====================
 
-            // 후기 10개, 문의 10개만 생성 (이미 있으면 건너뜀)
+            // 후기 100개, 문의 100개만 생성 (이미 있으면 건너뜀)
 
             if (productReviewRepository.count() == 0 || productInquiryRepository.count() == 0) {
 
@@ -266,7 +266,7 @@ public class DataInitializer {
                             .comment(comment)
                             .build();
                     productReviewRepository.save(review);
-                    if (reviewCount >= 10) break;
+                    if (reviewCount >= 100) break;
                 }
 
                 // 2) 문의 생성
@@ -283,7 +283,7 @@ public class DataInitializer {
                             .parent(null)
                             .build();
                     productInquiryRepository.save(inquiry);
-                    if (inquiryCount >= 10) break;
+                    if (inquiryCount >= 100) break;
                 }
 
                 System.out.println("샘플 후기 " + reviewCount + "건, 문의 " + inquiryCount + "건 생성 완료");

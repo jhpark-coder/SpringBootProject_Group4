@@ -21,7 +21,7 @@ const ImageComponent = ({ node, updateAttributes, editor, deleteNode }) => {
 
     return (
         <NodeViewWrapper
-            className={`image-wrapper resizable ${getAlignmentClass()}`}
+            className={`image-container resizable ${getAlignmentClass()}`}
             contentEditable={false}
             suppressContentEditableWarning={true}
             data-drag-handle
