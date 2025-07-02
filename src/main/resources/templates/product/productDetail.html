@@ -36,7 +36,7 @@
             <div class="author-info">
                 <div class="author-profile">
                     <img class="author-pfp" alt="author profile picture">
-                    <span class="author-name" th:text="*{author.name}">작가 이름</span>
+                        <span class="author-name" th:text="*{author.name}" th:data-author-id="*{author.id}">작가 이름</span>
                 </div>
                 <button class="subscribe-btn" onclick="toggleFollow()">Subscribe</button>
 
@@ -63,12 +63,20 @@
                     <i class="fa fa-thumbs-up"></i>
                     <span class="like-count" th:text="${heartCount}">0</span>
                 </button>
-                <!-- 구매 버튼 (오른쪽, 노란색, pill형) -->
-                <button onclick="requestPay()"
+                <!-- 구매 버튼들 (오른쪽, 세로 배치) -->
+                <div class="purchase-buttons">
+                    <!-- 포인트 결제 버튼 -->
+                    <button onclick="requestPointPay()"
                         class="purchase-btn"
-                        th:text="${product.price != null} ? ${product.price} + 'P로 계속보기' : '구매하기'">
-                    즉시구매
+                            th:text="${product.price != null} ? ${product.price} + 'P로 구매하기' : '포인트로 구매하기'">
+                        포인트로 구매하기
+                    </button>
+                    <!-- 정기구독 버튼 -->
+                    <button onclick="requestPubPay()"
+                            class="subscription-btn">
+                        정기구독으로 보기
                 </button>
+                </div>
             <th:block
                 th:if="${currentMember != null and product.author != null and currentMember.id == product.author.id}">
                 <a th:href="@{'/editor/product/' + ${product.id}}"

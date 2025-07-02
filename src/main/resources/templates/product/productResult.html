@@ -282,7 +282,7 @@
         </nav>
         <div class="user-info">
             <button class="points-btn">
-                <span>보유한 포인트: 1000</span>
+                <span>보유한 포인트<p th:text="${currentPoint ?: 0}"></p></span>
                 <span style="font-size: 18px;">🔔</span>
             </button>
         </div>
@@ -315,7 +315,7 @@
                 <div class="author-profile">
                     <img src="https://via.placeholder.com/40" alt="작가 프로필" class="author-pfp"
                         onerror="this.src='https://via.placeholder.com/40/cccccc/666666?text=작가'" />
-                    <span class="author-name" th:text="${product.createdBy ?: '익명 작가'}">작가이름이 들어가</span>
+                    <span class="author-name" th:text="${product.createdBy ?: '익명 작가'}" th:data-author-id="${product.author != null ? product.author.id : ''}">작가이름이 들어가</span>
                 </div>
                 <button th:if="${#authentication.name != product.createdBy}" class="subscribe-btn">Subscribe</button>
             </div>
@@ -335,9 +335,14 @@
                     <span class="like-icon">👍</span>
                     <span class="like-count" th:text="${heartCount ?: 0}">0</span>
                 </button>
-                <button class="continue-btn" onclick="alert('포인트 결제 기능 추가 예정!')">
-                    <span>30P로 계속보기</span>
-                </button>
+                <div class="purchase-buttons">
+                    <button class="purchase-btn" onclick="requestPointPay()">
+                        <span>30P로 구매하기</span>
+                    </button>
+                    <button class="subscription-btn" onclick="requestSubscription()">
+                        <span>정기구독으로 보기</span>
+                    </button>
+                </div>
             </div>
         </aside>
     </main>
@@ -426,6 +431,97 @@
                     });
             }
         });
+
+        // 포인트 결제 함수
+        function requestPointPay() {
+            const productId = window.location.pathname.split('/').pop();
+            const price = 30; // 고정 가격
+            
+            if (!confirm(`${price}P로 이 상품을 구매하시겠습니까?`)) {
+                return;
+            }
+            
+            fetch(`/api/products/${productId}/purchase/point`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    productId: productId,
+                    price: price
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('포인트 결제가 완료되었습니다!');
+                    window.location.reload();
+                } else {
+                    alert('포인트 결제 실패: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('포인트 결제 오류:', error);
+                alert('포인트 결제 중 오류가 발생했습니다.');
+            });
+        }
+
+        // 정기구독 함수
+        function requestSubscription() {
+            const productId = window.location.pathname.split('/').pop();
+            const authorName = document.querySelector('.author-name').textContent;
+            
+            if (!confirm(`${authorName} 작가님의 정기구독을 신청하시겠습니까?\n\n정기구독 혜택:\n- 해당 작가의 모든 작품을 무제한으로 볼 수 있습니다\n- 월 9,900원 (첫 달 무료)\n- 언제든지 해지 가능`)) {
+                return;
+            }
+            
+            fetch(`/api/products/${productId}/subscription`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    productId: productId,
+                    authorId: getAuthorIdFromPage()
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('정기구독 신청이 완료되었습니다!\n\n첫 달은 무료로 이용하실 수 있으며, 다음 달부터 월 9,900원이 자동으로 결제됩니다.');
+                    updateSubscriptionButton(true);
+                } else {
+                    alert('정기구독 신청 실패: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('정기구독 오류:', error);
+                alert('정기구독 신청 중 오류가 발생했습니다.');
+            });
+        }
+
+        // 작가 ID를 페이지에서 추출하는 함수
+        function getAuthorIdFromPage() {
+            const authorElement = document.querySelector('.author-name');
+            if (authorElement && authorElement.dataset.authorId) {
+                return authorElement.dataset.authorId;
+            }
+            return null;
+        }
+
+        // 구독 버튼 상태 업데이트 함수
+        function updateSubscriptionButton(isSubscribed) {
+            const subscriptionBtn = document.querySelector('.subscription-btn');
+            if (subscriptionBtn) {
+                if (isSubscribed) {
+                    subscriptionBtn.textContent = '구독 중';
+                    subscriptionBtn.style.background = '#28a745';
+                    subscriptionBtn.onclick = function() {
+                        alert('이미 구독 중인 작가입니다.');
+                    };
+                }
+            }
+        }
     </script>
 </body>
 
