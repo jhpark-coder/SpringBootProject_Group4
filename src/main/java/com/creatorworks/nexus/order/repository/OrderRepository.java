@@ -60,11 +60,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * @return TopSellingProductDto 목록
      */
     @Query("SELECT new com.creatorworks.nexus.order.dto.TopSellingProductDto(" +
-            "  p.id, p.name, p.imageUrl, p.author.name, COUNT(o.id)) " +
+            "  p.id, p.name, p.imageUrl, p.seller.name, COUNT(o.id)) " +
             "FROM Order o JOIN o.product p " +
-            "WHERE p.author = :seller " +
+            "WHERE p.seller = :seller " +
             "  AND o.orderDate BETWEEN :startDate AND :endDate " +
-            "GROUP BY p.id, p.name, p.imageUrl, p.author.name " +
+            "GROUP BY p.id, p.name, p.imageUrl, p.seller.name " +
             "ORDER BY COUNT(o.id) DESC, p.name ASC")
     List<TopSellingProductDto> findTopSellingProductsBySeller(
             @Param("seller") Member seller,
@@ -78,7 +78,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT new com.creatorworks.nexus.order.dto.MonthlySalesDto(" +
             "  YEAR(o.orderDate), MONTH(o.orderDate), COUNT(o.id)) " + // SUM(p.price) -> COUNT(o.id)
             "FROM Order o JOIN o.product p " +
-            "WHERE p.author = :seller AND o.orderDate >= :startDate " +
+            "WHERE p.seller = :seller AND o.orderDate >= :startDate " +
             "GROUP BY YEAR(o.orderDate), MONTH(o.orderDate) " +
             "ORDER BY YEAR(o.orderDate), MONTH(o.orderDate)")
     List<MonthlySalesDto> findMonthlySalesBySeller(@Param("seller") Member seller, @Param("startDate") LocalDateTime startDate);
@@ -87,7 +87,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT new com.creatorworks.nexus.order.dto.GenderRatioDto(" + // product.dto -> order.dto
             "  o.buyer.gender, COUNT(DISTINCT o.buyer.id)) " +
             "FROM Order o JOIN o.product p " +
-            "WHERE p.author = :seller " +
+            "WHERE p.seller = :seller " +
             "GROUP BY o.buyer.gender")
     List<GenderRatioDto> findGenderRatioBySeller(@Param("seller") Member seller);
 
@@ -103,7 +103,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "    ELSE '기타' END, " +
             "  COUNT(DISTINCT o.buyer.id)) " +
             "FROM Order o JOIN o.product p " +
-            "WHERE p.author = :seller AND o.buyer.birthYear != 'N/A' " +
+            "WHERE p.seller = :seller AND o.buyer.birthYear != 'N/A' " +
             // GROUP BY 절도 SELECT 절의 CASE 문과 완전히 동일해야 합니다.
             "GROUP BY CASE " +
             "    WHEN (YEAR(CURRENT_DATE) - CAST(o.buyer.birthYear AS INTEGER)) >= 50 THEN '50대 이상' " +
@@ -115,7 +115,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<AgeRatioDto> findAgeRatioBySeller(@Param("seller") Member seller);
     // =======================================================
 
-    // ★★★ 특정 작가(판매자)의 총 판매 건수를 조회하는 메서드 추가 ★★★
-    @Query("SELECT COUNT(o) FROM Order o WHERE o.product.author = :author")
-    long countByProductAuthor(@Param("author") Member author);
+    // ★★★ 특정 판매자의 총 판매 건수를 조회하는 메서드 추가 ★★★
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.product.seller = :seller")
+    long countByProductSeller(@Param("seller") Member seller);
 }

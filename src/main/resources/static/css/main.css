@@ -129,26 +129,27 @@ a {
     padding: 0 10px;
 }
 
-.author-info {
+.seller-info {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    margin-bottom: 12px;
 }
 
-.author-avatar {
+.seller-avatar {
     width: 30px;
     height: 30px;
-    background: #D9D9D9;
+    background-color: #ddd;
     border-radius: 50%;
 }
 
-.author-name {
-    font-size: 1rem;
-    /* 16px */
+.seller-name {
+    font-size: 13px;
+    color: #666;
     font-weight: 500;
 }
 
-.subscribe-btn {
+.subscribe-btn, .follow-btn {
     width: 100px;
     height: 41px;
     background: #0071DE;
@@ -221,11 +222,55 @@ a {
 }
 
 .sell-description {
-    font-size: 1.2rem;
-    /* 24px */
+    font-size: 1.25rem;
+    /* 20px */
     font-weight: 500;
     line-height: 1.6;
     margin: 0;
+}
+
+/* Floating Chat Buttons */
+.chatbot-btn,
+.chat-btn {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #007bff;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    cursor: pointer;
+    z-index: 1000;
+    font-size: 24px;
+    
+    /* Initially hidden */
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease-in-out;
+}
+
+.chatbot-btn.chat-button-initialized,
+.chat-btn.chat-button-initialized {
+    /* Visible and in position when initialized */
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.chatbot-btn {
+    background-color: #28a745; /* Green for chatbot */
+    right: 40px;
+    bottom: 120px;
+}
+
+.chat-btn {
+    background-color: #007bff; /* Blue for support chat */
+    right: 40px;
+    bottom: 40px;
 }
 
 /* ----- 반응형 디자인을 위한 미디어 쿼리 ----- */

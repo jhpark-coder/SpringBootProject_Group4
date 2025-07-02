@@ -202,22 +202,29 @@ body {
     padding: 0 5px;
 }
 
+.seller-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+/* 기존 호환성을 위해 author-* 클래스도 유지 */
 .author-info {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
-    font-weight: 500;
+    gap: 8px;
+    margin-bottom: 12px;
 }
 
-.author-avatar {
+.seller-avatar, .author-avatar {
     width: 30px;
     height: 30px;
-    background-color: var(--light-gray);
+    background-color: #ddd;
     border-radius: 50%;
 }
 
-.subscribe-btn {
+.subscribe-btn, .follow-btn {
     background-color: var(--primary-blue);
     color: var(--text-light);
     padding: 10px 20px;
@@ -230,16 +237,16 @@ body {
     transition: background-color 0.3s ease;
 }
 
-.subscribe-btn:hover {
+.subscribe-btn:hover, .follow-btn:hover {
     background-color: #0074e9;
 }
 
-.subscribe-btn.following {
+.subscribe-btn.following, .follow-btn.following {
     background-color: #28a745;
     color: white;
 }
 
-.subscribe-btn.following:hover {
+.subscribe-btn.following:hover, .follow-btn.following:hover {
     background-color: #218838;
 }
 

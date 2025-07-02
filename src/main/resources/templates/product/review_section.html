@@ -153,20 +153,42 @@
 
     <script th:inline="javascript">
         /*<![CDATA[*/
-        document.addEventListener('DOMContentLoaded', function () {
+        // 페이지 레이아웃이 안정된 후 모달 이벤트를 바인딩합니다.
+        document.addEventListener('pageReady', function () {
             const reviewModal = document.getElementById('reviewModal');
             const reviewEditModal = document.getElementById('reviewEditModal');
 
             const openReviewBtn = document.querySelector('.btn-write-review');
             const openEditReviewBtn = document.querySelector('.btn-edit-review');
 
-            if (openReviewBtn) {
-                openReviewBtn.addEventListener('click', () => { if (reviewModal) reviewModal.style.display = 'flex'; });
+            if (openReviewBtn && reviewModal) {
+                openReviewBtn.addEventListener('click', () => {
+                    reviewModal.style.display = 'flex';
+                    // 강제 리플로우로 위치 안정화
+                    requestAnimationFrame(() => {
+                        void reviewModal.offsetHeight;
+                        reviewModal.style.opacity = '0.99';
+                        requestAnimationFrame(() => {
+                            reviewModal.style.opacity = '';
+                        });
+                    });
+                });
             }
-            if (openEditReviewBtn) {
-                openEditReviewBtn.addEventListener('click', () => { if (reviewEditModal) reviewEditModal.style.display = 'flex'; });
+            if (openEditReviewBtn && reviewEditModal) {
+                openEditReviewBtn.addEventListener('click', () => {
+                    reviewEditModal.style.display = 'flex';
+                    // 강제 리플로우로 위치 안정화
+                    requestAnimationFrame(() => {
+                        void reviewEditModal.offsetHeight;
+                        reviewEditModal.style.opacity = '0.99';
+                        requestAnimationFrame(() => {
+                            reviewEditModal.style.opacity = '';
+                        });
+                    });
+                });
             }
 
+            // 모든 모달의 닫기 버튼과 외부 클릭 이벤트를 한 번에 처리합니다.
             const allModals = document.querySelectorAll('.modal-overlay');
             allModals.forEach(modal => {
                 const closeModalBtn = modal.querySelector('.close-modal-btn');

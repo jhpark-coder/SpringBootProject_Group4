@@ -45,9 +45,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<Product> findTop3BySecondaryCategoryOrderByViewCountDesc(String secondaryCategory);
     
     /**
-     * 특정 작가가 작성한 모든 상품을 조회합니다.
-     * @param author 작가
-     * @return 해당 작가의 상품 목록
+     * 특정 판매자가 작성한 모든 상품을 조회합니다.
+     * @param seller 판매자
+     * @return 해당 판매자의 상품 목록
      */
-    List<Product> findByAuthor(Member author);
+    List<Product> findBySeller(Member seller);
 }

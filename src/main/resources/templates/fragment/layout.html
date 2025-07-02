@@ -19,6 +19,9 @@
     
     <!-- Chat Buttons Controller -->
     <script src="/js/chat-buttons.js"></script>
+    
+    <!-- FAQ CSS -->
+    <link rel="stylesheet" th:href="@{/css/faq.css}">
 
     <style>
         /* 기본적으로 JS 경고만 보여주고, 콘텐츠와 방어막은 숨김 */
@@ -41,50 +44,6 @@
 
         body[data-sentinel-state="alive"] #javascript-warning {
             display: none;
-        }
-
-        /* Hide floating buttons by default using visibility/opacity */
-        .chatbot-btn, .chat-btn {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: auto;
-            transition: opacity 0.3s ease-in-out;
-            position: fixed !important; /* 강제로 fixed 적용 */
-            z-index: 9999; /* 더 높은 z-index 적용 */
-        }
-
-        /* Floating Chat Button */
-        .chat-btn {
-            bottom: 40px !important;
-            right: 40px !important;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background-color: #007bff;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Chatbot Button */
-        .chatbot-btn {
-            bottom: 120px !important;
-            right: 40px !important;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background-color: #28a745;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         /* Chat Container */
@@ -345,10 +304,78 @@
             font-size: 14px;
         }
 
-        .product-recommend-card .info .author,
+        .product-recommend-card .info .seller,
         .product-recommend-card .info .price {
             font-size: 12px;
             color: #666;
+        }
+        
+        /* 챗봇 및 상담원 버튼 스타일 */
+        .chatbot-btn, .chat-btn {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #007bff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            z-index: 1000;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        
+        .chatbot-btn {
+            bottom: 120px;
+            right: 40px;
+        }
+        
+        .chat-btn {
+            bottom: 40px;
+            right: 40px;
+        }
+        
+        .chatbot-btn:hover, .chat-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 버튼 초기화 완료 시 애니메이션 */
+        .chatbot-btn.chat-button-initialized,
+        .chat-btn.chat-button-initialized {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        /* 모달 위치 안정화 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1050;
+            justify-content: center;
+            align-items: center;
+            display: none;
+        }
+        
+        .modal-content {
+            position: relative;
+            background-color: white;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
     </style>
 
@@ -382,7 +409,7 @@
     <th:block layout:fragment="css"></th:block>
 </head>
 
-<body data-sentinel-state="alive">
+<body data-sentinel-state="initializing">
     <div th:replace="~{fragment/header::header}"></div>
     <div th:replace="~{fragment/header::category-nav}"></div>
     <noscript>
@@ -432,6 +459,14 @@
     </div>
     
     <div th:replace="~{fragment/footer::footer}"></div>
+    
+    <!-- 챗봇/상담원 버튼을 HTML에 직접 추가 -->
+    <div class="chatbot-btn" style="position: fixed !important; right: 40px !important; bottom: 120px !important; z-index: 1000 !important; width: 60px !important; height: 60px !important; visibility: hidden; opacity: 0;">
+        <i class="fas fa-robot"></i>
+    </div>
+    <div class="chat-btn" style="position: fixed !important; right: 40px !important; bottom: 40px !important; z-index: 1000 !important; width: 60px !important; height: 60px !important; visibility: hidden; opacity: 0;">
+        <i class="fas fa-comments"></i>
+    </div>
 
     <!-- 1. 코어 JS 라이브러리 (jQuery 등) -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -582,32 +617,9 @@
             });
         });
     </script>
-    
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const chatbotBtn = document.querySelector(".chatbot-btn");
-            const chatbotContainer = document.getElementById("chatbot-container");
-            const closeChatbotBtn = document.getElementById("close-chatbot-btn");
-
-            if (chatbotBtn) {
-                chatbotBtn.addEventListener("click", () => {
-                    const isDisplayed = chatbotContainer.style.display === "flex";
-                    chatbotContainer.style.display = isDisplayed ? "none" : "flex";
-                });
-            }
-
-            if(closeChatbotBtn) {
-                closeChatbotBtn.addEventListener("click", () => {
-                    chatbotContainer.style.display = "none";
-                });
-            }
-        });
-    </script>
 
     <!-- 2. 각 페이지의 개별 스크립트 -->
     <th:block layout:fragment="script"></th:block>
-
-       <!-- (기존의 다른 script 태그들...) -->
 
     <!-- 추가 보안 스크립트 (토스트 알림, 드래그 방지 등) -->
     <script th:src="@{/js/security.js}"></script>
@@ -616,12 +628,88 @@
     <!-- body 태그가 닫히기 직전에 로드하여, parent.document.body가 항상 존재하도록 보장 -->
     <iframe th:src="@{/sentinel}" style="display:none; width:0; height:0;" title="sentinel"></iframe>
 
-    <div class="chatbot-btn">
-        <i class="fas fa-robot"></i>
-    </div>
-    <div class="chat-btn">
-        <i class="fas fa-comments"></i>
-    </div>
+    <!-- ★★★★★ 최종 해결 스크립트 (The Conductor) ★★★★★ -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // sentinel.js가 body의 'data-sentinel-state' 속성을 'alive'로 바꿀 때까지 기다립니다.
+            const sentinelObserver = new MutationObserver((mutationsList, observer) => {
+                for (const mutation of mutationsList) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'data-sentinel-state') {
+                        const body = mutation.target;
+                        if (body.dataset.sentinelState === 'alive') {
+                            
+                            // 목표를 달성했으므로 감시를 중단합니다.
+                            observer.disconnect();
+
+                            // 콘텐츠 표시 트랜지션(0.2s)이 끝날 때까지 기다린 후,
+                            // 모든 동적 UI 요소들을 초기화하라는 신호를 보냅니다.
+                            setTimeout(() => {
+                                // 강제 리플로우를 통해 레이아웃 안정화
+                                document.body.style.visibility = 'hidden';
+                                void document.body.offsetHeight;
+                                document.body.style.visibility = 'visible';
+
+                                // 1. 챗봇/상담원 버튼을 초기화합니다.
+                                if (typeof window.initializeChatButtons === 'function') {
+                                    window.initializeChatButtons();
+                                }
+
+                                // 2. 페이지의 다른 모든 컴포넌트(모달 등)에게 레이아웃이 준비되었다는
+                                //    커스텀 이벤트를 보냅니다.
+                                //    각 컴포넌트의 스크립트는 이 이벤트를 수신하여 위치 계산 등의
+                                //    초기화 작업을 수행하면 됩니다.
+                                //    예: document.addEventListener('pageReady', function() { ... });
+                                document.dispatchEvent(new CustomEvent('pageReady'));
+
+                                // 3. 추가 리플로우를 통한 최종 안정화
+                                requestAnimationFrame(() => {
+                                    // 모든 모달과 동적 요소들의 위치 재계산
+                                    const modals = document.querySelectorAll('.modal-overlay');
+                                    modals.forEach(modal => {
+                                        if (modal.style.display !== 'none') {
+                                            modal.style.display = 'none';
+                                            void modal.offsetHeight;
+                                            modal.style.display = '';
+                                        }
+                                    });
+                                    
+                                    console.log('Page layout is stable. All components initialized.');
+                                });
+
+                            }, 300); // CSS transition 200ms + 100ms buffer
+
+                            break; // 루프 종료
+                        }
+                    }
+                }
+            });
+
+            // body 태그의 속성 변화에 대한 감시를 시작합니다.
+            sentinelObserver.observe(document.body, { attributes: true });
+            
+            // IntersectionObserver를 사용한 추가 안정화
+            if ('IntersectionObserver' in window) {
+                const layoutStabilizer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            // 요소가 뷰포트에 들어왔을 때 위치 재계산
+                            requestAnimationFrame(() => {
+                                entry.target.style.opacity = '0.99';
+                                void entry.target.offsetHeight;
+                                entry.target.style.opacity = '';
+                            });
+                        }
+                    });
+                });
+                
+                // 주요 동적 요소들을 관찰
+                setTimeout(() => {
+                    const elementsToWatch = document.querySelectorAll('.chatbot-btn, .chat-btn, .modal-overlay');
+                    elementsToWatch.forEach(el => layoutStabilizer.observe(el));
+                }, 1000);
+            }
+        });
+    </script>
 
 </body>
 

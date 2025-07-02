@@ -76,28 +76,7 @@ public class ProductController {
     private final MemberFollowService memberFollowService;
     private final RedisTemplate<String, String> redisTemplate;
 
-    /**
-     * 그리드 뷰 페이지("/products/grid") 요청을 처리하여 'gridView.html' 뷰를 렌더링합니다.
-     * @return 렌더링할 뷰의 이름 ("gridView")
-     */
-    @GetMapping("/products/grid")
-    public String gridView() {
-        return "gridView";
-    }
 
-    /**
-     * 무한 스크롤 테스트용 그리드 뷰 페이지("/products/grid/test")를 렌더링합니다.
-     * @return 렌더링할 뷰의 이름 ("gridViewTest")
-     */
-    @GetMapping("/products/grid/test")
-    public String gridViewTest(Model model, HttpServletRequest request) {
-        // CSRF 토큰을 Model에 추가
-        CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-        if (csrfToken != null) {
-            model.addAttribute("_csrf", csrfToken);
-        }
-        return "gridViewTest";
-    }
 
     /**
      * 상품 목록 데이터를 JSON 형태로 반환하는 API 엔드포인트입니다. (무한 스크롤 기능에서 사용)
@@ -155,8 +134,8 @@ public class ProductController {
                 // ---
 
                 // --- 팔로우 상태 확인 로직 추가 ---
-                if (product.getAuthor() != null) {
-                    isFollowing = memberFollowService.isFollowing(currentMember.getId(), product.getAuthor().getId());
+                if (product.getSeller() != null) {
+                    isFollowing = memberFollowService.isFollowing(currentMember.getId(), product.getSeller().getId());
                 }
                 // ---
 
@@ -195,11 +174,11 @@ public class ProductController {
                 // 1. 실제 구매 여부를 확인하여 후기 작성 권한 설정
                 canWriteReview = productReviewService.hasUserPurchasedProduct(currentMember, product);
 
-                // 2. 작성자 본인인지 확인 (ID를 직접 비교하여 안정성 확보)
-                boolean isAuthor = product.getAuthor() != null && currentMember.getId().equals(product.getAuthor().getId());
+                // 2. 판매자 본인인지 확인 (ID를 직접 비교하여 안정성 확보)
+                boolean isSeller = product.getSeller() != null && currentMember.getId().equals(product.getSeller().getId());
 
-                // 3. 컨텐츠 열람 권한 설정 (구매자 또는 관리자 또는 작성자)
-                canViewContent = canWriteReview || isAuthor || currentMember.getRole() == com.creatorworks.nexus.member.constant.Role.ADMIN;
+                // 3. 컨텐츠 열람 권한 설정 (구매자 또는 관리자 또는 판매자)
+                canViewContent = canWriteReview || isSeller || currentMember.getRole() == com.creatorworks.nexus.member.constant.Role.ADMIN;
 
                 // 4. 이미 작성한 후기가 있는지 확인
                 if (canWriteReview) {
@@ -311,7 +290,7 @@ public class ProductController {
     @ResponseBody
     public Long saveProduct(@RequestBody ProductSaveRequest request, Principal principal) {
         // 개발 환경에서는 principal이 null일 수 있으므로, 임시 사용자 정보를 사용합니다.
-        String userEmail = (principal != null) ? principal.getName() : "author@test.com"; // 임시 이메일
+        String userEmail = (principal != null) ? principal.getName() : "seller@test.com"; // 임시 이메일
         Product saved = productService.saveProduct(request, userEmail);
         return saved.getId();
     }

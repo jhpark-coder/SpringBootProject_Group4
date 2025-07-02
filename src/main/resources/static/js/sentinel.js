@@ -29,6 +29,7 @@
      * 임무 3: JS 비활성화를 감지하기 위한 '죽은 자의 스위치'
      */
     let deathTimer; // 폭탄 타이머
+    let isFirstHeartbeat = true; // 첫 번째 심장박동 여부를 추적하는 플래그
 
     // 콘텐츠를 숨기는 함수
     function hideContent() {
@@ -46,7 +47,14 @@
 
         try {
             if (parentWindow.document.body) {
-                parentWindow.document.body.dataset.sentinelState = 'alive'; // 살아있다는 신호 전송
+                // 첫 번째 심장박동 시 'alive' 상태만 설정.
+                // 위치 보정 로직은 이제 layout.html의 MutationObserver가 담당.
+                if (isFirstHeartbeat) {
+                    parentWindow.document.body.dataset.sentinelState = 'alive';
+                    isFirstHeartbeat = false;
+                } else {
+                    parentWindow.document.body.dataset.sentinelState = 'alive'; // 살아있다는 신호 전송
+                }
             }
         } catch (e) {
             // 부모 창 접근 불가 에러가 발생해도 인터벌을 멈추지 않습니다.

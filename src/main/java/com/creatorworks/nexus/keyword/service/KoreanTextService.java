@@ -73,32 +73,6 @@ public class KoreanTextService {
                 }
             }
             
-            // 간단한 토큰 결합: 연속된 한글 토큰들을 결합
-            if (nouns.size() >= 2) {
-                List<String> combinedWords = new ArrayList<>();
-                StringBuilder currentWord = new StringBuilder();
-                
-                for (String noun : nouns) {
-                    if (noun.length() <= 2 && noun.matches(".*[가-힣].*")) {
-                        currentWord.append(noun);
-                    } else {
-                        if (currentWord.length() > 2) {
-                            combinedWords.add(currentWord.toString());
-                            System.out.println("[DEBUG] 한글 토큰 결합: '" + currentWord + "'");
-                        }
-                        currentWord = new StringBuilder();
-                    }
-                }
-                
-                // 마지막 결합 단어 처리
-                if (currentWord.length() > 2) {
-                    combinedWords.add(currentWord.toString());
-                    System.out.println("[DEBUG] 한글 토큰 결합: '" + currentWord + "'");
-                }
-                
-                nouns.addAll(combinedWords);
-            }
-            
             // 중복 제거
             nouns = nouns.stream().distinct().collect(Collectors.toList());
             

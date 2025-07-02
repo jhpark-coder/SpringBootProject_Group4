@@ -1,0 +1,146 @@
+/* FAQ 카드 스타일 */
+.faq-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin: 10px 0;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.faq-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.faq-question {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background: #f8f9fa;
+    cursor: pointer;
+    font-weight: 500;
+    color: #333;
+    transition: background-color 0.3s ease;
+    gap: 10px;
+}
+
+.faq-question:hover {
+    background: #e9ecef;
+}
+
+.faq-question i:first-child {
+    color: #007bff;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.faq-question span {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.faq-question i:last-child {
+    color: #666;
+    font-size: 12px;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.faq-card.active .faq-question i:last-child {
+    transform: rotate(180deg);
+}
+
+.faq-answer {
+    padding: 15px;
+    background: #fff;
+    border-top: 1px solid #e0e0e0;
+    color: #555;
+    line-height: 1.6;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.faq-answer i {
+    color: #28a745;
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.faq-answer span {
+    flex: 1;
+}
+
+/* 챗봇 내부 FAQ 스타일 조정 */
+.chatbot-container .faq-card {
+    margin: 8px 0;
+    border-radius: 6px;
+}
+
+.chatbot-container .faq-question {
+    padding: 12px;
+    font-size: 14px;
+}
+
+.chatbot-container .faq-answer {
+    padding: 12px;
+    font-size: 13px;
+}
+
+.chatbot-container .faq-question i:first-child,
+.chatbot-container .faq-answer i {
+    font-size: 14px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .faq-question {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .faq-answer {
+        padding: 12px;
+        font-size: 13px;
+    }
+    
+    .faq-question i:first-child,
+    .faq-answer i {
+        font-size: 14px;
+    }
+}
+
+/* FAQ 카드 강제 스타일 (글자 안짤리게) */
+.faq-card {
+  border: 2px solid #007bff !important;
+  background: #fff !important;
+  margin: 10px 0 !important;
+  padding: 10px !important;
+  display: block !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  word-break: break-all !important;
+  overflow: visible !important;
+}
+
+.faq-question, .faq-answer {
+  color: #222 !important;
+  font-size: 16px !important;
+  background: #f8f9fa !important;
+  padding: 12px 16px !important;
+  border-radius: 6px !important;
+  margin-bottom: 4px !important;
+  display: block !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  word-break: break-all !important;
+  white-space: pre-line !important;
+  overflow: visible !important;
+}
+
+.faq-answer {
+  background: #e9ecef !important;
+} 

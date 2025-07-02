@@ -19,8 +19,8 @@
             <h2 class="profile-name" th:text="${Name} + ' 님'">판매자 이름 님</h2>
 
             <!-- 판매자용 버튼들 -->
+            <a th:href="@{/editor}" class="btn btn-solid">작품 등록</a>
             <a th:href="@{/seller/products}" class="btn btn-solid">작품 관리</a>
-            <a th:href="@{/seller/stats}" class="btn btn-solid">판매 통계</a>
             <a th:href="@{/seller/reviews}" class="btn btn-solid">내 작품 후기</a>
             <a th:href="@{/seller/inquiries}" class="btn btn-solid">내 작품 문의</a>
             <a th:href="@{/seller/auctions}" class="btn btn-solid">경매 관리</a>
@@ -93,7 +93,7 @@
                     <h2>진행 중인 경매</h2>
                     <a href="#" class="see-more-link">더 보러가기 »</a>
                 </header>
-                <div class="auction-grid">
+                <div class="auction-grid" th:if="${ongoingAuctions != null and !ongoingAuctions.isEmpty()}">
                     <!-- (임시) 경매 아이템. 이 부분은 컨트롤러에서 받은 데이터로 th:each를 사용합니다. -->
                     <article class="auction-card" th:each="auction : ${ongoingAuctions}">
                         <div class="auction-image-placeholder"
@@ -111,6 +111,10 @@
                             </div>
                         </div>
                     </article>
+                </div>
+                <!-- 진행 중인 경매가 없을 경우 메시지 -->
+                <div th:if="${ongoingAuctions == null or ongoingAuctions.isEmpty()}">
+                    <p>진행 중인 경매가 없습니다.</p>
                 </div>
             </section>
         </main>

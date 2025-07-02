@@ -13,7 +13,7 @@ public class KeywordRecommendSpecification {
     public static Specification<Product> containsKeywordsInFields(List<String> keywords) {
         return (root, query, cb) -> {
             if (keywords == null || keywords.isEmpty()) return null;
-            // title, description, workDescription, tiptapJson, primaryCategory, secondaryCategory, author.name
+            // title, description, workDescription, tiptapJson, primaryCategory, secondaryCategory, seller.name
             Predicate[] predicates = keywords.stream().flatMap(keyword -> {
                 String likePattern = "%" + keyword + "%";
                 return java.util.stream.Stream.of(
@@ -23,7 +23,7 @@ public class KeywordRecommendSpecification {
                     cb.like(root.get("tiptapJson"), likePattern),
                     cb.like(root.get("primaryCategory"), likePattern),
                     cb.like(root.get("secondaryCategory"), likePattern),
-                    cb.like(root.get("author").get("name"), likePattern)
+                    cb.like(root.get("seller").get("name"), likePattern)
                 );
             }).toArray(Predicate[]::new);
             return cb.or(predicates);

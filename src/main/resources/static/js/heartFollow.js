@@ -27,31 +27,33 @@ function toggleFollow(userId) {
                 }
             }
 
-            // productDetail 페이지의 Subscribe 버튼 상태 업데이트 (새로운 방식)
-            const subscribeButtons = document.querySelectorAll('.subscribe-btn');
-            subscribeButtons.forEach(button => {
+            // productDetail 페이지의 Follow 버튼 상태 업데이트 (새로운 방식)
+            const followButtons = document.querySelectorAll('.follow-btn');
+            followButtons.forEach(button => {
                 const onclickAttr = button.getAttribute('onclick');
                 if (onclickAttr && onclickAttr.includes(`toggleFollow(${userId})`)) {
                     if (data.isFollowing) {
-                        button.textContent = 'Following';
+                        button.textContent = 'Following'; // 실제 텍스트 유지 (CSS에서 투명처리)
                         button.classList.add('following');
+                        console.log('Following 클래스 추가됨:', button.classList);
                     } else {
-                        button.textContent = 'Subscribe';
+                        button.textContent = 'Follow';
                         button.classList.remove('following');
+                        console.log('Following 클래스 제거됨:', button.classList);
                     }
                 }
             });
 
             // 마이페이지의 Subscribe 버튼들 상태 업데이트 (onclick 속성으로 구분)
-            const myPageSubscribeButtons = document.querySelectorAll('.product-card .subscribe-btn');
-            myPageSubscribeButtons.forEach(button => {
+            const myPageFollowButtons = document.querySelectorAll('.product-card .follow-btn');
+            myPageFollowButtons.forEach(button => {
                 const onclickAttr = button.getAttribute('onclick');
                 if (onclickAttr && onclickAttr.includes(`toggleFollow(${userId})`)) {
                     if (data.isFollowing) {
-                        button.textContent = 'Following';
+                        button.textContent = 'Following'; // 실제 텍스트 유지 (CSS에서 투명처리)
                         button.classList.add('following');
                     } else {
-                        button.textContent = 'Subscribe';
+                        button.textContent = 'Follow';
                         button.classList.remove('following');
                     }
                 }

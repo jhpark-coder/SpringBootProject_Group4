@@ -6,6 +6,7 @@
     <!-- 이 페이지의 CSS를 layout.html에 전달 -->
     <th:block layout:fragment="css">
         <link rel="stylesheet" th:href="@{/css/main.css}">
+        <link rel="stylesheet" th:href="@{/css/heartFollow.css}">
     </th:block>
     <title>Nexus - 당신의 창작품, 세상과 만나다</title>
 </head>
@@ -74,6 +75,7 @@
     </div>
 
     <th:block layout:fragment="script">
+        <script th:src="@{/js/heartFollow.js}"></script>
         <script th:src="@{/js/main.js}"></script>
     </th:block>
 </body>

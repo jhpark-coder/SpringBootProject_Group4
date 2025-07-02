@@ -103,25 +103,27 @@
     /* Pushes info to the bottom */
 }
 
-.author-info {
+.seller-info {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    margin-bottom: 12px;
 }
 
-.author-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+.seller-avatar {
+    width: 30px;
+    height: 30px;
     background-color: #ddd;
+    border-radius: 50%;
 }
 
-.author-name {
+.seller-name {
+    font-size: 13px;
+    color: #666;
     font-weight: 500;
-    font-size: 0.9rem;
 }
 
-.subscribe-btn {
+.subscribe-btn, .follow-btn {
     padding: 6px 14px;
     font-size: 0.85rem;
     font-weight: bold;
@@ -134,7 +136,7 @@
     transition: background-color 0.2s;
 }
 
-.subscribe-btn:hover {
+.subscribe-btn:hover, .follow-btn:hover {
     background-color: #0056b3;
 }
 

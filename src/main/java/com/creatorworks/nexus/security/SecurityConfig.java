@@ -20,6 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.creatorworks.nexus.member.service.SocialMemberService;
+import com.creatorworks.nexus.security.CustomLoginSuccessHandler;
 
 import lombok.RequiredArgsConstructor;
 
@@ -36,6 +37,7 @@ public class SecurityConfig {
 
     private final SocialMemberService socialMemberService;
     private final CustomOAuth2LoginSuccessHandler customOAuth2LoginSuccessHandler;
+    private final CustomLoginSuccessHandler customLoginSuccessHandler;
 
     // @Value("${file.upload-dir}")
     // private String uploadDir;
@@ -75,7 +77,7 @@ public class SecurityConfig {
             // CSRF 보호를 활성화하고, 토큰을 JS가 읽을 수 있는 쿠키로 생성합니다.
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**", "/api/follow/**")
+                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**", "/api/follow/**", "/api/faq/**")
             )
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout").permitAll()
@@ -88,6 +90,7 @@ public class SecurityConfig {
             .formLogin(formLogin -> formLogin
                 .loginPage("/members/login")
                 .usernameParameter("email")
+                .successHandler(customLoginSuccessHandler)
                 .defaultSuccessUrl("/")
                 .failureUrl("/members/login/error")
                 .permitAll()
@@ -115,7 +118,7 @@ public class SecurityConfig {
             // CSRF 보호를 활성화하고, 토큰을 JS가 읽을 수 있는 쿠키로 생성합니다.
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**", "/api/follow/**")
+                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**", "/api/follow/**", "/api/faq/**")
             )
             // 모든 요청을 허용합니다. (개발환경과 동일하게)
             .authorizeHttpRequests(authz -> authz
@@ -130,6 +133,7 @@ public class SecurityConfig {
             .formLogin(formLogin -> formLogin
                 .loginPage("/members/login")
                 .usernameParameter("email")
+                .successHandler(customLoginSuccessHandler)
                 .defaultSuccessUrl("/")
                 .failureUrl("/members/login/error")
                 .permitAll()

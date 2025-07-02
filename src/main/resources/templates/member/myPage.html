@@ -4,6 +4,7 @@
 <head>
     <th:block layout:fragment="css">
         <link rel="stylesheet" th:href="@{/css/myPage.css}">
+        <link rel="stylesheet" th:href="@{/css/heartFollow.css}">
     </th:block>
 </head>
 
@@ -61,20 +62,20 @@
                             </div>
                         </a>
                         <div class="product-info">
-                            <div class="author-info">
-                                <div class="author-avatar"></div>
-                                <!-- product.author.name 으로 작가 이름에 접근 -->
-                                <span th:text="${product.author.name}">작가 이름</span>
+                            <div class="seller-info">
+                                <div class="seller-avatar"></div>
+                                <!-- product.seller.name 으로 판매자 이름에 접근 -->
+                                <span th:text="${product.seller.name}">판매자 이름</span>
                             </div>
-                            <!-- 로그인한 경우이고 본인이 아닌 작가일 때만 Subscribe 버튼 표시 -->
-                            <button class="subscribe-btn"
-                                th:if="${product.author != null and product.author.email != #authentication.name}"
-                                th:onclick="|toggleFollow(${product.author.id})|"
-                                sec:authorize="isAuthenticated()">Subscribe</button>
+                            <!-- 로그인한 경우이고 본인이 아닌 판매자일 때만 Follow 버튼 표시 -->
+                            <button class="follow-btn"
+                                th:if="${product.seller != null and product.seller.email != #authentication.name}"
+                                th:onclick="|toggleFollow(${product.seller.id})|"
+                                sec:authorize="isAuthenticated()">Follow</button>
                             <!-- 비로그인인 경우 -->
-                            <button class="subscribe-btn" th:if="${product.author != null}"
+                            <button class="follow-btn" th:if="${product.seller != null}"
                                 onclick="alert('로그인이 필요합니다.'); location.href='/members/login';"
-                                sec:authorize="!isAuthenticated()">Subscribe</button>
+                                sec:authorize="!isAuthenticated()">Follow</button>
                         </div>
                     </article>
                 </div>
@@ -99,20 +100,20 @@
                             </div>
                         </a>
                         <div class="product-info">
-                            <div class="author-info">
-                                <div class="author-avatar"></div>
-                                <!-- product.author.name 으로 작가 이름에 접근 -->
-                                <span th:text="${product.author.name}">작가 이름</span>
+                            <div class="seller-info">
+                                <div class="seller-avatar"></div>
+                                <!-- product.seller.name 으로 판매자 이름에 접근 -->
+                                <span th:text="${product.seller.name}">판매자 이름</span>
                             </div>
-                            <!-- 로그인한 경우이고 본인이 아닌 작가일 때만 Subscribe 버튼 표시 -->
-                            <button class="subscribe-btn"
-                                th:if="${product.author != null and product.author.email != #authentication.name}"
-                                th:onclick="|toggleFollow(${product.author.id})|"
-                                sec:authorize="isAuthenticated()">Subscribe</button>
+                            <!-- 로그인한 경우이고 본인이 아닌 판매자일 때만 Follow 버튼 표시 -->
+                            <button class="follow-btn"
+                                th:if="${product.seller != null and product.seller.email != #authentication.name}"
+                                th:onclick="|toggleFollow(${product.seller.id})|"
+                                sec:authorize="isAuthenticated()">Follow</button>
                             <!-- 비로그인인 경우 -->
-                            <button class="subscribe-btn" th:if="${product.author != null}"
+                            <button class="follow-btn" th:if="${product.seller != null}"
                                 onclick="alert('로그인이 필요합니다.'); location.href='/members/login';"
-                                sec:authorize="!isAuthenticated()">Subscribe</button>
+                                sec:authorize="!isAuthenticated()">Follow</button>
                         </div>
                     </article>
                 </div>

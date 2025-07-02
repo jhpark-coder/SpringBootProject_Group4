@@ -5,6 +5,7 @@
 <th:block layout:fragment="css">
     <link rel="stylesheet" th:href="@{/css/review.css}">
     <link rel="stylesheet" th:href="@{/css/inquiry.css}">
+    <link rel="stylesheet" th:href="@{/css/heartFollow.css}">
     <th:block th:if="${product.fontFamily != null && !#strings.isEmpty(product.fontFamily)}">
         <th:block th:with="cleanFont=${#strings.replace(#strings.substringBefore(product.fontFamily, ','), ' ', '+')}">
             <link th:href="@{'https://fonts.googleapis.com/css2?family=' + ${cleanFont} + ':wght@400;700&display=swap'}"
@@ -359,33 +360,33 @@
             align-items: stretch;
         }
 
-        .sidebar-card .author-info {
+        .sidebar-card .seller-info {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 14px;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
-        .sidebar-card .author-profile {
+        .sidebar-card .seller-profile {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
-        .sidebar-card .author-pfp {
-            width: 48px;
-            height: 48px;
-            background: #e0e0e0;
+        .sidebar-card .seller-pfp {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
+            object-fit: cover;
         }
 
-        .sidebar-card .author-name {
-            font-weight: 700;
-            font-size: 17px;
-            color: #222;
+        .sidebar-card .seller-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
         }
 
-        .sidebar-card .subscribe-btn {
+        .sidebar-card .follow-btn {
             background: #0096ff;
             color: #fff;
             padding: 7px 20px;
@@ -397,7 +398,7 @@
             transition: background 0.2s;
         }
 
-        .sidebar-card .subscribe-btn:hover {
+        .sidebar-card .follow-btn:hover {
             background: #0074e9;
         }
 
@@ -573,33 +574,33 @@
             height: 400px;
         }
 
-        .sidebar-goalcard .author-info {
+        .sidebar-goalcard .seller-info {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
-        .sidebar-goalcard .author-profile {
+        .sidebar-goalcard .seller-profile {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
-        .sidebar-goalcard .author-pfp {
-            width: 44px;
-            height: 44px;
-            background: #e0e0e0;
+        .sidebar-goalcard .seller-pfp {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
+            object-fit: cover;
         }
 
-        .sidebar-goalcard .author-name {
-            font-weight: 700;
-            font-size: 16px;
-            color: #222;
+        .sidebar-goalcard .seller-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
         }
 
-        .sidebar-goalcard .subscribe-btn {
+        .sidebar-goalcard .follow-btn {
             background: #0096ff;
             color: #fff;
             padding: 7px 20px;
@@ -611,7 +612,7 @@
             transition: background 0.2s;
         }
 
-        .sidebar-goalcard .subscribe-btn:hover {
+        .sidebar-goalcard .follow-btn:hover {
             background: #0074e9;
         }
 
@@ -734,19 +735,18 @@
         <!-- Sidebar Section -->
         <aside class="sidebar-goalcard" th:classappend="${#lists.isEmpty(tagNames)} ? '' : 'has-tags'"
             th:object="${product}">
-            <div class="author-info">
-                <div class="author-profile">
-                    <img class="author-pfp" alt="author profile picture">
-                    <span class="author-name" th:text="*{author.name}">작가 이름</span>
+            <div class="seller-info">
+                <div class="seller-profile">
+                    <img class="seller-pfp" alt="seller profile picture">
+                    <span class="seller-name" th:text="*{seller.name}">판매자 이름</span>
                 </div>
-                <!-- 로그인한 경우 -->
-                <button class="subscribe-btn"
-                    th:if="${currentMember != null and product.author != null and currentMember.id != product.author.id}"
-                    th:text="${isFollowing} ? 'Following' : 'Subscribe'"
-                    th:onclick="|toggleFollow(${product.author.id})|">Subscribe</button>
-                <!-- 비로그인인 경우 -->
-                <button class="subscribe-btn" th:if="${currentMember == null}"
-                    onclick="alert('로그인이 필요합니다.'); location.href='/member/login';">Subscribe</button>
+                <!-- 판매자가 아닌 경우에만 Follow 버튼 표시 -->
+                <button class="follow-btn"
+                    th:if="${currentMember != null and product.seller != null and currentMember.id != product.seller.id}"
+                    th:data-member-id="${product.seller.id}"
+                    th:onclick="|toggleFollow(${product.seller.id})|"
+                    th:classappend="${isFollowing} ? 'following'"
+                    th:text="${isFollowing} ? 'Following' : 'Follow'">Follow</button>
             </div>
             <div class="tags">
                 <a th:href="@{/products/category/{name}(name=${product.primaryCategory}, page=1, secondary='all')}"
@@ -767,8 +767,7 @@
                     <span class="like-count" th:text="${heartCount}">0</span>
                 </button>
                 <!-- 비로그인용 -->
-                <button class="like-btn" onclick="alert('로그인이 필요합니다.'); location.href='/member/login';"
-                    sec:authorize="!isAuthenticated()">
+                <button class="like-btn" onclick="alert('로그인이 필요합니다.'); location.href='/members/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);" sec:authorize="!isAuthenticated()">
                     <i class="fa fa-thumbs-up"></i>
                     <span class="like-count" th:text="${heartCount}">0</span>
                 </button>
@@ -776,13 +775,13 @@
                 <a href="#" class="purchase-btn"
                     th:text="${product.price} != null ? ${product.price} + 'P로 계속보기' : '구매하기'">30P로 계속보기</a>
             </div>
-            <th:block
-                th:if="${currentMember != null and product.author != null and currentMember.id == product.author.id}">
+            <!-- 판매자인 경우만 수정 버튼 표시 -->
+            <button th:if="${currentMember != null and product.seller != null and currentMember.id == product.seller.id}">
                 <a th:href="@{'/editor/product/' + ${product.id}}"
                     style="display:block;width:100%;margin-top:24px;padding:12px 0;background:#222;color:#fff;text-align:center;border-radius:8px;font-weight:600;font-size:16px;">
                     글 수정하기
                 </a>
-            </th:block>
+            </button>
         </aside>
 
         <!-- Description Section (Full Width) -->

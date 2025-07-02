@@ -38,6 +38,12 @@ $(document).ready(function () {
                 }
 
                 products.forEach(function (product) {
+                    // sellerId가 있는 경우에만 팔로우 버튼 생성
+                    const followButton = product.sellerId ? 
+                        `<button class="btn follow-btn" 
+                                 data-member-id="${product.sellerId}"
+                                 onclick="toggleFollow(${product.sellerId})">Follow</button>` : '';
+                    
                     const productItem = `
                         <div class="col-md-3">
                             <article class="grid-item">
@@ -46,16 +52,28 @@ $(document).ready(function () {
                                         style="background-image: url('${product.imageUrl || '/images/placeholder.png'}'); background-size: cover; background-position: center; width: 100%; height: 200px; border-radius: 8px;"></div>
                                 </a>
                                 <div class="item-info">
-                                    <div class="author-info">
-                                        <div class="author-avatar"></div>
-                                        <span class="author-name">${product.authorName || '작가 이름'}</span>
+                                    <div class="seller-info">
+                                        <div class="seller-avatar"></div>
+                                        <span class="seller-name">${product.sellerName || '판매자 이름'}</span>
                                     </div>
-                                    <a href="#" class="btn subscribe-btn">Subscribe</a>
+                                    ${followButton}
                                 </div>
                             </article>
                         </div>
                     `;
                     gridContainer.append(productItem);
+                });
+                // 강제 리플로우를 requestAnimationFrame으로 개선
+                requestAnimationFrame(() => {
+                    if (gridContainer[0]) {
+                        gridContainer[0].style.opacity = '0.99';
+                        void gridContainer[0].offsetHeight;
+                    }
+                    requestAnimationFrame(() => {
+                        if (gridContainer[0]) {
+                            gridContainer[0].style.opacity = '';
+                        }
+                    });
                 });
             })
             .fail(function (error) {

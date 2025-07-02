@@ -5,6 +5,7 @@
 <head>
     <th:block layout:fragment="css">
         <link rel="stylesheet" th:href="@{/css/category_grid.css}">
+        <link rel="stylesheet" th:href="@{/css/heartFollow.css}">
     </th:block>
     <title>Nexus - 카테고리</title>
 </head>
@@ -38,11 +39,21 @@
                                 th:style="'background-image: url(\'' + ${product.imageUrl} + '\');'"></div>
                         </a>
                         <div class="item-info">
-                            <div class="author-info">
-                                <div class="author-avatar"></div>
-                                <span class="author-name" th:text="${product.authorName}"></span>
+                            <div class="seller-info">
+                                <div class="seller-avatar"></div>
+                                <span class="seller-name" th:text="${product.sellerName}"></span>
                             </div>
-                            <a href="#" class="btn subscribe-btn">Subscribe</a>
+                            <!-- 로그인한 사용자가 판매자 본인이 아닌 경우에만 팔로우 버튼 표시 -->
+                            <button class="btn follow-btn" 
+                                    th:if="${product.sellerId != null}"
+                                    th:data-member-id="${product.sellerId}"
+                                    th:onclick="|toggleFollow(${product.sellerId})|"
+                                    sec:authorize="isAuthenticated()">Follow</button>
+                            <!-- 비로그인 사용자에게는 로그인 유도 -->
+                            <button class="btn follow-btn"
+                                    th:if="${product.sellerId != null}"
+                                    onclick="alert('로그인이 필요합니다.'); location.href='/members/login';"
+                                    sec:authorize="!isAuthenticated()">Follow</button>
                         </div>
                     </article>
                 </div>
@@ -71,6 +82,7 @@
     </div>
 
     <th:block layout:fragment="script">
+        <script th:src="@{/js/heartFollow.js}"></script>
         <script th:inline="javascript">
             /*<![CDATA[*/
             $(document).ready(function () {
@@ -85,6 +97,12 @@
                 let noMoreData = /*[[${initialProductPage.last}]]*/ false;
 
                 function createProductCard(product) {
+                    // sellerId가 있는 경우에만 팔로우 버튼 생성
+                    const followButton = product.sellerId ? 
+                        `<button class="btn follow-btn" 
+                                 data-member-id="${product.sellerId}"
+                                 onclick="toggleFollow(${product.sellerId})">Follow</button>` : '';
+                    
                     return `
                         <div class="col-md-3">
                             <article class="grid-item">
@@ -92,11 +110,11 @@
                                     <div class="item-image-placeholder" style="background-image: url('${product.imageUrl}');"></div>
                                 </a>
                                 <div class="item-info">
-                                    <div class="author-info">
-                                        <div class="author-avatar"></div>
-                                        <span class="author-name">${product.authorName}</span>
+                                    <div class="seller-info">
+                                        <div class="seller-avatar"></div>
+                                        <span class="seller-name">${product.sellerName}</span>
                                     </div>
-                                    <a href="#" class="btn subscribe-btn">Subscribe</a>
+                                    ${followButton}
                                 </div>
                             </article>
                         </div>
@@ -146,6 +164,13 @@
                         loadProducts();
                     }
                 });
+
+                // 강제 리플로우
+                setTimeout(() => {
+                    document.body.style.display = 'none';
+                    void document.body.offsetHeight;
+                    document.body.style.display = '';
+                }, 0);
             });
             /*]]>*/
         </script>

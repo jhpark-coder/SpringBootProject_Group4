@@ -28,13 +28,13 @@ public class AuctionService {
 
     @Transactional
     public Auction saveAuction(AuctionSaveRequest request, String userEmail) {
-        Member author = memberRepository.findByEmail(userEmail);
-        if (author == null) {
+        Member seller = memberRepository.findByEmail(userEmail);
+        if (seller == null) {
             throw new IllegalArgumentException("작성자 정보를 찾을 수 없습니다: " + userEmail);
         }
 
         Auction auction = Auction.builder()
-                .author(author)
+                .seller(seller)
                 .name(request.getName())
                 .startBidPrice(request.getStartBidPrice())
                 .buyNowPrice(request.getBuyNowPrice())
@@ -59,7 +59,7 @@ public class AuctionService {
         Auction auction = auctionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid auction Id:" + id));
 
-        if (!auction.getAuthor().getEmail().equals(userEmail)) {
+        if (!auction.getSeller().getEmail().equals(userEmail)) {
             throw new IllegalStateException("경매를 수정할 권한이 없습니다.");
         }
 

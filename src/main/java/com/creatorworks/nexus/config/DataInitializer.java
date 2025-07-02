@@ -18,6 +18,8 @@ import com.creatorworks.nexus.order.entity.Order;
 import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.repository.ProductRepository;
+import com.creatorworks.nexus.product.repository.ProductReviewRepository;
+import com.creatorworks.nexus.product.repository.ProductInquiryRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +32,8 @@ public class DataInitializer {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final OrderRepository orderRepository;
+    private final ProductReviewRepository productReviewRepository;
+    private final ProductInquiryRepository productInquiryRepository;
 
     @Bean
     public CommandLineRunner initData() {
@@ -67,12 +71,12 @@ public class DataInitializer {
                 System.out.println("초기 데이터: 일반 사용자 계정(usertest@test.com) 생성 완료");
             }
 
-            // 기존 작가 계정 생성 로직 (이메일 중복 방지 추가)
-            Member author;
-            if (memberRepository.findByEmail("author@test.com") == null) {
-                author = Member.builder()
-                        .email("author@test.com")
-                        .name("테스트작가")
+            // 테스트용 판매자 계정 생성 (기존 작가 계정을 판매자로 변경)
+            Member seller;
+            if (memberRepository.findByEmail("seller@test.com") == null) {
+                seller = Member.builder()
+                        .email("seller@test.com")
+                        .name("테스트판매자")
                         .password(passwordEncoder.encode("password"))
                         .role(Role.SELLER)
                         .gender("Male")
@@ -80,10 +84,10 @@ public class DataInitializer {
                         .birthMonth("01")
                         .birthDay("01")
                         .build();
-                memberRepository.save(author);
-                System.out.println("초기 데이터: 테스트 작가 계정(author@test.com) 생성 완료");
+                memberRepository.save(seller);
+                System.out.println("초기 데이터: 테스트 판매자 계정(seller@test.com) 생성 완료");
             } else {
-                author = memberRepository.findByEmail("author@test.com");
+                seller = memberRepository.findByEmail("seller@test.com");
             }
 
             // 상품 데이터 생성 (필요한 경우)
@@ -112,7 +116,7 @@ public class DataInitializer {
                     String sCategory = sCategories[((i - 1) / primaryCategories.length) % sCategories.length];
 
                     Product product = Product.builder()
-                            .author(author)
+                            .seller(seller)
                             .name(name)
                             .price((long) price)
                             .description(description)
@@ -207,17 +211,17 @@ public class DataInitializer {
             }
             System.out.println("가상 구매자 " + virtualBuyers.size() + "명 준비 완료.");
             
-            // 2. 작가(author)의 상품 목록 가져오기
-            List<Product> authorProducts = productRepository.findByAuthor(author);
+            // 2. 판매자(seller)의 상품 목록 가져오기
+            List<Product> sellerProducts = productRepository.findBySeller(seller);
 
-            // 3. 작가의 상품에 대해 가상 구매 기록 50건 생성
-            if (!authorProducts.isEmpty() && orderRepository.countByProductAuthor(author) < 50) {
+            // 3. 판매자의 상품에 대해 가상 구매 기록 50건 생성
+            if (!sellerProducts.isEmpty() && orderRepository.countByProductSeller(seller) < 50) {
                 int ordersToCreate = 50;
                 for (int i = 0; i < ordersToCreate; i++) {
                     // 무작위 구매자 선택
                     Member randomBuyer = virtualBuyers.get((int) (Math.random() * virtualBuyers.size()));
                     // 무작위 상품 선택
-                    Product randomProduct = authorProducts.get((int) (Math.random() * authorProducts.size()));
+                    Product randomProduct = sellerProducts.get((int) (Math.random() * sellerProducts.size()));
                     // 무작위 구매 날짜 (최근 12개월 이내)
                     LocalDateTime randomOrderDate;
                     // 5건은 "이번 달" 데이터로 강제 생성
@@ -238,12 +242,57 @@ public class DataInitializer {
                             .build();
                     orderRepository.save(saleRecord);
                 }
-                System.out.println("작가(" + author.getName() + ")의 상품에 대한 판매 기록 " + ordersToCreate + "건 생성 완료.");
+                System.out.println("판매자(" + seller.getName() + ")의 상품에 대한 판매 기록 " + ordersToCreate + "건 생성 완료.");
             } else {
-                System.out.println("이미 작가의 판매 기록이 충분하거나 판매할 상품이 없어, 추가 생성하지 않습니다.");
+                System.out.println("이미 판매자의 판매 기록이 충분하거나 판매할 상품이 없어, 추가 생성하지 않습니다.");
             }
             // ==========================================================
             System.out.println("데이터 초기화 작업이 완료되었습니다.");
+
+            // ====================== 후기 / 문의 테스트 데이터 =====================
+
+            // 후기 10개, 문의 10개만 생성 (이미 있으면 건너뜀)
+
+            if (productReviewRepository.count() == 0 || productInquiryRepository.count() == 0) {
+
+                List<Product> sampleProducts = sellerProducts.subList(0, Math.min(sellerProducts.size(), 20));
+
+                // 1) 후기 생성
+                int reviewCount = 0;
+                for (Product p : sampleProducts) {
+                    Member randomBuyer = virtualBuyers.get((int) (Math.random() * virtualBuyers.size()));
+                    int rating = (int) (Math.random() * 5) + 1;
+                    String comment = "샘플 후기 " + (++reviewCount) + " - 별점 " + rating;
+
+                    com.creatorworks.nexus.product.entity.ProductReview review = com.creatorworks.nexus.product.entity.ProductReview.builder()
+                            .product(p)
+                            .writer(randomBuyer)
+                            .rating(rating)
+                            .comment(comment)
+                            .build();
+                    productReviewRepository.save(review);
+                    if (reviewCount >= 10) break;
+                }
+
+                // 2) 문의 생성
+                int inquiryCount = 0;
+                for (Product p : sampleProducts) {
+                    Member randomBuyer = virtualBuyers.get((int) (Math.random() * virtualBuyers.size()));
+                    String content = "샘플 문의 " + (++inquiryCount) + " - 이 작품에 대한 질문입니다.";
+
+                    com.creatorworks.nexus.product.entity.ProductInquiry inquiry = com.creatorworks.nexus.product.entity.ProductInquiry.builder()
+                            .product(p)
+                            .writer(randomBuyer)
+                            .content(content)
+                            .isSecret(false)
+                            .parent(null)
+                            .build();
+                    productInquiryRepository.save(inquiry);
+                    if (inquiryCount >= 10) break;
+                }
+
+                System.out.println("샘플 후기 " + reviewCount + "건, 문의 " + inquiryCount + "건 생성 완료");
+            }
         };
     }
 } 
