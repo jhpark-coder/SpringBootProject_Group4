@@ -39,7 +39,7 @@ const VideoComponent = ({ editor, node, updateAttributes, selected, deleteNode }
                 contentEditable={false}
                 suppressContentEditableWarning={true}
             >
-                <div className="drag-handle" contentEditable={false}>
+                <div className="drag-handle" contentEditable={false} data-drag-handle>
                     <GripVertical size={18} />
                 </div>
                 <div className={`video-container ${alignmentClass}`} style={{ width }}>
@@ -67,7 +67,7 @@ const VideoComponent = ({ editor, node, updateAttributes, selected, deleteNode }
             contentEditable={false}
             suppressContentEditableWarning={true}
         >
-            <div className="drag-handle" contentEditable={false}>
+            <div className="drag-handle" contentEditable={false} data-drag-handle>
                 <GripVertical size={18} />
             </div>
             <div className={`video-container ${alignmentClass}`} style={{ width }}>

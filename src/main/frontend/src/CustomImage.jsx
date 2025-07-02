@@ -22,6 +22,10 @@ export const CustomImage = Image.extend({
             width: {
                 default: '100%',
             },
+            // `textAlign` 속성을 추가합니다. 텍스트 정렬을 위해 사용되며, 기본값은 'left'입니다.
+            textAlign: {
+                default: 'left',
+            },
             // `data-float` 속성을 새로 추가합니다. 좌우 정렬(float)을 위해 사용되며, 기본값은 없습니다(null).
             'data-float': {
                 default: null,
@@ -45,11 +49,20 @@ export const CustomImage = Image.extend({
             return originalHTML;
         }
 
-        // data-float 속성이 있으면 float 스타일을 HTML에 직접 추가합니다.
-        const { 'data-float': float } = HTMLAttributes;
+        // data-float 속성과 textAlign 속성을 HTML에 직접 추가합니다.
+        const { 'data-float': float, textAlign } = HTMLAttributes;
+        let style = HTMLAttributes.style || '';
+
         if (float) {
-            const style = HTMLAttributes.style ? HTMLAttributes.style + ';' : '';
-            HTMLAttributes.style = `${style} float: ${float};`;
+            style = style ? `${style}; float: ${float};` : `float: ${float};`;
+        }
+
+        if (textAlign) {
+            style = style ? `${style}; text-align: ${textAlign};` : `text-align: ${textAlign};`;
+        }
+
+        if (style) {
+            HTMLAttributes.style = style;
         }
 
         //最终的に 'img' 태그를 생성하고, 기본 속성과 커스텀 속성을 모두 병합하여 적용합니다.
