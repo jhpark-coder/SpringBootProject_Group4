@@ -25,11 +25,11 @@ $(document).ready(function () {
             return;
         }
 
-        gridContainer.html('<p>상품 목록을 불러오는 중입니다...</p>');
+        gridContainer.html('<p>추천 상품을 불러오는 중입니다...</p>');
 
-        $.getJSON("/api/products?page=0&size=4&sort=regTime,DESC")
-            .done(function (pageResponse) {
-                const products = pageResponse.content || pageResponse.products || pageResponse || [];
+        // 팀원이 만든 개인화 추천 API 사용
+        $.getJSON("/api/main/recommendations")
+            .done(function (products) {
                 gridContainer.empty();
 
                 if (!products || products.length === 0) {
@@ -39,11 +39,11 @@ $(document).ready(function () {
 
                 products.forEach(function (product) {
                     // sellerId가 있는 경우에만 팔로우 버튼 생성
-                    const followButton = product.sellerId ? 
+                    const followButton = product.sellerId ?
                         `<button class="btn follow-btn" 
                                  data-member-id="${product.sellerId}"
                                  onclick="toggleFollow(${product.sellerId})">Follow</button>` : '';
-                    
+
                     const productItem = `
                         <div class="col-md-3">
                             <article class="grid-item">
@@ -77,8 +77,8 @@ $(document).ready(function () {
                 });
             })
             .fail(function (error) {
-                console.error('상품 데이터를 가져오는 중 오류 발생:', error);
-                gridContainer.html(`<p style="color: red;">데이터를 불러오는데 실패했습니다.</p>`);
+                console.error('추천 상품 데이터를 가져오는 중 오류 발생:', error);
+                gridContainer.html(`<p style="color: red;">추천 데이터를 불러오는데 실패했습니다.</p>`);
             });
     }
 

@@ -17,9 +17,9 @@ import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.order.entity.Order;
 import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.entity.Product;
+import com.creatorworks.nexus.product.repository.ProductInquiryRepository;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.repository.ProductReviewRepository;
-import com.creatorworks.nexus.product.repository.ProductInquiryRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -51,7 +51,6 @@ public class DataInitializer {
                         .birthDay("N/A")
                         .build();
                 memberRepository.save(admin);
-                System.out.println("초기 데이터: 관리자 계정(admintest@test.com) 생성 완료");
             }
 
             // 일반 사용자 계정 생성
@@ -68,7 +67,6 @@ public class DataInitializer {
                         .birthDay("N/A")
                         .build();
                 memberRepository.save(user);
-                System.out.println("초기 데이터: 일반 사용자 계정(usertest@test.com) 생성 완료");
             }
 
             // 테스트용 판매자 계정 생성 (기존 작가 계정을 판매자로 변경)
@@ -85,7 +83,6 @@ public class DataInitializer {
                         .birthDay("01")
                         .build();
                 memberRepository.save(seller);
-                System.out.println("초기 데이터: 테스트 판매자 계정(seller@test.com) 생성 완료");
             } else {
                 seller = memberRepository.findByEmail("seller@test.com");
             }
@@ -96,7 +93,7 @@ public class DataInitializer {
 
                 String[] primaryCategories = {"artwork", "graphic-design", "character", "java", "frontend", "python"};
                 String[][] secondaryCategories = {
-                    {"포토그라피", "일러스트레이션", "스케치", "코믹스"},
+                    {"포토그래피", "일러스트레이션", "스케치", "코믹스"},
                     {"타이포그라피", "앨범아트", "로고", "브랜딩", "편집디자인"},
                     {"카툰", "팬아트", "2D 캐릭터", "3D 모델링"},
                     {"Spring/JPA", "네트워크", "알고리즘", "코어 자바"},
@@ -158,8 +155,6 @@ public class DataInitializer {
                                     .build();
 
                             orderRepository.save(testOrder);
-                            System.out.printf("초기 데이터: usertest가 %s 날짜로 상품 ID %d (%s)를 구매 처리\n",
-                                    fixedOrderDate.toLocalDate().toString(), productId, productToBuy.getPrimaryCategory());
                         }
                     }
                 } else {

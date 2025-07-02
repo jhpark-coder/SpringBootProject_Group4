@@ -80,7 +80,7 @@ public class SecurityConfig {
                 .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**", "/api/follow/**", "/api/faq/**")
             )
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout").permitAll()
+                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout", "/test/**").permitAll()
                 .requestMatchers("/editor/**", "/editor").hasAnyRole("ADMIN", "SELLER")
                 .requestMatchers("/api/korean/**", "/api/keyword/**").permitAll()
                 .requestMatchers("/api/follow/**").authenticated()
@@ -122,7 +122,7 @@ public class SecurityConfig {
             )
             // 모든 요청을 허용합니다. (개발환경과 동일하게)
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout").permitAll()
+                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout", "/test/**").permitAll()
                 .requestMatchers("/editor/**", "/editor").hasAnyRole("ADMIN", "SELLER")
                 .requestMatchers("/api/korean/**", "/api/keyword/**").permitAll()
                 .requestMatchers("/api/follow/**").authenticated()

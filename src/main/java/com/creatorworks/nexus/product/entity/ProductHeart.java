@@ -31,4 +31,14 @@ public class ProductHeart extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     private Product product;
+
+      // JPA를 위한 기본 생성자 (반드시 필요)
+    public ProductHeart() {
+    }
+
+    // 서비스 로직에서 사용할 생성자
+    public ProductHeart(Member member, Product product) {
+        this.member = member;
+        this.product = product;
+    }
 } 
