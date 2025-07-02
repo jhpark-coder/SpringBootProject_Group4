@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import com.creatorworks.nexus.product.service.RecentlyViewedProductRedisService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -75,6 +76,7 @@ public class ProductController {
     private final ObjectMapper objectMapper;
     private final MemberFollowService memberFollowService;
     private final RedisTemplate<String, String> redisTemplate;
+    private final RecentlyViewedProductRedisService recentlyViewedProductRedisService;
 
     /**
      * 그리드 뷰 페이지("/products/grid") 요청을 처리하여 'gridView.html' 뷰를 렌더링합니다.
@@ -165,16 +167,8 @@ public class ProductController {
                 // ==============================================================
                 // --- ★★★ Redis 기록 로직 전체를 아래 코드로 교체 ★★★ ---
                 // 1. 개인별 최근 본 상품 기록 (기존 로직)
-                String memberId = currentMember.getId().toString();
-                String productIdStr = String.valueOf(id);
-                double score = System.currentTimeMillis();
-                String userViewHistoryKey = "viewHistory:" + memberId;
-                redisTemplate.opsForZSet().add(userViewHistoryKey, productIdStr, score);
-                Long userHistorySize = redisTemplate.opsForZSet().zCard(userViewHistoryKey);
-                if (userHistorySize != null && userHistorySize > 100) {
-                    redisTemplate.opsForZSet().removeRange(userViewHistoryKey, 0, userHistorySize - 101);
-                }
-                log.info("사용자 ID {}의 최근 본 상품 기록 추가/업데이트: 상품 ID {}", memberId, id);
+                recentlyViewedProductRedisService.addProductToHistory(currentMember.getId(), id);
+                log.info("사용자 ID {}의 최근 본 상품 기록 추가 (서비스 호출): 상품 ID {}", currentMember.getId(), id);
 
                 // 2. 카테고리별 조회수 통계 기록 (새로운 로직)
                 if (product.getPrimaryCategory() != null && product.getSecondaryCategory() != null) {

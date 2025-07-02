@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.creatorworks.nexus.product.service.RecentlyViewedProductRedisService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -47,11 +48,12 @@ public class MyPageController {
 
     private static final Logger log = LoggerFactory.getLogger(MyPageController.class);
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RecentlyViewedProductRedisService recentlyViewedProductRedisService;
     private final ProductRepository productRepository;
     private final MemberOrderRepository memberOrderRepository;
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @GetMapping("/my-page")
     public String myPage(@AuthenticationPrincipal CustomUserDetails customUserDetails, Model model) {
@@ -60,6 +62,7 @@ public class MyPageController {
                 throw new IllegalStateException("회원 정보를 찾을 수 없습니다.");
             }
         Member currentMember = memberRepository.findByEmail(customUserDetails.getUsername());
+
 
 
 
@@ -160,41 +163,30 @@ public class MyPageController {
         //      ★★★ Redis 최근 본 상품 - 순서 보장 로직으로 수정 ★★★
         // ==========================================================
 
-        // 1. 현재 사용자의 최근 본 상품 키를 생성
-        String key = "viewHistory:" + currentMember.getId().toString();
+        // 1. 서비스 호출하여 최근 본 상품 ID 목록을 10개 가져옴
+        List<Long> recentProductIds = recentlyViewedProductRedisService.getRecentlyViewedProductIds(currentMemberId, 10);
 
-        // 2. Redis에서 score가 높은 순(최신순)으로 상품 ID를 10개 가져옴
-        Set<String> recentProductIdsStr = redisTemplate.opsForZSet().reverseRange(key, 0, 9);
-
-        // 3. 만약 조회된 ID가 있다면 처리
-        if (recentProductIdsStr != null && !recentProductIdsStr.isEmpty()) {
-            // 3-1. 문자열 ID 목록을 Long 타입 ID 목록으로 변환
-            List<Long> recentProductIds = recentProductIdsStr.stream()
-                    .map(Long::parseLong)
-                    .collect(Collectors.toList());
-
-            // 3-2. ID 목록으로 DB에서 상품 정보들을 한 번에 조회(IN 쿼리)
+        if (!recentProductIds.isEmpty()) {
+            // 2. ID 목록으로 DB에서 상품 정보들을 한 번에 조회(IN 쿼리)
             List<Product> unorderedProducts = productRepository.findAllById(recentProductIds);
 
-            // 3-3. ★★★ DB에서 가져온 상품들을 Redis에서 가져온 ID 순서(최신순)로 재정렬 ★★★
+            // 3. DB에서 가져온 상품들을 Redis에서 가져온 ID 순서(최신순)로 재정렬
             Map<Long, Product> productMap = unorderedProducts.stream()
                     .collect(Collectors.toMap(Product::getId, product -> product));
 
             List<Product> sortedProducts = recentProductIds.stream()
                     .map(productMap::get)
-                    .filter(java.util.Objects::nonNull) // 혹시 DB에서 삭제된 상품이 있을 경우를 대비
+                    .filter(java.util.Objects::nonNull)
                     .collect(Collectors.toList());
 
-            // 3-4. 구매하지 않은 상품만 필터링하고 4개로 제한
+            // 4. 구매하지 않은 상품만 필터링하고 4개로 제한
             List<Product> recentViewedProducts = sortedProducts.stream()
                     .filter(product -> !orderRepository.existsByBuyerAndProduct(currentMember, product))
                     .limit(4)
                     .collect(Collectors.toList());
 
-            // 3-5. Model에 담아서 View로 전달
             model.addAttribute("recentViewedProducts", recentViewedProducts);
         } else {
-            // 조회된 상품이 없으면 빈 리스트를 전달
             model.addAttribute("recentViewedProducts", Collections.emptyList());
         }
 

@@ -118,4 +118,20 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // ★★★ 특정 작가(판매자)의 총 판매 건수를 조회하는 메서드 추가 ★★★
     @Query("SELECT COUNT(o) FROM Order o WHERE o.product.author = :author")
     long countByProductAuthor(@Param("author") Member author);
+
+    /**
+     * [수정] 가장 많이 팔린 상품 ID 목록 조회 (비로그인 사용자용)
+     */
+    @Query("SELECT o.product.id FROM Order o GROUP BY o.product.id ORDER BY COUNT(o.product.id) DESC")
+    List<Long> findTopSellingProductIds(Pageable pageable);
+
+    /**
+     * [추가] 특정 상품들을 제외하고 가장 많이 팔린 상품 ID 목록 조회 (로그인 사용자 추천 채우기용)
+     */
+    @Query("SELECT o.product.id FROM Order o " +
+            "WHERE o.product.id NOT IN :excludedIds " +
+            "GROUP BY o.product.id ORDER BY COUNT(o.product.id) DESC")
+    List<Long> findTopSellingProductIds(@Param("excludedIds") List<Long> excludedIds, Pageable pageable);
+
+    List<Order>findByBuyer(Member member);
 }
