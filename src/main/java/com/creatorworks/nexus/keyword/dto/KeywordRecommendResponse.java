@@ -24,7 +24,7 @@ public class KeywordRecommendResponse {
     public static class RecommendedProduct {
         private Long id;
         private String name;
-        private String authorName;
+        private String sellerName;
         private String imageUrl;
         private String description;
         private String primaryCategory;
@@ -43,8 +43,8 @@ public class KeywordRecommendResponse {
         public void setId(Long id) { this.id = id; }
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
-        public String getAuthorName() { return authorName; }
-        public void setAuthorName(String authorName) { this.authorName = authorName; }
+        public String getSellerName() { return sellerName; }
+        public void setSellerName(String sellerName) { this.sellerName = sellerName; }
         public String getImageUrl() { return imageUrl; }
         public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
         public String getDescription() { return description; }
@@ -73,7 +73,7 @@ public class KeywordRecommendResponse {
             return "RecommendedProduct{" +
                     "id=" + id +
                     ", name='" + name + '\'' +
-                    ", authorName='" + authorName + '\'' +
+                    ", sellerName='" + sellerName + '\'' +
                     ", imageUrl='" + imageUrl + '\'' +
                     ", description='" + description + '\'' +
                     ", primaryCategory='" + primaryCategory + '\'' +

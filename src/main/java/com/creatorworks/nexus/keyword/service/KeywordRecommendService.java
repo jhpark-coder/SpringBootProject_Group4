@@ -77,7 +77,7 @@ public class KeywordRecommendService {
                         RecommendedProduct dto = new RecommendedProduct();
                         dto.setId(product.getId());
                         dto.setName(product.getName());
-                        dto.setAuthorName(product.getAuthor() != null ? product.getAuthor().getName() : null);
+                        dto.setSellerName(product.getSeller() != null ? product.getSeller().getName() : null);
                         dto.setImageUrl(product.getImageUrl());
                         dto.setDescription(product.getDescription());
                         dto.setPrimaryCategory(product.getPrimaryCategory());
@@ -119,7 +119,7 @@ public class KeywordRecommendService {
                             if (containsIgnoreCase(product.getWorkDescription(), lower)) score += 3;
                             if (containsIgnoreCase(product.getTiptapJson(), lower)) score += 3;
                             if (tagNames.stream().anyMatch(tag -> containsIgnoreCase(tag, lower))) score += 3;
-                            if (product.getAuthor() != null && containsIgnoreCase(product.getAuthor().getName(), lower)) score += 3;
+                            if (product.getSeller() != null && containsIgnoreCase(product.getSeller().getName(), lower)) score += 3;
                             if (containsIgnoreCase(product.getSecondaryCategory(), lower)) score += 2;
                             if (containsIgnoreCase(product.getPrimaryCategory(), lower)) score += 1;
                         }

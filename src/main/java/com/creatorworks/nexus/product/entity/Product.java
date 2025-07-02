@@ -28,7 +28,7 @@ import lombok.ToString;
 @Setter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@ToString(exclude = {"author", "inquiries", "itemTags"})
+@ToString(exclude = {"seller", "inquiries", "itemTags"})
 public class Product extends BaseEntity implements Serializable {
 
     @Id
@@ -36,8 +36,8 @@ public class Product extends BaseEntity implements Serializable {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id")
-    private Member author;
+    @JoinColumn(name = "seller_id")
+    private Member seller;
 
     private String name;
     private Long price;
@@ -64,8 +64,8 @@ public class Product extends BaseEntity implements Serializable {
     private List<ProductItemTag> itemTags = new ArrayList<>();
 
     @Builder
-    public Product(Member author, String name, Long price, String description, String workDescription, String tiptapJson, String imageUrl, String primaryCategory, String secondaryCategory, String backgroundColor, String fontFamily) {
-        this.author = author;
+    public Product(Member seller, String name, Long price, String description, String workDescription, String tiptapJson, String imageUrl, String primaryCategory, String secondaryCategory, String backgroundColor, String fontFamily) {
+        this.seller = seller;
         this.name = name;
         this.price = price;
         this.description = description;

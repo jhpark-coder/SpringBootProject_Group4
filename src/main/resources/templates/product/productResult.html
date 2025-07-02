@@ -169,28 +169,30 @@
             max-width: 320px;
         }
 
-        .sidebar .author-info {
+        .sidebar .seller-info {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
-        .sidebar .author-profile {
+        .sidebar .seller-profile {
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .sidebar .author-pfp {
+        .sidebar .seller-pfp {
             width: 40px;
             height: 40px;
-            background: #e0e0e0;
             border-radius: 50%;
+            object-fit: cover;
         }
 
-        .sidebar .author-name {
-            font-weight: bold;
-            font-size: 15px;
+        .sidebar .seller-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
         }
 
         .sidebar .subscribe-btn {
@@ -311,13 +313,13 @@
         </section>
 
         <aside class="sidebar">
-            <div class="author-info">
-                <div class="author-profile">
-                    <img src="https://via.placeholder.com/40" alt="작가 프로필" class="author-pfp"
-                        onerror="this.src='https://via.placeholder.com/40/cccccc/666666?text=작가'" />
-                    <span class="author-name" th:text="${product.createdBy ?: '익명 작가'}">작가이름이 들어가</span>
+            <div class="seller-info">
+                <div class="seller-profile">
+                    <img src="https://via.placeholder.com/40" alt="판매자 프로필" class="seller-pfp"
+                                                            th:src="${product.seller?.profileImage ?: 'https://via.placeholder.com/40'}">
+                    <span class="seller-name" th:text="${product.createdBy ?: '익명 판매자'}">판매자이름이 들어가</span>
                 </div>
-                <button th:if="${#authentication.name != product.createdBy}" class="subscribe-btn">Subscribe</button>
+                <button th:if="${#authentication.name != product.createdBy}" class="follow-btn">Follow</button>
             </div>
             <div class="tags">
                 <button class="tag-btn"

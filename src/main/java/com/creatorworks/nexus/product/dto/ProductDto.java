@@ -2,33 +2,40 @@ package com.creatorworks.nexus.product.dto;
 
 import com.creatorworks.nexus.product.entity.Product;
 
-import lombok.Getter;
-
-@Getter
-public class ProductDto {
-    private final Long id;
-    private final String name;
-    private final Long price;
-    private final String imageUrl;
-    private final String authorName;
-    private final String primaryCategory;
-    private final String secondaryCategory;
-    private final String tiptapJson;
-    private final String workDescription;
-    private final String backgroundColor;
-    private final String fontFamily;
-
+public record ProductDto(
+        Long id,
+        String name,
+        Long price,
+        String description,
+        String workDescription,
+        String tiptapJson,
+        String imageUrl,
+        String primaryCategory,
+        String secondaryCategory,
+        String backgroundColor,
+        String fontFamily,
+        String sellerName,
+        Long sellerId,
+        java.time.LocalDateTime regTime,
+        java.time.LocalDateTime updateTime
+) {
     public ProductDto(Product product) {
-        this.id = product.getId();
-        this.name = product.getName();
-        this.price = product.getPrice();
-        this.imageUrl = product.getImageUrl();
-        this.authorName = (product.getAuthor() != null) ? product.getAuthor().getName() : "Unknown";
-        this.primaryCategory = product.getPrimaryCategory();
-        this.secondaryCategory = product.getSecondaryCategory();
-        this.tiptapJson = product.getTiptapJson();
-        this.workDescription = product.getWorkDescription();
-        this.backgroundColor = product.getBackgroundColor();
-        this.fontFamily = product.getFontFamily();
+        this(
+                product.getId(),
+                product.getName(),
+                product.getPrice(),
+                product.getDescription(),
+                product.getWorkDescription(),
+                product.getTiptapJson(),
+                product.getImageUrl(),
+                product.getPrimaryCategory(),
+                product.getSecondaryCategory(),
+                product.getBackgroundColor(),
+                product.getFontFamily(),
+                (product.getSeller() != null) ? product.getSeller().getName() : "Unknown",
+                (product.getSeller() != null) ? product.getSeller().getId() : null,
+                product.getRegTime(),
+                product.getUpdateTime()
+        );
     }
 } 

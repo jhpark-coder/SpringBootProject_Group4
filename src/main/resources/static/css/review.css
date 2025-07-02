@@ -261,12 +261,24 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.5);
     display: none;
     /* Default is hidden */
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 1050;
+    overflow: hidden;
+    /* GPU 가속을 통한 렌더링 안정화 */
+    will-change: transform;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* 모달 표시 시 flex로 변경 */
+.modal-overlay[style*="display: flex"] {
+    display: flex !important;
 }
 
 .modal-content {
@@ -275,8 +287,12 @@
     border-radius: 8px;
     width: 100%;
     max-width: 600px;
+    max-height: 90vh;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     animation: slide-down 0.3s ease-out;
+    overflow-y: auto;
+
+    margin: auto;
 }
 
 @keyframes slide-down {

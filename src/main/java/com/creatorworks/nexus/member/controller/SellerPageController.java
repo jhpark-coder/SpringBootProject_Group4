@@ -89,7 +89,7 @@ public class SellerPageController {
         model.addAttribute("topSellingProducts", topSellingProducts);
         // ---------------------------------------------
 
-        model.addAttribute("sellerName", seller.getName());
+        model.addAttribute("Name", seller.getName());
 
         return "member/sellerPage"; // sellerDashboard.html 템플릿 반환
     }

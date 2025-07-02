@@ -140,13 +140,13 @@ body {
     /* 좌우 약간의 여백 */
 }
 
-.author-name {
-    font-size: 16px;
-    font-weight: 500;
-    color: #FFFFFF;
+.seller-name {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
 }
 
-.subscribe-btn {
+.subscribe-btn, .follow-btn {
     padding: 0.5rem 1.5rem;
     background-color: #0071DE;
     color: #FFFFFF;
@@ -156,7 +156,7 @@ body {
     border: none;
 }
 
-.subscribe-btn:hover {
+.subscribe-btn:hover, .follow-btn:hover {
     opacity: 0.8;
 }
 

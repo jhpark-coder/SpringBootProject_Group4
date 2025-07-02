@@ -50,4 +50,10 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, Lo
     Double findAverageRatingByProductId(@Param("productId") Long productId);
 
     Page<ProductReview> findAllByProductId(Long productId, Pageable pageable);
+
+    /**
+     * 판매자가 등록한 모든 상품에 대한 후기 목록을 조회합니다.
+     */
+    @Query("SELECT r FROM ProductReview r WHERE r.product.seller = :seller")
+    Page<ProductReview> findBySeller(@Param("seller") com.creatorworks.nexus.member.entity.Member seller, Pageable pageable);
 } 

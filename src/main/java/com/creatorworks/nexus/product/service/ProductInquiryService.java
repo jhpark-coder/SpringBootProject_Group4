@@ -68,8 +68,8 @@ public class ProductInquiryService {
         ProductInquiry parent = productInquiryRepository.findById(parentInquiryId)
                 .orElseThrow(() -> new IllegalArgumentException("부모 문의를 찾을 수 없습니다. id=" + parentInquiryId));
         
-        // 권한 검증: 현재 로그인한 사용자가 상품의 작가인지 확인합니다.
-        if (!product.getAuthor().getId().equals(writer.getId())) {
+        // 권한 검증: 현재 로그인한 사용자가 상품의 판매자인지 확인합니다.
+        if (!product.getSeller().getId().equals(writer.getId())) {
             throw new IllegalStateException("답변을 작성할 권한이 없습니다.");
         }
 

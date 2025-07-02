@@ -95,8 +95,8 @@ public class ProductInquiry extends BaseEntity {
             return true;
         }
         
-        // 상품 작성자(작가)는 모든 비밀글을 볼 수 있음
-        if (this.product.getAuthor().getId().equals(currentMember.getId())) {
+        // 상품 작성자(판매자)는 모든 비밀글을 볼 수 있음
+        if (this.product.getSeller().getId().equals(currentMember.getId())) {
             return true;
         }
 

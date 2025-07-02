@@ -52,8 +52,8 @@ public class Auction extends BaseEntity {
     private Long buyNowPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id")
-    private Member author;
+    @JoinColumn(name = "seller_id")
+    private Member seller;
 
     private LocalDateTime auctionEndTime;
 
@@ -61,10 +61,10 @@ public class Auction extends BaseEntity {
     private List<AuctionItemTag> itemTags = new ArrayList<>();
 
     @Builder
-    public Auction(Member author, String name, Long startBidPrice, Long buyNowPrice, String description,
+    public Auction(Member seller, String name, Long startBidPrice, Long buyNowPrice, String description,
                    String workDescription, String tiptapJson, String imageUrl, String primaryCategory,
                    String secondaryCategory, LocalDateTime auctionEndTime, String backgroundColor, String fontFamily) {
-        this.author = author;
+        this.seller = seller;
         this.name = name;
         this.startBidPrice = startBidPrice;
         this.buyNowPrice = buyNowPrice;

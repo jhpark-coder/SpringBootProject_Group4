@@ -5,9 +5,12 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.entity.ProductInquiry;
+import com.creatorworks.nexus.member.entity.Member;
 
 public interface ProductInquiryRepository extends JpaRepository<ProductInquiry, Long> {
 
@@ -20,5 +23,12 @@ public interface ProductInquiryRepository extends JpaRepository<ProductInquiry, 
     List<ProductInquiry> findByProduct_IdOrderByParent_IdAscRegTimeAsc(Long productId);
 
     Page<ProductInquiry> findByProductAndParentIsNull(Product product, Pageable pageable);
+
+    /**
+     * 판매자가 등록한 모든 상품에 대한 (최상위) 문의 목록을 조회합니다.
+     * 답변을 제외하고 질문 글(parent null)만 가져옵니다.
+     */
+    @Query("SELECT i FROM ProductInquiry i WHERE i.product.seller = :seller AND i.parent IS NULL")
+    Page<ProductInquiry> findTopLevelBySeller(@Param("seller") Member seller, Pageable pageable);
 
 } 

@@ -144,9 +144,9 @@ public class ProductService {
      */
     @Transactional
     public Product saveProduct(ProductSaveRequest request, String userEmail) {
-        Member author = memberRepository.findByEmail(userEmail);
-        if (author == null) {
-            throw new IllegalArgumentException("작성자 정보를 찾을 수 없습니다: " + userEmail);
+        Member seller = memberRepository.findByEmail(userEmail);
+        if (seller == null) {
+            throw new IllegalArgumentException("판매자 정보를 찾을 수 없습니다: " + userEmail);
         }
 
         // 카테고리 저장 디버그 로그
@@ -155,7 +155,7 @@ public class ProductService {
         System.out.println("🔍 상품 저장 - tags: " + request.getTags());
 
         Product product = Product.builder()
-                .author(author)
+                .seller(seller)
                 .name(request.getName())
                 .price(request.getPrice())
                 .description(request.getDescription())
@@ -184,8 +184,8 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid product Id:" + id));
         
-        // 상품 수정 권한 체크 (로그인한 사용자가 상품의 author와 동일한지 확인)
-        if (!product.getAuthor().getEmail().equals(userEmail)) {
+        // 상품 수정 권한 체크 (로그인한 사용자가 상품의 seller와 동일한지 확인)
+        if (!product.getSeller().getEmail().equals(userEmail)) {
             throw new IllegalStateException("상품을 수정할 권한이 없습니다.");
         }
 

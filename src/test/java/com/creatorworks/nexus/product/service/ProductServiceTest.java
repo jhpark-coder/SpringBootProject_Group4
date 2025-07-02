@@ -20,6 +20,8 @@ import com.creatorworks.nexus.product.entity.ProductItemTag;
 import com.creatorworks.nexus.product.repository.ItemTagRepository;
 import com.creatorworks.nexus.product.repository.ProductItemTagRepository;
 import com.creatorworks.nexus.product.repository.ProductRepository;
+import com.creatorworks.nexus.product.repository.ProductInquiryRepository;
+import com.creatorworks.nexus.product.repository.ProductReviewRepository;
 
 @SpringBootTest
 @Transactional
@@ -43,14 +45,22 @@ class ProductServiceTest {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private ProductInquiryRepository productInquiryRepository;
+
+    @Autowired
+    private ProductReviewRepository productReviewRepository;
+
     private Member testUser;
 
     @BeforeEach
     void setUp() {
-        // 테스트간 데이터 격리를 위해 기존 데이터 삭제 (의존성 역순으로)
+        // 테스트간 데이터 격리를 위해 기존 데이터 삭제 (외래키 제약조건을 고려한 역순으로)
         productItemTagRepository.deleteAllInBatch();
-        orderRepository.deleteAllInBatch();
-        productRepository.deleteAllInBatch();
+        productInquiryRepository.deleteAllInBatch(); // Product를 참조하므로 먼저 삭제
+        productReviewRepository.deleteAllInBatch();  // Product를 참조하므로 먼저 삭제
+        orderRepository.deleteAllInBatch();          // Product를 참조하므로 먼저 삭제
+        productRepository.deleteAllInBatch();        // 이제 Product 삭제 가능
         memberRepository.deleteAllInBatch();
         itemTagRepository.deleteAllInBatch();
 
