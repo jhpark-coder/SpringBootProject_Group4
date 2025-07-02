@@ -32,6 +32,13 @@ public class MemberController {
         model.addAttribute("memberFormDto", new MemberFormDto());
         return "member/memberForm";
     }
+    @GetMapping("/point")
+    public String MemberPoint(Model model) {
+
+        return "member/point";
+    }
+
+
 
     @PostMapping("/new")
     public String memberForm(@Valid MemberFormDto memberFormDto, BindingResult bindingResult, Model model) {

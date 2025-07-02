@@ -119,7 +119,7 @@ public class ProductController {
                                 @RequestParam(value = "reviewKeyword", required = false) String reviewKeyword,
                                 Principal principal,
                                 Model model) {
-        Product product = productService.findProductById(id);
+            Product product = productService.findProductById(id);
 
         // 문의 관련
         Page<ProductInquiry> inquiryPage = productInquiryService.findInquiriesByProduct(id, inquiryPageable);
@@ -129,7 +129,7 @@ public class ProductController {
         double averageRating = productReviewService.getAverageRating(id);
 
         // --- 좋아요 관련 로직 추가 ---
-        long heartCount = productService.getHeartCount(id);
+            long heartCount = productService.getHeartCount(id);
         boolean isLiked = false;
         // ---
 
@@ -192,9 +192,9 @@ public class ProductController {
                 // 여기서는 간단히 빈 문자열로 대체
                 contentHtml = "<p>콘텐츠를 불러오는 데 실패했습니다.</p>";
             }
-        }
-
-        model.addAttribute("product", product);
+            }
+            
+            model.addAttribute("product", product);
         model.addAttribute("contentHtml", contentHtml); // 렌더링된 HTML 추가
         model.addAttribute("inquiryPage", inquiryPage);
         model.addAttribute("reviewPage", reviewPage);
@@ -204,8 +204,8 @@ public class ProductController {
         model.addAttribute("canWriteReview", canWriteReview);
         model.addAttribute("existingReview", existingReview.orElse(null));
         // --- 좋아요 관련 모델 속성 추가 ---
-        model.addAttribute("heartCount", heartCount);
-        model.addAttribute("isLiked", isLiked);
+            model.addAttribute("heartCount", heartCount);
+            model.addAttribute("isLiked", isLiked);
         // ---
         
         // --- 태그 정보 추가 ---
@@ -228,8 +228,8 @@ public class ProductController {
         log.debug("  - 전체 태그 목록: {}", allTagNames);
         log.debug("  - 순수 태그 목록: {}", pureTagNames);
         // ---
-
-        return "product/productDetail";
+            
+            return "product/productDetail";
     }
 
     /**

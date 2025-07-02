@@ -43,7 +43,7 @@
                 <!-- 3. 사용자 액션 영역 -->
                 <div class="user-actions" sec:authorize="isAuthenticated()">
                     <a href="#" class="points-button">
-                        <span>보유한 포인트 : 1000</span>
+                        <span>보유한 포인트<p th:text="${currentPoint ?: 0}"></p></span>
                         <!-- SVG의 종 아이콘 부분 추출 -->
                         <svg class="bell-icon" viewBox="0 0 25 27" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path
