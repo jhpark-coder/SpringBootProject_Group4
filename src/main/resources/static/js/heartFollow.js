@@ -284,3 +284,18 @@ function requestPubPay() {
         }
     });
 }
+
+// SweetAlert2 예시
+Swal.fire({
+  title: '구독 결제',
+  html: `월 구독료: <b>9,900원</b><br>결제하시겠습니까?`,
+  showCancelButton: true,
+  confirmButtonText: '결제하기',
+  cancelButtonText: '취소'
+}).then((result) => {
+  if (result.isConfirmed) {
+    // 결제 API 호출
+    fetch('/api/subscription', { ... })
+      .then(...)
+  }
+});
