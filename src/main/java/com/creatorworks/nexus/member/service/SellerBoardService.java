@@ -16,14 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SellerBoardService {
 
-    private final ProductReviewRepository productReviewRepository;
-    private final ProductInquiryRepository productInquiryRepository;
+    private final ProductReviewRepository reviewRepository;
+    private final ProductInquiryRepository inquiryRepository;
 
     public Page<ProductReview> getReviewsBySeller(Member seller, Pageable pageable) {
-        return productReviewRepository.findBySeller(seller, pageable);
+        return reviewRepository.findBySeller(seller, pageable);
     }
 
     public Page<ProductInquiry> getInquiriesBySeller(Member seller, Pageable pageable) {
-        return productInquiryRepository.findTopLevelBySeller(seller, pageable);
+        return inquiryRepository.findBySeller(seller, pageable);
     }
 } 

@@ -103,12 +103,13 @@ public class ProductController {
                                 @Qualifier("inquiryPageable") @PageableDefault(size = 4, sort = "regTime", direction = Sort.Direction.DESC) Pageable inquiryPageable,
                                 @Qualifier("reviewPageable") @PageableDefault(size = 10, sort = "regTime", direction = Sort.Direction.DESC) Pageable reviewPageable,
                                 @RequestParam(value = "reviewKeyword", required = false) String reviewKeyword,
+                                @RequestParam(value = "inquiryKeyword", required = false) String inquiryKeyword,
                                 Principal principal,
                                 Model model) {
         Product product = productService.findProductByIdAndIncrementView(id);
         
-        // 문의 관련
-        Page<ProductInquiry> inquiryPage = productInquiryService.findInquiriesByProduct(id, inquiryPageable);
+        // 문의 관련 (검색 기능 추가)
+        Page<ProductInquiry> inquiryPage = productInquiryService.findInquiriesByProduct(id, inquiryKeyword, inquiryPageable);
 
         // 후기 관련
         Page<ProductReview> reviewPage = productReviewService.findReviewsByProduct(id, reviewKeyword, reviewPageable);
@@ -214,6 +215,7 @@ public class ProductController {
         model.addAttribute("product", product);
         model.addAttribute("contentHtml", contentHtml); // 렌더링된 HTML 추가
         model.addAttribute("inquiryPage", inquiryPage);
+        model.addAttribute("inquiryKeyword", inquiryKeyword);
         model.addAttribute("reviewPage", reviewPage);
         model.addAttribute("averageRating", averageRating);
         model.addAttribute("reviewKeyword", reviewKeyword);

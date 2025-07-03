@@ -14,6 +14,10 @@ import com.creatorworks.nexus.product.repository.ProductInquiryRepository;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageImpl;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -25,10 +29,29 @@ public class ProductInquiryService {
     private final ProductInquiryRepository productInquiryRepository;
 
     @Transactional(readOnly = true)
-    public Page<ProductInquiry> findInquiriesByProduct(Long productId, Pageable pageable) {
+    public Page<ProductInquiry> findInquiriesByProduct(Long productId, String keyword, Pageable pageable) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 상품을 찾을 수 없습니다. id=" + productId));
-        return productInquiryRepository.findByProductAndParentIsNull(product, pageable);
+                .orElseThrow(() -> new IllegalArgumentException("Invalid product Id:" + productId));
+        
+        // 키워드가 없으면 DB에서 바로 페이징하여 반환
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return productInquiryRepository.findByProductAndParentIsNull(product, pageable);
+        }
+
+        // 키워드가 있으면, 전체 목록을 가져와 애플리케이션 레벨에서 필터링
+        List<ProductInquiry> allInquiries = productInquiryRepository.findByProductAndParentIsNull(product, Pageable.unpaged()).getContent();
+        
+        List<ProductInquiry> filteredInquiries = allInquiries.stream()
+                .filter(inquiry -> inquiry.getContent() != null && inquiry.getContent().toLowerCase().contains(keyword.toLowerCase()))
+                .collect(Collectors.toList());
+
+        // 수동으로 페이징 처리
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), filteredInquiries.size());
+        
+        List<ProductInquiry> pageContent = (start > filteredInquiries.size()) ? List.of() : filteredInquiries.subList(start, end);
+
+        return new PageImpl<>(pageContent, pageable, filteredInquiries.size());
     }
 
     public void createInquiry(Long productId, ProductInquiryRequestDto requestDto, String userEmail) {

@@ -256,4 +256,12 @@ public class TestController {
         
         return request.getRemoteAddr();
     }
+
+    /**
+     * NestJS Socket.io 테스트 페이지
+     */
+    @GetMapping("/nestjstest")
+    public String nestjsTestPage() {
+        return "nestjstest";
+    }
 } 
