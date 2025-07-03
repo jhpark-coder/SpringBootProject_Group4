@@ -21,161 +21,8 @@
         }
     </style>
 </th:block>
-<!-- 사용자 스크립트 추가 -->
-<th:block layout:fragment="script">
-    <script th:inline="javascript">
-        $(document).ready(function(){
-          var errorMessage = /*[[${errorMessage}]]*/ null;
-          if(errorMessage != null){
-            alert(errorMessage);
-          }
-           // 년도 생성 (1950년 ~ 현재년도)
-            var currentYear = new Date().getFullYear();
-            for (var year = currentYear; year >= 1950; year--) {
-                $("#birthYear").append('<option value="' + year + '">' + year + '년</option>');
-            }
-            
-            // 월 생성 (1~12월)
-            for (var month = 1; month <= 12; month++) {
-                $("#birthMonth").append('<option value="' + month + '">' + month + '월</option>');
-            }
-            
-            // 일 생성 (1~31일)
-            for (var day = 1; day <= 31; day++) {
-                $("#birthDay").append('<option value="' + day + '">' + day + '일</option>');
-            }
-
-            // 3. 최종 회원가입 함수 (form의 submit 버튼 클릭 시 호출)
-            $("#registerForm").on("submit", function(e) {
-                if (!isEmailVerified) {
-                    e.preventDefault();
-                    alert("이메일 인증을 먼저 완료해주세요.");
-                    return;
-                }
-
-<!--                var formData = {-->
-<!--                    name: $("#name").val(),-->
-<!--                    email: $("#email").val(),-->
-<!--                    password: $("#password").val(),-->
-<!--                    passwordConfirm: $("#passwordConfirm").val(), // 비밀번호 확인 필드 추가-->
-<!--                    gender: $("input[name='gender']:checked").val(), // 선택된 성별 값-->
-<!--                    birthYear: $("select[name='birth-year']").val(), // 선택된 년도-->
-<!--                    birthMonth: $("select[name='birth-month']").val(), // 선택된 월-->
-<!--                    birthDay: $("select[name='birth-day']").val()-->
-<!--                };-->
-
-<!--                $.ajax({-->
-<!--                    url: "/members/new",-->
-<!--                    type: "POST",-->
-<!--                    contentType: "application/json",-->
-<!--                    data: JSON.stringify(formData),-->
-<!--                    success: function(response) {-->
-<!--                        alert(response);-->
-<!--                        window.location.href = "/members/login";-->
-<!--                    },-->
-<!--                    error: function(xhr) {-->
-<!--                        alert(xhr.responseText);-->
-<!--                    }-->
-<!--                });-->
-            });
-            // [핵심] 이메일 인증 상태를 저장할 전역 변수
-            var isEmailVerified = false;
-
-            // CSRF 토큰 설정 (Spring Security 사용 시)
-            var token = $("meta[name='_csrf']").attr("content");
-            var header = $("meta[name='_csrf_header']").attr("content");
-            // 토큰이 없으면 경고 출력
-            if (!token || !header) {
-                console.error("CSRF 토큰을 찾을 수 없습니다.");
-                console.log("Available meta tags:", $("meta").map(function() { return $(this).attr('name'); }).get());
-            }
-
-            $(document).ajaxSend(function(e, xhr, options) {
-                if (header && token) {
-                    xhr.setRequestHeader(header, token);
-                    console.log("CSRF 헤더 설정됨:", header, token);
-                } else {
-                    console.warn("CSRF 헤더 설정 실패");
-                }
-            });
-
-            // 1. 인증메일 발송 함수
-              $("#sendAuthEmailBtn").on("click", function() {
-                console.log("sendAuthEmail 함수 호출됨");
-
-                var email = $("#email").val();
-                console.log("입력된 이메일:", email);
-
-                if (!email) {
-                    alert("이메일을 입력해주세요.");
-                    return;
-                }
-
-                console.log("AJAX 요청 시작...");
-                $.ajax({
-                    url: "/members/email-auth",
-                    type: "POST",
-                    contentType: "application/json",
-                    data: JSON.stringify({ email: email }),
-                    success: function(response) {
-                        alert(response);
-                        $("#verifyEmailBtn").prop("disabled", false);
-                    },
-                    error: function(xhr, status, error) {
-                        alert("오류 발생: " + xhr.responseText);
-                    }
-                });
-              });
-
-            // 2. 인증코드 확인 함수
-            $("#verifyEmailBtn").on("click", function(){
-                var email = $("#email").val();
-                var authCode = $("#authCode").val();
-
-                $.ajax({
-                    url: "/members/email-verify",
-                    type: "POST",
-                    contentType: "application/json",
-                    data: JSON.stringify({ email: email, authCode: authCode }),
-                    success: function(response) {
-                        alert(response);
-                        $("#emailVerifyMessage").text("인증 완료");
-                        isEmailVerified = true;
-
-                        $("#email").prop("readonly", true);
-                        $("#email").addClass("readonly-as-disabled");
-
-                        $("#sendAuthEmailBtn").prop("disabled", true);
-                        $("#authCode").prop("disabled", true);
-                        $("#verifyEmailBtn").prop("disabled", true);
-
-
-                        checkFormValidity();
-                    },
-                    error: function(xhr) {
-                        alert(xhr.responseText);
-                        isEmailVerified = false;
-                        checkFormValidity();
-                    }
-                });
-            });
-
-
-
-            // [핵심] 회원가입 버튼 활성화 여부를 체크하는 함수
-            function checkFormValidity() {
-                if (isEmailVerified) {
-                    $("#submitBtn").prop("disabled", false);
-                } else {
-                    $("#submitBtn").prop("disabled", true);
-                }
-            }
-        });
-    </script>
-</th:block>
-<div layout:fragment="content">
-    <div>
-
+<body>
+    <div layout:fragment="content">
         <!-- 페이지 전체를 감싸는 컨테이너 (회색 배경) -->
         <main class="signup-page-container">
             <!-- 흰색 폼 카드 -->
@@ -190,14 +37,15 @@
 
 
                 <!-- 실제 폼 제출 영역 -->
-                <form action="/members/new" method="post" role="form" th:object="${memberFormDto}" id="registerForm">
+                <form action="/members/api/new"  role="form"  id="registerForm" th:object="${memberFormDto}">
                     <div class="form-group">
                         <label for="email">이메일 주소(로그인ID)</label>
                         <div class="input-with-button">
                             <input type="email" id="email" class="email-check" placeholder="이메일을 입력해주세요." th:field="*{email}">
                             <button type="button" id="sendAuthEmailBtn" class="btn btn-outline">인증메일 발송</button>
                         </div>
-                        <p class="fieldError" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Incorrect date</p>
+<!--                        <p class="fieldError" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Incorrect date</p>-->
+                        <p class="fieldError" id="error-email"></p>
                     </div>
                     <div class="form-group">
                         <label for="authCode">인증코드</label>
@@ -210,12 +58,14 @@
                     <div class="form-group">
                         <label th:for="name">별명(활동명)</label>
                         <input type="text" placeholder="이름을 입력해주세요." th:field="*{name}">
-                        <p class="fieldError" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Incorrect date</p>
+<!--                        <p class="fieldError" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Incorrect date</p>-->
+                        <p class="fieldError" id="error-name"></p>
                     </div>
                     <div class="form-group">
                         <label th:for="password">비밀번호</label>
                         <input type="password" placeholder="비밀번호 입력" th:field="*{password}" autocomplete="new-password">
-                        <p class="fieldError" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Incorrect date</p>
+<!--                        <p class="fieldError" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Incorrect date</p>-->
+                        <p class="fieldError" id="error-password"></p>
                     </div>
 
                     <!-- ===================================== -->
@@ -226,7 +76,8 @@
                     <div class="form-group">
                         <label for="passwordConfirm">비밀번호 확인</label>
                         <input type="password" id="passwordConfirm" name="passwordConfirm" placeholder="비밀번호를 다시 한번 입력하세요">
-                        <p class="fieldError" th:if="${#fields.hasErrors('passwordConfirm')}" th:errors="*{passwordConfirm}">Incorrect date</p>
+<!--                        <p class="fieldError" th:if="${#fields.hasErrors('passwordConfirm')}" th:errors="*{passwordConfirm}">Incorrect date</p>-->
+                        <p class="fieldError" id="error-passwordConfirm"></p>
                     </div>
 
                     <!-- 성별 -->
@@ -245,7 +96,8 @@
                                 <input type="radio" id="gender-other" name="gender" value="other">
                                 <label for="gender-other">기타</label>
                             </div>
-                            <p class="fieldError" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}">Incorrect date</p>
+<!--                            <p class="fieldError" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}">Incorrect date</p>-->
+                            <p class="fieldError" id="error-gender"></p>
                         </div>
                     </div>
 
@@ -257,17 +109,20 @@
                                 <option>----년</option>
                                 <!-- JavaScript로 년도 채우기 -->
                             </select>
-                            <p class="fieldError" th:if="${#fields.hasErrors('birthYear')}" th:errors="*{birthYear}">Incorrect date</p>
+                            <p class="fieldError" id="error-birthYear"></p>
+<!--                            <p class="fieldError" th:if="${#fields.hasErrors('birthYear')}" th:errors="*{birthYear}">Incorrect date</p>-->
                             <select name="birthMonth" aria-label="출생 월" id="birthMonth">
                                 <option>--월</option>
                                 <!-- JavaScript로 월 채우기 -->
                             </select>
-                            <p class="fieldError" th:if="${#fields.hasErrors('birthMonth')}" th:errors="*{birthMonth}">Incorrect date</p>
+<!--                            <p class="fieldError" th:if="${#fields.hasErrors('birthMonth')}" th:errors="*{birthMonth}">Incorrect date</p>-->
+                            <p class="fieldError" id="error-birthMonth"></p>
                             <select name="birthDay" aria-label="출생 일" id="birthDay">
                                 <option>--일</option>
                                 <!-- JavaScript로 일 채우기 -->
                             </select>
-                            <p class="fieldError" th:if="${#fields.hasErrors('birthDay')}" th:errors="*{birthDay}">Incorrect date</p>
+<!--                            <p class="fieldError" th:if="${#fields.hasErrors('birthDay')}" th:errors="*{birthDay}">Incorrect date</p>-->
+                            <p class="fieldError" id="error-birthDay"></p>
                         </div>
                     </div>
 
@@ -284,8 +139,20 @@
 
             </div>
         </main>
-
+        <div class="popup-overlay" id="myPopup">
+            <!-- 팝업 컨테이너 -->
+            <div class="popup-container">
+                <!-- 팝업 메시지 (이 부분의 텍스트를 변경하여 사용) -->
+                <p class="popup-message" id="popupMessage">
+                    이메일 인증메일을 보냈습니다!
+                </p>
+                <!-- 확인 버튼 -->
+                <button class="popup-button" id="closePopup">확인</button>
+            </div>
+        </div>
     </div>
-    </form>
-</div>
+    <th:block layout:fragment="script">
+        <script th:src="@{/js/memberForm.js}"></script>
+    </th:block>
+</body>
 </html>
