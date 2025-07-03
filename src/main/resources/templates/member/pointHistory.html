@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{fragment/layout}">
+
+<th:block layout:fragment="css">
+    <style>
+        .point-history-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .point-history-header {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .point-history-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 16px;
+        }
+
+        .point-balance-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .point-balance-label {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .point-balance-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #007bff;
+        }
+
+        .point-history-list {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .point-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .point-history-item:last-child {
+            border-bottom: none;
+        }
+
+        .point-history-info {
+            flex: 1;
+        }
+
+        .point-history-description {
+            font-size: 16px;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 4px;
+        }
+
+        .point-history-date {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .point-history-amount {
+            text-align: right;
+        }
+
+        .point-amount {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .point-amount.charge {
+            color: #28a745;
+        }
+
+        .point-amount.use {
+            color: #dc3545;
+        }
+
+        .point-balance-after {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 60px 24px;
+            color: #666;
+        }
+
+        .empty-history i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 16px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .pagination .page-link {
+            color: #007bff;
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+            margin: 0 2px;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+
+        .pagination .page-link:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: white;
+        }
+
+        .back-button {
+            display: inline-block;
+            background: #6c757d;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-bottom: 24px;
+            transition: background-color 0.3s;
+        }
+
+        .back-button:hover {
+            background: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+</th:block>
+
+<div layout:fragment="content" class="point-history-container">
+    <a href="/member/myPage" class="back-button">
+        <i class="fas fa-arrow-left"></i> 마이페이지로 돌아가기
+    </a>
+
+    <div class="point-history-header">
+        <h1>포인트 내역</h1>
+        <div class="point-balance-info">
+            <span class="point-balance-label">현재 보유 포인트</span>
+            <span class="point-balance-value" th:text="${#numbers.formatInteger(currentBalance ?: 0, 3, 'COMMA')} + 'P'">0P</span>
+        </div>
+    </div>
+
+    <div class="point-history-list">
+        <div th:if="${pointHistory.empty}" class="empty-history">
+            <i class="fas fa-wallet"></i>
+            <p>포인트 내역이 없습니다.</p>
+            <p>포인트를 충전하거나 상품을 구매하면 내역이 표시됩니다.</p>
+        </div>
+
+        <div th:each="point : ${pointHistory}" class="point-history-item">
+            <div class="point-history-info">
+                <div class="point-history-description" th:text="${point.description}">포인트 충전</div>
+                <div class="point-history-date" th:text="${#temporals.format(point.regTime, 'yyyy-MM-dd HH:mm')}">2025-01-01 12:00</div>
+            </div>
+            <div class="point-history-amount">
+                <div class="point-amount" 
+                     th:classappend="${point.type.name() == 'CHARGE'} ? 'charge' : 'use'"
+                     th:text="${point.type.name() == 'CHARGE'} ? '+' + ${#numbers.formatInteger(point.amount, 3, 'COMMA')} + 'P' : '-' + ${#numbers.formatInteger(-point.amount, 3, 'COMMA')} + 'P'">
+                    +1,000P
+                </div>
+                <div class="point-balance-after" th:text="'잔액: ' + ${#numbers.formatInteger(point.balanceAfter, 3, 'COMMA')} + 'P'">잔액: 1,000P</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div th:if="${pointHistory.totalPages > 1}" class="pagination">
+        <div th:if="${pointHistory.hasPrevious()}" class="page-item">
+            <a th:href="@{/api/points/history/page(page=${pointHistory.number - 1})}" class="page-link">이전</a>
+        </div>
+        
+        <div th:each="pageNum : ${#numbers.sequence(0, pointHistory.totalPages - 1)}" class="page-item">
+            <a th:href="@{/api/points/history/page(page=${pageNum})}" 
+               th:text="${pageNum + 1}"
+               th:class="${pageNum == pointHistory.number} ? 'page-link active' : 'page-link'"
+               class="page-link">1</a>
+        </div>
+        
+        <div th:if="${pointHistory.hasNext()}" class="page-item">
+            <a th:href="@{/api/points/history/page(page=${pointHistory.number + 1})}" class="page-link">다음</a>
+        </div>
+    </div>
+</div>
+
+</html> 

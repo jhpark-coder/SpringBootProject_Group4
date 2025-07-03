@@ -44,6 +44,9 @@ import com.creatorworks.nexus.product.service.ProductInquiryService;
 import com.creatorworks.nexus.product.service.ProductReviewService;
 import com.creatorworks.nexus.product.service.ProductService;
 import com.creatorworks.nexus.product.service.RecentlyViewedProductRedisService;
+import com.creatorworks.nexus.product.service.PointService;
+import com.creatorworks.nexus.product.dto.PointPurchaseRequest;
+import com.creatorworks.nexus.product.dto.PointResponse;
 import com.creatorworks.nexus.util.tiptap.TipTapDocument;
 import com.creatorworks.nexus.util.tiptap.TipTapNode;
 import com.creatorworks.nexus.util.tiptap.TipTapRenderer;
@@ -75,6 +78,7 @@ public class ProductController {
     private final MemberFollowService memberFollowService;
     private final RedisTemplate<String, String> redisTemplate;
     private final RecentlyViewedProductRedisService recentlyViewedProductRedisService;
+    private final PointService pointService;
 
 
 
@@ -498,5 +502,48 @@ public class ProductController {
     public ResponseEntity<Map<String, Object>> getHeartCount(@PathVariable Long id) {
         long heartCount = productService.getHeartCount(id);
         return ResponseEntity.ok(Map.of("heartCount", heartCount));
+    }
+    @PostMapping("/api/products/{id}/purchase/point")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> purchaseWithPoint(
+            @PathVariable Long id,
+            @RequestBody PointPurchaseRequest request,
+            Principal principal) {
+        
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("success", false, "message", "로그인이 필요합니다."));
+        }
+
+        Member member = memberRepository.findByEmail(principal.getName());
+        if (member == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("success", false, "message", "회원 정보를 찾을 수 없습니다."));
+        }
+
+        // 요청 데이터 설정
+        request.setProductId(id);
+
+        try {
+            PointResponse response = pointService.purchaseWithPoint(member.getId(), request);
+            
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", response.getMessage(),
+                    "currentBalance", response.getCurrentBalance()
+                ));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", response.getMessage(),
+                    "currentBalance", response.getCurrentBalance()
+                ));
+            }
+        } catch (Exception e) {
+            log.error("포인트 구매 실패: 상품ID={}, 회원ID={}, 오류={}", id, member.getId(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "포인트 구매 중 오류가 발생했습니다."));
+        }
     }
 }
