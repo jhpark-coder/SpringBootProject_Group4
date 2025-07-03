@@ -15,6 +15,9 @@ import com.creatorworks.nexus.member.dto.EmailAuthRequestDto;
 import com.creatorworks.nexus.member.dto.MemberFormDto;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.service.MemberService;
+import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.product.service.PointService;
+import java.security.Principal;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +29,8 @@ public class MemberController {
 
     private final MemberService memberService;
     private final PasswordEncoder passwordEncoder;
+    private final MemberRepository memberRepository;
+    private final PointService pointService;
 
     @GetMapping("/new")
     public String memberForm(Model model) {
@@ -33,8 +38,14 @@ public class MemberController {
         return "member/memberForm";
     }
     @GetMapping("/point")
-    public String MemberPoint(Model model) {
-
+    public String MemberPoint(Model model, Principal principal) {
+        if (principal != null) {
+            Member member = memberRepository.findByEmail(principal.getName());
+            if (member != null) {
+                Long currentPoint = pointService.getCurrentBalance(member.getId());
+                model.addAttribute("currentPoint", currentPoint);
+            }
+        }
         return "member/point";
     }
 

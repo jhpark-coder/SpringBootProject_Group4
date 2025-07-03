@@ -26,6 +26,7 @@ import com.creatorworks.nexus.product.repository.ProductItemTagRepository;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.specification.ProductSpecification;
 
+import javassist.NotFoundException;
 import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;

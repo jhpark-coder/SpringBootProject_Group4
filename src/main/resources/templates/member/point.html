@@ -300,7 +300,7 @@
         <div class="point-amount-section">
             <h3>충전 금액 선택</h3>
             <div class="point-amount-options">
-                <div class="point-amount-option" data-point="1000" data-price="1000">
+                <div class="point-amount-option" data-point="1000" data-price="1">
                     <div class="point-amount-value">1,000P</div>
                     <div class="point-amount-price">1,000원</div>
                 </div>
@@ -458,7 +458,9 @@
                 buyer_email: '[[${#authentication.name}]]',
                 buyer_name: '[[${#authentication.principal.name}]]'
             }, function(rsp) {
+                console.log('아임포트 결제 응답:', rsp);
                 if (rsp.success) {
+                    console.log('결제 성공, 포인트 충전 요청 시작');
                     // 결제 성공 시 서버에 포인트 충전 요청
                     fetch('/api/points/charge', {
                         method: 'POST',
@@ -472,8 +474,12 @@
                             merchantUid: rsp.merchant_uid
                         })
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        console.log('서버 응답 상태:', response.status);
+                        return response.json();
+                    })
                     .then(data => {
+                        console.log('서버 응답 데이터:', data);
                         if (data.success) {
                             alert('포인트 충전이 완료되었습니다!');
                             window.location.href = '/member/myPage';
