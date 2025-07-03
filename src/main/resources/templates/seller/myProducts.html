@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html layout:decorate="~{fragment/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/myPage.css}">
+        <link rel="stylesheet" th:href="@{/css/sellerPage.css}">
+        <link rel="stylesheet" th:href="@{/css/inquiry.css}">
+    </th:block>
+</head>
+
+<body>
+<div layout:fragment="content" class="page-container">
+    <aside class="profile-sidebar">
+        <h2 class="profile-name" th:text="${Name} + ' 님'">판매자 이름 님</h2>
+        <a th:href="@{/seller/dashboard}" class="btn btn-outline">대시보드</a>
+        <a th:href="@{/seller/products}" class="btn btn-solid">내 작품 관리</a>
+        <a th:href="@{/seller/reviews}" class="btn btn-outline">내 작품 후기</a>
+        <a th:href="@{/seller/inquiries}" class="btn btn-outline">내 작품 문의</a>
+        <a th:href="@{/members/edit}" class="btn btn-outline">개인정보수정</a>
+    </aside>
+
+    <main class="main-content">
+        <section class="content-section">
+            <header class="section-header">
+                <h2>내 작품 목록</h2>
+            </header>
+
+            <div th:if="${productPage == null || productPage.empty}" style="padding:2rem; text-align:center;">
+                <p>등록된 작품이 없습니다.</p>
+            </div>
+
+            <table th:unless="${productPage == null || productPage.empty}" class="table" style="width:100%; border-collapse:collapse;">
+                <thead>
+                <tr>
+                    <th style="text-align:left; padding:8px;">등록일시</th>
+                    <th style="text-align:left; padding:8px;">작품명</th>
+                    <th style="text-align:left; padding:8px;">카테고리</th>
+                    <th style="text-align:left; padding:8px;">가격</th>
+                    <th style="text-align:left; padding:8px;">조회수</th>
+                    <th style="text-align:left; padding:8px;">관리</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="product : ${productPage.content}" style="border-top:1px solid #ddd;">
+                    <td th:text="${#temporals.format(product.regTime, 'yyyy-MM-dd HH:mm')}"></td>
+                    <td><a th:href="@{/products/{id}(id=${product.id})}" th:text="${product.name}"></a></td>
+                    <td th:text="${product.primaryCategory} + ' > ' + ${product.secondaryCategory}"></td>
+                    <td th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + '원'"></td>
+                    <td th:text="${product.viewCount}"></td>
+                    <td>
+                        <a th:href="@{/editor/product/{id}(id=${product.id})}" class="btn-sm btn-outline">수정</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <nav th:if="${productPage != null && productPage.totalPages > 0}" aria-label="Page navigation" style="margin-top:1rem;">
+                <ul class="pagination" style="justify-content:center;">
+                    <li class="page-item" th:classappend="${startPage == 0} ? 'disabled'">
+                        <a class="page-link" th:href="@{/seller/products(page=${startPage - 1})}">«</a>
+                    </li>
+                    <li class="page-item" th:each="p : ${#numbers.sequence(startPage, endPage)}" th:classappend="${p == productPage.number} ? 'active'">
+                        <a class="page-link" th:href="@{/seller/products(page=${p})}" th:text="${p + 1}"></a>
+                    </li>
+                    <li class="page-item" th:classappend="${endPage >= productPage.totalPages - 1} ? 'disabled'">
+                        <a class="page-link" th:href="@{/seller/products(page=${endPage + 1})}">»</a>
+                    </li>
+                </ul>
+            </nav>
+        </section>
+    </main>
+</div>
+</body>
+</html> 

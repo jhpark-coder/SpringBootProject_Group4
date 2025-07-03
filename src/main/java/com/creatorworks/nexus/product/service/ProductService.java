@@ -303,4 +303,15 @@ public class ProductService {
                        .map(ProductDto::new)
                        .collect(Collectors.toList());
     }
+
+    /**
+     * 특정 판매자가 등록한 상품 목록을 페이징하여 조회합니다.
+     * @param seller 조회할 판매자 Member 객체
+     * @param pageable 페이징 정보
+     * @return 페이징된 상품 Page 객체
+     */
+    @Transactional(readOnly = true)
+    public Page<Product> findProductsBySeller(Member seller, Pageable pageable) {
+        return productRepository.findBySeller(seller, pageable);
+    }
 }

@@ -360,69 +360,57 @@ function App() {
 
       // `fetch`는 자바스크립트 내장 함수로, 서버에 네트워크 요청을 보낼 때 사용합니다.
       fetch(endpoint)
-        // .then()은 비동기 작업이 성공했을 때 실행될 코드를 정의합니다.
-        .then(response => {
-          if (!response.ok) throw new Error('데이터를 불러오는데 실패했습니다.'); // 응답이 실패하면 에러를 발생시킵니다.
-          return response.json(); // 성공 시, 응답 데이터를 JSON 형태로 변환하여 다음 then으로 넘깁니다.
-        })
+        .then(response => response.json())
         .then(data => {
-          console.log('Loaded data:', data);
+          console.log("Loaded data from server:", data); // 서버에서 받은 데이터 전체를 확인
 
-          // 서버에서 받은 데이터를 화면에 표시하기 좋게 공통 형식으로 정리합니다.
+          const isProduct = location.pathname.includes('/editor/product/');
+          const isAuction = location.pathname.includes('/editor/auction/');
+
+          // 공통 데이터 설정
           const commonData = {
-            title: data.title || data.name || '',
-            coverImage: data.coverImage || data.imageUrl || '',
-            backgroundColor: data.backgroundColor || '#ffffff',
-            fontFamily: data.fontFamily || 'sans-serif',
+            title: data.name || '',
+            coverImage: data.imageUrl || '',
             workDescription: data.workDescription || '',
+            // 서버로부터 받은 모든 태그를 그대로 사용합니다.
+            tags: data.tags || [], 
           };
 
-          // 편집 모드(경매, 상품)에 따라 받아온 데이터를 다르게 처리하여 `projectSettings` 상태에 저장합니다.
-          if (mode === 'edit-auction') {
-            console.log('경매 편집 데이터 로딩:', data);
-            setProjectSettings({
-              ...commonData, // 위에서 정의한 공통 데이터를 복사해 넣습니다.
-              tags: [data.primaryCategory, data.secondaryCategory].filter(Boolean),
-              saleType: 'auction',
-              salePrice: '', // 경매는 판매 가격이 없으므로 비워둡니다.
-              auctionDuration: `${data.auctionDuration}일`,
-              startBidPrice: data.startBidPrice?.toString() || '',
-              buyNowPrice: data.buyNowPrice?.toString() || '',
-            });
-          } else if (mode === 'edit-product') {
-            console.log('상품 편집 데이터 로딩:', data);
+          // 에디터 스타일 설정
+          const editorStylesData = {
+            backgroundColor: data.backgroundColor,
+            fontFamily: data.fontFamily,
+          };
+
+          if (isProduct) {
+            // 상품 데이터 처리
             setProjectSettings({
               ...commonData,
-              tags: [data.primaryCategory, data.secondaryCategory].filter(Boolean),
               saleType: 'sale',
               salePrice: data.price?.toString() || '',
-              auctionDuration: '', // 상품은 경매 기간이 없으므로 비워둡니다.
+              auctionDuration: '',
               startBidPrice: '',
               buyNowPrice: '',
             });
-          } else {
-            // 기존 에디터 로직 (일반 문서 편집)
+          } else if (isAuction) {
+            // 경매 데이터 처리 (필요 시 로직 추가)
             setProjectSettings({
-              title: data.title || '',
-              coverImage: data.coverImage || '',
-              tags: data.tags || [],
-              saleType: data.saleType || '',
-              salePrice: data.salePrice || '',
-              auctionDuration: data.auctionDuration || '',
-              startBidPrice: data.startBidPrice || '',
-              buyNowPrice: data.buyNowPrice || '',
+              ...commonData,
+              saleType: 'auction',
+              salePrice: '',
+              // ... 경매 관련 데이터 설정
             });
+          } else {
+            // 일반 문서 데이터 처리
+            setProjectSettings(commonData);
           }
 
           // 에디터의 배경색, 글꼴 등 스타일 정보를 상태에 저장합니다.
-          setEditorStyles({
-            backgroundColor: commonData.backgroundColor,
-            fontFamily: commonData.fontFamily,
-          });
+          setEditorStyles(editorStylesData);
 
           // Google Fonts 로딩 (편집 모드에서 폰트 불러오기)
-          if (commonData.fontFamily) {
-            const selectedFont = GOOGLE_FONTS.find(f => f.family === commonData.fontFamily);
+          if (editorStylesData.fontFamily) {
+            const selectedFont = GOOGLE_FONTS.find(f => f.family === editorStylesData.fontFamily);
             if (selectedFont) {
               console.log('Loading Google Font for edit mode:', selectedFont.name);
               loadGoogleFont(selectedFont.name);

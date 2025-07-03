@@ -34,7 +34,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public String handleNoResourceFoundException(NoResourceFoundException ex, WebRequest request) {
-        log.error("404 Not Found: 요청한 리소스를 찾을 수 없습니다. URL: {}", request.getDescription(false), ex);
+        String requestUri = request.getDescription(false);
+        
+        // Chrome DevTools 관련 요청은 로그에서 제외
+        if (requestUri.contains(".well-known/appspecific/com.chrome.devtools.json") || 
+            requestUri.contains("favicon.ico") ||
+            requestUri.contains("robots.txt")) {
+            // 로그를 출력하지 않고 조용히 처리
+            return "error/404";
+        }
+        
+        log.error("404 Not Found: 요청한 리소스를 찾을 수 없습니다. URL: {}", requestUri, ex);
         return "error/404";
     }
 

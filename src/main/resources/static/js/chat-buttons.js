@@ -502,8 +502,7 @@ function initializeChatComponents() {
                     
                     if (products.length === 0) {
                         const retryOptions = [
-                            { key: 'keyword', text: '다른 키워드로 검색', icon: '<i class="fas fa-search"></i>' },
-                            { key: 'back', text: '처음으로', icon: '<i class="fas fa-arrow-left"></i>' }
+                            { key: 'back', text: '처음으로', icon: '<i class="fas fa-home"></i>' }
                         ];
                         appendBotResponse(`"${nouns.join(', ')}" 키워드와 관련된 작품을 찾지 못했습니다. 다른 키워드로 시도해보세요.`, retryOptions, false);
                         return;
@@ -549,10 +548,10 @@ function initializeChatComponents() {
                         
                         // 추가 옵션 제공
                         const continueOptions = [
-                            { key: 'yes_restart', text: '다른 키워드로 검색', icon: '<i class="fas fa-search"></i>' },
+                            { key: 'back', text: '처음으로', icon: '<i class="fas fa-home"></i>' },
                             { key: 'no_close', text: '종료', icon: '<i class="fas fa-times"></i>' }
                         ];
-                        appendBotResponse("다른 키워드로 더 검색해보시겠어요?", continueOptions, false);
+                        appendBotResponse("다른 추천을 원하시면 처음으로 돌아가주세요.", continueOptions, false);
                         
                         scrollChatToBottom();
                     }, 800);
