@@ -101,11 +101,38 @@ public class DataInitializer {
                     {"웹 개발", "데이터 분석", "머신러닝", "자동화"}
                 };
 
-                for (int i = 1; i <= 2000; i++) {
-                    String name = "샘플 상품 " + i;
+                // 다양한 상품명 배열
+                String[] productNames = {
+                    "아름다운 일러스트", "모던한 디자인", "클래식한 아트워크", "미니멀한 그래픽",
+                    "컬러풀한 캐릭터", "세련된 로고", "독특한 아이콘", "우아한 타이포그래피",
+                    "창의적인 브랜딩", "감성적인 사진", "기하학적 패턴", "유기적 형태",
+                    "디지털 아트", "핸드드로잉", "벡터 일러스트", "3D 렌더링",
+                    "웹 디자인", "모바일 UI", "앱 아이콘", "배너 디자인",
+                    "카드 디자인", "포스터 아트", "앨범 커버", "북 커버",
+                    "패키지 디자인", "명함 디자인", "브로셔 디자인", "팜플렛 디자인"
+                };
+                
+                // 다양한 설명 배열
+                String[] descriptions = {
+                    "독창적인 아이디어로 제작된 작품입니다.",
+                    "세심한 디테일과 완벽한 완성도를 자랑합니다.",
+                    "현대적 감각과 전통적 요소가 조화를 이룹니다.",
+                    "사용자의 니즈를 고려한 실용적인 디자인입니다.",
+                    "감성적이고 아름다운 색감으로 구성되었습니다.",
+                    "혁신적인 접근 방식으로 제작된 작품입니다.",
+                    "고품질의 재료와 기술로 완성된 작품입니다.",
+                    "독특한 스타일과 개성이 돋보이는 작품입니다."
+                };
+
+                for (int i = 1; i <= 1000; i++) {
+                    // 다양한 상품명 사용
+                    String name = productNames[i % productNames.length] + " " + (i / productNames.length + 1);
                     int price = (int) (Math.random() * 90000) + 10000; // 10,000 ~ 99,999원
-                    String description = "이것은 " + i + "번째 멋진 샘플 상품입니다. 품질이 아주 좋습니다.";
-                    String imageUrl = "https://picsum.photos/id/" + i + "/400/400";
+                    String description = descriptions[i % descriptions.length];
+                    
+                    // 로컬 static images 폴더의 webp 파일 사용 (1~100 범위)
+                    int imageId = (i % 100) + 1; // 1~100 범위로 제한
+                    String imageUrl = "/images/" + imageId + ".webp";
 
                     int categoryIndex = (i - 1) % primaryCategories.length;
                     String pCategory = primaryCategories[categoryIndex];
@@ -123,6 +150,17 @@ public class DataInitializer {
                             .secondaryCategory(sCategory)
                             .build();
 
+                    // 조회수 설정 (100~10000 사이의 랜덤 값, 일부는 높은 조회수)
+                    long viewCount;
+                    if (i % 10 == 0) {
+                        // 10%는 높은 조회수 (5000~10000)
+                        viewCount = (long) (Math.random() * 5000) + 5000;
+                    } else {
+                        // 90%는 일반적인 조회수 (100~5000)
+                        viewCount = (long) (Math.random() * 4900) + 100;
+                    }
+                    product.setViewCount(viewCount);
+                    
                     productRepository.save(product);
                 }
                  System.out.println("상품 데이터 생성이 완료되었습니다.");
