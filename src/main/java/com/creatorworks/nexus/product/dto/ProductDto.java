@@ -1,6 +1,11 @@
 package com.creatorworks.nexus.product.dto;
 
+import com.creatorworks.nexus.product.entity.ItemTag;
 import com.creatorworks.nexus.product.entity.Product;
+import com.creatorworks.nexus.product.entity.ProductItemTag;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public record ProductDto(
         Long id,
@@ -17,7 +22,8 @@ public record ProductDto(
         String sellerName,
         Long sellerId,
         java.time.LocalDateTime regTime,
-        java.time.LocalDateTime updateTime
+        java.time.LocalDateTime updateTime,
+        List<String> tags
 ) {
     public ProductDto(Product product) {
         this(
@@ -35,7 +41,10 @@ public record ProductDto(
                 (product.getSeller() != null) ? product.getSeller().getName() : "Unknown",
                 (product.getSeller() != null) ? product.getSeller().getId() : null,
                 product.getRegTime(),
-                product.getUpdateTime()
+                product.getUpdateTime(),
+                product.getItemTags().stream()
+                        .map(productItemTag -> productItemTag.getItemTag().getName())
+                        .collect(Collectors.toList())
         );
     }
 } 

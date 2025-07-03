@@ -52,6 +52,14 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
      */
     List<Product> findBySeller(Member seller);
 
+    /**
+     * 특정 판매자가 작성한 모든 상품을 페이징하여 조회합니다.
+     * @param seller 판매자
+     * @param pageable 페이징 정보
+     * @return 페이징 처리된 해당 판매자의 상품 목록
+     */
+    Page<Product> findBySeller(Member seller, Pageable pageable);
+
     // =================================================================================
     // MainPageService에서 사용하는 메서드들 (추가 및 수정된 부분)
     // =================================================================================

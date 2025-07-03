@@ -40,9 +40,39 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
     const fileInputRef = useRef(null);
 
     useEffect(() => {
+        console.log('Received initialSettings:', initialSettings); // 데이터 확인을 위한 콘솔 로그 추가
         if (isOpen && initialSettings) {
-            setCurrentSettings(initialSettings);
-            setPrimaryCategory(initialSettings.primaryCategory || '');
+            // 모든 카테고리 및 서브카테고리 목록 준비
+            const allPrimaryCategories = Object.keys(CATEGORIES);
+            const allSubCategories = Object.values(CATEGORIES).flat();
+
+            // 1. 카테고리 설정
+            const foundPrimary = allPrimaryCategories.find(cat => initialSettings.tags?.includes(cat)) || '';
+            const foundSecondary = allSubCategories.find(sub => initialSettings.tags?.includes(sub)) || '';
+            
+            setPrimaryCategory(foundPrimary);
+
+            // 2. 태그 설정 (카테고리 제외)
+            const pureTags = initialSettings.tags?.filter(tag => 
+                !allPrimaryCategories.includes(tag) && 
+                !allSubCategories.includes(tag)
+            ).map(tag => tag.startsWith('#') ? tag : `#${tag}`) || []; // # 기호 정규화
+
+            setSelectedTags(pureTags);
+
+            // 3. currentSettings 상태 업데이트 (가장 중요)
+            // 2차 카테고리가 있는 경우, tags 배열에 [1차, 2차] 형식으로 설정
+            const categoryTags = foundPrimary ? [foundPrimary] : [];
+            if (foundSecondary) {
+                categoryTags.push(foundSecondary);
+            }
+
+            setCurrentSettings({
+                ...initialSettings,
+                tags: categoryTags // 카테고리 태그만 설정
+            });
+            
+            // 4. 나머지 상태 설정
             setSaleType(initialSettings.saleType || '');
             setSalePrice(initialSettings.salePrice || '');
             setAuctionDuration(initialSettings.auctionDuration || '');
@@ -50,9 +80,6 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
             setBuyNowPrice(initialSettings.buyNowPrice || '');
             setWorkDescription(initialSettings.workDescription || '');
             setBuyout_price(initialSettings.buyout_price || '');
-            // initialSettings에서 카테고리 태그를 제외한 순수 태그만 필터링하여 초기화
-            const initialPureTags = initialSettings.tags?.filter(tag => !CATEGORIES[initialSettings.primaryCategory]?.includes(tag) && tag !== initialSettings.primaryCategory) || [];
-            setSelectedTags(initialPureTags);
         }
     }, [isOpen, initialSettings]);
 
@@ -257,14 +284,30 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
     };
 
     const addTag = (tag) => {
+        // # 기호 정규화
         const newTag = tag.startsWith('#') ? tag : `#${tag}`;
-        if (!selectedTags.includes(newTag) && selectedTags.length < 5) {
+
+        // 태그가 이미 존재하거나, 카테고리/서브카테고리인 경우 추가하지 않음
+        const allCategories = Object.keys(CATEGORIES);
+        const allSubCategories = Object.values(CATEGORIES).flat();
+
+        if (selectedTags.length < 5 &&
+            !selectedTags.includes(newTag) &&
+            !allCategories.includes(newTag) &&
+            !allSubCategories.includes(newTag)) {
             setSelectedTags([...selectedTags, newTag]);
         }
     };
 
     const removeTag = (tagToRemove) => {
-        setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
+        // 카테고리나 서브카테고리가 아닌 경우에만 제거 가능
+        const allCategories = Object.keys(CATEGORIES);
+        const allSubCategories = Object.values(CATEGORIES).flat();
+        
+        if (!allCategories.includes(tagToRemove) && 
+            !allSubCategories.includes(tagToRemove)) {
+            setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
+        }
     };
 
     const handleWorkDescriptionChange = (e) => {
@@ -273,20 +316,23 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
 
     const handleSave = () => {
         if (validateForm()) {
-            // 기존 카테고리 태그와 새로운 일반 태그를 합침
-            const allTags = [...currentSettings.tags, ...selectedTags];
+            // 현재 선택된 카테고리 (1차, 2차)와 사용자가 추가한 태그를 모두 합침
+            const finalTags = [...currentSettings.tags, ...selectedTags];
 
-            const updatedSettings = {
+            const settings = {
                 ...currentSettings,
-                tags: allTags, // 업데이트된 전체 태그
+                tags: finalTags,
+                primaryCategory,
                 saleType,
-                salePrice: saleType === 'sale' ? salePrice : '',
-                auctionDuration: saleType === 'auction' ? auctionDuration : '',
-                startBidPrice: saleType === 'auction' ? startBidPrice : '',
-                buyNowPrice: saleType === 'auction' ? buyNowPrice : '',
+                salePrice: saleType === 'sale' ? salePrice : null,
+                auctionDuration: saleType === 'auction' ? auctionDuration : null,
+                startBidPrice: saleType === 'auction' ? startBidPrice : null,
+                buyNowPrice: saleType === 'auction' ? buyNowPrice : null,
                 workDescription
             };
-            onSave(updatedSettings);
+
+            onSave(settings);
+            onClose();
         }
     };
 
@@ -294,6 +340,19 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
     const hasSecondaryCategory = currentSettings.tags.some(tag =>
         primaryCategory && CATEGORIES[primaryCategory]?.includes(tag)
     );
+
+    // 추천 태그 선택 여부 확인 함수 추가
+    const isTagSelected = (tag) => {
+        return selectedTags.includes(tag);
+    };
+
+    const handleRecommendedTagClick = (tag) => {
+        if (isTagSelected(tag)) {
+            removeTag(tag);
+        } else if (selectedTags.length < 5) {
+            addTag(tag);
+        }
+    };
 
     if (!isOpen) return null;
 
@@ -509,7 +568,12 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
                                             <h4 className="recommended-tags-title">추천 태그</h4>
                                             <div className="recommended-tags">
                                                 {RECOMMENDED_TAGS[primaryCategory]?.map(tag => (
-                                                    <button key={tag} onClick={() => addTag(tag)} className="recommended-tag-btn" disabled={selectedTags.length >= 5 || selectedTags.includes(tag)}>
+                                                    <button 
+                                                        key={tag} 
+                                                        onClick={() => handleRecommendedTagClick(tag)} 
+                                                        className={`recommended-tag-btn ${isTagSelected(tag) ? 'selected' : ''}`}
+                                                        disabled={selectedTags.length >= 5 && !isTagSelected(tag)}
+                                                    >
                                                         {tag}
                                                     </button>
                                                 ))}
