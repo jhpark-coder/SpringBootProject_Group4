@@ -98,7 +98,8 @@
             return false;
         }
 
-        // --- 개발자 도구 관련 단축키 차단 ---
+        // --- 개발자 도구 관련 단축키 차단 --- (주석 처리됨)
+        /*
         if (e.ctrlKey || e.metaKey) { // Ctrl 또는 Cmd 키가 함께 눌렸을 경우
             if (e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) {
                 e.preventDefault();
@@ -112,6 +113,7 @@
                 return false;
             }
         }
+        */
 
         // --- 콘텐츠 복사/저장 관련 단축키 차단 ---
         if (e.ctrlKey || e.metaKey) {
@@ -148,7 +150,8 @@
             }
         }
 
-        // F12 키
+        // F12 키 (주석 처리됨)
+        /*
         if (e.key === 'F12' || e.keyCode === 123) {
             e.preventDefault();
             showNotice('개발자도구 사용이 제한됩니다.');
@@ -163,6 +166,7 @@
                 return false;
             }
         }
+        */
     });
 
     // [실행 순서 2-4] 탭 전환 감지 및 화면 보호
@@ -383,12 +387,14 @@
         // 강화된 키보드 이벤트 감지
         function setupEnhancedKeyboardDetection() {
             document.addEventListener('keydown', function (e) {
-                // F12 키 (개발자도구) - 최우선 처리
+                // F12 키 (개발자도구) - 최우선 처리 (주석 처리됨)
+                /*
                 if (e.key === 'F12' || e.keyCode === 123) {
                     e.preventDefault();
                     showNotice('개발자도구 사용이 제한됩니다.');
                     return false;
                 }
+                */
 
                 /* 스크린샷 관련 키 감지 (주석처리됨)
                 // PrintScreen 키 감지 (다양한 방법)
@@ -431,7 +437,8 @@
                 }
                 */
 
-                // 개발자 도구 관련 (Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C)
+                // 개발자 도구 관련 (Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C) (주석 처리됨)
+                /*
                 if (e.ctrlKey || e.metaKey) {
                     if (e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) {
                         e.preventDefault();
@@ -439,6 +446,7 @@
                         return false;
                     }
                 }
+                */
             });
 
             /* 스크린샷 관련 keyup 이벤트 (주석처리됨)
