@@ -4,6 +4,8 @@ import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.entity.MemberFollow;
 import com.creatorworks.nexus.member.repository.MemberFollowRepository;
 import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.notification.dto.FollowNotificationRequest;
+import com.creatorworks.nexus.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,7 @@ public class MemberFollowService {
 
     private final MemberFollowRepository memberFollowRepository;
     private final MemberRepository memberRepository;
+    private final NotificationService notificationService;
 
     /**
      * 팔로우/언팔로우 토글
@@ -51,6 +54,18 @@ public class MemberFollowService {
             // 팔로우 관계가 없으면 생성 (팔로우)
             MemberFollow newFollow = new MemberFollow(follower, following);
             memberFollowRepository.save(newFollow);
+            
+            // 팔로우 알림 생성 및 전송
+            FollowNotificationRequest followNotificationRequest = new FollowNotificationRequest();
+            followNotificationRequest.setTargetUserId(followingId); // 알림 받을 사람(팔로우 당한 사람)
+            followNotificationRequest.setSenderUserId(followerId);   // 알림 보낸 사람(팔로우 건 사람)
+            followNotificationRequest.setMessage(follower.getName() + "님이 회원님을 팔로우했습니다!");
+
+            String link = "/members/" + followerId; // 팔로우 건 사람의 프로필 링크
+            var savedNotification = notificationService.saveNotification(followNotificationRequest, link);
+            System.out.println("[알림 DB 저장 완료] 팔로우 알림, notificationId=" + savedNotification.getId());
+            notificationService.sendNotification(followNotificationRequest);
+
             return true;
         }
     }

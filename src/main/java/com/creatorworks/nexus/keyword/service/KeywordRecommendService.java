@@ -114,22 +114,20 @@ public class KeywordRecommendService {
                             
                             String lower = keyword.toLowerCase().trim();
                             
-                            if (containsIgnoreCase(product.getName(), lower)) score += 3;
-                            if (containsIgnoreCase(product.getDescription(), lower)) score += 3;
-                            if (containsIgnoreCase(product.getWorkDescription(), lower)) score += 3;
-                            if (containsIgnoreCase(product.getTiptapJson(), lower)) score += 3;
-                            if (tagNames.stream().anyMatch(tag -> containsIgnoreCase(tag, lower))) score += 3;
-                            if (product.getSeller() != null && containsIgnoreCase(product.getSeller().getName(), lower)) score += 3;
-                            if (containsIgnoreCase(product.getSecondaryCategory(), lower)) score += 2;
-                            if (containsIgnoreCase(product.getPrimaryCategory(), lower)) score += 1;
+                            if (containsIgnoreCase(product.getName(), lower)) score += 100;
+                            if (containsIgnoreCase(product.getDescription(), lower)) score += 100;
+                            if (containsIgnoreCase(product.getWorkDescription(), lower)) score += 100;
+                            if (containsIgnoreCase(product.getTiptapJson(), lower)) score += 100;
+                            if (tagNames.stream().anyMatch(tag -> containsIgnoreCase(tag, lower))) score += 100;
+                            if (product.getSeller() != null && containsIgnoreCase(product.getSeller().getName(), lower)) score += 100;
+                            if (containsIgnoreCase(product.getSecondaryCategory(), lower)) score += 50;
+                            if (containsIgnoreCase(product.getPrimaryCategory(), lower)) score += 30;
                         }
                         dto.setScore(score);
                         
-                        // B안: 균형잡힌 가중치 기반 최종 점수 계산
-                        // 📊 가중치 비율: 구매 1개 = 좋아요 1.5개 = 조회수 600개
                         double finalScore = score +                          // 키워드 매칭 점수 (기본)
-                                          (dto.getPurchaseCount() * 30.0) +  // 구매수: 30점/개 (가장 높은 가치)
-                                          (dto.getLikeCount() * 20.0) +      // 좋아요: 20점/개 (중간 가치)
+                                          (dto.getPurchaseCount() * 0.6) +  // 구매수: 0.6점/개 (가장 높은 가치)
+                                          (dto.getLikeCount() * 0.3) +      // 좋아요: 0.3점/개 (중간 가치)
                                           (dto.getViewCount() * 0.05);       // 조회수: 0.05점/회 (참고용)
                         dto.setFinalScore(finalScore);
                         
@@ -150,10 +148,11 @@ public class KeywordRecommendService {
                 
             System.out.println("[DEBUG] 점수 1점 이상 product 개수: " + scored.size());
             
-            // 3. B안 정렬: 가중치 기반 최종 점수 순 (높은순, 동점이면 ID 큰순)
+            // 3. 정렬 기준 변경: 키워드 점수가 최우선, 그 다음 최종 점수
             List<RecommendedProduct> top3 = scored.stream()
-                .sorted(Comparator.comparingDouble(RecommendedProduct::getFinalScore).reversed()
-                    .thenComparing(RecommendedProduct::getId, Comparator.reverseOrder()))
+                .sorted(Comparator.comparingInt(RecommendedProduct::getScore).reversed() // 1. 키워드 점수
+                    .thenComparing(Comparator.comparingDouble(RecommendedProduct::getFinalScore).reversed()) // 2. 최종 점수
+                    .thenComparing(RecommendedProduct::getId, Comparator.reverseOrder())) // 3. ID
                 .limit(3)
                 .collect(Collectors.toList());
                 
