@@ -13,8 +13,9 @@
     }
 
     /**
-     * 임무 1 & 2: 우클릭 및 개발자 도구 단축키 차단 (alert 없이 조용히)
+     * 임무 1 & 2: 우클릭 및 개발자 도구 단축키 차단 (alert 없이 조용히) (주석 처리됨)
      */
+    /*
     parentWindow.document.addEventListener('contextmenu', function (e) {
         e.preventDefault();
     }, false);
@@ -24,6 +25,7 @@
             e.preventDefault();
         }
     });
+    */
 
     /**
      * 임무 3: JS 비활성화를 감지하기 위한 '죽은 자의 스위치'

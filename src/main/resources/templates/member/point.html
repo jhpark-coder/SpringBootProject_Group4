@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragment/layout}">
+<!-- jQuery -->
+<head>
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js" ></script>
+  <!-- iamport.payment.js -->
+  <script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.1.8.js"></script>
+</head>
+
+<th:block layout:fragment="css">
+    <link rel="stylesheet" th:href="@{/css/productdetall.css}">
+    <style>
+        .point-payment-container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .point-payment-card {
+            background: #fff;
+            border: 1.5px solid #1ea7fd;
+            border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 32px 28px;
+            margin-bottom: 24px;
+        }
+
+        .point-payment-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .point-payment-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 8px;
+        }
+
+        .point-payment-header p {
+            font-size: 16px;
+            color: #666;
+            margin: 0;
+        }
+
+        .point-info-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .point-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .point-info-row:last-child {
+            margin-bottom: 0;
+            padding-top: 16px;
+            border-top: 1px solid #e9ecef;
+            font-weight: 700;
+            font-size: 18px;
+            color: #222;
+        }
+
+        .point-info-label {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .point-info-value {
+            font-size: 16px;
+            color: #222;
+            font-weight: 600;
+        }
+
+        .point-amount-section {
+            margin-bottom: 32px;
+        }
+
+        .point-amount-section h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 16px;
+        }
+
+        .point-amount-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .point-amount-option {
+            background: #fff;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 16px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .point-amount-option:hover {
+            border-color: #1ea7fd;
+            background: #f8f9fa;
+        }
+
+        .point-amount-option.selected {
+            border-color: #1ea7fd;
+            background: #e3f2fd;
+        }
+
+        .point-amount-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 4px;
+        }
+
+        .point-amount-price {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .point-amount-bonus {
+            font-size: 12px;
+            color: #1ea7fd;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .custom-amount-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .custom-amount-input:focus {
+            border-color: #1ea7fd;
+        }
+
+        .payment-method-section {
+            margin-bottom: 32px;
+        }
+
+        .payment-method-section h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 16px;
+        }
+
+        .payment-method-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .payment-method-option {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .payment-method-option:hover {
+            border-color: #1ea7fd;
+            background: #f8f9fa;
+        }
+
+        .payment-method-option.selected {
+            border-color: #1ea7fd;
+            background: #e3f2fd;
+        }
+
+        .payment-method-option input[type="radio"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+
+        .payment-method-label {
+            font-size: 16px;
+            color: #222;
+            font-weight: 500;
+        }
+
+        .payment-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .payment-btn {
+            flex: 1;
+            padding: 16px 0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: center;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .payment-btn.primary {
+            background: #1ea7fd;
+            color: #fff;
+        }
+
+        .payment-btn.primary:hover {
+            background: #1976d2;
+        }
+
+        .payment-btn.secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #e9ecef;
+        }
+
+        .payment-btn.secondary:hover {
+            background: #e9ecef;
+            color: #222;
+        }
+
+        .point-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .point-notice h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 8px;
+        }
+
+        .point-notice ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .point-notice li {
+            font-size: 13px;
+            color: #856404;
+            margin-bottom: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .point-amount-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .payment-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</th:block>
+
+<div layout:fragment="content" class="point-payment-container">
+    <div class="point-payment-card">
+        <!-- 헤더 -->
+        <div class="point-payment-header">
+            <h1>포인트 충전</h1>
+            <p>원하는 금액을 선택하여 포인트를 충전하세요</p>
+        </div>
+
+        <!-- 포인트 정보 -->
+        <div class="point-info-section">
+            <div class="point-info-row">
+                <span class="point-info-label">현재 보유 포인트</span>
+                <span class="point-info-value" th:text="${#numbers.formatInteger(currentPoint ?: 0, 3, 'COMMA')} + 'P'">0P</span>
+            </div>
+            <div class="point-info-row">
+                <span class="point-info-label">충전할 포인트</span>
+                <span class="point-info-value" id="selectedPointValue">0P</span>
+            </div>
+            <div class="point-info-row">
+                <span class="point-info-label">충전 후 포인트</span>
+                <span class="point-info-value" id="totalPointValue">0P</span>
+            </div>
+        </div>
+
+        <!-- 포인트 충전 금액 선택 -->
+        <div class="point-amount-section">
+            <h3>충전 금액 선택</h3>
+            <div class="point-amount-options">
+                <div class="point-amount-option" data-point="1000" data-price="1000">
+                    <div class="point-amount-value">1,000P</div>
+                    <div class="point-amount-price">1,000원</div>
+                </div>
+                <div class="point-amount-option" data-point="3000" data-price="3000">
+                    <div class="point-amount-value">3,000P</div>
+                    <div class="point-amount-price">3,000원</div>
+                    <div class="point-amount-bonus">+100P 보너스</div>
+                </div>
+                <div class="point-amount-option" data-point="5000" data-price="5000">
+                    <div class="point-amount-value">5,000P</div>
+                    <div class="point-amount-price">5,000원</div>
+                    <div class="point-amount-bonus">+200P 보너스</div>
+                </div>
+                <div class="point-amount-option" data-point="10000" data-price="10000">
+                    <div class="point-amount-value">10,000P</div>
+                    <div class="point-amount-price">10,000원</div>
+                    <div class="point-amount-bonus">+500P 보너스</div>
+                </div>
+                <div class="point-amount-option" data-point="20000" data-price="20000">
+                    <div class="point-amount-value">20,000P</div>
+                    <div class="point-amount-price">20,000원</div>
+                    <div class="point-amount-bonus">+1,200P 보너스</div>
+                </div>
+                <div class="point-amount-option" data-point="50000" data-price="50000">
+                    <div class="point-amount-value">50,000P</div>
+                    <div class="point-amount-price">50,000원</div>
+                    <div class="point-amount-bonus">+3,500P 보너스</div>
+                </div>
+            </div>
+            <input type="number" class="custom-amount-input" placeholder="직접 입력 (최소 1,000P)" min="1000" step="1000">
+        </div>
+
+        <!-- 결제 방법 선택 -->
+        <div class="payment-method-section">
+            <h3>결제 방법 선택</h3>
+            <div class="payment-method-options">
+                <div class="payment-method-option">
+                    <input type="radio" name="paymentMethod" value="card" id="card" checked>
+                    <label for="card" class="payment-method-label">신용카드</label>
+                </div>
+                <div class="payment-method-option">
+                    <input type="radio" name="paymentMethod" value="bank" id="bank">
+                    <label for="bank" class="payment-method-label">계좌이체</label>
+                </div>
+                <div class="payment-method-option">
+                    <input type="radio" name="paymentMethod" value="phone" id="phone">
+                    <label for="phone" class="payment-method-label">휴대폰 결제</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 포인트 이용 안내 -->
+        <div class="point-notice">
+            <h4>📌 포인트 이용 안내</h4>
+            <ul>
+                <li>포인트는 1P = 1원으로 사용됩니다</li>
+                <li>충전된 포인트는 환불이 불가능합니다</li>
+                <li>포인트는 상품 구매 시에만 사용 가능합니다</li>
+                <li>정기구독은 포인트로 결제할 수 없습니다</li>
+            </ul>
+        </div>
+
+        <!-- 결제 버튼 -->
+        <div class="payment-actions">
+            <button class="payment-btn secondary" onclick="history.back()">취소</button>
+            <button class="payment-btn primary" onclick="requestPointPayment()">포인트 충전하기</button>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="script">
+    <script>
+        let selectedPoint = 0;
+        let selectedPrice = 0;
+        const currentPoint = parseInt('[[${currentPoint ?: 0}]]') || 0;
+
+        // 포인트 금액 선택
+        document.querySelectorAll('.point-amount-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // 기존 선택 해제
+                document.querySelectorAll('.point-amount-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                // 현재 옵션 선택
+                this.classList.add('selected');
+                
+                // 값 설정
+                selectedPoint = parseInt(this.dataset.point);
+                selectedPrice = parseInt(this.dataset.price);
+                
+                // 커스텀 입력 초기화
+                document.querySelector('.custom-amount-input').value = '';
+                
+                // 화면 업데이트
+                updatePointDisplay();
+            });
+        });
+
+        // 커스텀 금액 입력
+        document.querySelector('.custom-amount-input').addEventListener('input', function() {
+            const value = parseInt(this.value) || 0;
+            if (value >= 1000) {
+                selectedPoint = value;
+                selectedPrice = value;
+                
+                // 기존 선택 해제
+                document.querySelectorAll('.point-amount-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                updatePointDisplay();
+            }
+        });
+
+        // 결제 방법 선택
+        document.querySelectorAll('.payment-method-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.payment-method-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                this.classList.add('selected');
+                this.querySelector('input').checked = true;
+            });
+        });
+
+        // 포인트 표시 업데이트
+        function updatePointDisplay() {
+            document.getElementById('selectedPointValue').textContent = selectedPoint.toLocaleString() + 'P';
+            document.getElementById('totalPointValue').textContent = (currentPoint + selectedPoint).toLocaleString() + 'P';
+        }
+
+        // 포인트 결제 요청
+        function requestPointPayment() {
+            if (selectedPoint < 1000) {
+                alert('최소 1,000P 이상 선택해주세요.');
+                return;
+            }
+
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            
+            if (!confirm(`${selectedPoint.toLocaleString()}P 충전을 진행하시겠습니까?\n결제 금액: ${selectedPrice.toLocaleString()}원`)) {
+                return;
+            }
+
+            // 아임포트 결제 요청
+            IMP.init('imp20067661'); // 실제 가맹점 코드로 변경 필요
+
+            IMP.request_pay({
+                pg: 'html5_inicis',
+                pay_method: paymentMethod === 'card' ? 'card' : paymentMethod === 'bank' ? 'trans' : 'phone',
+                merchant_uid: 'point_' + new Date().getTime(),
+                name: '포인트 충전',
+                amount: selectedPrice,
+                buyer_email: '[[${#authentication.name}]]',
+                buyer_name: '[[${#authentication.principal.name}]]'
+            }, function(rsp) {
+                if (rsp.success) {
+                    // 결제 성공 시 서버에 포인트 충전 요청
+                    fetch('/api/points/charge', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            amount: selectedPoint,
+                            paymentAmount: selectedPrice,
+                            impUid: rsp.imp_uid,
+                            merchantUid: rsp.merchant_uid
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('포인트 충전이 완료되었습니다!');
+                            window.location.href = '/member/myPage';
+                        } else {
+                            alert('포인트 충전 실패: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('포인트 충전 오류:', error);
+                        alert('포인트 충전 중 오류가 발생했습니다.');
+                    });
+                } else {
+                    alert('결제 실패: ' + rsp.error_msg);
+                }
+            });
+        }
+
+        // 초기 포인트 표시
+        updatePointDisplay();
+    </script>
+</th:block>
+
+</html>
