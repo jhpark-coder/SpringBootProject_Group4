@@ -14,7 +14,15 @@ body {
     font-family: 'Noto Sans KR', sans-serif;
     background-color: var(--light-gray);
 }
-
+.fieldError{
+          color: #bd2130;
+ }
+         /* 👇 [추가] disabled처럼 보이게 할 CSS 클래스 */
+.readonly-as-disabled {
+    background-color: #e9ecef; /* 부트스트랩의 기본 disabled 배경색 */
+    opacity: 1; /* 글자가 너무 흐려지지 않게 */
+    cursor: not-allowed; /* 마우스 커서를 '금지' 모양으로 */
+}
 /* 전체 페이지 컨테이너 */
 .signup-page-container {
     width: 100%;
@@ -89,6 +97,14 @@ input[type="email"] {
     font-size: 1.1rem;
     box-sizing: border-box;
 }
+
+input[type="text"]:active,
+input[type="password"]:active,
+input[type="email"]:active {
+    background-color:#fff;
+    border-color:#0071de;
+}
+
 .email-check{
     width: 75%;
 }
@@ -103,7 +119,7 @@ input[type="email"] {
     white-space: nowrap; /* 버튼 글자 줄바꿈 방지 */
 }
 .btn:hover {
-    opacity: 0.9;
+    opacity: 0.5;
     background-color: #fff;
     color : #0071de;
     border: 1px solid #0071de;

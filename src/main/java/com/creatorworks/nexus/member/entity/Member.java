@@ -79,6 +79,19 @@ public class Member extends BaseEntity {
         return member;
     }
 
+    /**
+     * [추가된 메소드]
+     * 회원 정보(프로필) 수정을 위한 비즈니스 메소드입니다.
+     * 비밀번호를 제외한 프로필 관련 정보만 업데이트합니다.
+     */
+    public void updateProfile(String name, String gender, String birthYear, String birthMonth, String birthDay) {
+        this.name = name;
+        this.gender = gender;
+        this.birthYear = birthYear;
+        this.birthMonth = birthMonth;
+        this.birthDay = birthDay;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

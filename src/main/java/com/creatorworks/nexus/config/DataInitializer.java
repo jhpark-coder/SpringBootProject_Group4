@@ -61,10 +61,10 @@ public class DataInitializer {
                         .name("유저")
                         .password(passwordEncoder.encode("password"))
                         .role(Role.USER)
-                        .gender("N/A")
-                        .birthYear("N/A")
-                        .birthMonth("N/A")
-                        .birthDay("N/A")
+                        .gender("male")
+                        .birthYear("2024")
+                        .birthMonth("7")
+                        .birthDay("4")
                         .build();
                 memberRepository.save(user);
             }

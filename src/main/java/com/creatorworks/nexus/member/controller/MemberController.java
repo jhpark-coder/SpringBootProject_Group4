@@ -1,7 +1,11 @@
 package com.creatorworks.nexus.member.controller;
 
+import com.creatorworks.nexus.member.dto.CustomUserDetails;
+import com.creatorworks.nexus.member.dto.MemberModifyDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,6 +21,7 @@ import com.creatorworks.nexus.member.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,7 +72,7 @@ public class MemberController {
     }
 
 
-//    @PostMapping("/new")
+//    @PostMapping("/new") //기존 새로고침 방식
 //    public String memberForm(@Valid MemberFormDto memberFormDto, BindingResult bindingResult, Model model) {
 //        System.out.println("들어는 옴");
 //        if (bindingResult.hasErrors()) {
@@ -120,6 +125,58 @@ public class MemberController {
     public String loginError(Model model){
         model.addAttribute("loginErrorMsg","이메일(ID) 또는 비밀번호를 확인해주세요");
         return "member/loginForm";
+    }
+
+    @GetMapping("/modify")
+    public String memberModify(@AuthenticationPrincipal CustomUserDetails user, Model model){
+        String currentEmail = user.getUsername();
+
+        // 1-2. 이메일을 이용해 DB에서 전체 회원 정보를 조회합니다.
+        Member member = memberService.findByEmail(currentEmail);
+
+        // 1-3. 조회된 엔티티 정보를 DTO로 변환합니다.
+        //      (비밀번호 같은 민감 정보는 DTO에 담지 않습니다.)
+        MemberModifyDto memberModifyDto = new MemberModifyDto();
+        memberModifyDto.setName(member.getName());
+        memberModifyDto.setEmail(member.getEmail());
+        memberModifyDto.setGender(member.getGender());
+        // 생년월일 필드가 Member 엔티티와 DTO에 모두 String으로 되어 있다고 가정
+        memberModifyDto.setBirthYear(member.getBirthYear());
+        memberModifyDto.setBirthMonth(member.getBirthMonth());
+        memberModifyDto.setBirthDay(member.getBirthDay());
+
+        // 1-4. DTO를 Model에 담아 View로 전달합니다.
+        model.addAttribute("memberModifyDto", memberModifyDto);
+
+        // 1-5. 수정 폼 페이지의 경로를 반환합니다. (memberForm.html을 재사용)
+        return "member/memberModify";
+    }
+    @PostMapping("/modify")
+    public String memberUpdate(@Valid MemberModifyDto memberModifyDto, BindingResult bindingResult,
+                               @AuthenticationPrincipal CustomUserDetails  user, Model model) {
+
+        // 2-1. @Valid를 통한 기본 유효성 검증 (별명, 성별, 생년월일 등)
+        if (bindingResult.hasErrors()) {
+            // 이메일 필드는 readonly 이지만, 폼 제출 시 함께 넘어오므로 DTO에 다시 세팅해줍니다.
+            // 이렇게 하지 않으면 유효성 검증 실패 후 리프레시될 때 이메일 필드가 비어있게 됩니다.
+            memberModifyDto.setEmail(user.getUsername());
+            System.out.println("firstError");
+            return "member/memberModify";
+        }
+
+        try {
+            // 2-2. 서비스 계층에 DTO와 현재 사용자 이메일을 넘겨 업데이트 로직을 수행합니다.
+            memberService.updateMember(memberModifyDto, user.getUsername());
+        } catch (IllegalStateException e) {
+            // 2-3. 서비스 로직에서 발생할 수 있는 예외 처리 (예: 중복된 별명 등)
+            model.addAttribute("errorMessage", e.getMessage());
+            memberModifyDto.setEmail(user.getUsername()); // 오류 발생 시에도 이메일 필드 유지를 위해 추가
+            System.out.println("secondError");
+            return "member/memberModify";
+        }
+
+        // 2-4. 수정이 성공적으로 완료되면 마이페이지 등으로 리다이렉트합니다.
+        return "/User/my-Page"; // 예시 경로입니다.
     }
 
 }
