@@ -29,7 +29,7 @@
                     <ul>
                         <li><a href="#">Auction</a></li>
                         <li sec:authorize="isAuthenticated()"><a href="/User/my-page">MyPage</a></li>
-                        <li sec:authorize="hasRole('ROLE_USER') and !hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')"><a href="/seller/register">Register</a></li>
+                        <li sec:authorize="hasRole('ROLE_USER') and !hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')"><a th:href="@{/members/seller-register}">Register</a></li>
                         <li sec:authorize="hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')"><a href="/seller/dashboard">SellerPage</a></li>
                         <li sec:authorize="hasRole('ROLE_ADMIN')"><a href="/admin/seller-management">SellerManagement</a></li>
                         <li sec:authorize="isAnonymous()">

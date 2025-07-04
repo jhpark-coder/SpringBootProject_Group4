@@ -91,6 +91,21 @@ public class SellerPageController {
 
         model.addAttribute("Name", seller.getName());
 
-        return "member/sellerPage"; // sellerDashboard.html 템플릿 반환
+        return "seller/dashboard"; // sellerDashboard.html 템플릿 반환
+    }
+
+    @GetMapping("/my-products")
+    public String myProducts() {
+        return "seller/myProducts";
+    }
+
+    @GetMapping("/inquiry-board")
+    public String inquiryBoard() {
+        return "seller/inquiryBoard";
+    }
+
+    @GetMapping("/review-board")
+    public String reviewBoard() {
+        return "seller/reviewBoard";
     }
 }
