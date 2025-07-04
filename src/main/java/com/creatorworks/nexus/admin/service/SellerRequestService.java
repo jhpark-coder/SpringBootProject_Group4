@@ -5,6 +5,7 @@ import com.creatorworks.nexus.admin.repository.SellerRequestRepository;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.member.constant.Role;
+import com.creatorworks.nexus.notification.dto.FollowNotificationRequest;
 import com.creatorworks.nexus.notification.dto.SellerRequestNotificationRequest;
 import com.creatorworks.nexus.notification.entity.NotificationCategory;
 import com.creatorworks.nexus.notification.service.NotificationService;
@@ -34,27 +35,21 @@ public class SellerRequestService {
         sellerRequest.setMember(member);
         sellerRequest.setStatus(SellerRequest.RequestStatus.PENDING);
         
-        SellerRequest savedRequest = sellerRequestRepository.save(sellerRequest);
-
         // Admin에게 신청 알림 보내기
-        sendAdminNotification(member, savedRequest);
+        sendAdminNotification(member, sellerRequest);
         
-        return savedRequest;
+        return sellerRequestRepository.save(sellerRequest);
     }
 
     // Admin에게 신청 알림 보내기
     private void sendAdminNotification(Member member, SellerRequest request) {
-        // 모든 Admin 사용자에게 DB 알림 저장
-        List<Member> admins = memberRepository.findByRole(Role.ADMIN);
-        for (Member admin : admins) {
-            SellerRequestNotificationRequest notificationDto = new SellerRequestNotificationRequest();
-            notificationDto.setTargetUserId(admin.getId()); // DB 저장을 위해 개별 ID 설정
-            notificationDto.setMessage("새로운 작가 등록 신청이 있습니다. 신청자: " + member.getName() + " (" + member.getEmail() + ")");
-            notificationDto.setType("seller_request_received");
-            notificationDto.setCategory(NotificationCategory.ADMIN);
-            
-            notificationService.saveSellerRequestNotification(notificationDto, "/admin/seller-management");
-        }
+        // DB에는 단일 알림만 저장. targetUserId를 0으로 설정하여 시스템/그룹 알림으로 처리.
+        SellerRequestNotificationRequest dbNotificationDto = new SellerRequestNotificationRequest();
+        dbNotificationDto.setTargetUserId(0L); // 시스템 알림
+        dbNotificationDto.setMessage("새로운 작가 등록 신청이 있습니다. 신청자: " + member.getName() + " (" + member.getEmail() + ")");
+        dbNotificationDto.setType("seller_request_received");
+        dbNotificationDto.setCategory(NotificationCategory.ADMIN);
+        notificationService.saveSellerRequestNotification(dbNotificationDto, "/admin/seller-management");
 
         // 실시간 알림은 관리자 그룹에 한 번만 전송
         SellerRequestNotificationRequest broadcastDto = new SellerRequestNotificationRequest();
@@ -87,13 +82,16 @@ public class SellerRequestService {
         memberRepository.save(member);
 
         // 승인 알림 보내기
-        SellerRequestNotificationRequest notificationDto = new SellerRequestNotificationRequest();
+        FollowNotificationRequest notificationDto = new FollowNotificationRequest();
         notificationDto.setTargetUserId(member.getId());
-        notificationDto.setMessage("축하합니다! 작가 등록이 승인되었습니다. 이제 작품을 등록하고 판매할 수 있습니다.");
+        notificationDto.setSenderUserId(0L); // 시스템 알림
+        notificationDto.setMessage("축하합니다! 작가 등록이 승인되었습니다.");
         notificationDto.setType("seller_approved");
         notificationDto.setCategory(NotificationCategory.ADMIN);
         
-        notificationService.saveSellerRequestNotification(notificationDto, "/seller/dashboard");
+        // DB 저장과 실시간 알림 전송
+        notificationService.saveNotification(notificationDto, "/seller/dashboard");
+        notificationService.sendNotification(notificationDto);
     }
 
     // 신청 거절
@@ -109,13 +107,15 @@ public class SellerRequestService {
         request.setReason(reason);
 
         // 거절 알림 보내기
-        SellerRequestNotificationRequest notificationDto = new SellerRequestNotificationRequest();
+        FollowNotificationRequest notificationDto = new FollowNotificationRequest();
         notificationDto.setTargetUserId(request.getMember().getId());
-        notificationDto.setMessage("작가 등록 신청이 거절되었습니다. 거절 사유: " + reason);
+        notificationDto.setSenderUserId(0L); // 시스템 알림
+        notificationDto.setMessage("작가 등록 신청이 거절되었습니다. 사유: " + reason);
         notificationDto.setType("seller_rejected");
-        notificationDto.setReason(reason);
         notificationDto.setCategory(NotificationCategory.ADMIN);
         
-        notificationService.saveSellerRequestNotification(notificationDto, "/members/seller-register");
+        // DB 저장과 실시간 알림 전송
+        notificationService.saveNotification(notificationDto, "/members/seller-register");
+        notificationService.sendNotification(notificationDto);
     }
 } 

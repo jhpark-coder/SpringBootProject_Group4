@@ -16,4 +16,5 @@ public class SellerRequestNotificationRequest {
     private String type;         // 알림 타입 (seller_approved, seller_rejected)
     private String reason;       // 거절 사유 (거절 시에만)
     private NotificationCategory category;
+    private String link; // 알림 클릭 시 이동할 경로
 } 
