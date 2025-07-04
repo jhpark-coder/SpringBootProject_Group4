@@ -13,8 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
-import com.creatorworks.nexus.notification.service.NotificationService;
-import com.creatorworks.nexus.notification.dto.FollowNotificationRequest;
+
 import com.creatorworks.nexus.product.dto.ProductDto;
 import com.creatorworks.nexus.product.dto.ProductPageResponse;
 import com.creatorworks.nexus.product.dto.ProductSaveRequest;
@@ -49,7 +48,6 @@ public class ProductService {
     private final ItemTagRepository itemTagRepository;
     private final ProductItemTagRepository productItemTagRepository;
     private final ProductHeartRepository productHeartRepository;
-    private final NotificationService notificationService;
 
     /**
      * 특정 1차 카테고리에 속하는 중복되지 않는 2차 카테고리 목록을 조회합니다.

@@ -66,6 +66,11 @@ function toggleFollow(userId) {
             }
 
             console.log('구독 토글 결과:', data);
+            
+            // 팔로우 성공 시 알림 배지 갱신
+            if (data.isFollowing && window.notificationBadge) {
+                window.notificationBadge.updateNotificationCount();
+            }
         })
         .catch(error => {
             console.error('구독 토글 오류:', error);

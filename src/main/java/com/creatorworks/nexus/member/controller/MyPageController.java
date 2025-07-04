@@ -36,6 +36,8 @@ import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.service.RecentlyViewedProductRedisService;
+import com.creatorworks.nexus.notification.entity.Notification;
+import com.creatorworks.nexus.notification.service.NotificationService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -55,6 +57,7 @@ public class MyPageController {
     private final MemberOrderRepository memberOrderRepository;
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
+    private final NotificationService notificationService;
 
     @GetMapping("/my-page")
     public String myPage(@AuthenticationPrincipal Object principal, Model model) {
@@ -255,5 +258,29 @@ public class MyPageController {
         // ==========================================================
 
         return "member/myPage"; // myPage.html 템플릿을 보여줌
+    }
+
+    @GetMapping("/my-page/notifications")
+    public String notificationHistory(@AuthenticationPrincipal Object principal, Model model) {
+        String email = null;
+        if (principal instanceof CustomUserDetails) {
+            email = ((CustomUserDetails) principal).getUsername();
+        } else if (principal instanceof OAuth2User) {
+            email = ((OAuth2User) principal).getAttribute("email");
+        }
+
+        if (email == null) {
+            return "redirect:/members/login"; // 로그인되지 않은 사용자는 로그인 페이지로
+        }
+
+        Member currentUser = memberRepository.findByEmail(email);
+        if (currentUser != null) {
+            List<Notification> notifications = notificationService.getNotificationsByUserId(currentUser.getId());
+            model.addAttribute("notifications", notifications);
+        } else {
+            model.addAttribute("notifications", Collections.emptyList());
+        }
+        
+        return "member/my-notifications"; // 알림 내역 페이지 템플릿 반환
     }
 }

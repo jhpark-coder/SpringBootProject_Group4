@@ -11,16 +11,22 @@ import com.creatorworks.nexus.member.entity.Member;
 
 public class CustomUserDetails implements UserDetails {
 
+    private final Long id;
     private final String username; // email
     private final String password;
     private final String name;
     private final Collection<? extends GrantedAuthority> authorities;
 
     public CustomUserDetails(Member member) {
+        this.id = member.getId();
         this.username = member.getEmail();
         this.password = member.getPassword();
         this.name = member.getName();
         this.authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + member.getRole().toString()));
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public String getName() {

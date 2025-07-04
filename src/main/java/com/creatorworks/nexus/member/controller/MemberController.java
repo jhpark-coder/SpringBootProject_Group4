@@ -6,10 +6,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.*;
 
 import com.creatorworks.nexus.member.dto.EmailAuthRequestDto;
 import com.creatorworks.nexus.member.dto.MemberFormDto;
@@ -18,6 +16,9 @@ import com.creatorworks.nexus.member.service.MemberService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RequestMapping("/members")
 @Controller
@@ -33,29 +34,30 @@ public class MemberController {
         return "member/memberForm";
     }
 
-    @PostMapping("/new")
-    public String memberForm(@Valid MemberFormDto memberFormDto, BindingResult bindingResult, Model model) {
-        System.out.println("들어는 옴");
-        if (bindingResult.hasErrors()) {
-            System.out.println("입력값 오류");
-            return "member/memberForm";
-        }
+    @PostMapping("/api/new")
+    @ResponseBody
+    public ResponseEntity<?> registerMember(@Valid @RequestBody MemberFormDto memberFormDto, BindingResult bindingResult){
         if (!memberFormDto.getPassword().equals(memberFormDto.getPasswordConfirm())) {
-            System.out.println("비밀번호 일치 하지않음");
-            // bindingResult에 직접 에러를 추가하여 Thymeleaf에 전달
             bindingResult.rejectValue("passwordConfirm", "password.mismatch", "비밀번호가 일치하지 않습니다.");
-            return "member/memberForm";
+        }
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                errors.put(error.getField(), error.getDefaultMessage());
+            }
+            return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
         }
         try {
             Member member = Member.createMember(memberFormDto, passwordEncoder);
             memberService.saveMember(member);
         } catch (IllegalStateException e) {
-            System.out.println("Service 못보냄");
-            model.addAttribute("errorMessage", e.getMessage());
-            return "member/memberForm";
+            Map<String, String> errors = new HashMap<>();
+            errors.put("globalError", e.getMessage());
+            return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
         }
-        return "redirect:/";
+        return new ResponseEntity<>("회원가입이 성공적으로 완료되었습니다.", HttpStatus.OK);
     }
+
     @PostMapping("/email-auth")
     public ResponseEntity<String> sendAuthEmail(@RequestBody EmailAuthRequestDto requestDto) {
         try {
