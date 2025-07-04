@@ -191,4 +191,24 @@ public class MemberFollowController {
 
         return "member/followings";
     }
+
+    /**
+     * 팔로우 정보 조회 API
+     *
+     * @param memberId 조회할 사용자 ID
+     * @return 팔로우 정보
+     */
+    @GetMapping("/{memberId}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getFollowInfo(@PathVariable Long memberId) {
+        try {
+            Map<String, Object> followInfo = memberFollowService.getFollowStats(memberId);
+            return ResponseEntity.ok(followInfo);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", true);
+            errorResponse.put("message", "팔로우 정보를 불러오는데 실패했습니다.");
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
 }

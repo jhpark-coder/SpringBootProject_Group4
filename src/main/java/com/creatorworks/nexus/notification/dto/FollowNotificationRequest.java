@@ -17,6 +17,7 @@ public class FollowNotificationRequest { // 팔로우 알림 왔을때 요청 �
     private String message;      // 알림 메시지
     private String type = "follow"; // "follow"
     private NotificationCategory category;
+    private String link; // 알림 클릭 시 이동할 경로
 
     public Long getTargetUserId() { return targetUserId; }
     public void setTargetUserId(Long targetUserId) { this.targetUserId = targetUserId; }

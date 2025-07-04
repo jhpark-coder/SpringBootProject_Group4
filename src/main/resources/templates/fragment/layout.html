@@ -20,9 +20,6 @@
     <!-- Chat Buttons Controller -->
     <script src="/js/chat-buttons.js"></script>
     
-    <!-- Notification Badge -->
-    <script src="/js/notification-badge.js"></script>
-    
     <!-- FAQ CSS -->
     <link rel="stylesheet" th:href="@{/css/faq.css}">
 
@@ -409,6 +406,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
 
+    <!-- 페이지별 추가 CSS -->
     <th:block layout:fragment="css"></th:block>
 </head>
 
@@ -714,6 +712,14 @@
         });
     </script>
 
+    <!-- Socket.IO 클라이언트 스크립트 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+
+    <!-- Notification Badge - Socket.IO 스크립트 이후에 로드 -->
+    <script src="/js/notification-badge.js"></script>
+
+    <!-- 페이지별 추가 스크립트 -->
+    <th:block layout:fragment="script"></th:block>
 </body>
 
 </html>

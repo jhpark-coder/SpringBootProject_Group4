@@ -14,8 +14,8 @@ import java.util.List;
 @Service
 public class NotificationService {
     private final RestTemplate restTemplate = new RestTemplate();
-    private static final String NESTJS_NOTIFY_URL = "http://localhost:3000/notification/follow";
-    private static final String NESTJS_ADMIN_NOTIFY_URL = "http://localhost:3000/notification/admin";
+    private static final String NESTJS_NOTIFY_URL = "http://localhost:3000/api/notifications/create";
+    private static final String NESTJS_ADMIN_NOTIFY_URL = "http://localhost:3000/api/notifications/admin/create";
     private final NotificationRepository notificationRepository;
 
     @Autowired
@@ -24,11 +24,21 @@ public class NotificationService {
     }
 
     public void sendNotification(FollowNotificationRequest dto) {
-        restTemplate.postForObject(NESTJS_NOTIFY_URL, dto, Void.class);
+        try {
+            restTemplate.postForObject(NESTJS_NOTIFY_URL, dto, Void.class);
+        } catch (Exception e) {
+            // 실시간 알림 서버 에러는 로깅만 하고 계속 진행
+            System.err.println("실시간 알림 전송 실패: " + e.getMessage());
+        }
     }
 
     public void sendNotificationToAdminGroup(SellerRequestNotificationRequest dto) {
-        restTemplate.postForObject(NESTJS_ADMIN_NOTIFY_URL, dto, Void.class);
+        try {
+            restTemplate.postForObject(NESTJS_ADMIN_NOTIFY_URL, dto, Void.class);
+        } catch (Exception e) {
+            // 실시간 알림 서버 에러는 로깅만 하고 계속 진행
+            System.err.println("관리자 실시간 알림 전송 실패: " + e.getMessage());
+        }
     }
 
     // 알림을 DB에 저장하는 메서드

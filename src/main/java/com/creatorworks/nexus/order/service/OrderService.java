@@ -18,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderService {
 
-    //20250701 셀러 판매량 파악을 위해 추가
+    //20250701 작가 판매량 파악을 위해 추가
     private final OrderRepository orderRepository;
 
     public List<TopSellingProductDto> getTopSellingProductsThisMonth(Member seller, int limit) {
