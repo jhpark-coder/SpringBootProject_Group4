@@ -1,5 +1,6 @@
 package com.creatorworks.nexus.member.controller;
 
+import com.creatorworks.nexus.member.dto.LoginFormDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,6 +15,7 @@ import com.creatorworks.nexus.member.dto.MemberFormDto;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.service.MemberService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -90,4 +92,8 @@ public class MemberController {
         return "member/loginForm";
     }
 
+    @GetMapping("/seller-register")
+    public String sellerRegisterPage() {
+        return "member/seller-register";
+    }
 }

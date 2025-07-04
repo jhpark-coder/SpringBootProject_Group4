@@ -119,7 +119,7 @@
                 <div class="sell-image-placeholder"></div>
                 <div class="sell-text-content">
                     <p class="sell-description">창의적인 디자인 아트워크부터 논리적인 자바 코드구조까지 <br>정당한 비용을 받고 공유해보세요!</p>
-                    <a href="#" class="btn" id="sellerApplyBtn">작가 등록하기</a>
+                    <a th:href="@{/members/seller-register}" class="btn">작가 등록하기</a>
                 </div>
             </div>
         </section>
@@ -138,39 +138,6 @@
     <th:block layout:fragment="script">
         <script th:src="@{/js/heartFollow.js}"></script>
         <script th:src="@{/js/main.js}"></script>
-        <script>
-            $(document).ready(function() {
-                // 작가 신청 버튼 클릭 이벤트
-                $("#sellerApplyBtn").on("click", function(e) {
-                    e.preventDefault();
-                    
-                    $.ajax({
-                        url: "/seller-request/apply",
-                        type: "POST",
-                        success: function(response) {
-                            showPopup(response);
-                        },
-                        error: function(xhr) {
-                            // 서버가 구체적인 에러 메시지를 보내주는 경우 그것을 사용하고,
-                            // 그렇지 않으면 일반적인 메시지를 표시합니다.
-                            var errorMessage = xhr.responseText || "작가 신청 중 오류가 발생했습니다.";
-                            showPopup(errorMessage);
-                        }
-                    });
-                });
-
-                // 팝업 표시 함수
-                function showPopup(message) {
-                    $("#popupMessage").text(message);
-                    $("#popupOverlay").addClass("show");
-                }
-
-                // 팝업 닫기 함수
-                window.closePopup = function() {
-                    $("#popupOverlay").removeClass("show");
-                };
-            });
-        </script>
     </th:block>
 </body>
 

@@ -116,6 +116,6 @@ public class SellerRequestService {
         notificationDto.setReason(reason);
         notificationDto.setCategory(NotificationCategory.ADMIN);
         
-        notificationService.saveSellerRequestNotification(notificationDto, "/User/my-page");
+        notificationService.saveSellerRequestNotification(notificationDto, "/members/seller-register");
     }
 } 
