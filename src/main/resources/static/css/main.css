@@ -107,6 +107,7 @@ a {
     flex-direction: column;
     gap: 15px;
     flex-basis: 23%;
+    margin-bottom: 30px;
     /* 4개 아이템 배치 */
     min-width: 280px;
     /* 최소 너비 보장 */

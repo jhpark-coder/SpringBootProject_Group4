@@ -66,6 +66,10 @@ public class Member extends BaseEntity {
         return this;
     }
 
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
     public static Member createMember(MemberFormDto memberFormDto, PasswordEncoder passwordEncoder) {
         Member member = new Member();
         member.setEmail(memberFormDto.getEmail());

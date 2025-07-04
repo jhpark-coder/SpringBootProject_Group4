@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html layout:decorate="~{fragment/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/myPage.css}">
+        <!-- 알림 목록을 위한 별도 스타일 -->
+        <style>
+            .notification-history-page {
+                width: 100%;
+                max-width: 900px;
+                margin: 2rem auto;
+                padding: 2rem;
+                background-color: #fff;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            }
+            .notification-history-page h1 {
+                margin-bottom: 2rem;
+                border-bottom: 2px solid #333;
+                padding-bottom: 1rem;
+            }
+            .notification-list-full {
+                list-style: none;
+                padding: 0;
+            }
+            .notification-item-full {
+                display: flex;
+                align-items: center;
+                padding: 1rem;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            .notification-item-full:last-child {
+                border-bottom: none;
+            }
+            .notification-item-full.unread {
+                background-color: #f8fbff;
+                font-weight: 500;
+            }
+            .notification-item-full .category {
+                flex-shrink: 0;
+                margin-right: 1.5rem;
+                padding: 0.3rem 0.8rem;
+                border-radius: 16px;
+                font-size: 0.8rem;
+                background-color: #eee;
+            }
+             .notification-item-full .message {
+                flex-grow: 1;
+                margin: 0;
+            }
+            .notification-item-full .time {
+                flex-shrink: 0;
+                margin-left: 1.5rem;
+                color: #888;
+                font-size: 0.9rem;
+            }
+        </style>
+    </th:block>
+    <title>알림 내역</title>
+</head>
+
+<body>
+<div layout:fragment="content" class="notification-history-page">
+    <h1>알림 내역</h1>
+
+    <div th:if="${notifications.isEmpty()}">
+        <p>수신된 알림이 없습니다.</p>
+    </div>
+
+    <ul class="notification-list-full" th:if="${!notifications.isEmpty()}">
+        <li th:each="notification : ${notifications}" 
+            th:classappend="${!notification.isRead} ? 'unread' : ''"
+            class="notification-item-full">
+            <span class="category" th:text="${notification.category.toString().toLowerCase()}"></span>
+            <p class="message" th:text="${notification.message}"></p>
+            <span class="time" th:text="${#temporals.format(notification.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+        </li>
+    </ul>
+
+</div>
+</body>
+</html> 
