@@ -15,14 +15,63 @@
     <!-- layout.html의 content fragment를 이 내용으로 교체 -->
     <div layout:fragment="content">
         <!-- 1. 메인 슬라이드 섹션 -->
-        <section class="main-slide" id="main-slide">
-            <div class="container main-slide-content">
-                <div class="main-slide-text">
-                    <h1>Art<br>Design<br>&<br>Java<br>FrontEnd</h1>
-                    <a href="#needs-grid" class="btn">작품보러가기</a>
+<!--        <section class="main-slide" id="main-slide">-->
+<!--            <div class="container main-slide-content">-->
+<!--                <div class="main-slide-text">-->
+<!--                    <h1>Art<br>Design<br>&<br>Java<br>FrontEnd</h1>-->
+<!--                    <a href="#needs-grid" class="btn">작품보러가기</a>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </section>-->
+        <!--1. 슬라이드 시작-->
+        <div class="slider-wrapper">
+            <!-- 슬라이드 1 -->
+            <div class="slide">
+                <div class="slide-content">
+                    <div class="slide-text">
+                        <h1>Art<br>Design<br>&<br>Java<br>FrontEnd</h1>
+                        <a href="#" class="btn-view-work">작품보러가기</a>
+                    </div>
+                    <div class="slide-image">
+                        <span>또 다른 이미지<br>들어갈 수 있음</span>
+                    </div>
                 </div>
             </div>
-        </section>
+
+            <!-- 슬라이드 2 -->
+            <div class="slide">
+                <div class="slide-content">
+                    <div class="slide-text">
+                        <h1>Slide 2<br>Content</h1>
+                        <a href="#" class="btn-view-work">더 알아보기</a>
+                    </div>
+                    <div class="slide-image">
+                        <span>두 번째 슬라이드 이미지</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 슬라이드 3 -->
+            <div class="slide">
+                <div class="slide-content">
+                    <div class="slide-image">
+                        <span>세 번째 슬라이드 이미지</span>
+                    </div>
+                    <div class="slide-text">
+                        <h1>Slide 3<br>Content</h1>
+                        <a href="#" class="btn-view-work">프로젝트 보기</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 좌우 화살표 버튼 -->
+        <button class="slider-arrow prev"><</button>
+        <button class="slider-arrow next">></button>
+
+        <!-- 페이지네이션 (JS로 동적 생성) -->
+        <div class="slider-pagination"></div>
+        <!-- 슬라이드 끝!! -->
 
         <!-- 2. 작품 추천 그리드 섹션 -->
         <section class="needs-grid" id="needs-grid">

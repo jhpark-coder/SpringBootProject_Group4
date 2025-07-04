@@ -3,16 +3,14 @@ package com.creatorworks.nexus.order.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.creatorworks.nexus.order.dto.*;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.creatorworks.nexus.member.entity.Member;
-import com.creatorworks.nexus.order.dto.AgeRatioDto;
-import com.creatorworks.nexus.order.dto.GenderRatioDto;
-import com.creatorworks.nexus.order.dto.MonthlySalesDto;
-import com.creatorworks.nexus.order.dto.TopSellingProductDto;
 import com.creatorworks.nexus.order.entity.Order;
 import com.creatorworks.nexus.product.entity.Product;
 
@@ -134,4 +132,16 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Long> findTopSellingProductIds(@Param("excludedIds") List<Long> excludedIds, Pageable pageable);
 
     List<Order> findByBuyer(Member member);
+
+    /**
+     * member의 구매내역을 page로 리턴하는 쿼리문을 만들었습니다!
+     * 주석은 내가 직접단 것 임!!!!
+     */
+    @Query("SELECT new com.creatorworks.nexus.order.dto.MemberOrderListDto(" +
+            "o.id, p.id, p.name, p.imageUrl, p.primaryCategory, p.secondaryCategory, o.orderDate, s.name) " + // [수정] s.name 추가
+            "FROM Order o " +
+            "JOIN o.product p " +
+            "JOIN p.seller s " + // [추가] 상품(p)의 판매자(s)를 조인
+            "WHERE o.buyer = :buyer")
+    Page<MemberOrderListDto> findOrderListByBuyer(@Param("buyer") Member buyer, Pageable pageable);
 }

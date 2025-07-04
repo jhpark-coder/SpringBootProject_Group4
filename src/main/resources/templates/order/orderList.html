@@ -1,0 +1,85 @@
+<html layout:decorate="~{fragment/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+  <th:block layout:fragment="css">
+    <link rel="stylesheet" th:href="@{/css/myPage.css}">
+<!--    <link rel="stylesheet" th:href="@{/css/sellerPage.css}">-->
+    <link rel="stylesheet" th:href="@{/css/inquiry.css}">
+    <style>
+      td{
+        align-content:center;
+      };
+    </style>
+  </th:block>
+</head>
+
+<body>
+<div layout:fragment="content" class="page-container">
+  <!-- 1. 왼쪽 고정 메뉴 (사이드바) -->
+  <aside class="profile-sidebar">
+    <div class="profile-pic"></div>
+    <h2 class="profile-name" th:text="${Name} + ' 님'" sec:authentication="name">홍길동 님</h2>
+
+    <div class="button-group">
+      <a href="#" class="btn btn-outline">찜목록</a>
+      <a href="#" class="btn btn-outline">구독목록</a>
+    </div>
+
+    <a href="/members/modify" class="btn btn-solid">개인정보수정</a>
+    <a href="#" class="btn btn-solid">알림내역</a>
+    <a href="/User/orderList" class="btn btn-solid">구매내역</a>
+    <a href="#" class="btn btn-solid">참여중인 경매</a>
+  </aside>
+
+  <main class="main-content">
+    <section class="content-section">
+      <header class="section-header">
+        <h2>구매한 작품 현황</h2>
+      </header>
+
+      <div th:if="${orderList == null || orderList.empty}" style="padding:2rem; text-align:center;">
+        <p>구매한 작품이 없습니다.</p>
+      </div>
+
+      <table th:unless="${orderList == null || orderList.empty}" class="table" style="width:100%; border-collapse:collapse;">
+        <thead>
+        <tr>
+          <th style="text-align:left; padding:8px;">썸네일</th>
+          <th style="text-align:left; padding:8px;">작품명</th>
+          <th style="text-align:left; padding:8px;">작가이름</th>
+          <th style="text-align:left; padding:8px;">카테고리</th>
+          <th style="text-align:left; padding:8px;">구입일</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="order : ${orderList.content}" style="border-top:1px solid #ddd;">
+          <td><img th:src="${order.imageUrl}" th:alt="${order.productName+'의 썸네일'}" style="max-width: 150px;">
+            <a th:href="@{/products/{id}(id=${order.productId})}"></a>
+          </td>
+          <td><a th:href="@{/products/{id}(id=${order.productId})}" th:text="${order.productName}"></a></td>
+          <td th:text="${order.seller}"></td>
+          <td th:text="${order.primaryCategory} + ' > ' + ${order.secondaryCategory}"></td>
+          <td th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd HH:mm')}"></td>
+        </tr>
+        </tbody>
+      </table>
+
+      <nav th:if="${orderList != null && orderList.totalPages > 0}" aria-label="Page navigation" style="margin-top:1rem;">
+        <ul class="pagination" style="justify-content:center;">
+          <li class="page-item" th:classappend="${startPage == 0} ? 'disabled'">
+            <a class="page-link" th:href="@{/User/orderList(page=${startPage - 1})}">«</a>
+          </li>
+          <li class="page-item" th:each="p : ${#numbers.sequence(startPage, endPage)}" th:classappend="${p == orderList.number} ? 'active'">
+            <a class="page-link" th:href="@{/User/orderList(page=${p})}" th:text="${p + 1}"></a>
+          </li>
+          <li class="page-item" th:classappend="${endPage >= orderList.totalPages - 1} ? 'disabled'">
+            <a class="page-link" th:href="@{/User/orderList(page=${endPage + 1})}">»</a>
+          </li>
+        </ul>
+      </nav>
+    </section>
+  </main>
+</div>
+</body>
+</html>

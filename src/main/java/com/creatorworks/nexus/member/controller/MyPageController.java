@@ -1,5 +1,6 @@
 package com.creatorworks.nexus.member.controller;
 
+import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -13,12 +14,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.creatorworks.nexus.order.dto.MemberOrderListDto;
+import com.creatorworks.nexus.order.service.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
@@ -38,7 +44,7 @@ import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.service.RecentlyViewedProductRedisService;
 
 import lombok.RequiredArgsConstructor;
-
+import java.security.Principal;
 
 
 //20250630 차트 생성을 위해 작성됨
@@ -55,6 +61,8 @@ public class MyPageController {
     private final MemberOrderRepository memberOrderRepository;
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
+    private final OrderService orderService;
+
 
     @GetMapping("/my-page")
     public String myPage(@AuthenticationPrincipal Object principal, Model model) {
@@ -256,4 +264,29 @@ public class MyPageController {
 
         return "member/myPage"; // myPage.html 템플릿을 보여줌
     }
+    @GetMapping("/orderList")
+    public String orderList(Principal principal, @PageableDefault(sort = "orderDate", direction = Sort.Direction.DESC, size = 5)
+                                Pageable pageable, Model model) {
+        if (principal == null) {
+            return "redirect:/login";
+        }
+        Page<MemberOrderListDto> orderList = orderService.getMemberOrderList(principal.getName(), pageable);
+        model.addAttribute("orderList", orderList);
+        model.addAttribute("Name", principal.getName());
+        addPaginationAttributes(model, orderList);
+        return "order/orderList";
+    }
+    private void addPaginationAttributes(Model model, Page<?> page) {
+        int totalPages = page.getTotalPages();
+        if (totalPages > 0) {
+            int currentPage = page.getNumber();
+            int pageWindowSize = 10;
+            int startPage = Math.max(0, (currentPage / pageWindowSize) * pageWindowSize);
+            int endPage = Math.min(totalPages - 1, startPage + pageWindowSize - 1);
+
+            model.addAttribute("startPage", startPage);
+            model.addAttribute("endPage", endPage);
+        }
+    }
+
 }
