@@ -211,4 +211,58 @@ public class PointService {
         Long currentBalance = getCurrentBalance(memberId);
         return currentBalance >= amount;
     }
+
+    /**
+     * 포인트 추가 (보너스 등)
+     * @param memberId 회원 ID
+     * @param amount 추가할 포인트
+     * @param description 추가 사유
+     * @return 포인트 추가 결과
+     */
+    @Transactional
+    public PointResponse addPoints(Long memberId, Long amount, String description) {
+        try {
+            Member member = memberRepository.findById(memberId)
+                    .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+
+            // 현재 포인트 잔액 조회
+            Long currentBalance = getCurrentBalance(memberId);
+            Long newBalance = currentBalance + amount;
+
+            // 포인트 내역 저장
+            Point point = Point.builder()
+                    .member(member)
+                    .amount(amount)
+                    .type(PointType.CHARGE)
+                    .balanceAfter(newBalance)
+                    .description(description)
+                    .merchantUid("bonus_" + UUID.randomUUID().toString().replace("-", ""))
+                    .build();
+
+            pointRepository.save(point);
+
+            // 회원 포인트 업데이트
+            member.setPoint(newBalance.intValue());
+            memberRepository.save(member);
+
+            log.info("포인트 추가 완료: 회원ID={}, 추가금액={}, 사유={}, 잔액={}", 
+                    memberId, amount, description, newBalance);
+
+            return PointResponse.builder()
+                    .success(true)
+                    .message("포인트가 추가되었습니다.")
+                    .currentBalance(newBalance)
+                    .amount(amount)
+                    .description(description)
+                    .transactionDate(LocalDateTime.now())
+                    .build();
+
+        } catch (Exception e) {
+            log.error("포인트 추가 실패: 회원ID={}, 오류={}", memberId, e.getMessage());
+            return PointResponse.builder()
+                    .success(false)
+                    .message("포인트 추가 중 오류가 발생했습니다: " + e.getMessage())
+                    .build();
+        }
+    }
 } 

@@ -1,6 +1,7 @@
 package com.creatorworks.nexus.product.controller;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.creatorworks.nexus.member.entity.Member;
@@ -210,5 +212,78 @@ public class PointController {
         model.addAttribute("member", member);
 
         return "member/pointHistory";
+    }
+
+    /**
+     * 포인트 충전 성공 페이지
+     * @param model 모델
+     * @param principal 현재 로그인한 사용자
+     * @param amount 충전 금액
+     * @param paymentAmount 결제 금액
+     * @param paymentMethod 결제 방법
+     * @param merchantUid 주문번호
+     * @param impUid 아임포트 UID
+     * @return 포인트 충전 성공 페이지
+     */
+    @GetMapping("/charge/success")
+    public String chargeSuccess(Model model, Principal principal,
+                               @RequestParam(required = false) Long amount,
+                               @RequestParam(required = false) Long paymentAmount,
+                               @RequestParam(required = false) String paymentMethod,
+                               @RequestParam(required = false) String merchantUid,
+                               @RequestParam(required = false) String impUid) {
+        if (principal == null) {
+            return "redirect:/members/login";
+        }
+
+        Member member = memberRepository.findByEmail(principal.getName());
+        if (member == null) {
+            return "redirect:/members/login";
+        }
+
+        // URL 파라미터에서 결제 정보 가져오기
+        model.addAttribute("amount", amount != null ? amount : 0L);
+        model.addAttribute("paymentAmount", paymentAmount != null ? paymentAmount : 0L);
+        model.addAttribute("paymentMethod", paymentMethod != null ? paymentMethod : "신용카드");
+        model.addAttribute("transactionDate", LocalDateTime.now());
+        model.addAttribute("merchantUid", merchantUid != null ? merchantUid : "N/A");
+        model.addAttribute("currentBalance", pointService.getCurrentBalance(member.getId()));
+
+        return "member/pointSuccess";
+    }
+
+    /**
+     * 포인트 충전 실패 페이지
+     * @param model 모델
+     * @param principal 현재 로그인한 사용자
+     * @param errorMessage 오류 메시지
+     * @param amount 시도한 금액
+     * @param paymentMethod 결제 방법
+     * @return 포인트 충전 실패 페이지
+     */
+    @GetMapping("/charge/fail")
+    public String chargeFail(Model model, Principal principal,
+                            @RequestParam(required = false) String errorMessage,
+                            @RequestParam(required = false) Long amount,
+                            @RequestParam(required = false) String paymentMethod) {
+        if (principal == null) {
+            return "redirect:/members/login";
+        }
+
+        Member member = memberRepository.findByEmail(principal.getName());
+        if (member == null) {
+            return "redirect:/members/login";
+        }
+
+        // URL 파라미터에서 오류 정보 가져오기
+        model.addAttribute("errorMessage", errorMessage != null ? errorMessage : "결제 처리 중 오류가 발생했습니다.");
+        model.addAttribute("detailedErrorMessage", "카드 잔액 부족 또는 카드 정보 오류로 인해 결제가 실패했습니다.");
+        model.addAttribute("errorCode", "PAYMENT_FAILED");
+        model.addAttribute("amount", amount != null ? amount : 0L);
+        model.addAttribute("paymentMethod", paymentMethod != null ? paymentMethod : "신용카드");
+        model.addAttribute("transactionDate", LocalDateTime.now());
+        model.addAttribute("currentBalance", pointService.getCurrentBalance(member.getId()));
+
+        return "member/pointFail";
     }
 } 

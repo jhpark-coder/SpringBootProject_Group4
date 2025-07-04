@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
     layout:decorate="~{fragment/layout}">
-<!-- jQuery -->
-<head>
-<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js" ></script>
-<!-- iamport.payment.js -->
-<script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.1.8.js"></script>
-</head>
+    <head>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js" ></script>
+        <!-- iamport.payment.js -->
+        <script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.1.8.js"></script>
+      </head>
 <th:block layout:fragment="css">
     <link rel="stylesheet" th:href="@{/css/productdetall.css}">
     <link rel="stylesheet" th:href="@{/css/review.css}">
@@ -18,14 +17,6 @@
                 rel="stylesheet">
         </th:block>
     </th:block>
-</th:block>
-
-<th:block layout:fragment="script">
-    <!-- jQuery -->
-    <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
-    <!-- iamport.payment.js -->
-    <script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.1.8.js"></script>
-    <script th:src="@{/js/heartFollow.js}"></script>
 </th:block>
 
 <div layout:fragment="content" class="product-detail-page">
@@ -95,12 +86,12 @@
                 </div>
             </div>
             <!-- 판매자인 경우만 수정 버튼 표시 -->
-            <button th:if="${currentMember != null and product.seller != null and currentMember.id == product.seller.id}">
+            <th:block th:if="${currentMember != null and product.seller != null and currentMember.id == product.seller.id}">
                 <a th:href="@{'/editor/product/' + ${product.id}}"
                     style="display:block;width:100%;margin-top:24px;padding:12px 0;background:#222;color:#fff;text-align:center;border-radius:8px;font-weight:600;font-size:16px;">
                     글 수정하기
                 </a>
-            </button>
+            </th:block>
         </aside>
 
         <!-- Description Section (Full Width) -->
@@ -123,7 +114,5 @@
     <div th:replace="~{product/inquiry_section :: inquirySection(${product}, ${inquiryPage})}"></div>
 
 </div>
-
-<div th:replace="~{fragment/footer :: footer}"></div>
 
 </html>

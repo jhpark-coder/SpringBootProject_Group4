@@ -109,7 +109,12 @@ public class ProductController {
                                 @RequestParam(value = "reviewKeyword", required = false) String reviewKeyword,
                                 Principal principal,
                                 Model model) {
-            Product product = productService.findProductByIdAndIncrementView(id);
+        Product product = productService.findProductByIdAndIncrementView(id);
+        
+        // 상품이 존재하지 않는 경우 처리
+        if (product == null) {
+            throw new RuntimeException("해당 상품이 존재하지 않습니다: " + id);
+        }
         
         // 문의 관련
         Page<ProductInquiry> inquiryPage = productInquiryService.findInquiriesByProduct(id, inquiryPageable);
@@ -119,7 +124,7 @@ public class ProductController {
         double averageRating = productReviewService.getAverageRating(id);
 
         // --- 좋아요 관련 로직 추가 ---
-            long heartCount = productService.getHeartCount(id);
+        long heartCount = productService.getHeartCount(id);
         boolean isLiked = false;
         // ---
 
@@ -213,9 +218,9 @@ public class ProductController {
                 // 여기서는 간단히 빈 문자열로 대체
                 contentHtml = "<p>콘텐츠를 불러오는 데 실패했습니다.</p>";
             }
-            }
-            
-            model.addAttribute("product", product);
+        }
+        
+        model.addAttribute("product", product);
         model.addAttribute("contentHtml", contentHtml); // 렌더링된 HTML 추가
         model.addAttribute("inquiryPage", inquiryPage);
         model.addAttribute("reviewPage", reviewPage);
@@ -233,9 +238,12 @@ public class ProductController {
         // ---
         
         // --- 태그 정보 추가 ---
-        List<String> allTagNames = product.getItemTags().stream()
-                .map(productItemTag -> productItemTag.getItemTag().getName())
-                .toList();
+        List<String> allTagNames = new ArrayList<>();
+        if (product.getItemTags() != null) {
+            allTagNames = product.getItemTags().stream()
+                    .map(productItemTag -> productItemTag.getItemTag().getName())
+                    .toList();
+        }
         
         // 카테고리를 제외한 순수 태그만 필터링
         List<String> pureTagNames = allTagNames.stream()
@@ -252,8 +260,8 @@ public class ProductController {
         log.debug("  - 전체 태그 목록: {}", allTagNames);
         log.debug("  - 순수 태그 목록: {}", pureTagNames);
         // ---
-            
-            return "product/productDetail";
+        
+        return "product/productDetail";
     }
 
     /**

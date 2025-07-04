@@ -60,6 +60,13 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
      */
     Page<Product> findBySeller(Member seller, Pageable pageable);
 
+    /**
+     * 특정 판매자가 작성한 모든 상품을 최신순으로 조회합니다.
+     * @param seller 판매자
+     * @return 해당 판매자의 상품 목록 (최신순)
+     */
+    List<Product> findBySellerOrderByRegTimeDesc(Member seller);
+
     // =================================================================================
     // MainPageService에서 사용하는 메서드들 (추가 및 수정된 부분)
     // =================================================================================

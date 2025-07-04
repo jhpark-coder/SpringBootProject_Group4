@@ -182,12 +182,24 @@ function requestPointPay() {
         return;
     }
     
+    // CSRF 토큰 가져오기
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+    
+    // 헤더 설정
+    const headers = {
+        'Content-Type': 'application/json',
+    };
+    
+    // CSRF 토큰이 있으면 헤더에 추가
+    if (csrfToken && csrfHeader) {
+        headers[csrfHeader] = csrfToken;
+    }
+    
     // 포인트 결제 API 호출
     fetch(`/api/products/${productId}/purchase/point`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify({
             productId: productId,
             price: price
@@ -284,7 +296,7 @@ function requestPay() {
     IMP.init("imp20067661"); // 실제 가맹점 코드로 바꿔주세요
 
     IMP.request_pay({
-        pg: "html5_inicis",         // 결제 대행사
+        pg: "html5_inicis.INIpayTest",         // 결제 대행사
         pay_method: "card",         // 결제 수단
         merchantuid: "order" + new Date().getTime(), // 주문번호 (고유해야 함)
         name: "",
@@ -299,20 +311,6 @@ function requestPay() {
     });
 }
 function requestPubPay() {
-    IMP.init("imp20067661"); // 실제 가맹점 코드로 바꿔주세요
-
-    IMP.request_pay({
-        pg: "html5_inicis",         // 결제 대행사
-        pay_method: "card",         // 결제 수단
-        merchantuid: "order" + new Date().getTime(), // 주문번호 (고유해야 함)
-        name: "구독권",
-        amount: 1000                // 결제 금액 (원 단위)
-    }, function (rsp) {
-        if (rsp.success) {
-            alert("결제 성공!");
-            console.log(rsp);
-        } else {
-            alert("결제 실패: " + rsp.error_msg);
-        }
-    });
+    // 구독 결제창으로 이동
+    window.location.href = '/members/subscription';
 }

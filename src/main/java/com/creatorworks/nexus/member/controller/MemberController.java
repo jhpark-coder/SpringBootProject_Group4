@@ -18,6 +18,18 @@ import com.creatorworks.nexus.member.service.MemberService;
 import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.product.service.PointService;
 import java.security.Principal;
+import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.creatorworks.nexus.product.entity.Product;
+import com.creatorworks.nexus.product.entity.ProductHeart;
+import com.creatorworks.nexus.product.repository.ProductHeartRepository;
+import com.creatorworks.nexus.member.service.MemberFollowService;
+import com.creatorworks.nexus.product.repository.ProductRepository;
+import com.creatorworks.nexus.product.service.ProductService;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +43,10 @@ public class MemberController {
     private final PasswordEncoder passwordEncoder;
     private final MemberRepository memberRepository;
     private final PointService pointService;
+    private final ProductHeartRepository productHeartRepository;
+    private final MemberFollowService memberFollowService;
+    private final ProductRepository productRepository;
+    private final ProductService productService;
 
     @GetMapping("/new")
     public String memberForm(Model model) {
@@ -49,6 +65,109 @@ public class MemberController {
         return "member/point";
     }
 
+    @GetMapping("/subscription")
+    public String subscription(Model model, Principal principal) {
+        // GlobalModelAttributes에서 자동으로 currentPoint가 추가되므로 별도 처리 불필요
+        return "member/subscription";
+    }
+
+    @GetMapping("/liked-products")
+    public String likedProducts(Model model, Principal principal) {
+        if (principal == null) {
+            return "redirect:/members/login";
+        }
+        
+        Member member = memberRepository.findByEmail(principal.getName());
+        if (member == null) {
+            return "redirect:/members/login";
+        }
+        
+        // 좋아요한 상품 목록 조회
+        List<ProductHeart> likedProducts = productHeartRepository.findByMember(member);
+        List<Product> products = likedProducts.stream()
+                .map(ProductHeart::getProduct)
+                .collect(Collectors.toList());
+        
+        model.addAttribute("likedProducts", products);
+        return "member/likedProducts";
+    }
+
+    @GetMapping("/following-products")
+    public String followingProducts(Model model, Principal principal) {
+        if (principal == null) {
+            return "redirect:/members/login";
+        }
+        
+        Member member = memberRepository.findByEmail(principal.getName());
+        if (member == null) {
+            return "redirect:/members/login";
+        }
+        
+        // 팔로잉한 작가 목록 조회
+        List<Member> followingMembers = memberFollowService.getFollowings(member.getId());
+        
+        // 팔로잉한 작가들의 작품 목록 조회
+        List<Product> followingProducts = new ArrayList<>();
+        for (Member followingMember : followingMembers) {
+            List<Product> memberProducts = productRepository.findBySellerOrderByRegTimeDesc(followingMember);
+            followingProducts.addAll(memberProducts);
+        }
+        
+        // 최신순으로 정렬
+        followingProducts.sort((p1, p2) -> p2.getRegTime().compareTo(p1.getRegTime()));
+        
+        // 각 상품의 좋아요 개수 계산
+        Map<Long, Long> heartCounts = new HashMap<>();
+        for (Product product : followingProducts) {
+            long heartCount = productService.getHeartCount(product.getId());
+            heartCounts.put(product.getId(), heartCount);
+        }
+        
+        model.addAttribute("followingProducts", followingProducts);
+        model.addAttribute("heartCounts", heartCounts);
+        model.addAttribute("followingCount", followingMembers.size());
+        return "member/followingProducts";
+    }
+
+    // 구독 결제 API
+    @PostMapping("/api/subscription/start")
+    public ResponseEntity<Map<String, Object>> startSubscription(@RequestBody Map<String, Object> request, Principal principal) {
+        try {
+            if (principal == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("success", false, "message", "로그인이 필요합니다."));
+            }
+
+            Member member = memberRepository.findByEmail(principal.getName());
+            if (member == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("success", false, "message", "회원 정보를 찾을 수 없습니다."));
+            }
+
+            String plan = (String) request.get("plan");
+            Integer price = (Integer) request.get("price");
+            Integer bonusPoints = (Integer) request.get("bonusPoints");
+            String impUid = (String) request.get("impUid");
+            String merchantUid = (String) request.get("merchantUid");
+
+            // 구독 정보 저장 (실제 구현에서는 구독 엔티티에 저장)
+            // 여기서는 포인트 보너스만 지급
+            if (bonusPoints > 0) {
+                pointService.addPoints(member.getId(), bonusPoints.longValue(), "구독 보너스 포인트");
+            }
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "구독이 성공적으로 시작되었습니다.",
+                "plan", plan,
+                "bonusPoints", bonusPoints
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("success", false, "message", "구독 처리 중 오류가 발생했습니다: " + e.getMessage()));
+        }
+    }
 
 
     @PostMapping("/new")
