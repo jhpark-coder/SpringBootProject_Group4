@@ -27,6 +27,7 @@ import com.creatorworks.nexus.product.repository.ProductItemTagRepository;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.specification.ProductSpecification;
 
+import javassist.NotFoundException;
 import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;
@@ -66,7 +67,7 @@ public class ProductService {
      * @return 페이징된 상품 응답 DTO
      */
     public ProductPageResponse findAllProducts(String primaryCategory, String secondaryCategory, Pageable pageable) {
-        Specification<Product> spec = Specification.where(ProductSpecification.byCategory(primaryCategory, secondaryCategory));
+        Specification<Product> spec = ProductSpecification.byCategory(primaryCategory, secondaryCategory);
         Page<Product> productPage = productRepository.findAll(spec, pageable);
 
         List<ProductDto> productDtos = productPage.getContent().stream()

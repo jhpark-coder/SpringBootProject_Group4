@@ -16,10 +16,11 @@
             <h2 class="profile-name" th:text="${Name} + ' 님'" sec:authentication="name">홍길동 님</h2>
 
             <div class="button-group">
-                <a href="#" class="btn btn-outline">찜목록</a>
-                <a href="#" class="btn btn-outline">구독목록</a>
+                <a href="/members/liked-products" class="btn btn-outline">좋아요한 작품</a>
+                <a href="/members/following-products" class="btn btn-outline">구독목록</a>
             </div>
 
+            <a href="/api/points/history/page" class="btn btn-solid">포인트 내역</a>
             <a href="#" class="btn btn-solid">개인정보수정</a>
             <a th:href="@{/User/my-page/notifications}" class="btn btn-solid">알림내역</a>
             <a href="#" class="btn btn-solid">구매내역</a>
