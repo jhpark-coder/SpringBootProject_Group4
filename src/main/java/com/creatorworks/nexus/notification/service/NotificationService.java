@@ -1,15 +1,16 @@
 package com.creatorworks.nexus.notification.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.creatorworks.nexus.notification.dto.FollowNotificationRequest;
 import com.creatorworks.nexus.notification.dto.SellerRequestNotificationRequest;
 import com.creatorworks.nexus.notification.entity.Notification;
-import com.creatorworks.nexus.notification.entity.NotificationCategory;
 import com.creatorworks.nexus.notification.repository.NotificationRepository;
-import java.util.List;
 
 @Service
 public class NotificationService {
@@ -72,8 +73,18 @@ public class NotificationService {
         return notificationRepository.countByTargetUserIdAndIsReadFalse(userId);
     }
 
+    // 관리자의 읽지 않은 알림 개수 조회 (개인 + 관리자 알림)
+    public long getUnreadNotificationCountForAdmin(Long userId) {
+        return notificationRepository.countUserAndAdminUnreadNotifications(userId, com.creatorworks.nexus.notification.entity.NotificationCategory.ADMIN);
+    }
+
     // 작가 신청 알림을 DB에 저장하는 메서드
     public Notification saveSellerRequestNotification(SellerRequestNotificationRequest dto, String link) {
+        System.out.println("=== [알림 DB 저장] saveSellerRequestNotification 호출 ===");
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        for (int i = 1; i < Math.min(stackTrace.length, 8); i++) {
+            System.out.println("  at " + stackTrace[i]);
+        }
         Notification notification = Notification.builder()
                 .senderUserId(0L) // 시스템에서 보내는 알림이므로 0으로 설정
                 .targetUserId(dto.getTargetUserId())
@@ -83,14 +94,17 @@ public class NotificationService {
                 .isRead(false)
                 .link(link)
                 .build();
-        
-        // DB에 저장하고 바로 반환
         return notificationRepository.save(notification);
     }
 
     // 사용자의 알림 목록 조회
     public List<Notification> getNotificationsByUserId(Long userId) {
         return notificationRepository.findByTargetUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    // 관리자의 알림 목록 조회 (개인 + 관리자 알림)
+    public List<Notification> getNotificationsForAdmin(Long userId) {
+        return notificationRepository.findUserAndAdminNotifications(userId, com.creatorworks.nexus.notification.entity.NotificationCategory.ADMIN);
     }
 
     // 전체 알림 읽음 처리
@@ -100,10 +114,41 @@ public class NotificationService {
         notificationRepository.saveAll(notis);
     }
 
+    // 관리자의 전체 알림 읽음 처리 (개인 + 관리자 알림)
+    public void markAllAsReadForAdmin(Long userId) {
+        // 개인 알림 읽음 처리
+        List<Notification> personalNotis = notificationRepository.findByTargetUserIdAndIsReadFalse(userId);
+        for (Notification n : personalNotis) n.setIsRead(true);
+        
+        // 관리자 알림 읽음 처리 (TARGET_USER_ID = 0, ADMIN 카테고리)
+        List<Notification> adminNotis = notificationRepository.findByTargetUserIdAndCategoryOrderByCreatedAtDesc(0L, com.creatorworks.nexus.notification.entity.NotificationCategory.ADMIN);
+        List<Notification> unreadAdminNotis = adminNotis.stream()
+                .filter(n -> !n.getIsRead())
+                .collect(java.util.stream.Collectors.toList());
+        for (Notification n : unreadAdminNotis) n.setIsRead(true);
+        
+        // 모든 변경사항 저장
+        List<Notification> allNotis = new ArrayList<>();
+        allNotis.addAll(personalNotis);
+        allNotis.addAll(unreadAdminNotis);
+        if (!allNotis.isEmpty()) {
+            notificationRepository.saveAll(allNotis);
+        }
+    }
+
     // 개별 알림 읽음 처리
     public void markAsRead(Long notificationId, Long userId) {
         Notification notification = notificationRepository.findById(notificationId).orElse(null);
-        if (notification != null && notification.getTargetUserId().equals(userId)) {
+        if (notification == null) {
+            return;
+        }
+        
+        // 개인 알림이거나 관리자 알림인 경우 읽음 처리
+        boolean isPersonalNotification = notification.getTargetUserId().equals(userId);
+        boolean isAdminNotification = notification.getTargetUserId().equals(0L) && 
+                                    notification.getCategory() == com.creatorworks.nexus.notification.entity.NotificationCategory.ADMIN;
+        
+        if (isPersonalNotification || isAdminNotification) {
             notification.setIsRead(true);
             notificationRepository.save(notification);
         }

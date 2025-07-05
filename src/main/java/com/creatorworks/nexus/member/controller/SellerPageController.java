@@ -1,21 +1,5 @@
 package com.creatorworks.nexus.member.controller;
 
-import com.creatorworks.nexus.member.entity.Member;
-import com.creatorworks.nexus.member.repository.MemberRepository;
-import com.creatorworks.nexus.order.dto.AgeRatioDto;
-import com.creatorworks.nexus.order.dto.GenderRatioDto;
-import com.creatorworks.nexus.order.dto.MonthlySalesDto;
-import com.creatorworks.nexus.order.repository.OrderRepository;
-import com.creatorworks.nexus.order.service.OrderService;
-import com.creatorworks.nexus.order.dto.TopSellingProductDto;
-import com.creatorworks.nexus.product.service.ProductService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -23,6 +7,25 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.creatorworks.nexus.member.constant.Role;
+import com.creatorworks.nexus.member.entity.Member;
+import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.order.dto.AgeRatioDto;
+import com.creatorworks.nexus.order.dto.GenderRatioDto;
+import com.creatorworks.nexus.order.dto.MonthlySalesDto;
+import com.creatorworks.nexus.order.dto.TopSellingProductDto;
+import com.creatorworks.nexus.order.repository.OrderRepository;
+import com.creatorworks.nexus.order.service.OrderService;
+import com.creatorworks.nexus.product.service.ProductService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Controller
@@ -41,7 +44,18 @@ public class SellerPageController {
         if (principal == null) {
             return "redirect:/login";
         }
+        
         Member seller = memberRepository.findByEmail(principal.getName());
+        if (seller == null) {
+            return "redirect:/login";
+        }
+
+        // 권한 체크: SELLER 또는 ADMIN만 접근 가능
+        if (seller.getRole() != Role.SELLER && seller.getRole() != Role.ADMIN) {
+            return "redirect:/"; // 판매자 권한이 없는 경우 메인 페이지로 리다이렉트
+        }
+
+
 
         // --- 1. 월별 판매 현황 데이터 (수정된 로직) ---
         // "11달 전의 1일" 부터 조회하여 현재 달까지 총 12개월을 포함시킴

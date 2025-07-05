@@ -1,5 +1,7 @@
 package com.creatorworks.nexus.member.controller;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -7,8 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.creatorworks.nexus.member.dto.OAuthAttributesDto;
 import com.creatorworks.nexus.member.dto.SessionMemberFormDto;
+import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.member.service.SocialMemberService;
 
 import jakarta.servlet.http.HttpSession;
@@ -20,25 +22,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SocialMemberController {
     private final SocialMemberService socialMemberService;
+    private final MemberRepository memberRepository;
     private final HttpSession httpSession;
 
     @GetMapping("/addInfo")
-    public String socialMemberForm(Model model) {
-        // 세션에서 추가 정보 입력 필요 여부 확인
+    public String socialMemberForm(Model model, @AuthenticationPrincipal OAuth2User oauthUser) {
         Boolean needsAdditionalInfo = (Boolean) httpSession.getAttribute("needsAdditionalInfo");
-        OAuthAttributesDto attributes = (OAuthAttributesDto)httpSession.getAttribute("temp_oauth_attributes");
-        if (needsAdditionalInfo == null || !needsAdditionalInfo) {
-            // 추가 정보가 필요하지 않으면 메인 페이지로 리다이렉트
+        if (needsAdditionalInfo == null || !needsAdditionalInfo || oauthUser == null) {
             return "redirect:/";
         }
-        SessionMemberFormDto formDto = new SessionMemberFormDto();
-        if (attributes != null && attributes.getName() != null) {
-            // 소셜 서비스에서 이름을 받아왔다면, 폼 DTO의 기본값으로 설정
-            formDto.setName(attributes.getName());
-        }
 
-        // formDto를 모델에 추가
-        model.addAttribute("sessionMemberFormDto", formDto);
+        model.addAttribute("sessionMemberFormDto", new SessionMemberFormDto());
         return "member/socialMemberForm";
     }
     

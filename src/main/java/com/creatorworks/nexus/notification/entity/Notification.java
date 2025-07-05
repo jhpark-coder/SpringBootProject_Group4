@@ -1,8 +1,20 @@
 package com.creatorworks.nexus.notification.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
@@ -42,5 +54,20 @@ public class Notification { // 알림 데이터
 
     public void setIsRead(Boolean isRead) {
         this.isRead = isRead;
+    }
+
+    @Override
+    public String toString() {
+        return "Notification{" +
+                "id=" + id +
+                ", senderUserId=" + senderUserId +
+                ", targetUserId=" + targetUserId +
+                ", message='" + message + '\'' +
+                ", category=" + category +
+                ", type='" + type + '\'' +
+                ", isRead=" + isRead +
+                ", link='" + link + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
     }
 } 

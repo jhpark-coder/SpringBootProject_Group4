@@ -29,9 +29,13 @@
                     <ul>
                         <li><a href="#">Auction</a></li>
                         <li sec:authorize="isAuthenticated()"><a href="/User/my-page">MyPage</a></li>
-                        <li sec:authorize="hasRole('ROLE_USER') and !hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')"><a th:href="@{/members/seller-register}">Register</a></li>
-                        <li sec:authorize="hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')"><a href="/seller/dashboard">SellerPage</a></li>
-                        <li sec:authorize="hasRole('ROLE_ADMIN')"><a href="/admin/seller-management">SellerManagement</a></li>
+                        <li sec:authorize="hasRole('ROLE_USER') and !hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')">
+                            <a th:href="@{/members/seller-register}">Register</a>
+                        </li>
+                        <li sec:authorize="hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')"><a
+                                href="/seller/dashboard">SellerPage</a></li>
+                        <li sec:authorize="hasRole('ROLE_ADMIN')"><a
+                                href="/admin/seller-management">SellerManagement</a></li>
                         <li sec:authorize="isAnonymous()">
                             <a href="/members/login">Login</a>
                         </li>
@@ -43,20 +47,33 @@
 
                 <!-- 3. 사용자 액션 영역 (로그인한 사용자만) -->
                 <div class="user-actions" sec:authorize="isAuthenticated()">
-                    <a href="#" id="notification-bell-anchor" class="points-button">
+                    <!-- 포인트 버튼 -->
+                    <a href="/my-page/points" class="points-button">
                         <span>보유한 포인트 : 1000</span>
-                        <!-- SVG의 종 아이콘 부분 추출 -->
-                        <div class="bell-container" th:data-user-id="${#authentication.principal.id}" th:if="${#authentication.principal != null}">
+                    </a>
+                    <!-- 알림 아이콘 컨테이너 -->
+                    <div class="bell-container" th:data-user-id="${#authentication.principal.id}">
+                        <a href="#" id="notification-bell-anchor" class="notification-icon-wrapper">
                             <svg class="bell-icon" viewBox="0 0 25 27" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path
                                     d="M24.31 25.3333C24.07 25.7374 23.74 26.0728 23.33 26.306C22.93 26.5392 22.47 26.6619 22 26.6619C21.53 26.6619 21.07 26.5392 20.67 26.306C20.26 26.0728 19.93 25.7374 19.69 25.3333M20 8.00001C20 5.87827 19.16 3.84345 17.66 2.34315C16.16 0.842854 14.12 0 12 0C9.88001 0 7.84001 0.842854 6.34001 2.34315C4.84001 3.84345 4.00001 5.87827 4.00001 8.00001C4.00001 17.3333 0 20 0 20H24C24 20 20 17.3333 20 8.00001Z"
                                     stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                             <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
+                        </a>
+                        <!-- 알림 모달은 bell-container 내부에 위치 -->
+                        <div id="notificationModal" class="notification-modal" style="display: none;">
+                            <!-- 모달 헤더 -->
+                            <div class="notification-modal-header">
+                                <span>알림</span>
+                                <button id="markAllReadBtn" class="mark-all-read-btn">전체 읽음</button>
+                            </div>
+                            <!-- 알림 목록이 표시될 영역 -->
+                            <div class="notification-modal-list" id="notificationList">
+                                <!-- notification-list.js가 이 안에 내용을 채웁니다. -->
+                            </div>
                         </div>
-                    </a>
-                    <!-- 알림 모달 컨테이너: 종 아이콘 바로 아래에 위치 -->
-                    <div id="notificationModal" class="notification-modal" style="display: none;"></div>
+                    </div>
                 </div>
             </div>
         </div>

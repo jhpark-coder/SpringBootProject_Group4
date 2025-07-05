@@ -2,6 +2,7 @@ package com.creatorworks.nexus.member.dto;
 
 import java.io.Serializable;
 
+import com.creatorworks.nexus.member.entity.Member;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -22,5 +23,13 @@ public class SessionMemberFormDto implements Serializable{
     private String birthMonth;    // 생월
     @NotEmpty(message = "생일은 필수 입력 값입니다.")
     private String birthDay;      // 생일
-    
+    private String email;
+
+    public SessionMemberFormDto() {
+
+    }
+    public SessionMemberFormDto(Member member) {
+        this.name = member.getName();
+        this.email = member.getEmail();
+    }
 }

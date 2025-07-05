@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{fragment/layout}">
+    layout:decorate="~{fragment/layout}">
 
 <head>
     <th:block layout:fragment="css">
@@ -11,19 +11,22 @@
                 padding: 2rem;
                 background-color: #fff;
                 border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 text-align: center;
             }
+
             .register-container h1 {
                 font-size: 2rem;
                 margin-bottom: 1rem;
             }
+
             .register-container p {
                 font-size: 1.1rem;
                 color: #555;
                 margin-bottom: 2rem;
                 line-height: 1.6;
             }
+
             .apply-btn {
                 background-color: #007bff;
                 color: white;
@@ -35,9 +38,17 @@
                 cursor: pointer;
                 transition: background-color 0.3s;
             }
-            .apply-btn:hover {
+
+            .apply-btn:hover:not(:disabled) {
                 background-color: #0056b3;
             }
+
+            .apply-btn:disabled {
+                background-color: #6c757d;
+                cursor: not-allowed;
+                opacity: 0.6;
+            }
+
             .popup-overlay {
                 display: none;
                 position: fixed;
@@ -50,6 +61,7 @@
                 align-items: center;
                 z-index: 999;
             }
+
             .popup-container {
                 background-color: #ffffff;
                 padding: 40px;
@@ -59,6 +71,7 @@
                 max-width: 400px;
                 width: 90%;
             }
+
             .popup-message {
                 font-size: 1.1rem;
                 font-weight: 500;
@@ -67,6 +80,7 @@
                 margin-bottom: 30px;
                 line-height: 1.6;
             }
+
             .popup-button {
                 background-color: #007bff;
                 color: #ffffff;
@@ -78,9 +92,11 @@
                 cursor: pointer;
                 transition: background-color 0.2s ease-in-out;
             }
+
             .popup-button:hover {
                 background-color: #0056b3;
             }
+
             .popup-overlay.show {
                 display: flex;
             }
@@ -90,59 +106,74 @@
 </head>
 
 <body>
-<div layout:fragment="content">
-    <div class="register-container">
-        <h1>작가 등록하고 당신의 재능을 판매하세요!</h1>
-        <p>
-            Nexus에서는 창의적인 디자인, 아트워크, 그리고 견고한 프로그래밍 코드까지<br>
-            다양한 디지털 창작물을 판매할 수 있는 공간을 제공합니다.<br>
-            지금 바로 작가로 등록하여 전 세계의 사용자들과 당신의 작품을 공유하고 수익을 창출하세요.
-        </p>
-        <button id="sellerApplyBtn" class="apply-btn">작가 신청하기</button>
-    </div>
+    <div layout:fragment="content">
+        <div class="register-container">
+            <h1>작가 등록하고 당신의 재능을 판매하세요!</h1>
+            <p>
+                Nexus에서는 창의적인 디자인, 아트워크, 그리고 견고한 프로그래밍 코드까지<br>
+                다양한 디지털 창작물을 판매할 수 있는 공간을 제공합니다.<br>
+                지금 바로 작가로 등록하여 전 세계의 사용자들과 당신의 작품을 공유하고 수익을 창출하세요.
+            </p>
+            <button id="sellerApplyBtn" class="apply-btn">작가 신청하기</button>
+        </div>
 
-    <!-- 팝업 오버레이 -->
-    <div id="popupOverlay" class="popup-overlay">
-        <div class="popup-container">
-            <p id="popupMessage" class="popup-message"></p>
-            <button class="popup-button" onclick="closePopup()">확인</button>
+        <!-- 팝업 오버레이 -->
+        <div id="popupOverlay" class="popup-overlay">
+            <div class="popup-container">
+                <p id="popupMessage" class="popup-message"></p>
+                <button class="popup-button" onclick="closePopup()">확인</button>
+            </div>
         </div>
     </div>
-</div>
 
-<th:block layout:fragment="script">
-    <script>
-        $(document).ready(function() {
-            // 작가 신청 버튼 클릭 이벤트
-            $("#sellerApplyBtn").on("click", function(e) {
-                e.preventDefault();
+    <th:block layout:fragment="script">
+        <script>
+            $(document).ready(function () {
+                // 작가 신청 버튼 클릭 이벤트
+                $("#sellerApplyBtn").on("click", function (e) {
+                    e.preventDefault();
 
-                $.ajax({
-                    url: "/seller-request/apply",
-                    type: "POST",
-                    success: function(response) {
-                        showPopup(response);
-                    },
-                    error: function(xhr) {
-                        var errorMessage = xhr.responseText || "작가 신청 중 오류가 발생했습니다.";
-                        showPopup(errorMessage);
+                    // 중복 클릭 방지
+                    if ($(this).prop('disabled')) {
+                        return;
                     }
+
+                    // 버튼 비활성화 및 텍스트 변경
+                    $(this).prop('disabled', true).text('신청 중...');
+
+                    $.ajax({
+                        url: "/seller-request/apply",
+                        type: "POST",
+                        success: function (response) {
+                            showPopup(response);
+                        },
+                        error: function (xhr) {
+                            var errorMessage = xhr.responseText || "작가 신청 중 오류가 발생했습니다.";
+                            showPopup(errorMessage);
+                        },
+                        complete: function () {
+                            // 요청 완료 후 버튼 다시 활성화
+                            setTimeout(function () {
+                                $("#sellerApplyBtn").prop('disabled', false).text('작가 신청하기');
+                            }, 2000); // 2초 후 재활성화
+                        }
+                    });
                 });
+
+                // 팝업 표시 함수
+                function showPopup(message) {
+                    $("#popupMessage").text(message);
+                    $("#popupOverlay").addClass("show");
+                }
+
+                // 팝업 닫기 함수
+                window.closePopup = function () {
+                    $("#popupOverlay").removeClass("show");
+                };
             });
-
-            // 팝업 표시 함수
-            function showPopup(message) {
-                $("#popupMessage").text(message);
-                $("#popupOverlay").addClass("show");
-            }
-
-            // 팝업 닫기 함수
-            window.closePopup = function() {
-                $("#popupOverlay").removeClass("show");
-            };
-        });
-    </script>
-</th:block>
+        </script>
+    </th:block>
 
 </body>
-</html> 
+
+</html>
