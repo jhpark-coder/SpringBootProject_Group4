@@ -2,19 +2,44 @@
 class NotificationList {
     constructor() {
         this.notifications = [];
-        this.init();
+        this.csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
+        this.csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+        this.init(); // init 호출을 다시 활성화
     }
 
+    // init 메서드를 다시 활성화하여 '전체 읽음' 버튼 이벤트를 연결
     init() {
-        this.loadNotifications();
-        this.createNotificationModal();
-        // 전체 읽음 버튼 이벤트 연결
-        document.addEventListener('click', (e) => {
-            if (e.target && e.target.id === 'markAllReadBtn') {
+        // '전체 읽음' 버튼에 대한 이벤트 리스너
+        const markAllReadBtn = document.getElementById('markAllReadBtn');
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 this.markAllAsRead();
-            }
-        });
+            });
+        }
     }
+
+    // createNotificationModal 메서드도 더 이상 필요하지 않습니다.
+    /*
+    createNotificationModal() {
+        // 알림 목록 모달 HTML 생성 (카테고리 탭 없는 버전)
+        const modalHTML = `
+            <div id="notificationModal" class="notification-modal" style="display: none;">
+                <div class="notification-modal-header">
+                    <span>알림</span>
+                    <button id="markAllReadBtn" class="mark-all-read-btn">전체 읽음</button>
+                </div>
+                <div class="notification-modal-list" id="notificationList"></div>
+            </div>
+        `;
+
+        // 종 아이콘(.bell-container)의 자식으로 모달 삽입
+        const bellContainer = document.querySelector('.bell-container');
+        if (bellContainer) {
+            bellContainer.insertAdjacentHTML('beforeend', modalHTML);
+        }
+    }
+    */
 
     async loadNotifications() {
         try {
@@ -36,25 +61,6 @@ class NotificationList {
         }
     }
 
-    createNotificationModal() {
-        // 알림 목록 모달 HTML 생성
-        const modalHTML = `
-            <div id="notificationModal" class="notification-modal" style="display: none;">
-                <div class="notification-modal-header">
-                    <span>알림</span>
-                    <button id="markAllReadBtn" class="mark-all-read-btn">전체 읽음</button>
-                </div>
-                <div class="notification-modal-list" id="notificationList"></div>
-            </div>
-        `;
-
-        // 종 아이콘(.bell-container) 바로 뒤에 모달 삽입
-        const bellContainer = document.querySelector('.bell-container');
-        if (bellContainer) {
-            bellContainer.insertAdjacentHTML('afterend', modalHTML);
-        }
-    }
-
     updateNotificationList() {
         const notificationList = document.getElementById('notificationList');
         if (!notificationList) return;
@@ -72,7 +78,7 @@ class NotificationList {
 
             return `
                 <div class="notification-item ${isUnread ? 'unread' : ''}" 
-                     onclick="notificationList.handleNotificationClick(${notification.id}, '${notification.link}')">
+                     onclick="notificationList.handleNotificationClick(${notification.id}, '${notification.link}', '${notification.type}')">
                     <div class="notification-message">${notification.message}</div>
                     <div class="notification-time">
                         ${timeAgo}
@@ -85,75 +91,148 @@ class NotificationList {
         notificationList.innerHTML = notificationsHTML;
     }
 
+    getTimeAgo(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+
+        if (days > 7) {
+            return date.toLocaleDateString();
+        } else if (days > 0) {
+            return `${days}일 전`;
+        } else if (hours > 0) {
+            return `${hours}시간 전`;
+        } else if (minutes > 0) {
+            return `${minutes}분 전`;
+        } else {
+            return '방금 전';
+        }
+    }
+
     getTypeClass(type) {
         switch (type) {
-            case 'seller_approved': return 'seller_approved';
-            case 'seller_rejected': return 'seller_rejected';
-            case 'seller_request_received': return 'seller_request_received';
-            default: return '';
+            case 'follow': return 'type-follow';
+            case 'like': return 'type-like';
+            case 'comment': return 'type-comment';
+            case 'seller_request_received':
+            case 'seller_request_submitted':
+            case 'seller_approved':
+            case 'seller_rejected':
+                return 'type-seller';
+            default: return 'type-default';
         }
     }
 
     getTypeText(type) {
         switch (type) {
+            case 'follow': return '팔로우';
+            case 'like': return '좋아요';
+            case 'comment': return '댓글';
+            case 'seller_request_received': return '작가신청';
+            case 'seller_request_submitted': return '작가신청';
             case 'seller_approved': return '승인';
             case 'seller_rejected': return '거절';
-            case 'seller_request_received': return '신청';
-            default: return type;
+            default: return '알림';
         }
-    }
-
-    getTimeAgo(createdAt) {
-        const now = new Date();
-        const created = new Date(createdAt);
-        const diffMs = now - created;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-
-        if (diffMins < 1) return '방금 전';
-        if (diffMins < 60) return `${diffMins}분 전`;
-        if (diffHours < 24) return `${diffHours}시간 전`;
-        return `${diffDays}일 전`;
-    }
-
-    handleNotificationClick(notificationId, link) {
-        // 알림 읽음 처리
-        this.markAsRead(notificationId);
-        
-        // 링크로 이동
-        if (link) {
-            window.location.href = link;
-        }
-        
-        this.closeModal();
     }
 
     async markAsRead(notificationId) {
         try {
-            await fetch(`/api/notifications/${notificationId}/read`, {
+            const headers = { 'Content-Type': 'application/json' };
+            if (this.csrfToken && this.csrfHeader) {
+                headers[this.csrfHeader] = this.csrfToken;
+            }
+
+            const response = await fetch(`/api/notifications/${notificationId}/read`, {
                 method: 'POST',
                 credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+                headers: headers
             });
-            
-            // 알림 배지 업데이트
-            if (window.notificationBadge) {
-                window.notificationBadge.decrementBadge();
+
+            if (response.ok) {
+                const notification = this.notifications.find(n => n.id === notificationId);
+                if (notification) {
+                    notification.isRead = true;
+                    this.updateNotificationList();
+                    if (window.notificationBadge) window.notificationBadge.decrementBadge();
+                }
+                return true; // 성공 시 true 반환
+            } else {
+                console.error('알림 읽음 처리 서버 응답 오류:', response.status);
+                return false; // 실패 시 false 반환
             }
         } catch (error) {
             console.error('알림 읽음 처리 실패:', error);
+            return false; // 실패 시 false 반환
+        }
+    }
+
+    async markAllAsRead() {
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (this.csrfToken && this.csrfHeader) {
+                headers[this.csrfHeader] = this.csrfToken;
+            }
+
+            await fetch('/api/notifications/read-all', {
+                method: 'POST',
+                credentials: 'include',
+                headers: headers
+            });
+            this.notifications.forEach(n => n.isRead = true);
+            this.updateNotificationList();
+            if (window.notificationBadge) window.notificationBadge.updateBadge(0);
+        } catch (error) {
+            console.error('전체 읽음 처리 실패:', error);
+        }
+    }
+
+    async handleNotificationClick(notificationId, link, type) {
+        // '작가 승인' 알림에 대한 특별 처리
+        if (type === 'seller_approved') {
+            const isSuccess = await this.markAsRead(notificationId);
+            if (isSuccess) {
+                // 로그아웃 후 로그인 페이지로 이동하라는 정보를 세션 스토리지에 저장
+                sessionStorage.setItem('post_logout_redirect', '/members/login');
+                sessionStorage.setItem('post_logout_message', '작가 등급이 승인되었습니다. 변경된 권한을 적용하기 위해 다시 로그인해주세요.');
+                window.location.href = '/members/logout';
+            }
+            return; // 페이지 이동을 막기 위해 여기서 함수 종료
+        }
+
+        // 서버가 읽음 처리를 성공적으로 완료했는지 확인합니다.
+        const isSuccess = await this.markAsRead(notificationId);
+
+        // 성공한 경우에만 페이지를 이동합니다.
+        if (isSuccess && link) {
+            window.location.href = link;
+        }
+
+        // 모달은 성공 여부와 관계없이 닫습니다.
+        this.closeModal();
+    }
+
+    toggleModal() {
+        console.log('🔔 notificationList.toggleModal() 호출됨');
+        const modal = document.getElementById('notificationModal');
+        if (modal) {
+            const isModalOpen = modal.style.display === 'flex';
+            if (isModalOpen) {
+                this.closeModal();
+            } else {
+                this.openModal();
+            }
         }
     }
 
     openModal() {
         const modal = document.getElementById('notificationModal');
         if (modal) {
-            modal.style.display = 'block';
-            this.loadNotifications(); // 모달 열 때 최신 알림 로드
-            // 모달 외부 클릭 시 닫기
+            modal.style.display = 'flex';
+            this.loadNotifications();
             setTimeout(() => {
                 document.addEventListener('mousedown', this.handleOutsideClick);
             }, 0);
@@ -168,40 +247,15 @@ class NotificationList {
         }
     }
 
-    handleOutsideClick = (event) => {
+    handleOutsideClick = (e) => {
         const modal = document.getElementById('notificationModal');
-        if (modal && !modal.contains(event.target)) {
+        const bellContainer = document.querySelector('.bell-container');
+        // bell-container나 그 자식 요소를 클릭한 경우는 무시
+        if (modal && !modal.contains(e.target) && bellContainer && !bellContainer.contains(e.target)) {
             this.closeModal();
-        }
-    }
-
-    async markAllAsRead() {
-        try {
-            await fetch('/api/notifications/read-all', {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            // 모든 알림을 읽음 처리
-            this.notifications.forEach(n => n.isRead = true);
-            this.updateNotificationList();
-            if (window.notificationBadge) window.notificationBadge.updateBadge(0);
-        } catch (error) {
-            console.error('전체 읽음 처리 실패:', error);
         }
     }
 }
 
 // 전역 변수로 설정
 window.notificationList = new NotificationList();
-
-// 헤더의 알림 벨 클릭 이벤트
-document.addEventListener('DOMContentLoaded', function() {
-    const bellContainer = document.querySelector('.bell-container');
-    if (bellContainer) {
-        bellContainer.addEventListener('click', function(e) {
-            e.preventDefault();
-            window.notificationList.openModal();
-        });
-    }
-}); 

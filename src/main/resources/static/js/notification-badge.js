@@ -1,9 +1,12 @@
 // 알림 배지 관리
 class NotificationBadge {
-    constructor() {
-        this.badge = document.getElementById('notification-badge');
+    constructor(badge) {
+        this.badge = badge;
         this.socket = null;
         this.initialized = false;
+        this.processedNotifications = new Set(); // 처리된 알림 ID 저장
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 3;
         // DOMContentLoaded 이후에 초기화
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.init());
@@ -14,26 +17,41 @@ class NotificationBadge {
 
     init() {
         if (this.badge && !this.initialized) {
+            console.log('🔔 NotificationBadge 초기화 시작');
+            console.log('🔔 배지 요소:', this.badge);
+
             try {
                 const bellContainer = document.querySelector('.bell-container');
                 const userId = bellContainer ? parseInt(bellContainer.dataset.userId) : null;
 
+                console.log('🔔 벨 컨테이너:', bellContainer);
+                console.log('🔔 사용자 ID:', userId);
+
                 if (!userId) {
-                    console.warn('사용자 ID를 찾을 수 없습니다.');
+                    console.warn('⚠️ 사용자 ID를 찾을 수 없습니다.');
                     return;
+                }
+
+                // 기존 연결이 있다면 해제
+                if (this.socket) {
+                    console.log('🔔 기존 WebSocket 연결 해제');
+                    this.socket.disconnect();
+                    this.socket = null;
                 }
 
                 // Socket.IO가 로드될 때까지 대기
                 const initSocket = () => {
                     if (typeof io !== 'undefined') {
+                        console.log('🔔 Socket.IO 초기화 시작');
                         // Socket.IO 연결 설정
                         this.socket = io('http://localhost:3000', {
                             withCredentials: true,
-                            transports: ['websocket'],
+                            transports: ['websocket', 'polling'], // fallback 추가
                             autoConnect: true,
-                            reconnection: true,
-                            reconnectionAttempts: 5,
-                            reconnectionDelay: 1000,
+                            reconnection: true, // 자동 재연결 활성화
+                            reconnectionAttempts: 5, // 최대 5회 재시도
+                            reconnectionDelay: 2000, // 재연결 간격 2초
+                            timeout: 10000, // 연결 타임아웃 10초
                             auth: {
                                 userId: userId,
                                 roles: window.currentUser ? window.currentUser.roles : []
@@ -42,12 +60,13 @@ class NotificationBadge {
 
                         // 연결 이벤트 핸들러
                         this.socket.on('connect', () => {
-                            console.log('WebSocket 연결 성공');
+                            console.log('✅ WebSocket 연결 성공 - 연결 ID:', this.socket.id);
                             this.initialized = true;
-                            // 초기 알림 목록 및 개수 요청
-                            this.socket.emit('findAllNotifications');
-                            
-                            // 'notifications' 이벤트 핸들러를 연결 성공 시점에 등록
+                            this.reconnectAttempts = 0;
+                            // 초기 알림 개수를 Spring Boot API에서 직접 가져오기
+                            this.loadNotificationCount();
+
+                            // WebSocket은 실시간 알림만 처리
                             this.socket.on('notifications', (data) => {
                                 if (window.notificationBadge) {
                                     window.notificationBadge.handleAllNotifications(data);
@@ -56,15 +75,25 @@ class NotificationBadge {
                         });
 
                         // 연결 해제 이벤트 핸들러
-                        this.socket.on('disconnect', () => {
-                            console.log('WebSocket 연결 해제');
+                        this.socket.on('disconnect', (reason) => {
+                            console.log('🔔 WebSocket 연결 해제:', reason);
                             this.initialized = false;
+
+                            // 자동 재연결 시도 (최대 3회)
+                            if (this.reconnectAttempts < this.maxReconnectAttempts && reason !== 'io client disconnect') {
+                                this.reconnectAttempts++;
+                                console.log(`🔔 재연결 시도 ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+                                setTimeout(() => {
+                                    if (!this.socket.connected) {
+                                        this.socket.connect();
+                                    }
+                                }, 2000 * this.reconnectAttempts); // 재연결 간격 증가
+                            }
                         });
 
-                        // 연결 에러 이벤트 핸들러
+                        // 연결 오류 이벤트 핸들러
                         this.socket.on('connect_error', (error) => {
-                            console.error('WebSocket 연결 에러:', error);
-                            this.initialized = false;
+                            console.error('❌ WebSocket 연결 오류:', error);
                         });
 
                         // 재연결 시도 이벤트 핸들러
@@ -85,48 +114,118 @@ class NotificationBadge {
 
                         // 새 알림 수신 이벤트 핸들러
                         this.socket.on('newNotification', (notification) => {
-                            this.incrementBadge();
+                            console.log('🔔 새 알림 수신:', notification);
+
+                            // 알림 고유 식별자 생성 (ID + 시간 + 내용으로 중복 방지)
+                            const notificationKey = `${notification.id || 'unknown'}_${notification.message || ''}_${notification.createdAt || Date.now()}`;
+
+                            // 이미 처리된 알림인지 확인
+                            if (this.processedNotifications.has(notificationKey)) {
+                                console.log('🔔 이미 처리된 알림입니다. 무시합니다:', notificationKey);
+                                return;
+                            }
+
+                            // 처리된 알림으로 마크
+                            this.processedNotifications.add(notificationKey);
+
+                            // 오래된 처리 기록 정리 (메모리 절약)
+                            if (this.processedNotifications.size > 100) {
+                                const oldKeys = Array.from(this.processedNotifications).slice(0, 50);
+                                oldKeys.forEach(key => this.processedNotifications.delete(key));
+                            }
+
                             this.showNotificationToast(notification);
-                            // 새 알림 수신 시 전체 목록을 다시 요청
-                            this.socket.emit('findAllNotifications');
+
+                            // 현재 사용자가 해당 알림을 볼 수 있는지 확인
+                            const canViewNotification = this.canUserViewNotification(notification);
+                            console.log('🔔 알림 표시 가능 여부:', canViewNotification);
+
+                            if (canViewNotification) {
+                                // 배지 숫자 즉시 증가
+                                console.log('🔔 배지 숫자 증가 시도...');
+                                this.incrementBadge();
+                            } else {
+                                console.log('🔔 현재 사용자가 볼 수 없는 알림이므로 배지 증가 안함');
+                            }
+
+                            // 알림 모달이 열려있다면 목록도 다시 로드
+                            const modal = document.getElementById('notificationModal');
+                            if (modal && modal.style.display === 'flex') {
+                                if (window.notificationList && typeof window.notificationList.loadNotifications === 'function') {
+                                    window.notificationList.loadNotifications();
+                                } else {
+                                    console.error('❌ notificationList.loadNotifications 함수를 찾을 수 없습니다!');
+                                }
+                            }
                         });
+
+                        // 초기 연결 시도
+                        this.socket.connect();
                     } else {
-                        // Socket.IO가 아직 로드되지 않았다면 100ms 후에 다시 시도
-                        setTimeout(initSocket, 100);
+                        console.warn('⚠️ Socket.IO 라이브러리를 찾을 수 없습니다. 1초 후 재시도...');
+                        setTimeout(initSocket, 1000);
                     }
                 };
 
                 // Socket.IO 초기화 시작
                 initSocket();
             } catch (error) {
-                console.error('WebSocket 초기화 실패:', error);
+                console.error('❌ NotificationBadge 초기화 중 오류:', error);
             }
         }
     }
 
     updateBadge(count) {
-        if (!this.badge) return;
+        console.log('🔔 updateBadge 호출 - count:', count, 'badge 요소:', this.badge);
+        if (!this.badge) {
+            console.error('❌ 배지 요소를 찾을 수 없습니다!');
+            return;
+        }
 
         if (count > 0) {
             this.badge.textContent = count > 99 ? '99+' : count.toString();
             this.badge.style.display = 'flex';
+            console.log('✅ 배지 표시 - 개수:', this.badge.textContent);
         } else {
             this.badge.style.display = 'none';
+            console.log('✅ 배지 숨김');
         }
     }
 
-    // 실시간 알림 수신 시 배지 업데이트
-    incrementBadge() {
-        if (!this.badge) return;
+    // Spring Boot API에서 알림 개수 로드
+    async loadNotificationCount() {
+        console.log('🔔 알림 개수 로드 시작...');
+        try {
+            const response = await fetch('/api/notifications/count', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('✅ 알림 개수 로드 성공:', data);
+            this.updateBadge(data.count);
+        } catch (error) {
+            console.error('❌ 알림 개수 로드 실패:', error);
+        }
+    }
+
+    // 배지 숫자 증가
+    incrementBadge() {
+        console.log('🔔 배지 숫자 증가 시도...');
         const currentCount = parseInt(this.badge.textContent) || 0;
         this.updateBadge(currentCount + 1);
     }
 
-    // 알림 읽음 처리 시 배지 감소
+    // 배지 숫자 감소
     decrementBadge() {
-        if (!this.badge) return;
-
+        console.log('🔔 배지 숫자 감소 시도...');
         const currentCount = parseInt(this.badge.textContent) || 0;
         if (currentCount > 0) {
             this.updateBadge(currentCount - 1);
@@ -135,24 +234,43 @@ class NotificationBadge {
 
     // 토스트 알림 표시
     showNotificationToast(notification) {
+        console.log('🍞 토스트 알림 표시:', notification);
+
+        const toastContainer = document.body;
+        const existingToasts = toastContainer.querySelectorAll('.notification-toast');
+
         const toast = document.createElement('div');
         toast.className = 'notification-toast';
+
+        // 동적으로 top 위치 설정
+        toast.style.top = `${20 + (existingToasts.length * 85)}px`;
+
         toast.innerHTML = `
-            <div class="notification-toast-content">
-                <div class="notification-toast-title">${notification.title || '새 알림'}</div>
-                <div class="notification-toast-message">${notification.message}</div>
-            </div>
+            <div class="notification-toast-title">🔔 새 알림</div>
+            <div class="notification-toast-message">${notification.message || '알림이 도착했습니다.'}</div>
         `;
 
-        document.body.appendChild(toast);
+        toastContainer.appendChild(toast);
+        console.log('🍞 토스트 DOM에 추가됨');
 
-        // 3초 후 토스트 제거
+        // 등장 애니메이션
         setTimeout(() => {
-            toast.classList.add('fade-out');
-            setTimeout(() => {
-                document.body.removeChild(toast);
-            }, 300);
-        }, 3000);
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(0)';
+        }, 100);
+
+        // 5초 후 자동 사라짐
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            toast.addEventListener('transitionend', () => {
+                toast.remove();
+                // 다른 토스트들 위치 재조정
+                toastContainer.querySelectorAll('.notification-toast').forEach((t, index) => {
+                    t.style.top = `${20 + (index * 85)}px`;
+                });
+            });
+        }, 5000);
     }
 
     destroy() {
@@ -184,218 +302,203 @@ class NotificationBadge {
             window.setAllNotifications(data.notifications || []);
         }
     }
+
+    // 현재 사용자가 해당 알림을 볼 수 있는지 확인
+    canUserViewNotification(notification) {
+        console.log('🔔 알림 권한 확인:', notification);
+
+        // 현재 사용자 정보 확인 (DOM에서 가져오기)
+        if (typeof window.currentUser === 'undefined' || !window.currentUser) {
+            // DOM에서 사용자 정보 가져오기
+            const bellContainer = document.querySelector('.bell-container');
+            const currentUserId = bellContainer ? bellContainer.getAttribute('data-user-id') : null;
+
+            if (!currentUserId) {
+                console.warn('⚠️ 현재 사용자 정보를 찾을 수 없습니다.');
+                return true; // 사용자 정보가 없으면 모든 알림 허용 (안전한 기본값)
+            }
+
+            // 임시로 사용자 정보 설정
+            window.currentUser = {
+                id: currentUserId,
+                roles: [] // 역할은 서버에서 확인
+            };
+        }
+
+        const userRoles = window.currentUser.roles || [];
+        const currentUserId = window.currentUser.id;
+        console.log('🔔 사용자 권한:', userRoles, '사용자 ID:', currentUserId);
+
+        // 관리자 권한 확인
+        const isAdmin = userRoles.includes('ROLE_ADMIN');
+        const isSeller = userRoles.includes('ROLE_SELLER');
+        console.log('🔔 관리자 여부:', isAdmin, '판매자 여부:', isSeller);
+
+        // 알림 타입에 따른 접근 권한 확인
+        switch (notification.category) {
+            case 'ADMIN':
+                // 관리자 알림은 관리자만 볼 수 있지만, 신청자용 알림은 해당 사용자도 볼 수 있음
+                console.log('🔔 관리자 알림 - 권한 체크');
+                const targetUserId = notification.userId || notification.targetUserId;
+                const isTargetUser = targetUserId === currentUserId;
+                const isAdminNotification = targetUserId === 0;
+
+                console.log('🔔 ADMIN 알림 상세:', {
+                    targetUserId: targetUserId,
+                    currentUserId: currentUserId,
+                    isTargetUser: isTargetUser,
+                    isAdminNotification: isAdminNotification,
+                    isAdmin: isAdmin
+                });
+
+                // 관리자이거나 해당 사용자에게 오는 ADMIN 알림인 경우 표시
+                return isAdmin || isTargetUser;
+            case 'SELLER':
+                // 판매자 알림은 판매자 이상 권한이 필요
+                console.log('🔔 판매자 알림 - 판매자 권한 필요');
+                return isSeller || isAdmin;
+            case 'AUCTION':
+            case 'ORDER':
+            case 'SOCIAL':
+            default:
+                // 일반 알림은 해당 사용자 또는 관리자가 볼 수 있음
+                const generalTargetUserId = notification.userId || notification.targetUserId;
+                const isGeneralTargetUser = generalTargetUserId === currentUserId;
+                const isPublicNotification = generalTargetUserId === 0;
+                console.log('🔔 일반 알림 - 대상 사용자 ID:', generalTargetUserId, '현재 사용자 ID:', currentUserId, '대상 일치:', isGeneralTargetUser, '공개 알림:', isPublicNotification);
+                return isGeneralTargetUser || isPublicNotification || isAdmin;
+        }
+    }
+
+    // 연결 해제 메서드
+    disconnect() {
+        if (this.socket) {
+            console.log('🔔 WebSocket 연결 해제 중...');
+            this.socket.disconnect();
+            this.socket = null;
+            this.initialized = false;
+            this.processedNotifications.clear();
+        }
+    }
 }
 
-// 페이지 로드 시 알림 배지 초기화
-document.addEventListener('DOMContentLoaded', function() {
-    window.notificationBadge = new NotificationBadge();
+// 전역 변수로 설정
+let notificationBadge = null;
 
-    const notificationBell = document.getElementById('notification-bell-anchor');
-    const notificationModal = document.getElementById('notificationModal');
-    let allNotifications = []; // 모든 알림을 저장할 배열
-    let currentCategory = 'ALL'; // 현재 선택된 카테고리
+// DOM이 완전히 로드된 후 초기화
+document.addEventListener('DOMContentLoaded', function () {
+    // 로그인한 사용자일 경우에만 알림 관련 모든 기능을 초기화합니다.
+    if (window.currentUser && window.currentUser.id) {
+        console.log('🔔 로그인 상태 확인됨 - NotificationBadge 초기화 시작');
 
-    // NotificationBadge 클래스에서 호출될 수 있도록 전역 함수로 정의
-    window.setAllNotifications = (notifications) => {
-        allNotifications = notifications;
-        renderNotifications(currentCategory); // 데이터가 업데이트되면 항상 다시 렌더링
-    };
-
-    if (!notificationBell || !notificationModal) {
-        console.warn('알림 벨 또는 모달을 찾을 수 없습니다.');
-        return;
-    }
-
-    // 알림 벨 클릭 시 모달 토글
-    notificationBell.addEventListener('click', function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        const isVisible = notificationModal.style.display === 'flex';
-        notificationModal.style.display = isVisible ? 'none' : 'flex';
-        if (!isVisible) {
-            loadAndRenderNotifications();
+        // 기존 인스턴스가 있다면 해제
+        if (window.notificationBadge) {
+            console.log('🔔 기존 NotificationBadge 인스턴스 해제');
+            window.notificationBadge.disconnect();
+            window.notificationBadge = null;
         }
-    });
 
-    // 모달 외부 클릭 시 닫기
-    document.addEventListener('click', function(event) {
-        if (!notificationModal.contains(event.target) && !notificationBell.contains(event.target)) {
-            notificationModal.style.display = 'none';
-        }
-    });
-
-    // 아이콘 매핑
-    const categoryIcons = {
-        'SOCIAL': '<i class="fas fa-user-friends"></i>',
-        'AUCTION': '<i class="fas fa-gavel"></i>',
-        'ORDER': '<i class="fas fa-receipt"></i>',
-        'ADMIN': '<i class="fas fa-user-shield"></i>',
-        'DEFAULT': '<i class="fas fa-bell"></i>'
-    };
-
-    // 알림 목록 렌더링 함수
-    function renderNotifications(category = 'ALL') {
-        currentCategory = category;
-        const listContainer = notificationModal.querySelector('.notification-modal-list');
-        if (!listContainer) return;
-
-        const filteredNotifications = category === 'ALL'
-            ? allNotifications
-            : allNotifications.filter(n => n.category === category);
-
-        if (filteredNotifications.length > 0) {
-            let notificationListHtml = '';
-            filteredNotifications.forEach(notification => {
-                const icon = categoryIcons[notification.category] || categoryIcons['DEFAULT'];
-                notificationListHtml += `
-                    <div class="notification-item ${notification.isRead ? '' : 'unread'}" data-id="${notification.id}" data-link="${notification.link}">
-                        <div class="notification-item-icon"><div class="icon-placeholder">${icon}</div></div>
-                        <div class="notification-item-content">
-                            <p class="notification-item-message">${notification.message}</p>
-                            <div class="notification-item-time">${new Date(notification.createdAt).toLocaleString()}</div>
-                        </div>
-                    </div>`;
-            });
-            listContainer.innerHTML = notificationListHtml;
+        // 알림 배지 요소 확인
+        const badge = document.getElementById('notification-badge');
+        if (badge) {
+            console.log('🔔 알림 배지 요소 발견:', badge);
+            notificationBadge = new NotificationBadge(badge);
+            window.notificationBadge = notificationBadge;
         } else {
-            listContainer.innerHTML = '<p style="padding: 15px; text-align: center;">이 카테고리에는 알림이 없습니다.</p>';
+            console.warn('⚠️ 알림 배지 요소를 찾을 수 없습니다.');
         }
 
-        document.querySelectorAll('.notification-tab').forEach(tab => {
-            tab.classList.toggle('active', tab.dataset.category === category);
-        });
-    }
+        // 알림 모달 관련 초기화
+        const notificationBell = document.getElementById('notification-bell-anchor');
+        const bellContainer = document.querySelector('.bell-container');
+        const notificationModal = document.getElementById('notificationModal');
 
-    // 알림 목록 로드 및 렌더링
-    async function loadAndRenderNotifications() {
-        // Socket.IO가 연결될 때까지 대기
-        if (!window.notificationBadge || !window.notificationBadge.isConnected()) {
-            console.log('Socket 연결 대기 중... 재시도합니다.');
-            setTimeout(loadAndRenderNotifications, 500);
-            return;
-        }
+        console.log('🔔 요소 확인 - Bell:', !!notificationBell, 'Container:', !!bellContainer, 'Modal:', !!notificationModal);
 
-        // 모달의 HTML 구조를 예전 방식으로 복원
-        if (!notificationModal.querySelector('.notification-modal-header')) {
-            notificationModal.innerHTML = `
-                <div class="notification-modal-header">
-                    <h5>알림</h5>
-                    <button class="notification-settings-btn" title="모두 읽음"><i class="fas fa-check-double"></i></button>
-                </div>
-                <div class="notification-modal-tabs">
-                    <button class="notification-tab active" data-category="ALL">전체</button>
-                    <button class="notification-tab" data-category="SOCIAL">소셜</button>
-                    <button class="notification-tab" data-category="AUCTION">경매</button>
-                    <button class="notification-tab" data-category="ORDER">주문</button>
-                </div>
-                <div class="notification-modal-list"><p style="padding: 15px; text-align: center;">로딩 중...</p></div>
-            `;
-        }
+        if (notificationModal) {
+            console.log('🔔 알림 모달 초기화');
 
-        // 알림 데이터 요청
-        window.notificationBadge.safeEmit('findAllNotifications');
-    }
+            // 모달 토글 함수
+            const toggleNotificationModal = function (e) {
+                e.preventDefault();
+                e.stopPropagation();
 
-    // 이벤트 위임
-    notificationModal.addEventListener('click', async function(event) {
-        const item = event.target.closest('.notification-item');
-        const tab = event.target.closest('.notification-tab');
-        const settingsBtn = event.target.closest('.notification-settings-btn');
-
-        if (tab) {
-            // 탭 클릭 시 해당 카테고리의 알림을 다시 렌더링
-            document.querySelectorAll('.notification-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            renderNotifications(tab.dataset.category);
-            return;
-        }
-
-        if (settingsBtn) {
-            // WebSocket을 통해 모든 알림 읽음 처리 요청
-            if (window.notificationBadge && window.notificationBadge.isConnected()) {
-                window.notificationBadge.socket.emit('markAllAsRead');
-                console.log('모든 알림 읽음 처리 요청');
-            }
-            return;
-        }
-
-        if (item) {
-            const notificationId = item.dataset.id;
-            const link = item.dataset.link;
-
-            // 읽지 않은 알림만 처리
-            if (!item.classList.contains('read')) {
-                // WebSocket을 통해 알림 읽음 처리 요청
-                if (window.notificationBadge && window.notificationBadge.isConnected()) {
-                    window.notificationBadge.socket.emit('markAsRead', { notificationId: parseInt(notificationId, 10) });
-                    console.log(`알림 ${notificationId} 읽음 처리 요청`);
+                if (window.notificationList) {
+                    window.notificationList.toggleModal();
+                } else {
+                    console.error('❌ notificationList 객체를 찾을 수 없습니다!');
                 }
+            };
+
+            // 여러 요소에 클릭 이벤트 등록 (더 안정적)
+            if (notificationBell) {
+                console.log('🔔 Bell anchor에 이벤트 리스너 등록');
+                notificationBell.addEventListener('click', toggleNotificationModal);
+            } else if (bellContainer) {
+                // anchor가 없으면 container에라도 등록
+                console.log('🔔 Bell container에 이벤트 리스너 등록');
+                bellContainer.addEventListener('click', toggleNotificationModal);
             }
 
-            // 링크가 있으면 해당 페이지로 이동
-            if (link && link !== 'null') {
-                window.location.href = link;
-            }
+            // 모달 내부 클릭 시 버블링 방지
+            notificationModal.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+        } else {
+            console.error('❌ 알림 모달 요소를 찾을 수 없습니다!');
         }
-    });
+    } else {
+        console.log('🔔 비로그인 상태 - 알림 기능을 초기화하지 않습니다.');
+    }
 });
 
-// 토스트 알림 스타일 추가
-const style = document.createElement('style');
-style.textContent = `
-    .notification-toast {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        padding: 16px;
-        z-index: 9999;
-        max-width: 300px;
-        animation: slide-in 0.3s ease-out;
+// 전역 메서드 제공
+window.incrementBadge = function () {
+    if (window.notificationBadge) {
+        window.notificationBadge.incrementBadge();
+    } else {
+        console.warn('⚠️ NotificationBadge가 초기화되지 않았습니다.');
     }
+};
 
-    .notification-toast.fade-out {
-        animation: fade-out 0.3s ease-out;
+window.decrementBadge = function () {
+    if (window.notificationBadge) {
+        window.notificationBadge.decrementBadge();
+    } else {
+        console.warn('⚠️ NotificationBadge가 초기화되지 않았습니다.');
     }
+};
 
-    .notification-toast-title {
-        font-weight: bold;
-        margin-bottom: 4px;
+// 페이지가 포커스를 받았을 때 알림 개수 갱신
+window.addEventListener('focus', function () {
+    if (window.notificationBadge) {
+        console.log('🔔 페이지 포커스 - 알림 개수 갱신');
+        window.notificationBadge.loadNotificationCount();
     }
+});
 
-    .notification-toast-message {
-        color: #666;
-    }
-
-    @keyframes slide-in {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-
-    @keyframes fade-out {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
+// 페이지 가시성 변경 시 처리
+document.addEventListener('visibilitychange', function () {
+    if (window.notificationBadge) {
+        if (document.hidden) {
+            console.log('🔔 페이지 숨김 - 소켓 연결 해제');
+            window.notificationBadge.disconnect();
+        } else {
+            console.log('🔔 페이지 가시성 변경 - 알림 개수 갱신');
+            // 페이지가 다시 보일 때 재연결 및 알림 개수 갱신
+            if (!window.notificationBadge.initialized) {
+                window.notificationBadge.init();
+            } else {
+                window.notificationBadge.loadNotificationCount();
+            }
         }
     }
-`;
+});
 
-document.head.appendChild(style);
-
-// 현재 사용자 ID를 가져오는 함수
-function getCurrentUserId() {
-    const bellContainer = document.querySelector('.bell-container');
-    return bellContainer ? bellContainer.getAttribute('data-user-id') : null;
-} 
+// 페이지 언로드 시 소켓 연결 해제
+window.addEventListener('beforeunload', function () {
+    if (window.notificationBadge) {
+        console.log('🔔 페이지 언로드 - 소켓 연결 해제');
+        window.notificationBadge.disconnect();
+    }
+}); 

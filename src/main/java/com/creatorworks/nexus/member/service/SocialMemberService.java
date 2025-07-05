@@ -18,49 +18,35 @@ import com.creatorworks.nexus.member.dto.SessionMemberDto;
 import com.creatorworks.nexus.member.dto.SessionMemberFormDto;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.security.dto.UserAccount;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class SocialMemberService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+public class SocialMemberService extends DefaultOAuth2UserService {
     private final MemberRepository memberRepository;
     private final HttpSession httpSession;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
-        OAuth2User oAuth2User = delegate.loadUser(userRequest);
+        OAuth2User oAuth2User = super.loadUser(userRequest);
 
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
-        String userNameAttributeName = userRequest.getClientRegistration()
-                .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName();
-        
+        String userNameAttributeName = userRequest.getClientRegistration().getProviderDetails().getUserInfoEndpoint()
+                .getUserNameAttributeName();
+
         OAuthAttributesDto attributes = OAuthAttributesDto.of(registrationId, userNameAttributeName, oAuth2User.getAttributes());
 
-        // OAuth 정보로 Member 생성 또는 업데이트
         Member member = saveOrUpdate(attributes);
+        httpSession.setAttribute("member", new SessionMemberFormDto(member));
 
-        // 추가 정보 입력이 필요한지 확인하여 세션에 플래그 저장
-        boolean needsAdditionalInfo = needsAdditionalInfo(member);
-        httpSession.setAttribute("needsAdditionalInfo", needsAdditionalInfo);
-
-        // 세션에 저장
-        if (needsAdditionalInfo) {
-            // DB에 저장되지 않은 회원!
-            // 임시 정보를 세션에 저장. 이메일만 저장해도 되고, DTO 전체를 저장해도 됨.
-            // 이메일만 저장하는게 더 깔끔합니다.
-            httpSession.setAttribute("temp_oauth_email", attributes.getEmail());
-            httpSession.setAttribute("temp_oauth_attributes", attributes); // Post-Redirect-Get 패턴을 위해 임시 저장
-        } else {
-            // DB에 저장된 완전한 회원!
-            httpSession.setAttribute("member", new SessionMemberDto(member));
-        }
-        return new DefaultOAuth2User(
+        // 여기! DefaultOAuth2User 대신 UserAccount를 반환하도록 변경
+        return new UserAccount(
+                member,
                 Collections.singleton(new SimpleGrantedAuthority(member.getRole().name())),
-                attributes.getAttributes(),
-                "email"
+                attributes.getAttributes()
         );
     }
 

@@ -31,13 +31,13 @@ import com.creatorworks.nexus.member.dto.MonthlyCategoryPurchaseDTO;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberOrderRepository;
 import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.notification.entity.Notification;
+import com.creatorworks.nexus.notification.service.NotificationService;
 import com.creatorworks.nexus.order.entity.Order;
 import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.service.RecentlyViewedProductRedisService;
-import com.creatorworks.nexus.notification.entity.Notification;
-import com.creatorworks.nexus.notification.service.NotificationService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -275,7 +275,21 @@ public class MyPageController {
 
         Member currentUser = memberRepository.findByEmail(email);
         if (currentUser != null) {
-            List<Notification> notifications = notificationService.getNotificationsByUserId(currentUser.getId());
+            // 관리자 권한 확인
+            boolean isAdmin = false;
+            if (principal instanceof CustomUserDetails) {
+                isAdmin = ((CustomUserDetails) principal).getAuthorities().stream()
+                        .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
+            }
+            
+            List<Notification> notifications;
+            if (isAdmin) {
+                // 관리자의 경우 개인 알림 + 관리자 알림 조회
+                notifications = notificationService.getNotificationsForAdmin(currentUser.getId());
+            } else {
+                // 일반 사용자의 경우 개인 알림만 조회
+                notifications = notificationService.getNotificationsByUserId(currentUser.getId());
+            }
             model.addAttribute("notifications", notifications);
         } else {
             model.addAttribute("notifications", Collections.emptyList());

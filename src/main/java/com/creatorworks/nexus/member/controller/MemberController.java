@@ -1,6 +1,8 @@
 package com.creatorworks.nexus.member.controller;
 
-import com.creatorworks.nexus.member.dto.LoginFormDto;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -8,7 +10,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.creatorworks.nexus.member.dto.EmailAuthRequestDto;
 import com.creatorworks.nexus.member.dto.MemberFormDto;
@@ -18,9 +25,6 @@ import com.creatorworks.nexus.member.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RequestMapping("/members")
 @Controller
@@ -83,7 +87,15 @@ public class MemberController {
 
 
     @GetMapping("/login")
-    public String login() {
+    public String login(@RequestParam(value = "message", required = false) String message, 
+                       Model model, HttpServletRequest request) {
+        if (message != null) {
+            model.addAttribute("message", message);
+            // 권한 업데이트 메시지인 경우 기존 세션 무효화
+            if (message.contains("권한이 업데이트되었습니다")) {
+                request.getSession().invalidate();
+            }
+        }
         return "member/loginForm";
     }
     @GetMapping(value = "/login/error")
