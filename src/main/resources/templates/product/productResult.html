@@ -83,14 +83,20 @@
         }
 
         .header .points-btn {
-            background: #007bff;
+            background: #0071DE;
             color: #fff;
-            padding: 8px 18px;
+            padding: 0.6rem 1.2rem;
             border-radius: 20px;
-            font-size: 15px;
+            font-size: 1rem;
+            font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 0.8rem;
+            transition: opacity 0.2s;
+        }
+
+        .header .points-btn:hover {
+            opacity: 0.9;
         }
 
         /* --- 카테고리 바 --- */
@@ -283,10 +289,9 @@
             </ul>
         </nav>
         <div class="user-info">
-            <button class="points-btn">
-                <span>보유한 포인트<p th:text="${currentPoint ?: 0}"></p></span>
-                <span style="font-size: 18px;">🔔</span>
-            </button>
+            <a href="/members/point" class="points-btn">
+                <span>보유한 포인트 : <span th:text="${#numbers.formatInteger(currentPoint ?: 0, 3, 'COMMA')}">0</span>P</span>
+            </a>
         </div>
     </header>
 
@@ -471,11 +476,14 @@
         // 정기구독 함수
         function requestSubscription() {
             const productId = window.location.pathname.split('/').pop();
-            const authorName = document.querySelector('.author-name').textContent;
+            const authorName = document.querySelector('.seller-name').textContent;
             
             if (!confirm(`${authorName} 작가님의 정기구독을 신청하시겠습니까?\n\n정기구독 혜택:\n- 해당 작가의 모든 작품을 무제한으로 볼 수 있습니다\n- 월 9,900원 (첫 달 무료)\n- 언제든지 해지 가능`)) {
                 return;
             }
+            
+            // 구독 페이지로 이동
+            window.location.href = `/members/subscription?author=${encodeURIComponent(authorName)}&productId=${productId}`;
             
             fetch(`/api/products/${productId}/subscription`, {
                 method: 'POST',

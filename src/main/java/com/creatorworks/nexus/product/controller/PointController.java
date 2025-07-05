@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -65,12 +66,30 @@ public class PointController {
             );
         }
 
-        PointResponse response = pointService.chargePoint(member.getId(), request);
-        
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
+        try {
+            PointResponse response = pointService.chargePoint(member.getId(), request);
+            
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body(response);
+            }
+        } catch (IllegalArgumentException e) {
+            log.error("포인트 충전 실패: 회원ID={}, 오류={}", member.getId(), e.getMessage());
+            return ResponseEntity.badRequest().body(
+                PointResponse.builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .build()
+            );
+        } catch (Exception e) {
+            log.error("포인트 충전 중 예상치 못한 오류: 회원ID={}, 오류={}", member.getId(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                PointResponse.builder()
+                    .success(false)
+                    .message("포인트 충전 중 오류가 발생했습니다.")
+                    .build()
+            );
         }
     }
 
@@ -110,12 +129,30 @@ public class PointController {
         // 요청 데이터 설정
         request.setProductId(productId);
 
-        PointResponse response = pointService.purchaseWithPoint(member.getId(), request);
-        
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
+        try {
+            PointResponse response = pointService.purchaseWithPoint(member.getId(), request);
+            
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body(response);
+            }
+        } catch (IllegalArgumentException e) {
+            log.error("포인트 구매 실패: 회원ID={}, 상품ID={}, 오류={}", member.getId(), productId, e.getMessage());
+            return ResponseEntity.badRequest().body(
+                PointResponse.builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .build()
+            );
+        } catch (Exception e) {
+            log.error("포인트 구매 중 예상치 못한 오류: 회원ID={}, 상품ID={}, 오류={}", member.getId(), productId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                PointResponse.builder()
+                    .success(false)
+                    .message("포인트 구매 중 오류가 발생했습니다.")
+                    .build()
+            );
         }
     }
 
@@ -257,6 +294,7 @@ public class PointController {
      * @param model 모델
      * @param principal 현재 로그인한 사용자
      * @param errorMessage 오류 메시지
+     * @param errorCode 오류 코드
      * @param amount 시도한 금액
      * @param paymentMethod 결제 방법
      * @return 포인트 충전 실패 페이지
@@ -264,6 +302,7 @@ public class PointController {
     @GetMapping("/charge/fail")
     public String chargeFail(Model model, Principal principal,
                             @RequestParam(required = false) String errorMessage,
+                            @RequestParam(required = false) String errorCode,
                             @RequestParam(required = false) Long amount,
                             @RequestParam(required = false) String paymentMethod) {
         if (principal == null) {
@@ -277,8 +316,8 @@ public class PointController {
 
         // URL 파라미터에서 오류 정보 가져오기
         model.addAttribute("errorMessage", errorMessage != null ? errorMessage : "결제 처리 중 오류가 발생했습니다.");
+        model.addAttribute("errorCode", errorCode != null ? errorCode : "UNKNOWN");
         model.addAttribute("detailedErrorMessage", "카드 잔액 부족 또는 카드 정보 오류로 인해 결제가 실패했습니다.");
-        model.addAttribute("errorCode", "PAYMENT_FAILED");
         model.addAttribute("amount", amount != null ? amount : 0L);
         model.addAttribute("paymentMethod", paymentMethod != null ? paymentMethod : "신용카드");
         model.addAttribute("transactionDate", LocalDateTime.now());

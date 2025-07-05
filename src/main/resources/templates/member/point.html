@@ -300,7 +300,7 @@
         <div class="point-amount-section">
             <h3>충전 금액 선택</h3>
             <div class="point-amount-options">
-                <div class="point-amount-option" data-point="10000000" data-price="1">
+                <div class="point-amount-option" data-point="100000" data-price="1">
                     <div class="point-amount-value">1,000P</div>
                     <div class="point-amount-price">1,000원</div>
                 </div>
@@ -461,18 +461,25 @@
                 console.log('아임포트 결제 응답:', rsp);
                 if (rsp.success) {
                     console.log('결제 성공, 포인트 충전 요청 시작');
-                    
                     // CSRF 토큰 가져오기
-                    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                    const csrfMeta = document.querySelector('meta[name="_csrf"]');
+                    const headerMeta = document.querySelector('meta[name="_csrf_header"]');
+                    
+                    let headers = {
+                        'Content-Type': 'application/json'
+                    };
+                    
+                    // CSRF 토큰이 있는 경우에만 추가
+                    if (csrfMeta && headerMeta) {
+                        const token = csrfMeta.getAttribute('content');
+                        const header = headerMeta.getAttribute('content');
+                        headers[header] = token;
+                    }
                     
                     // 결제 성공 시 서버에 포인트 충전 요청
                     fetch('/api/points/charge', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            [csrfHeader]: csrfToken
-                        },
+                        headers: headers,
                         body: JSON.stringify({
                             amount: selectedPoint,
                             paymentAmount: selectedPrice,
@@ -487,23 +494,23 @@
                     .then(data => {
                         console.log('서버 응답 데이터:', data);
                         if (data.success) {
-                            // 성공 페이지로 리다이렉트 (URL 파라미터로 정보 전달)
+                            // 성공 시 성공 페이지로 리다이렉트
                             const params = new URLSearchParams({
                                 amount: selectedPoint,
                                 paymentAmount: selectedPrice,
-                                paymentMethod: paymentMethod,
+                                paymentMethod: paymentMethod === 'card' ? '신용카드' : paymentMethod === 'bank' ? '계좌이체' : '휴대폰 결제',
                                 merchantUid: rsp.merchant_uid,
                                 impUid: rsp.imp_uid
                             });
-                            window.location.href = `/api/points/charge/success?${params.toString()}`;
+                            window.location.href = '/api/points/charge/success?' + params.toString();
                         } else {
-                            // 실패 페이지로 리다이렉트
+                            // 실패 시 실패 페이지로 리다이렉트
                             const params = new URLSearchParams({
                                 errorMessage: data.message,
                                 amount: selectedPoint,
-                                paymentMethod: paymentMethod
+                                paymentMethod: paymentMethod === 'card' ? '신용카드' : paymentMethod === 'bank' ? '계좌이체' : '휴대폰 결제'
                             });
-                            window.location.href = `/api/points/charge/fail?${params.toString()}`;
+                            window.location.href = '/api/points/charge/fail?' + params.toString();
                         }
                     })
                     .catch(error => {
@@ -511,7 +518,14 @@
                         alert('포인트 충전 중 오류가 발생했습니다.');
                     });
                 } else {
-                    alert('결제 실패: ' + rsp.error_msg);
+                    // 결제 실패 시 실패 페이지로 리다이렉트
+                    const params = new URLSearchParams({
+                        errorMessage: rsp.error_msg,
+                        errorCode: rsp.error_code || 'UNKNOWN',
+                        amount: selectedPoint,
+                        paymentMethod: paymentMethod === 'card' ? '신용카드' : paymentMethod === 'bank' ? '계좌이체' : '휴대폰 결제'
+                    });
+                    window.location.href = '/api/points/charge/fail?' + params.toString();
                 }
             });
         }

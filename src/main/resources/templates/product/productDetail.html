@@ -5,7 +5,7 @@
         <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js" ></script>
         <!-- iamport.payment.js -->
         <script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.1.8.js"></script>
-      </head>
+    </head>
 <th:block layout:fragment="css">
     <link rel="stylesheet" th:href="@{/css/productdetall.css}">
     <link rel="stylesheet" th:href="@{/css/review.css}">
@@ -114,5 +114,10 @@
     <div th:replace="~{product/inquiry_section :: inquirySection(${product}, ${inquiryPage})}"></div>
 
 </div>
+
+<th:block layout:fragment="script">
+    <!-- heartFollow.js 스크립트 추가 -->
+    <script th:src="@{/js/heartFollow.js}"></script>
+</th:block>
 
 </html>

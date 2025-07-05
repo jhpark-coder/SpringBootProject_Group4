@@ -112,15 +112,13 @@ public class ProductController {
                                 Model model) {
         Product product = productService.findProductByIdAndIncrementView(id);
         
-        // 문의 관련 (검색 기능 추가)
-        Page<ProductInquiry> inquiryPage = productInquiryService.findInquiriesByProduct(id, inquiryKeyword, inquiryPageable);
         // 상품이 존재하지 않는 경우 처리
         if (product == null) {
             throw new RuntimeException("해당 상품이 존재하지 않습니다: " + id);
         }
 
-        // 문의 관련
-        Page<ProductInquiry> inquiryPage = productInquiryService.findInquiriesByProduct(id, inquiryPageable);
+        // 문의 관련 (검색 기능 추가)
+        Page<ProductInquiry> inquiryPage = productInquiryService.findInquiriesByProduct(id, inquiryKeyword, inquiryPageable);
 
         // 후기 관련
         Page<ProductReview> reviewPage = productReviewService.findReviewsByProduct(id, reviewKeyword, reviewPageable);
@@ -552,8 +550,14 @@ public class ProductController {
                     "currentBalance", response.getCurrentBalance()
                 ));
             }
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             log.error("포인트 구매 실패: 상품ID={}, 회원ID={}, 오류={}", id, member.getId(), e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false, 
+                "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            log.error("포인트 구매 중 예상치 못한 오류: 상품ID={}, 회원ID={}, 오류={}", id, member.getId(), e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("success", false, "message", "포인트 구매 중 오류가 발생했습니다."));
         }

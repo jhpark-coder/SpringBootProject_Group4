@@ -38,9 +38,10 @@ import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.service.RecentlyViewedProductRedisService;
+import com.creatorworks.nexus.product.service.ProductHeartService;
 
 import lombok.RequiredArgsConstructor;
-
+import java.security.Principal;
 
 
 //20250630 차트 생성을 위해 작성됨
@@ -58,6 +59,7 @@ public class MyPageController {
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
     private final NotificationService notificationService;
+    private final ProductHeartService productHeartService;
 
     @GetMapping("/my-page")
     public String myPage(@AuthenticationPrincipal Object principal, Model model) {
@@ -296,5 +298,13 @@ public class MyPageController {
         }
         
         return "member/my-notifications"; // 알림 내역 페이지 템플릿 반환
+    }
+
+    @GetMapping("/liked-products")
+    public String likedProducts(Model model, Principal principal) {
+        Member member = memberRepository.findByEmail(principal.getName());
+        List<Product> likedProducts = productHeartService.getLikedProducts(member.getId());
+        model.addAttribute("likedProducts", likedProducts);
+        return "member/likedProducts";
     }
 }

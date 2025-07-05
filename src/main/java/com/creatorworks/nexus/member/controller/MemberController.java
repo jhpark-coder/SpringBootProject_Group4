@@ -62,19 +62,20 @@ public class MemberController {
     }
     @GetMapping("/point")
     public String MemberPoint(Model model, Principal principal) {
-        if (principal != null) {
-            Member member = memberRepository.findByEmail(principal.getName());
-            if (member != null) {
-                Long currentPoint = pointService.getCurrentBalance(member.getId());
-                model.addAttribute("currentPoint", currentPoint);
-            }
-        }
+        // GlobalModelAttributes에서 자동으로 currentPoint가 추가됨
         return "member/point";
     }
 
     @GetMapping("/subscription")
-    public String subscription(Model model, Principal principal) {
-        // GlobalModelAttributes에서 자동으로 currentPoint가 추가되므로 별도 처리 불필요
+    public String subscription(Model model, Principal principal,
+                              @RequestParam(required = false) String author,
+                              @RequestParam(required = false) Long productId) {
+        // GlobalModelAttributes에서 자동으로 currentPoint가 추가됨
+        
+        // URL 파라미터에서 작가 정보와 상품 ID를 모델에 추가
+        model.addAttribute("authorName", author != null ? author : "작가명");
+        model.addAttribute("productId", productId);
+        
         return "member/subscription";
     }
 

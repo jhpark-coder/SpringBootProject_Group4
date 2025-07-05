@@ -40,58 +40,50 @@ public class PointService {
      */
     @Transactional
     public PointResponse chargePoint(Long memberId, PointChargeRequest request) {
-        try {
-            Member member = memberRepository.findById(memberId)
-                    .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+        // 회원 조회
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-            // 중복 충전 방지 (아임포트 UID로 확인)
-            if (request.getImpUid() != null && pointRepository.findByImpUid(request.getImpUid()) != null) {
-                return PointResponse.builder()
-                        .success(false)
-                        .message("이미 처리된 결제입니다.")
-                        .build();
-            }
-
-            // 현재 포인트 잔액 조회
-            Long currentBalance = getCurrentBalance(memberId);
-            Long newBalance = currentBalance + request.getAmount();
-
-            // 포인트 내역 저장
-            Point point = Point.builder()
-                    .member(member)
-                    .amount(request.getAmount())
-                    .type(PointType.CHARGE)
-                    .balanceAfter(newBalance)
-                    .description("포인트 충전")
-                    .impUid(request.getImpUid())
-                    .merchantUid(request.getMerchantUid())
-                    .build();
-
-            pointRepository.save(point);
-
-            // 회원 포인트 업데이트
-            member.setPoint(newBalance.intValue());
-            memberRepository.save(member);
-
-            log.info("포인트 충전 완료: 회원ID={}, 충전금액={}, 잔액={}", 
-                    memberId, request.getAmount(), newBalance);
-
-            return PointResponse.builder()
-                    .success(true)
-                    .message("포인트 충전이 완료되었습니다.")
-                    .currentBalance(newBalance)
-                    .amount(request.getAmount())
-                    .description("포인트 충전")
-                    .transactionDate(LocalDateTime.now())
-                    .build();
-
-        } catch (Exception e) {
-            log.error("포인트 충전 실패: 회원ID={}, 오류={}", memberId, e.getMessage());
+        // 중복 충전 방지 (아임포트 UID로 확인)
+        if (request.getImpUid() != null && pointRepository.findByImpUid(request.getImpUid()) != null) {
             return PointResponse.builder()
                     .success(false)
-                    .message("포인트 충전 중 오류가 발생했습니다: " + e.getMessage())
+                    .message("이미 처리된 결제입니다.")
                     .build();
         }
+
+        // 현재 포인트 잔액 조회
+        Long currentBalance = getCurrentBalance(memberId);
+        Long newBalance = currentBalance + request.getAmount();
+
+        // 포인트 내역 저장
+        Point point = Point.builder()
+                .member(member)
+                .amount(request.getAmount())
+                .type(PointType.CHARGE)
+                .balanceAfter(newBalance)
+                .description("포인트 충전")
+                .impUid(request.getImpUid())
+                .merchantUid(request.getMerchantUid())
+                .build();
+
+        pointRepository.save(point);
+
+        // 회원 포인트 업데이트
+        member.setPoint(newBalance.intValue());
+        memberRepository.save(member);
+
+        log.info("포인트 충전 완료: 회원ID={}, 충전금액={}, 잔액={}", 
+                memberId, request.getAmount(), newBalance);
+
+        return PointResponse.builder()
+                .success(true)
+                .message("포인트 충전이 완료되었습니다.")
+                .currentBalance(newBalance)
+                .amount(request.getAmount())
+                .description("포인트 충전")
+                .transactionDate(LocalDateTime.now())
+                .build();
     }
 
     /**
@@ -102,65 +94,57 @@ public class PointService {
      */
     @Transactional
     public PointResponse purchaseWithPoint(Long memberId, PointPurchaseRequest request) {
-        try {
-            Member member = memberRepository.findById(memberId)
-                    .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+        // 회원 조회
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-            Product product = productRepository.findById(request.getProductId())
-                    .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+        // 상품 조회
+        Product product = productRepository.findById(request.getProductId())
+                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
 
-            // 현재 포인트 잔액 조회
-            Long currentBalance = getCurrentBalance(memberId);
+        // 현재 포인트 잔액 조회
+        Long currentBalance = getCurrentBalance(memberId);
 
-            // 포인트 부족 확인
-            if (currentBalance < request.getPrice()) {
-                return PointResponse.builder()
-                        .success(false)
-                        .message("포인트가 부족합니다. 현재 보유 포인트: " + currentBalance + "P")
-                        .currentBalance(currentBalance)
-                        .build();
-            }
-
-            // 포인트 차감
-            Long newBalance = currentBalance - request.getPrice();
-
-            // 포인트 내역 저장
-            Point point = Point.builder()
-                    .member(member)
-                    .product(product)
-                    .amount(-request.getPrice()) // 음수로 저장 (사용)
-                    .type(PointType.USE)
-                    .balanceAfter(newBalance)
-                    .description(product.getName() + " 구매")
-                    .merchantUid("purchase_" + UUID.randomUUID().toString().replace("-", ""))
-                    .build();
-
-            pointRepository.save(point);
-
-            // 회원 포인트 업데이트
-            member.setPoint(newBalance.intValue());
-            memberRepository.save(member);
-
-            log.info("포인트 구매 완료: 회원ID={}, 상품ID={}, 사용포인트={}, 잔액={}", 
-                    memberId, request.getProductId(), request.getPrice(), newBalance);
-
-            return PointResponse.builder()
-                    .success(true)
-                    .message("포인트 구매가 완료되었습니다.")
-                    .currentBalance(newBalance)
-                    .amount(-request.getPrice())
-                    .description(product.getName() + " 구매")
-                    .transactionDate(LocalDateTime.now())
-                    .build();
-
-        } catch (Exception e) {
-            log.error("포인트 구매 실패: 회원ID={}, 상품ID={}, 오류={}", 
-                    memberId, request.getProductId(), e.getMessage());
+        // 포인트 부족 확인
+        if (currentBalance < request.getPrice()) {
             return PointResponse.builder()
                     .success(false)
-                    .message("포인트 구매 중 오류가 발생했습니다: " + e.getMessage())
+                    .message("포인트가 부족합니다. 현재 보유 포인트: " + currentBalance + "P")
+                    .currentBalance(currentBalance)
                     .build();
         }
+
+        // 포인트 차감
+        Long newBalance = currentBalance - request.getPrice();
+
+        // 포인트 내역 저장
+        Point point = Point.builder()
+                .member(member)
+                .product(product)
+                .amount(-request.getPrice()) // 음수로 저장 (사용)
+                .type(PointType.USE)
+                .balanceAfter(newBalance)
+                .description(product.getName() + " 구매")
+                .merchantUid("purchase_" + UUID.randomUUID().toString().replace("-", ""))
+                .build();
+
+        pointRepository.save(point);
+
+        // 회원 포인트 업데이트
+        member.setPoint(newBalance.intValue());
+        memberRepository.save(member);
+
+        log.info("포인트 구매 완료: 회원ID={}, 상품ID={}, 사용포인트={}, 잔액={}", 
+                memberId, request.getProductId(), request.getPrice(), newBalance);
+
+        return PointResponse.builder()
+                .success(true)
+                .message("포인트 구매가 완료되었습니다.")
+                .currentBalance(newBalance)
+                .amount(-request.getPrice())
+                .description(product.getName() + " 구매")
+                .transactionDate(LocalDateTime.now())
+                .build();
     }
 
     /**
@@ -221,48 +205,40 @@ public class PointService {
      */
     @Transactional
     public PointResponse addPoints(Long memberId, Long amount, String description) {
-        try {
-            Member member = memberRepository.findById(memberId)
-                    .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+        // 회원 조회
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-            // 현재 포인트 잔액 조회
-            Long currentBalance = getCurrentBalance(memberId);
-            Long newBalance = currentBalance + amount;
+        // 현재 포인트 잔액 조회
+        Long currentBalance = getCurrentBalance(memberId);
+        Long newBalance = currentBalance + amount;
 
-            // 포인트 내역 저장
-            Point point = Point.builder()
-                    .member(member)
-                    .amount(amount)
-                    .type(PointType.CHARGE)
-                    .balanceAfter(newBalance)
-                    .description(description)
-                    .merchantUid("bonus_" + UUID.randomUUID().toString().replace("-", ""))
-                    .build();
+        // 포인트 내역 저장
+        Point point = Point.builder()
+                .member(member)
+                .amount(amount)
+                .type(PointType.CHARGE)
+                .balanceAfter(newBalance)
+                .description(description)
+                .merchantUid("bonus_" + UUID.randomUUID().toString().replace("-", ""))
+                .build();
 
-            pointRepository.save(point);
+        pointRepository.save(point);
 
-            // 회원 포인트 업데이트
-            member.setPoint(newBalance.intValue());
-            memberRepository.save(member);
+        // 회원 포인트 업데이트
+        member.setPoint(newBalance.intValue());
+        memberRepository.save(member);
 
-            log.info("포인트 추가 완료: 회원ID={}, 추가금액={}, 사유={}, 잔액={}", 
-                    memberId, amount, description, newBalance);
+        log.info("포인트 추가 완료: 회원ID={}, 추가금액={}, 사유={}, 잔액={}", 
+                memberId, amount, description, newBalance);
 
-            return PointResponse.builder()
-                    .success(true)
-                    .message("포인트가 추가되었습니다.")
-                    .currentBalance(newBalance)
-                    .amount(amount)
-                    .description(description)
-                    .transactionDate(LocalDateTime.now())
-                    .build();
-
-        } catch (Exception e) {
-            log.error("포인트 추가 실패: 회원ID={}, 오류={}", memberId, e.getMessage());
-            return PointResponse.builder()
-                    .success(false)
-                    .message("포인트 추가 중 오류가 발생했습니다: " + e.getMessage())
-                    .build();
-        }
+        return PointResponse.builder()
+                .success(true)
+                .message("포인트가 추가되었습니다.")
+                .currentBalance(newBalance)
+                .amount(amount)
+                .description(description)
+                .transactionDate(LocalDateTime.now())
+                .build();
     }
 } 

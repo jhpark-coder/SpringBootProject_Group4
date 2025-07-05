@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragment/layout}">
+<head>
+    <title>좋아요한 작품</title>
+    <style>
+.liked-products-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.product-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+}
+
+.product-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: box-shadow 0.2s;
+}
+
+.product-card:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.10);
+}
+
+.product-image {
+    width: 160px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.product-info h2 {
+    font-size: 18px;
+    margin: 8px 0 4px 0;
+    text-align: center;
+}
+
+.product-info p {
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.btn.btn-primary {
+    margin-top: auto;
+    padding: 8px 16px;
+    font-size: 14px;
+}
+</style>
+</head>
+<body>
+<div layout:fragment="content" class="liked-products-container">
+    <h1>좋아요한 작품</h1>
+    <div th:if="${likedProducts.isEmpty()}">
+        <p>좋아요한 작품이 없습니다.</p>
+    </div>
+    <div class="product-list" th:if="${!likedProducts.isEmpty()}">
+        <div th:each="product : ${likedProducts}" class="product-card">
+            <img th:src="${product.imageUrl}" alt="작품 이미지" class="product-image"/>
+            <div class="product-info">
+                <h2 th:text="${product.name}">작품명</h2>
+                <p th:text="${product.description}">작품 설명</p>
+                <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-primary">상세보기</a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html> 

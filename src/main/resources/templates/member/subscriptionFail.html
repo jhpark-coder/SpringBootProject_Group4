@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{fragment/layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>구독 실패 - Nexus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #fff;
+            min-height: 100vh;
+            padding: 0;
+        }
+        .fail-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .fail-card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .fail-header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            padding: 40px 30px;
+        }
+
+        .fail-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .fail-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .fail-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .fail-content {
+            padding: 40px 30px;
+        }
+
+        .error-info {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .error-message {
+            font-size: 16px;
+            color: #e53e3e;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .error-details {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .transaction-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #222;
+            font-weight: 600;
+        }
+
+        .balance-info {
+            background: #e3f2fd;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .balance-label {
+            font-size: 14px;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .balance-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #e9ecef;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .retry-section {
+            background: #f0f8ff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .retry-section h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+
+        .retry-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .retry-section li {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 6px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .retry-section li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .fail-container {
+                padding: 10px;
+            }
+
+            .fail-header {
+                padding: 30px 20px;
+            }
+
+            .fail-content {
+                padding: 30px 20px;
+            }
+
+            .action-buttons {
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div layout:fragment="content" class="fail-container">
+        <div class="fail-card">
+            <!-- 실패 헤더 -->
+            <div class="fail-header">
+                <div class="fail-icon">❌</div>
+                <h1 class="fail-title">구독 실패</h1>
+                <p class="fail-subtitle">결제 처리 중 오류가 발생했습니다</p>
+            </div>
+
+            <!-- 실패 내용 -->
+            <div class="fail-content">
+                <!-- 오류 정보 -->
+                <div class="error-info">
+                    <div class="error-message" th:text="${errorMessage}">결제 처리 중 오류가 발생했습니다.</div>
+                    <div class="error-details" th:text="${detailedErrorMessage}">카드 잔액 부족 또는 카드 정보 오류로 인해 결제가 실패했습니다.</div>
+                </div>
+
+                <!-- 재시도 안내 -->
+                <div class="retry-section">
+                    <h4>다시 시도해보세요</h4>
+                    <ul>
+                        <li>카드 잔액을 확인해주세요</li>
+                        <li>카드 정보가 올바른지 확인해주세요</li>
+                        <li>카드 유효기간을 확인해주세요</li>
+                        <li>다른 결제 방법을 시도해보세요</li>
+                    </ul>
+                </div>
+
+                <!-- 거래 정보 -->
+                <div class="transaction-info">
+                    <div class="info-row">
+                        <span class="info-label">시도한 플랜</span>
+                        <span class="info-value" th:text="${plan == 'monthly' ? '월간 구독' : '연간 구독'}">월간 구독</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">시도한 금액</span>
+                        <span class="info-value" th:text="${#numbers.formatInteger(amount ?: 0, 3, 'COMMA')} + '원'">9,900원</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">결제 방법</span>
+                        <span class="info-value">신용카드</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">시도 시간</span>
+                        <span class="info-value" th:text="${#temporals.format(subscriptionDate ?: #temporals.createNow(), 'yyyy-MM-dd HH:mm')}">2025-01-01 12:00</span>
+                    </div>
+                </div>
+
+                <!-- 현재 포인트 잔액 -->
+                <div class="balance-info">
+                    <div class="balance-label">현재 보유 포인트</div>
+                    <div class="balance-amount" th:text="${#numbers.formatInteger(currentBalance ?: 0, 3, 'COMMA')} + 'P'">1,000P</div>
+                </div>
+
+                <!-- 액션 버튼 -->
+                <div class="action-buttons">
+                    <a th:href="@{/members/subscription(author=${authorName}, productId=${productId})}" class="btn btn-primary">다시 시도하기</a>
+                    <a href="/products" class="btn btn-outline">상품 둘러보기</a>
+                    <a href="/member/myPage" class="btn btn-secondary">마이페이지로 이동</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html> 

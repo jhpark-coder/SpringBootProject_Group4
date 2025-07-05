@@ -42,4 +42,5 @@ public interface ProductHeartRepository extends JpaRepository<ProductHeart, Long
             "GROUP BY ph.product.id ORDER BY COUNT(ph.product.id) DESC")
     List<Long> findTopHeartedProductIds(@Param("excludedIds") List<Long> excludedIds, Pageable pageable);
 
+    List<ProductHeart> findByMemberId(Long memberId);
 } 

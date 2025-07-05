@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{fragment/layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정기 구독 결제 - Nexus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* body, html 스타일에서 flex 관련 제거 */
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #fff;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        /* 컨텐츠 wrapper만 중앙 정렬 */
+        .subscription-payment-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto; /* 좌우만 중앙, 상하 여백 없음 */
+        }
+
+        .subscription-payment-card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .subscription-payment-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .subscription-payment-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subscription-payment-header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .subscription-info-section {
+            padding: 30px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .subscription-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .subscription-info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .subscription-info-label {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .subscription-info-value {
+            font-size: 16px;
+            color: #222;
+            font-weight: 600;
+        }
+
+        .subscription-plan-section {
+            padding: 30px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .subscription-plan-section h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 16px;
+        }
+
+        .subscription-plan-options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .subscription-plan-option {
+            background: #fff;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .subscription-plan-option:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .subscription-plan-option.selected {
+            border-color: #667eea;
+            background: #e3f2fd;
+        }
+
+        .subscription-plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .subscription-plan-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #222;
+        }
+
+        .subscription-plan-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .subscription-plan-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .subscription-plan-features {
+            list-style: none;
+            padding: 0;
+        }
+
+        .subscription-plan-features li {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 6px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .subscription-plan-features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .subscription-plan-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .payment-method-section {
+            padding: 30px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .payment-method-section h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 16px;
+        }
+
+        .payment-method-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .payment-method-option {
+            background: #fff;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .payment-method-option:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .payment-method-option.selected {
+            border-color: #667eea;
+            background: #e3f2fd;
+        }
+
+        .payment-method-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .payment-method-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #222;
+        }
+
+        .payment-method-option input[type="radio"] {
+            display: none;
+        }
+
+        .subscription-summary-section {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .subscription-summary-section h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 16px;
+        }
+
+        .subscription-summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .subscription-summary-row:last-child {
+            margin-bottom: 0;
+            padding-top: 12px;
+            border-top: 1px solid #e9ecef;
+            font-weight: 700;
+            font-size: 18px;
+            color: #667eea;
+        }
+
+        .subscription-summary-label {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .subscription-summary-value {
+            font-size: 16px;
+            color: #222;
+            font-weight: 600;
+        }
+
+        .subscription-payment-button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 20px;
+        }
+
+        .subscription-payment-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .subscription-payment-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .subscription-benefits {
+            background: #e3f2fd;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .subscription-benefits h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+
+        .subscription-benefits ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .subscription-benefits li {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 6px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .subscription-benefits li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .success-container, .fail-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .subscription-payment-container {
+                padding: 10px;
+            }
+
+            .subscription-payment-header {
+                padding: 30px 20px;
+            }
+
+            .subscription-payment-header h1 {
+                font-size: 24px;
+            }
+
+            .subscription-info-section,
+            .subscription-plan-section,
+            .payment-method-section,
+            .subscription-summary-section {
+                padding: 20px;
+            }
+
+            .payment-method-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div layout:fragment="content" class="subscription-payment-container">
+        <div class="subscription-payment-card">
+            <!-- 헤더 -->
+            <div class="subscription-payment-header">
+                <h1>정기 구독 결제</h1>
+                <p>원하는 구독 플랜을 선택하여 결제하세요</p>
+            </div>
+
+            <!-- 구독 정보 -->
+            <div class="subscription-info-section">
+                <div class="subscription-info-row">
+                    <span class="subscription-info-label">구독 대상 작가</span>
+                    <span class="subscription-info-value" id="authorName">작가명</span>
+                </div>
+                <div class="subscription-info-row">
+                    <span class="subscription-info-label">구독 플랜</span>
+                    <span class="subscription-info-value" id="selectedPlanName">월간 구독</span>
+                </div>
+                <div class="subscription-info-row">
+                    <span class="subscription-info-label">결제 금액</span>
+                    <span class="subscription-info-value" id="selectedPlanPrice">9,900원</span>
+                </div>
+            </div>
+
+            <!-- 구독 플랜 선택 -->
+            <div class="subscription-plan-section">
+                <h3>구독 플랜 선택</h3>
+                <div class="subscription-plan-options">
+                    <div class="subscription-plan-option selected" data-plan="monthly" data-price="9900">
+                        <div class="subscription-plan-badge">인기</div>
+                        <div class="subscription-plan-header">
+                            <span class="subscription-plan-name">월간 구독</span>
+                            <span class="subscription-plan-price">9,900원/월</span>
+                        </div>
+                        <div class="subscription-plan-description">
+                            매월 자동으로 결제되며, 언제든지 해지할 수 있습니다.
+                        </div>
+                        <ul class="subscription-plan-features">
+                            <li>해당 작가의 모든 작품 무제한 감상</li>
+                            <li>신작 알림 서비스</li>
+                            <li>작가와의 소통 기능</li>
+                            <li>첫 달 무료 체험</li>
+                        </ul>
+                    </div>
+                    <div class="subscription-plan-option" data-plan="yearly" data-price="99000">
+                        <div class="subscription-plan-badge">할인</div>
+                        <div class="subscription-plan-header">
+                            <span class="subscription-plan-name">연간 구독</span>
+                            <span class="subscription-plan-price">99,000원/년</span>
+                        </div>
+                        <div class="subscription-plan-description">
+                            1년간 자동으로 결제되며, 2개월 무료 혜택을 제공합니다.
+                        </div>
+                        <ul class="subscription-plan-features">
+                            <li>해당 작가의 모든 작품 무제한 감상</li>
+                            <li>신작 알림 서비스</li>
+                            <li>작가와의 소통 기능</li>
+                            <li>2개월 무료 혜택 (월 8,250원)</li>
+                            <li>우선 고객 지원</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 결제 방법 선택 -->
+            <div class="payment-method-section">
+                <h3>결제 방법 선택</h3>
+                <div class="payment-method-options">
+                    <div class="payment-method-option selected">
+                        <input type="radio" name="paymentMethod" value="card" checked>
+                        <div class="payment-method-icon">💳</div>
+                        <div class="payment-method-name">신용카드</div>
+                    </div>
+                    <div class="payment-method-option">
+                        <input type="radio" name="paymentMethod" value="bank">
+                        <div class="payment-method-icon">🏦</div>
+                        <div class="payment-method-name">계좌이체</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 구독 요약 -->
+            <div class="subscription-summary-section">
+                <h3>구독 요약</h3>
+                <div class="subscription-summary-row">
+                    <span class="subscription-summary-label">구독 플랜</span>
+                    <span class="subscription-summary-value" id="summaryPlanName">월간 구독</span>
+                </div>
+                <div class="subscription-summary-row">
+                    <span class="subscription-summary-label">결제 주기</span>
+                    <span class="subscription-summary-value" id="summaryBillingCycle">매월</span>
+                </div>
+                <div class="subscription-summary-row">
+                    <span class="subscription-summary-label">월 결제 금액</span>
+                    <span class="subscription-summary-value" id="summaryMonthlyPrice">9,900원</span>
+                </div>
+                <div class="subscription-summary-row">
+                    <span class="subscription-summary-label">총 결제 금액</span>
+                    <span class="subscription-summary-value" id="summaryTotalPrice">9,900원</span>
+                </div>
+
+                <div class="subscription-benefits">
+                    <h4>구독 혜택</h4>
+                    <ul>
+                        <li>해당 작가의 모든 작품을 무제한으로 감상할 수 있습니다</li>
+                        <li>신작이 업로드되면 즉시 알림을 받을 수 있습니다</li>
+                        <li>작가와 직접 소통할 수 있는 채팅 기능을 이용할 수 있습니다</li>
+                        <li>언제든지 구독을 해지할 수 있습니다</li>
+                    </ul>
+                </div>
+
+                <button class="subscription-payment-button" onclick="requestSubscriptionPayment()">
+                    구독 시작하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="script">
+        <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+        <script>
+            let selectedPlan = 'monthly';
+            let selectedPrice = 9900;
+            let selectedPlanName = '월간 구독';
+            let selectedBillingCycle = '매월';
+
+            // 구독 플랜 선택
+            document.querySelectorAll('.subscription-plan-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    // 기존 선택 해제
+                    document.querySelectorAll('.subscription-plan-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // 현재 옵션 선택
+                    this.classList.add('selected');
+                    
+                    // 값 설정
+                    selectedPlan = this.dataset.plan;
+                    selectedPrice = parseInt(this.dataset.price);
+                    selectedPlanName = this.querySelector('.subscription-plan-name').textContent;
+                    selectedBillingCycle = selectedPlan === 'monthly' ? '매월' : '매년';
+                    
+                    // 화면 업데이트
+                    updateSubscriptionDisplay();
+                });
+            });
+
+            // 결제 방법 선택
+            document.querySelectorAll('.payment-method-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.payment-method-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    this.querySelector('input').checked = true;
+                });
+            });
+
+            // 구독 정보 표시 업데이트
+            function updateSubscriptionDisplay() {
+                document.getElementById('selectedPlanName').textContent = selectedPlanName;
+                document.getElementById('selectedPlanPrice').textContent = selectedPrice.toLocaleString() + '원';
+                document.getElementById('summaryPlanName').textContent = selectedPlanName;
+                document.getElementById('summaryBillingCycle').textContent = selectedBillingCycle;
+                document.getElementById('summaryMonthlyPrice').textContent = selectedPlan === 'monthly' ? 
+                    '9,900원' : '8,250원';
+                document.getElementById('summaryTotalPrice').textContent = selectedPrice.toLocaleString() + '원';
+            }
+
+            // URL에서 작가 정보 가져오기
+            function getAuthorInfoFromUrl() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const authorName = urlParams.get('author') || '작가명';
+                const productId = urlParams.get('productId') || '';
+                
+                document.getElementById('authorName').textContent = authorName;
+                
+                return { authorName, productId };
+            }
+
+            // 구독 결제 요청
+            function requestSubscriptionPayment() {
+                const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+                const { authorName, productId } = getAuthorInfoFromUrl();
+                
+                if (!confirm(`${selectedPlanName}을 시작하시겠습니까?\n결제 금액: ${selectedPrice.toLocaleString()}원`)) {
+                    return;
+                }
+
+                // 아임포트 결제 요청
+                IMP.init('imp20067661'); // 실제 가맹점 코드로 변경 필요
+
+                IMP.request_pay({
+                    pg: 'html5_inicis',
+                    pay_method: paymentMethod === 'card' ? 'card' : 'trans',
+                    merchant_uid: 'subscription_' + new Date().getTime(),
+                    name: `${authorName} 작가 정기구독`,
+                    amount: selectedPrice,
+                    buyer_email: '[[${#authentication.name}]]',
+                    buyer_name: '[[${#authentication.principal.name}]]',
+                    custom_data: {
+                        plan: selectedPlan,
+                        authorName: authorName,
+                        productId: productId
+                    }
+                }, function(rsp) {
+                    if (rsp.success) {
+                        // 결제 성공 시 서버에 구독 정보 전송
+                        fetch('/api/subscription/create', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || ''
+                            },
+                            body: JSON.stringify({
+                                plan: selectedPlan,
+                                amount: selectedPrice,
+                                authorName: authorName,
+                                productId: productId,
+                                impUid: rsp.imp_uid,
+                                merchantUid: rsp.merchant_uid
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // 성공 페이지로 리다이렉트
+                                window.location.href = `/api/subscription/success?plan=${selectedPlan}&amount=${selectedPrice}&authorName=${encodeURIComponent(authorName)}&impUid=${rsp.imp_uid}&merchantUid=${rsp.merchant_uid}`;
+                            } else {
+                                alert('구독 등록 실패: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('구독 등록 오류:', error);
+                            alert('구독 등록 중 오류가 발생했습니다.');
+                        });
+                    } else {
+                        // 결제 실패 시 실패 페이지로 리다이렉트
+                        window.location.href = `/api/subscription/fail?errorMessage=${encodeURIComponent(rsp.error_msg)}&errorCode=${rsp.error_code}&plan=${selectedPlan}&amount=${selectedPrice}&authorName=${encodeURIComponent(authorName)}`;
+                    }
+                });
+            }
+
+            // 페이지 로드 시 초기화
+            document.addEventListener('DOMContentLoaded', function() {
+                getAuthorInfoFromUrl();
+                updateSubscriptionDisplay();
+            });
+        </script>
+    </th:block>
+</body>
+
+</html> 
