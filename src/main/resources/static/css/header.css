@@ -450,3 +450,45 @@ ul {
 .notification-toast-message {
     font-size: 0.9rem;
 }
+
+/* 알림 카테고리 필터 바 스타일 */
+.notification-filter-bar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 0;
+    height: 48px;
+    align-items: center;
+}
+
+.notification-filter-bar .filter-btn {
+    border: 1.5px solid #e0e4ea;
+    background: #fff;
+    color: #7a7a7a;
+    border-radius: 20px;
+    padding: 6px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    outline: none;
+    height: 35px;
+    min-width: 60px;
+    white-space: nowrap;
+}
+
+.notification-filter-bar .filter-btn.active,
+.notification-filter-bar .filter-btn:focus {
+    background: #2563eb;
+    color: #fff;
+    border: 1.5px solid #2563eb;
+    box-shadow: 0 2px 8px 0 rgba(37, 99, 235, 0.08);
+}
+
+.notification-filter-bar .filter-btn:hover:not(.active) {
+    background: #f4f6fa;
+    color: #2563eb;
+    border: 1.5px solid #bcd0f7;
+}

@@ -2,6 +2,7 @@
 class NotificationList {
     constructor() {
         this.notifications = [];
+        this.filteredCategory = 'all'; // 추가: 현재 필터 카테고리
         this.csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
         this.csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
         this.init(); // init 호출을 다시 활성화
@@ -17,6 +18,25 @@ class NotificationList {
                 this.markAllAsRead();
             });
         }
+
+        // 필터 버튼 이벤트 리스너 등록
+        document.addEventListener('DOMContentLoaded', () => {
+            const filterBar = document.querySelector('.notification-filter-bar');
+            if (filterBar) {
+                filterBar.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const category = btn.getAttribute('data-category');
+                        this.filteredCategory = category;
+                        // 버튼 활성화 스타일 처리
+                        filterBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.updateNotificationList();
+                    });
+                });
+                // 기본값: 전체 활성화
+                filterBar.querySelector('.filter-btn[data-category="all"]').classList.add('active');
+            }
+        });
     }
 
     // createNotificationModal 메서드도 더 이상 필요하지 않습니다.
@@ -65,12 +85,34 @@ class NotificationList {
         const notificationList = document.getElementById('notificationList');
         if (!notificationList) return;
 
-        if (this.notifications.length === 0) {
+        // 카테고리별 필터링
+        let filtered = this.notifications;
+        switch (this.filteredCategory) {
+            case 'social':
+                filtered = this.notifications.filter(n => ['follow', 'like', 'comment'].includes(n.type));
+                break;
+            case 'product':
+                filtered = this.notifications.filter(n => ['product_inquiry', 'product_review'].includes(n.type));
+                break;
+            case 'admin':
+                filtered = this.notifications.filter(n => [
+                    'seller_request_received', 'seller_request_submitted', 'seller_approved', 'seller_rejected', 'admin_notice'
+                ].includes(n.type));
+                break;
+            case 'auction':
+                filtered = this.notifications.filter(n => ['auction_bid', 'auction_win', 'auction_lose'].includes(n.type));
+                break;
+            case 'all':
+            default:
+                filtered = this.notifications;
+        }
+
+        if (filtered.length === 0) {
             notificationList.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">알림이 없습니다.</div>';
             return;
         }
 
-        const notificationsHTML = this.notifications.map(notification => {
+        const notificationsHTML = filtered.map(notification => {
             const isUnread = !notification.isRead;
             const timeAgo = this.getTimeAgo(notification.createdAt);
             const typeClass = this.getTypeClass(notification.type);
@@ -207,7 +249,13 @@ class NotificationList {
         const isSuccess = await this.markAsRead(notificationId);
 
         // 성공한 경우에만 페이지를 이동합니다.
-        if (isSuccess && link) {
+        if (
+            isSuccess &&
+            link &&
+            link !== 'null' &&
+            link !== 'undefined' &&
+            link !== ''
+        ) {
             window.location.href = link;
         }
 
