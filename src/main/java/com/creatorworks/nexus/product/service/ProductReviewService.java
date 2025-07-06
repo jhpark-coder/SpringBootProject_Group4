@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.creatorworks.nexus.member.entity.Member;
-import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.dto.ProductReviewRequestDto;
 import com.creatorworks.nexus.product.entity.Product;
@@ -24,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 public class ProductReviewService {
 
     private final ProductRepository productRepository;
-    private final MemberRepository memberRepository;
     private final ProductReviewRepository productReviewRepository;
     private final OrderRepository orderRepository; // 구매 확인용
 
