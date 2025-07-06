@@ -22,7 +22,6 @@ import com.creatorworks.nexus.order.dto.MonthlySalesDto;
 import com.creatorworks.nexus.order.dto.TopSellingProductDto;
 import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.order.service.OrderService;
-import com.creatorworks.nexus.product.service.ProductService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +35,7 @@ public class SellerPageController {
     private final MemberRepository memberRepository;
     private final OrderService orderService;
     private final OrderRepository orderRepository;
-    private final ProductService productService;
+    // private final ProductService productService; // 사용하지 않으므로 삭제
     // ... 다른 서비스/레포지토리
 
     @GetMapping("/dashboard")

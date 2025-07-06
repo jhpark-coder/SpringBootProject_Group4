@@ -3,7 +3,6 @@ package com.creatorworks.nexus.notification.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -19,7 +18,6 @@ public class NotificationService {
     private static final String NESTJS_ADMIN_NOTIFY_URL = "http://localhost:3000/api/notifications/admin/create";
     private final NotificationRepository notificationRepository;
 
-    @Autowired
     public NotificationService(NotificationRepository notificationRepository) {
         this.notificationRepository = notificationRepository;
     }

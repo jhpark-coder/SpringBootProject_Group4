@@ -1,11 +1,10 @@
 package com.creatorworks.nexus.product.dto;
 
-import com.creatorworks.nexus.product.entity.ItemTag;
-import com.creatorworks.nexus.product.entity.Product;
-import com.creatorworks.nexus.product.entity.ProductItemTag;
-
+// import com.creatorworks.nexus.product.entity.ItemTag; // 사용하지 않으므로 삭제
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.creatorworks.nexus.product.entity.Product;
 
 public record ProductDto(
         Long id,

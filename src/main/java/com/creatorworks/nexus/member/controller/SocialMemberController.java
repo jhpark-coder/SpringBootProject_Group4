@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.creatorworks.nexus.member.dto.SessionMemberFormDto;
-import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.member.service.SocialMemberService;
 
 import jakarta.servlet.http.HttpSession;
@@ -22,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SocialMemberController {
     private final SocialMemberService socialMemberService;
-    private final MemberRepository memberRepository;
     private final HttpSession httpSession;
 
     @GetMapping("/addInfo")

@@ -493,10 +493,12 @@
     </script>
 
     <!-- 페이지 로드 시 로그인한 사용자의 ID를 전역 변수로 설정 -->
-    <script th:inline="javascript" th:if="${#authentication.principal != 'anonymousUser'}">
+    <script th:inline="javascript">
         /*<![CDATA[*/
         window.currentUser = {
-            id: /*[[${#authentication.principal.id}]]*/ '0'
+            id: /*[[${#authentication.principal != 'anonymousUser' ? #authentication.principal.id : null}]]*/ null,
+            username: /*[[${#authentication.principal != 'anonymousUser' ? #authentication.principal.username : null}]]*/ null,
+            roles: /*[[${#authentication.authorities.![authority]}]]*/[]
         };
         /*]]>*/
     </script>

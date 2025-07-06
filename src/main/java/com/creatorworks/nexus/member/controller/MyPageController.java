@@ -201,7 +201,7 @@ public class MyPageController {
 
             // 4. 구매하지 않은 상품만 필터링하고 4개로 제한
             List<Product> recentViewedProducts = sortedProducts.stream()
-                    .filter(product -> !orderRepository.existsByBuyerAndProduct(currentMember, product))
+                    .filter(product -> currentMember != null && !orderRepository.existsByBuyerAndProduct(currentMember, product))
                     .limit(4)
                     .collect(Collectors.toList());
 

@@ -1,14 +1,15 @@
 package com.creatorworks.nexus.keyword.service;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.openkoreantext.processor.OpenKoreanTextProcessorJava;
 import org.openkoreantext.processor.tokenizer.KoreanTokenizer;
 import org.springframework.stereotype.Service;
+
 import scala.collection.Seq;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.Collections;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 @Service
 public class KoreanTextService {

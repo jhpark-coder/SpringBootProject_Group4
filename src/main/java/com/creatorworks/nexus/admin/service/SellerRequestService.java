@@ -95,17 +95,16 @@ public class SellerRequestService {
 
     // 신청 승인
     public void approveRequest(Long requestId) {
-        SellerRequest request = sellerRequestRepository.findById(requestId)
+        SellerRequest sellerRequest = sellerRequestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("신청을 찾을 수 없습니다."));
 
-        if (request.getStatus() != SellerRequest.RequestStatus.PENDING) {
+        if (sellerRequest.getStatus() != SellerRequest.RequestStatus.PENDING) {
             throw new IllegalStateException("이미 처리된 신청입니다.");
         }
 
-        request.setStatus(SellerRequest.RequestStatus.APPROVED);
+        sellerRequest.setStatus(SellerRequest.RequestStatus.APPROVED);
         
-        // 회원의 역할을 SELLER로 변경
-        Member member = request.getMember();
+        Member member = sellerRequest.getMember();
         member.setRole(Role.SELLER);
         memberRepository.save(member);
 
@@ -124,19 +123,19 @@ public class SellerRequestService {
 
     // 신청 거절
     public void rejectRequest(Long requestId, String reason) {
-        SellerRequest request = sellerRequestRepository.findById(requestId)
+        SellerRequest sellerRequest = sellerRequestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("신청을 찾을 수 없습니다."));
 
-        if (request.getStatus() != SellerRequest.RequestStatus.PENDING) {
+        if (sellerRequest.getStatus() != SellerRequest.RequestStatus.PENDING) {
             throw new IllegalStateException("이미 처리된 신청입니다.");
         }
 
-        request.setStatus(SellerRequest.RequestStatus.REJECTED);
-        request.setReason(reason);
+        sellerRequest.setStatus(SellerRequest.RequestStatus.REJECTED);
+        sellerRequest.setReason(reason);
 
         // 거절 알림 보내기
         FollowNotificationRequest notificationDto = new FollowNotificationRequest();
-        notificationDto.setTargetUserId(request.getMember().getId());
+        notificationDto.setTargetUserId(sellerRequest.getMember().getId());
         notificationDto.setSenderUserId(0L); // 시스템 알림
         notificationDto.setMessage("작가 등록 신청이 거절되었습니다. 사유: " + reason);
         notificationDto.setType("seller_rejected");
