@@ -397,11 +397,11 @@
             <div class="subscription-plan-section">
                 <h3>구독 플랜 선택</h3>
                 <div class="subscription-plan-options">
-                    <div class="subscription-plan-option selected" data-plan="monthly" data-price="9900">
+                    <div class="subscription-plan-option selected" data-plan="monthly" data-price="1">
                         <div class="subscription-plan-badge">인기</div>
                         <div class="subscription-plan-header">
                             <span class="subscription-plan-name">월간 구독</span>
-                            <span class="subscription-plan-price">9,900원/월</span>
+                            <span class="subscription-plan-price">1원/월</span>
                         </div>
                         <div class="subscription-plan-description">
                             매월 자동으로 결제되며, 언제든지 해지할 수 있습니다.
@@ -413,11 +413,11 @@
                             <li>첫 달 무료 체험</li>
                         </ul>
                     </div>
-                    <div class="subscription-plan-option" data-plan="yearly" data-price="99000">
+                    <div class="subscription-plan-option" data-plan="yearly" data-price="12">
                         <div class="subscription-plan-badge">할인</div>
                         <div class="subscription-plan-header">
                             <span class="subscription-plan-name">연간 구독</span>
-                            <span class="subscription-plan-price">99,000원/년</span>
+                            <span class="subscription-plan-price">12원/년</span>
                         </div>
                         <div class="subscription-plan-description">
                             1년간 자동으로 결제되며, 2개월 무료 혜택을 제공합니다.
@@ -463,11 +463,11 @@
                 </div>
                 <div class="subscription-summary-row">
                     <span class="subscription-summary-label">월 결제 금액</span>
-                    <span class="subscription-summary-value" id="summaryMonthlyPrice">9,900원</span>
+                    <span class="subscription-summary-value" id="summaryMonthlyPrice">1원</span>
                 </div>
                 <div class="subscription-summary-row">
                     <span class="subscription-summary-label">총 결제 금액</span>
-                    <span class="subscription-summary-value" id="summaryTotalPrice">9,900원</span>
+                    <span class="subscription-summary-value" id="summaryTotalPrice">1원</span>
                 </div>
 
                 <div class="subscription-benefits">
@@ -491,7 +491,7 @@
         <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
         <script>
             let selectedPlan = 'monthly';
-            let selectedPrice = 9900;
+            let selectedPrice = 1;
             let selectedPlanName = '월간 구독';
             let selectedBillingCycle = '매월';
 
@@ -535,7 +535,7 @@
                 document.getElementById('summaryPlanName').textContent = selectedPlanName;
                 document.getElementById('summaryBillingCycle').textContent = selectedBillingCycle;
                 document.getElementById('summaryMonthlyPrice').textContent = selectedPlan === 'monthly' ? 
-                    '9,900원' : '8,250원';
+                    '1원' : '1원';
                 document.getElementById('summaryTotalPrice').textContent = selectedPrice.toLocaleString() + '원';
             }
 
@@ -568,8 +568,8 @@
                     merchant_uid: 'subscription_' + new Date().getTime(),
                     name: `${authorName} 작가 정기구독`,
                     amount: selectedPrice,
-                    buyer_email: '[[${#authentication.name}]]',
-                    buyer_name: '[[${#authentication.principal.name}]]',
+                                buyer_email: '[[${#authentication.name}]]',
+            buyer_name: '[[${#authentication.principal.name}]]',
                     custom_data: {
                         plan: selectedPlan,
                         authorName: authorName,
@@ -578,19 +578,31 @@
                 }, function(rsp) {
                     if (rsp.success) {
                         // 결제 성공 시 서버에 구독 정보 전송
+                        // CSRF 토큰 가져오기
+                        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+                        
+                        const headers = {
+                            'Content-Type': 'application/json'
+                        };
+                        
+                        if (csrfToken && csrfHeader) {
+                            headers[csrfHeader] = csrfToken;
+                        }
+                        
                         fetch('/api/subscription/create', {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || ''
-                            },
+                            headers: headers,
                             body: JSON.stringify({
                                 plan: selectedPlan,
                                 amount: selectedPrice,
                                 authorName: authorName,
-                                productId: productId,
+                                productId: productId ? parseInt(productId) : null,
                                 impUid: rsp.imp_uid,
-                                merchantUid: rsp.merchant_uid
+                                merchantUid: rsp.merchant_uid,
+                                months: selectedPlan === 'monthly' ? 1 : 12,
+                                cardNumber: rsp.card_number || '',
+                                cardType: rsp.card_type || ''
                             })
                         })
                         .then(response => response.json())

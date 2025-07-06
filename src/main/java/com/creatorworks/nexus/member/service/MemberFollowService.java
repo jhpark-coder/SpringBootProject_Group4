@@ -107,6 +107,19 @@ public class MemberFollowService {
     public long getFollowingCount(Long memberId) {
         return memberFollowRepository.countFollowingsByMemberId(memberId);
     }
+    
+    /**
+     * 사용자의 팔로잉 수 조회 (이메일로)
+     * @param memberEmail 사용자 이메일
+     * @return 팔로잉 수
+     */
+    public long getFollowingCount(String memberEmail) {
+        Member member = memberRepository.findByEmail(memberEmail);
+        if (member == null) {
+            return 0;
+        }
+        return memberFollowRepository.countFollowingsByMemberId(member.getId());
+    }
 
     /**
      * 사용자의 팔로워 목록 조회

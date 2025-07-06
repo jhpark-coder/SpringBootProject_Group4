@@ -324,7 +324,14 @@
                                                             th:src="${product.seller?.profileImage ?: 'https://via.placeholder.com/40'}">
                     <span class="seller-name" th:text="${product.createdBy ?: '익명 판매자'}">판매자이름이 들어가</span>
                 </div>
-                <button th:if="${#authentication.name != product.createdBy}" class="follow-btn">Follow</button>
+                <button th:if="${#authentication.name != product.createdBy}" 
+                        class="follow-btn"
+                        th:onclick="|toggleFollow(${product.seller.id})|"
+                        sec:authorize="isAuthenticated()">Follow</button>
+                <button th:if="${#authentication.name != product.createdBy}" 
+                        class="follow-btn"
+                        onclick="alert('로그인이 필요합니다.'); location.href='/members/login';"
+                        sec:authorize="!isAuthenticated()">Follow</button>
             </div>
             <div class="tags">
                 <button class="tag-btn"
@@ -533,6 +540,9 @@
             }
         }
     </script>
+    
+    <!-- 팔로우 기능 스크립트 -->
+    <script th:src="@{/js/heartFollow.js}"></script>
 </body>
 
 </html>

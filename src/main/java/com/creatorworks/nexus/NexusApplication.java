@@ -6,10 +6,12 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableCaching
 @EnableJpaAuditing
+@EnableScheduling
 @ComponentScan(basePackages = "com.creatorworks.nexus")
 @ConfigurationPropertiesScan
 public class NexusApplication {

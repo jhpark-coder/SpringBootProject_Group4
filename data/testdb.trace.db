@@ -37,3 +37,18 @@ Caused by: java.lang.AssertionError
 	at org.h2.mvstore.FileStore.executeFileStoreOperation(FileStore.java:1893)
 	at org.h2.mvstore.MVStore.executeFilestoreOperation(MVStore.java:922)
 	... 19 more
+2025-07-07 01:07:40.170705+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "SELER" not found; SQL statement:
+SELECT * FROM SELER [42102-232]
+2025-07-07 01:08:27.442350+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]FOLLOWING_ID FOLLOWING_ID"; SQL statement:
+FOLLOWING_ID FOLLOWING_ID [42000-232]
+2025-07-07 01:08:35.057880+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]FOLLOWER_ID"; SQL statement:
+FOLLOWER_ID [42000-232]
+2025-07-07 01:18:02.007671+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]ROLE"; expected "ROLLBACK, REVOKE, RUNSCRIPT, RELEASE, REFRESH"; SQL statement:
+ROLE [42001-232]
+2025-07-07 01:18:03.132972+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]ROLE"; expected "ROLLBACK, REVOKE, RUNSCRIPT, RELEASE, REFRESH"; SQL statement:
+ROLE [42001-232]

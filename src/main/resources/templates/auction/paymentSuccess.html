@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>경매 결제 성공</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+        .success-icon {
+            font-size: 60px;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .payment-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        .payment-details h3 {
+            margin-top: 0;
+            color: #495057;
+            text-align: center;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">✓</div>
+        
+        <div class="header">
+            <h1>결제가 완료되었습니다!</h1>
+            <p>경매 낙찰 결제가 성공적으로 처리되었습니다.</p>
+        </div>
+        
+        <div class="payment-details">
+            <h3>결제 정보</h3>
+            <div class="detail-row">
+                <span>결제 번호:</span>
+                <span th:text="${impUid}">-</span>
+            </div>
+            <div class="detail-row">
+                <span>결제 상태:</span>
+                <span style="color: #28a745; font-weight: bold;">성공</span>
+            </div>
+            <div class="detail-row">
+                <span>결제 일시:</span>
+                <span th:text="${#dates.format(#dates.createNow(), 'yyyy-MM-dd HH:mm:ss')}">-</span>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <a href="/" class="btn btn-primary">메인 페이지</a>
+            <a href="/api/auction-payment/history-page" class="btn btn-success">결제 내역 보기</a>
+            <a href="/auction" class="btn btn-secondary">경매 둘러보기</a>
+        </div>
+    </div>
+</body>
+</html> 

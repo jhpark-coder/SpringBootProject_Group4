@@ -40,6 +40,9 @@ import java.util.HashMap;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @RequestMapping("/members")
 @Controller
@@ -101,7 +104,8 @@ public class MemberController {
     }
 
     @GetMapping("/following-products")
-    public String followingProducts(Model model, Principal principal) {
+    public String followingProducts(Model model, Principal principal,
+                                  @RequestParam(defaultValue = "0") int page) {
         if (principal == null) {
             return "redirect:/members/login";
         }
@@ -111,29 +115,28 @@ public class MemberController {
             return "redirect:/members/login";
         }
         
-        // 팔로잉한 작가 목록 조회
-        List<Member> followingMembers = memberFollowService.getFollowings(member.getId());
-        
-        // 팔로잉한 작가들의 작품 목록 조회
-        List<Product> followingProducts = new ArrayList<>();
-        for (Member followingMember : followingMembers) {
-            List<Product> memberProducts = productRepository.findBySellerOrderByRegTimeDesc(followingMember);
-            followingProducts.addAll(memberProducts);
+        try {
+            // 페이징 처리
+            Pageable pageable = PageRequest.of(page, 12); // 한 페이지당 12개 작품
+            
+            // 팔로우한 작가들의 작품들을 가져오기
+            Page<Product> followingProducts = productService.getFollowingProducts(principal.getName(), pageable);
+            
+            model.addAttribute("followingProducts", followingProducts.getContent());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", followingProducts.getTotalPages());
+            model.addAttribute("totalElements", followingProducts.getTotalElements());
+            model.addAttribute("hasNext", followingProducts.hasNext());
+            model.addAttribute("hasPrevious", followingProducts.hasPrevious());
+            
+            // 팔로우한 작가 수
+            long followingCount = memberFollowService.getFollowingCount(principal.getName());
+            model.addAttribute("followingCount", followingCount);
+            
+        } catch (Exception e) {
+            model.addAttribute("error", "팔로우한 작품 목록을 불러오는데 실패했습니다.");
         }
         
-        // 최신순으로 정렬
-        followingProducts.sort((p1, p2) -> p2.getRegTime().compareTo(p1.getRegTime()));
-        
-        // 각 상품의 좋아요 개수 계산
-        Map<Long, Long> heartCounts = new HashMap<>();
-        for (Product product : followingProducts) {
-            long heartCount = productService.getHeartCount(product.getId());
-            heartCounts.put(product.getId(), heartCount);
-        }
-        
-        model.addAttribute("followingProducts", followingProducts);
-        model.addAttribute("heartCounts", heartCounts);
-        model.addAttribute("followingCount", followingMembers.size());
         return "member/followingProducts";
     }
 

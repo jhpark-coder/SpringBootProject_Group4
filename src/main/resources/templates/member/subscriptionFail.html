@@ -294,8 +294,9 @@
                 <!-- 액션 버튼 -->
                 <div class="action-buttons">
                     <a th:href="@{/members/subscription(author=${authorName}, productId=${productId})}" class="btn btn-primary">다시 시도하기</a>
-                    <a href="/products" class="btn btn-outline">상품 둘러보기</a>
-                    <a href="/member/myPage" class="btn btn-secondary">마이페이지로 이동</a>
+                    <a href="/" class="btn btn-outline">상품 둘러보기</a>
+                    <a href="/api/subscription/history" class="btn btn-secondary">구독 내역 보기</a>
+                    <a href="/members/myPage" class="btn btn-secondary">마이페이지로 이동</a>
                 </div>
             </div>
         </div>

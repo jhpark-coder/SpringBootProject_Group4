@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>경매 결제</title>
+    <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .payment-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .payment-info h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .payment-button {
+            width: 100%;
+            padding: 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .payment-button:hover {
+            background: #0056b3;
+        }
+        .payment-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .error-message {
+            color: #dc3545;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>경매 결제</h1>
+            <p>안전한 결제를 진행해주세요</p>
+        </div>
+        
+        <div class="payment-info">
+            <h3>결제 정보</h3>
+            <div class="info-row">
+                <span>경매 ID:</span>
+                <span th:text="${auctionId}">-</span>
+            </div>
+            <div class="info-row">
+                <span>낙찰 금액:</span>
+                <span id="amount">-</span>
+            </div>
+            <div class="info-row">
+                <span>결제자:</span>
+                <span th:text="${#authentication.principal.name}">-</span>
+            </div>
+        </div>
+        
+        <button id="payment-button" class="payment-button" onclick="requestPayment()">
+            결제하기
+        </button>
+        
+        <div id="loading" class="loading">
+            <p>결제 처리 중입니다...</p>
+        </div>
+        
+        <div id="error-message" class="error-message"></div>
+    </div>
+
+    <script th:inline="javascript">
+        const auctionId = [[${auctionId}]];
+        let amount = 0; // 실제 낙찰 금액으로 설정 필요
+        
+        // 아임포트 초기화
+        const IMP = window.IMP;
+        IMP.init('imp00000000'); // 실제 아임포트 가맹점 식별코드로 변경
+        
+        // 결제 요청
+        function requestPayment() {
+            const button = document.getElementById('payment-button');
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('error-message');
+            
+            button.disabled = true;
+            loading.style.display = 'block';
+            errorMessage.style.display = 'none';
+            
+            // 실제 낙찰 금액을 가져오는 API 호출 필요
+            // 임시로 10000원으로 설정
+            amount = 10000;
+            document.getElementById('amount').textContent = amount.toLocaleString() + '원';
+            
+            const merchantUid = 'auction_' + auctionId + '_' + new Date().getTime();
+            
+            IMP.request_pay({
+                pg: 'html5_inicis',
+                pay_method: 'card',
+                merchant_uid: merchantUid,
+                amount: amount,
+                name: '경매 낙찰 결제',
+                buyer_email: '[[${#authentication.principal.username}]]',
+                buyer_name: '[[${#authentication.principal.name}]]',
+            }, function(rsp) {
+                if (rsp.success) {
+                    // 결제 성공 시 서버에 결제 정보 전송
+                    processPayment(rsp.imp_uid, merchantUid, rsp);
+                } else {
+                    // 결제 실패
+                    handlePaymentFailure(rsp.imp_uid, rsp.error_msg);
+                }
+            });
+        }
+        
+        // 결제 처리
+        function processPayment(impUid, merchantUid, rsp) {
+            const paymentData = {
+                auctionId: auctionId,
+                amount: amount,
+                impUid: impUid,
+                merchantUid: merchantUid,
+                cardNumber: rsp.card_number || '',
+                cardType: rsp.card_type || ''
+            };
+            
+            fetch('/api/auction-payment/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').getAttribute('content')
+                },
+                body: JSON.stringify(paymentData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/api/auction-payment/success?impUid=' + impUid;
+                } else {
+                    throw new Error('결제 처리 실패');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                handlePaymentFailure(impUid, '결제 처리 중 오류가 발생했습니다.');
+            });
+        }
+        
+        // 결제 실패 처리
+        function handlePaymentFailure(impUid, reason) {
+            fetch('/api/auction-payment/fail', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').getAttribute('content')
+                },
+                body: 'impUid=' + encodeURIComponent(impUid) + '&failureReason=' + encodeURIComponent(reason)
+            })
+            .then(() => {
+                window.location.href = '/api/auction-payment/fail?impUid=' + impUid + '&failureReason=' + encodeURIComponent(reason);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('결제 실패 처리 중 오류가 발생했습니다.');
+            });
+        }
+        
+        // 에러 메시지 표시
+        function showError(message) {
+            const button = document.getElementById('payment-button');
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('error-message');
+            
+            button.disabled = false;
+            loading.style.display = 'none';
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+    </script>
+</body>
+</html> 

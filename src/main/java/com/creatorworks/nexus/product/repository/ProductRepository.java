@@ -114,4 +114,16 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
      * @return 상품 Page
      */
     Page<Product> findByIdNotIn(List<Long> ids, Pageable pageable);
+    
+    /**
+     * [추가] 팔로우한 작가들의 작품들을 페이징하여 조회합니다.
+     * @param followerId 팔로우하는 사용자 ID
+     * @param pageable 페이징 정보
+     * @return 팔로우한 작가들의 작품 목록
+     */
+    @Query("SELECT p FROM Product p " +
+           "WHERE p.seller.id IN " +
+           "(SELECT mf.following.id FROM MemberFollow mf WHERE mf.follower.id = :followerId) " +
+           "ORDER BY p.regTime DESC")
+    Page<Product> findByFollowingMembers(@Param("followerId") Long followerId, Pageable pageable);
 }

@@ -317,4 +317,20 @@ public class ProductService {
     public Page<Product> findProductsBySeller(Member seller, Pageable pageable) {
         return productRepository.findBySeller(seller, pageable);
     }
+    
+    /**
+     * 팔로우한 작가들의 작품들을 페이징하여 조회
+     * @param memberEmail 팔로우하는 사용자 이메일
+     * @param pageable 페이징 정보
+     * @return 팔로우한 작가들의 작품 목록
+     */
+    @Transactional(readOnly = true)
+    public Page<Product> getFollowingProducts(String memberEmail, Pageable pageable) {
+        Member member = memberRepository.findByEmail(memberEmail);
+        if (member == null) {
+            throw new IllegalArgumentException("사용자를 찾을 수 없습니다: " + memberEmail);
+        }
+        
+        return productRepository.findByFollowingMembers(member.getId(), pageable);
+    }
 }

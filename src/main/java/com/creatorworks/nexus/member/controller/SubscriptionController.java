@@ -2,6 +2,12 @@ package com.creatorworks.nexus.member.controller;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.Map;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +20,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.creatorworks.nexus.member.constant.SubscriptionStatus;
+import com.creatorworks.nexus.member.dto.SubscriptionCompleteRequest;
 import com.creatorworks.nexus.member.entity.Member;
+import com.creatorworks.nexus.member.entity.Subscription;
 import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.member.repository.SubscriptionRepository;
+import com.creatorworks.nexus.member.service.SubscriptionService;
 import com.creatorworks.nexus.product.service.PointService;
 
 import lombok.RequiredArgsConstructor;
@@ -28,7 +39,9 @@ import lombok.extern.slf4j.Slf4j;
 public class SubscriptionController {
 
     private final MemberRepository memberRepository;
+    private final SubscriptionRepository subscriptionRepository;
     private final PointService pointService;
+    private final SubscriptionService subscriptionService;
 
     /**
      * 구독 생성 API
@@ -39,7 +52,7 @@ public class SubscriptionController {
     @PostMapping("/create")
     @ResponseBody
     public ResponseEntity<SubscriptionResponse> createSubscription(
-            @RequestBody SubscriptionRequest request, 
+            @RequestBody SubscriptionCompleteRequest request, 
             Principal principal) {
         
         if (principal == null) {
@@ -62,10 +75,8 @@ public class SubscriptionController {
                 );
             }
 
-            // TODO: 실제 구독 로직 구현
-            // 1. 구독 정보 저장
-            // 2. 결제 내역 저장
-            // 3. 구독 상태 업데이트
+            // 구독 서비스를 통한 구독 생성
+            Subscription subscription = subscriptionService.createSubscription(request, member.getId());
 
             log.info("구독 생성 완료: 회원ID={}, 플랜={}, 작가={}, 금액={}", 
                     member.getId(), request.getPlan(), request.getAuthorName(), request.getAmount());
@@ -86,9 +97,116 @@ public class SubscriptionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 SubscriptionResponse.builder()
                     .success(false)
-                    .message("구독 생성 중 오류가 발생했습니다.")
+                    .message("구독 생성 중 오류가 발생했습니다: " + e.getMessage())
                     .build()
             );
+        }
+    }
+
+    /**
+     * 구독 상태 확인 API
+     */
+    @PostMapping("/check")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> checkSubscription(
+            @RequestBody Map<String, Object> request,
+            Principal principal) {
+        
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("success", false, "message", "로그인이 필요합니다."));
+        }
+
+        try {
+            Member member = memberRepository.findByEmail(principal.getName());
+            if (member == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("success", false, "message", "회원 정보를 찾을 수 없습니다."));
+            }
+
+            Long authorId = Long.valueOf(request.get("authorId").toString());
+            boolean isSubscribed = subscriptionService.isSubscribed(member.getId(), authorId);
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "isSubscribed", isSubscribed
+            ));
+
+        } catch (Exception e) {
+            log.error("구독 상태 확인 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("success", false, "message", "구독 상태 확인 중 오류가 발생했습니다."));
+        }
+    }
+
+    /**
+     * 구독 내역 조회 API
+     */
+    @GetMapping("/history")
+    public String subscriptionHistory(Model model, Principal principal,
+                                     @RequestParam(defaultValue = "0") int page,
+                                     @RequestParam(defaultValue = "10") int size) {
+        
+        if (principal == null) {
+            return "redirect:/members/login";
+        }
+
+        Member member = memberRepository.findByEmail(principal.getName());
+        if (member == null) {
+            return "redirect:/members/login";
+        }
+
+        // 구독 내역 조회 (페이징)
+        Pageable pageable = PageRequest.of(page, size, Sort.by("regTime").descending());
+        Page<Subscription> subscriptionPage = subscriptionRepository.findBySubscriberOrderByRegTimeDesc(member, pageable);
+        
+        // 구독 통계
+        long totalSubscriptions = subscriptionPage.getTotalElements();
+        long activeSubscriptions = subscriptionRepository.findBySubscriberAndStatus(member, SubscriptionStatus.ACTIVE).size();
+        
+        model.addAttribute("subscriptions", subscriptionPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", subscriptionPage.getTotalPages());
+        model.addAttribute("totalSubscriptions", totalSubscriptions);
+        model.addAttribute("activeSubscriptions", activeSubscriptions);
+        model.addAttribute("currentBalance", pointService.getCurrentBalance(member.getId()));
+
+        return "member/subscriptionHistory";
+    }
+
+    /**
+     * 구독 해지 API
+     */
+    @PostMapping("/cancel")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> cancelSubscription(
+            @RequestBody Map<String, Object> request,
+            Principal principal) {
+        
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("success", false, "message", "로그인이 필요합니다."));
+        }
+
+        try {
+            Member member = memberRepository.findByEmail(principal.getName());
+            if (member == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("success", false, "message", "회원 정보를 찾을 수 없습니다."));
+            }
+
+            Long subscriptionId = Long.valueOf(request.get("subscriptionId").toString());
+            subscriptionService.cancelSubscription(subscriptionId, member.getId());
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "구독이 성공적으로 해지되었습니다."
+            ));
+
+        } catch (Exception e) {
+            log.error("구독 해지 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("success", false, "message", "구독 해지 중 오류가 발생했습니다: " + e.getMessage()));
         }
     }
 
