@@ -49,6 +49,51 @@
                 opacity: 0.6;
             }
 
+            /* 대기중 상태 스타일 */
+            .apply-btn.waiting {
+                background-color: #ffc107;
+                color: #212529;
+            }
+
+            /* 승인됨 상태 스타일 */
+            .apply-btn.approved {
+                background-color: #28a745;
+                color: white;
+            }
+
+            /* 거절됨 상태 스타일 */
+            .apply-btn.rejected {
+                background-color: #dc3545;
+                color: white;
+            }
+
+            /* 상태 정보 표시 스타일 */
+            .status-info {
+                margin-top: 1rem;
+                padding: 1rem;
+                border-radius: 5px;
+                font-size: 1rem;
+                text-align: center;
+            }
+
+            .status-info.info {
+                background-color: #d1ecf1;
+                color: #0c5460;
+                border: 1px solid #bee5eb;
+            }
+
+            .status-info.success {
+                background-color: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+
+            .status-info.error {
+                background-color: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+            }
+
             .popup-overlay {
                 display: none;
                 position: fixed;
@@ -129,6 +174,9 @@
     <th:block layout:fragment="script">
         <script>
             $(document).ready(function () {
+                // 페이지 로드 시 작가신청 상태 확인
+                checkSellerRequestStatus();
+
                 // 작가 신청 버튼 클릭 이벤트
                 $("#sellerApplyBtn").on("click", function (e) {
                     e.preventDefault();
@@ -146,19 +194,83 @@
                         type: "POST",
                         success: function (response) {
                             showPopup(response);
+                            // 신청 완료 후 상태 재확인하여 버튼 상태 업데이트
+                            setTimeout(function () {
+                                checkSellerRequestStatus();
+                            }, 1000);
                         },
                         error: function (xhr) {
                             var errorMessage = xhr.responseText || "작가 신청 중 오류가 발생했습니다.";
                             showPopup(errorMessage);
-                        },
-                        complete: function () {
-                            // 요청 완료 후 버튼 다시 활성화
-                            setTimeout(function () {
-                                $("#sellerApplyBtn").prop('disabled', false).text('작가 신청하기');
-                            }, 2000); // 2초 후 재활성화
+                            // 에러 발생 시 버튼 다시 활성화
+                            $("#sellerApplyBtn").prop('disabled', false).text('작가 신청하기');
                         }
                     });
                 });
+
+                // 작가신청 상태 확인 함수
+                function checkSellerRequestStatus() {
+                    $.ajax({
+                        url: "/seller-request/status",
+                        type: "GET",
+                        success: function (response) {
+                            updateButtonStatus(response);
+                        },
+                        error: function (xhr) {
+                            console.error("상태 확인 중 오류:", xhr.responseText);
+                        }
+                    });
+                }
+
+                // 버튼 상태 업데이트 함수
+                function updateButtonStatus(statusData) {
+                    var $btn = $("#sellerApplyBtn");
+
+                    // 기존 상태 클래스 제거
+                    $btn.removeClass('waiting approved rejected');
+
+                    switch (statusData.status) {
+                        case 'NONE':
+                            // 신청 내역이 없음 - 버튼 활성화
+                            $btn.prop('disabled', false).text('작가 신청하기');
+                            break;
+                        case 'PENDING':
+                            // 대기중 - 버튼 비활성화
+                            $btn.prop('disabled', true).text('신청 대기중...').addClass('waiting');
+                            // 대기중 상태 정보 표시
+                            showStatusInfo('작가 신청이 접수되었습니다. 관리자 검토 후 결과를 알려드리겠습니다.', 'info');
+                            break;
+                        case 'APPROVED':
+                            // 승인됨 - 버튼 비활성화
+                            $btn.prop('disabled', true).text('승인됨').addClass('approved');
+                            // 승인 상태 정보 표시
+                            showStatusInfo('축하합니다! 작가 등록이 승인되었습니다.', 'success');
+                            break;
+                        case 'REJECTED':
+                            // 거절됨 - 버튼 활성화 (재신청 가능)
+                            $btn.prop('disabled', false).text('재신청하기').addClass('rejected');
+                            // 거절 상태 정보 표시
+                            var rejectMessage = '작가 신청이 거절되었습니다.';
+                            if (statusData.reason) {
+                                rejectMessage += ' 사유: ' + statusData.reason;
+                            }
+                            showStatusInfo(rejectMessage, 'error');
+                            break;
+                        default:
+                            // 기타 상태 - 버튼 활성화
+                            $btn.prop('disabled', false).text('작가 신청하기');
+                    }
+                }
+
+                // 상태 정보 표시 함수
+                function showStatusInfo(message, type) {
+                    // 기존 상태 메시지가 있으면 제거
+                    $('.status-info').remove();
+
+                    var statusClass = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+                    var statusHtml = '<div class="status-info ' + statusClass + '">' + message + '</div>';
+                    $('.register-container').append(statusHtml);
+                }
 
                 // 팝업 표시 함수
                 function showPopup(message) {
