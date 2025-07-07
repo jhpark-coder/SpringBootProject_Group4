@@ -157,28 +157,35 @@
             
             .pagination {
                 display: flex;
+                flex-direction: row;   /* 가로 정렬 */
                 justify-content: center;
-                gap: 10px;
+                align-items: center;
+                gap: 8px;
                 margin-top: 30px;
+                flex-wrap: wrap;
             }
-            
-            .pagination a,
-            .pagination span {
+            .pagination .page-link, .pagination .current {
+                display: inline-block;
+                min-width: 40px;
+                text-align: center;
                 padding: 8px 12px;
                 border: 1px solid #dee2e6;
-                text-decoration: none;
-                color: #007bff;
                 border-radius: 4px;
+                color: #007bff;
+                text-decoration: none;
+                transition: all 0.2s ease;
             }
-            
-            .pagination a:hover {
-                background: #e9ecef;
-            }
-            
             .pagination .current {
                 background: #007bff;
                 color: white;
                 border-color: #007bff;
+                font-weight: bold;
+            }
+            .pagination .page-ellipsis {
+                color: #6c757d;
+                border: none;
+                padding: 8px 4px;
+                min-width: auto;
             }
             
             .error-message {
@@ -230,14 +237,17 @@
                     <div class="seller-info">
                         <div class="seller-name">
                             <div class="seller-avatar"></div>
-                            <span th:text="${product.seller.name}">작가명</span>
+                            <span th:text="${product.sellerName}">작가명</span>
                         </div>
                         <button class="follow-btn"
-                                th:if="${product.seller != null and product.seller.email != #authentication.name}"
-                                th:onclick="|toggleFollow(${product.seller.id})|"
-                                sec:authorize="isAuthenticated()">Follow</button>
+                                th:if="${product.sellerId != null and product.sellerId != #authentication.principal.id}"
+                                th:data-member-id="${product.sellerId}"
+                                th:classappend="${product.isFollowing} ? 'following' : ''"
+                                th:onclick="|toggleFollow(${product.sellerId}, this)|"
+                                sec:authorize="isAuthenticated()"
+                                th:text="${product.isFollowing} ? 'Following' : 'Follow'">Follow</button>
                         <button class="follow-btn" 
-                                th:if="${product.seller != null}"
+                                th:if="${product.sellerId != null}"
                                 onclick="alert('로그인이 필요합니다.'); location.href='/members/login';"
                                 sec:authorize="!isAuthenticated()">Follow</button>
                     </div>
@@ -248,20 +258,44 @@
         
         <!-- 페이징 -->
         <div th:if="${totalPages > 1}" class="pagination">
+            <!-- 이전 페이지 -->
             <a th:if="${hasPrevious}" 
-               th:href="@{/members/following-products(page=${currentPage - 1})}">이전</a>
+               th:href="@{/members/following-products(page=${currentPage - 1})}"
+               class="page-link">이전</a>
             
-            <span th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}">
-                <a th:if="${pageNum != currentPage}" 
-                   th:href="@{/members/following-products(page=${pageNum})}"
-                   th:text="${pageNum + 1}">1</a>
-                <span th:if="${pageNum == currentPage}" 
-                      class="current" 
-                      th:text="${pageNum + 1}">1</span>
+            <!-- 첫 페이지 -->
+            <a th:if="${currentPage > 2}" 
+               th:href="@{/members/following-products(page=0)}"
+               class="page-link">1</a>
+            
+            <!-- 첫 페이지 근처 생략 표시 -->
+            <span th:if="${currentPage > 3}" class="page-ellipsis">...</span>
+            
+            <!-- 현재 페이지 주변 페이지들 -->
+            <span th:with="start=${currentPage > 0 ? currentPage - 1 : 0}, end=${currentPage < totalPages - 1 ? currentPage + 1 : totalPages - 1}">
+                <span th:each="pageNum : ${#numbers.sequence(start, end)}">
+                    <a th:if="${pageNum != currentPage}" 
+                       th:href="@{/members/following-products(page=${pageNum})}"
+                       class="page-link"
+                       th:text="${pageNum + 1}">1</a>
+                    <span th:if="${pageNum == currentPage}" 
+                          class="current" 
+                          th:text="${pageNum + 1}">1</span>
+                </span>
             </span>
             
+            <!-- 마지막 페이지 근처 생략 표시 -->
+            <span th:if="${currentPage < totalPages - 3}" class="page-ellipsis">...</span>
+            
+            <!-- 마지막 페이지 -->
+            <a th:if="${currentPage < totalPages - 2}" 
+               th:href="@{/members/following-products(page=${totalPages - 1})}"
+               class="page-link" th:text="${totalPages}">1</a>
+            
+            <!-- 다음 페이지 -->
             <a th:if="${hasNext}" 
-               th:href="@{/members/following-products(page=${currentPage + 1})}">다음</a>
+               th:href="@{/members/following-products(page=${currentPage + 1})}"
+               class="page-link">다음</a>
         </div>
     </div>
     

@@ -23,9 +23,10 @@ public record ProductDto(
         Long sellerId,
         java.time.LocalDateTime regTime,
         java.time.LocalDateTime updateTime,
-        List<String> tags
+        List<String> tags,
+        boolean isFollowing // 내가 팔로우 중인지
 ) {
-    public ProductDto(Product product) {
+    public ProductDto(Product product, boolean isFollowing) {
         this(
                 product.getId(),
                 product.getName(),
@@ -44,7 +45,12 @@ public record ProductDto(
                 product.getUpdateTime(),
                 product.getItemTags().stream()
                         .map(productItemTag -> productItemTag.getItemTag().getName())
-                        .collect(Collectors.toList())
+                        .collect(Collectors.toList()),
+                isFollowing
         );
+    }
+    // 기존 ProductDto(Product product) 생성자도 유지
+    public ProductDto(Product product) {
+        this(product, false);
     }
 } 

@@ -724,11 +724,28 @@ function App() {
       const savedId = await response.json();
       console.log('저장 성공! ID:', savedId);
 
-      // 5. 저장 성공 후 결과 페이지로 이동합니다.
-      const resultUrl = projectSettings.saleType === 'sale'
-        ? `/products/${savedId}`
-        : `/auctions/${savedId}`;
-      window.location.href = resultUrl;
+      // 5. iframe 내부에서 실행 중인 경우 부모 페이지로 메시지 전송
+      if (window.parent !== window) {
+        window.parent.postMessage({
+          type: 'EDITOR_SAVE_SUCCESS',
+          productId: savedId
+        }, window.location.origin);
+        
+        // 부모 페이지에서 처리할 시간을 주기 위해 잠시 대기
+        setTimeout(() => {
+          // 결과 페이지로 이동
+          const resultUrl = projectSettings.saleType === 'sale'
+            ? `/products/${savedId}`
+            : `/auctions/${savedId}`;
+          window.location.href = resultUrl;
+        }, 1000);
+      } else {
+        // 일반 에디터 페이지에서 실행 중인 경우
+        const resultUrl = projectSettings.saleType === 'sale'
+          ? `/products/${savedId}`
+          : `/auctions/${savedId}`;
+        window.location.href = resultUrl;
+      }
 
     } catch (error) {
       console.error('저장 실패:', error);

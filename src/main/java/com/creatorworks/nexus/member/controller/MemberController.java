@@ -34,6 +34,7 @@ import com.creatorworks.nexus.product.repository.ProductHeartRepository;
 import com.creatorworks.nexus.member.service.MemberFollowService;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.service.ProductService;
+import com.creatorworks.nexus.product.dto.ProductDto;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -83,23 +84,36 @@ public class MemberController {
     }
 
     @GetMapping("/liked-products")
-    public String likedProducts(Model model, Principal principal) {
+    public String likedProducts(Model model, Principal principal,
+                               @RequestParam(defaultValue = "0") int page) {
         if (principal == null) {
             return "redirect:/members/login";
         }
-        
         Member member = memberRepository.findByEmail(principal.getName());
         if (member == null) {
             return "redirect:/members/login";
         }
-        
-        // 좋아요한 상품 목록 조회
-        List<ProductHeart> likedProducts = productHeartRepository.findByMember(member);
-        List<Product> products = likedProducts.stream()
-                .map(ProductHeart::getProduct)
+
+        Pageable pageable = PageRequest.of(page, 12); // 한 페이지당 12개
+        Page<Product> likedProductsPage = productService.getLikedProducts(member.getId(), pageable);
+
+        // 팔로우 상태 정보 추가
+        List<ProductDto> likedProductsWithFollow = likedProductsPage.getContent().stream()
+                .map(product -> {
+                    boolean isFollowing = false;
+                    if (product.getSeller() != null) {
+                        isFollowing = memberFollowService.isFollowing(member.getId(), product.getSeller().getId());
+                    }
+                    return new ProductDto(product, isFollowing);
+                })
                 .collect(Collectors.toList());
-        
-        model.addAttribute("likedProducts", products);
+
+        model.addAttribute("likedProducts", likedProductsWithFollow);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", likedProductsPage.getTotalPages());
+        model.addAttribute("hasNext", likedProductsPage.hasNext());
+        model.addAttribute("hasPrevious", likedProductsPage.hasPrevious());
+
         return "member/likedProducts";
     }
 
@@ -122,7 +136,18 @@ public class MemberController {
             // 팔로우한 작가들의 작품들을 가져오기
             Page<Product> followingProducts = productService.getFollowingProducts(principal.getName(), pageable);
             
-            model.addAttribute("followingProducts", followingProducts.getContent());
+            // 팔로우 상태 정보 추가
+            List<ProductDto> followingProductsWithFollow = followingProducts.getContent().stream()
+                    .map(product -> {
+                        boolean isFollowing = false;
+                        if (product.getSeller() != null) {
+                            isFollowing = memberFollowService.isFollowing(member.getId(), product.getSeller().getId());
+                        }
+                        return new ProductDto(product, isFollowing);
+                    })
+                    .collect(Collectors.toList());
+            
+            model.addAttribute("followingProducts", followingProductsWithFollow);
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", followingProducts.getTotalPages());
             model.addAttribute("totalElements", followingProducts.getTotalElements());

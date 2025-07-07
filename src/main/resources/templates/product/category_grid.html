@@ -44,11 +44,13 @@
                                 <span class="seller-name" th:text="${product.sellerName}"></span>
                             </div>
                             <!-- 로그인한 사용자가 판매자 본인이 아닌 경우에만 팔로우 버튼 표시 -->
-                            <button class="btn follow-btn" 
+                            <button class="btn follow-btn"
                                     th:if="${product.sellerId != null}"
                                     th:data-member-id="${product.sellerId}"
-                                    th:onclick="|toggleFollow(${product.sellerId})|"
-                                    sec:authorize="isAuthenticated()">Follow</button>
+                                    th:classappend="${product.isFollowing} ? ' following' : ''"
+                                    th:onclick="|toggleFollow(${product.sellerId}, this)|"
+                                    sec:authorize="isAuthenticated()"
+                                    th:text="${product.isFollowing} ? 'Following' : 'Follow'">Follow</button>
                             <!-- 비로그인 사용자에게는 로그인 유도 -->
                             <button class="btn follow-btn"
                                     th:if="${product.sellerId != null}"

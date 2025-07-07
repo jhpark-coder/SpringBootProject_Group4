@@ -66,15 +66,18 @@
                             <div class="seller-info">
                                 <div class="seller-avatar"></div>
                                 <!-- product.seller.name 으로 판매자 이름에 접근 -->
-                                <span th:text="${product.seller.name}">판매자 이름</span>
+                                <span th:text="${product.sellerName}">판매자 이름</span>
                             </div>
                             <!-- 로그인한 경우이고 본인이 아닌 판매자일 때만 Follow 버튼 표시 -->
                             <button class="follow-btn"
-                                th:if="${product.seller != null and product.seller.email != #authentication.name}"
-                                th:onclick="|toggleFollow(${product.seller.id})|"
-                                sec:authorize="isAuthenticated()">Follow</button>
+                                th:if="${product.sellerId != null and product.sellerId != #authentication.principal.id}"
+                                th:data-member-id="${product.sellerId}"
+                                th:classappend="${product.isFollowing} ? 'following' : ''"
+                                th:onclick="|toggleFollow(${product.sellerId}, this)|"
+                                sec:authorize="isAuthenticated()"
+                                th:text="${product.isFollowing} ? 'Following' : 'Follow'">Follow</button>
                             <!-- 비로그인인 경우 -->
-                            <button class="follow-btn" th:if="${product.seller != null}"
+                            <button class="follow-btn" th:if="${product.sellerId != null}"
                                 onclick="alert('로그인이 필요합니다.'); location.href='/members/login';"
                                 sec:authorize="!isAuthenticated()">Follow</button>
                         </div>
@@ -104,15 +107,18 @@
                             <div class="seller-info">
                                 <div class="seller-avatar"></div>
                                 <!-- product.seller.name 으로 판매자 이름에 접근 -->
-                                <span th:text="${product.seller.name}">판매자 이름</span>
+                                <span th:text="${product.sellerName}">판매자 이름</span>
                             </div>
                             <!-- 로그인한 경우이고 본인이 아닌 판매자일 때만 Follow 버튼 표시 -->
                             <button class="follow-btn"
-                                th:if="${product.seller != null and product.seller.email != #authentication.name}"
-                                th:onclick="|toggleFollow(${product.seller.id})|"
-                                sec:authorize="isAuthenticated()">Follow</button>
+                                th:if="${product.sellerId != null and product.sellerId != #authentication.principal.id}"
+                                th:data-member-id="${product.sellerId}"
+                                th:classappend="${product.isFollowing} ? 'following' : ''"
+                                th:onclick="|toggleFollow(${product.sellerId}, this)|"
+                                sec:authorize="isAuthenticated()"
+                                th:text="${product.isFollowing} ? 'Following' : 'Follow'">Follow</button>
                             <!-- 비로그인인 경우 -->
-                            <button class="follow-btn" th:if="${product.seller != null}"
+                            <button class="follow-btn" th:if="${product.sellerId != null}"
                                 onclick="alert('로그인이 필요합니다.'); location.href='/members/login';"
                                 sec:authorize="!isAuthenticated()">Follow</button>
                         </div>

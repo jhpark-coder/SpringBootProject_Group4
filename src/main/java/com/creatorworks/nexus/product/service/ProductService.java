@@ -32,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import com.creatorworks.nexus.member.service.MemberFollowService;
 
 /**
  * @Service: 이 클래스가 비즈니스 로직을 처리하는 서비스 계층의 컴포넌트임을 Spring에 알립니다.
@@ -49,6 +50,7 @@ public class ProductService {
     private final ItemTagRepository itemTagRepository;
     private final ProductItemTagRepository productItemTagRepository;
     private final ProductHeartRepository productHeartRepository;
+    private final MemberFollowService memberFollowService;
 
     /**
      * 특정 1차 카테고리에 속하는 중복되지 않는 2차 카테고리 목록을 조회합니다.
@@ -66,12 +68,18 @@ public class ProductService {
      * @param pageable 페이징 정보
      * @return 페이징된 상품 응답 DTO
      */
-    public ProductPageResponse findAllProducts(String primaryCategory, String secondaryCategory, Pageable pageable) {
+    public ProductPageResponse findAllProducts(String primaryCategory, String secondaryCategory, Pageable pageable, Member currentUser) {
         Specification<Product> spec = ProductSpecification.byCategory(primaryCategory, secondaryCategory);
         Page<Product> productPage = productRepository.findAll(spec, pageable);
 
         List<ProductDto> productDtos = productPage.getContent().stream()
-                .map(ProductDto::new)
+                .map(product -> {
+                    boolean isFollowing = false;
+                    if (currentUser != null && product.getSeller() != null) {
+                        isFollowing = memberFollowService.isFollowing(currentUser.getId(), product.getSeller().getId());
+                    }
+                    return new ProductDto(product, isFollowing);
+                })
                 .toList();
 
         return new ProductPageResponse(
@@ -83,6 +91,11 @@ public class ProductService {
                 productPage.isFirst(),
                 productPage.isLast()
         );
+    }
+
+    // 기존 메서드는 currentUser를 null로 넘기도록 변경
+    public ProductPageResponse findAllProducts(String primaryCategory, String secondaryCategory, Pageable pageable) {
+        return findAllProducts(primaryCategory, secondaryCategory, pageable, null);
     }
 
     /**
@@ -332,5 +345,12 @@ public class ProductService {
         }
         
         return productRepository.findByFollowingMembers(member.getId(), pageable);
+    }
+
+    // 좋아요한 작품 페이지네이션
+    @Transactional(readOnly = true)
+    public Page<Product> getLikedProducts(Long memberId, Pageable pageable) {
+        Page<ProductHeart> hearts = productHeartRepository.findByMemberId(memberId, pageable);
+        return hearts.map(ProductHeart::getProduct);
     }
 }

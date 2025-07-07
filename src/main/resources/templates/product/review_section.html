@@ -51,17 +51,48 @@
         </div>
 
         <nav th:if="${!reviewPage.empty}" aria-label="Page navigation">
-            <ul class="pagination" style="justify-content: center;">
+            <ul class="pagination" style="justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <!-- 이전 페이지 -->
                 <li class="page-item" th:classappend="${reviewPage.first} ? 'disabled'">
                     <a class="page-link"
                         th:href="@{/products/{id}(id=${product.id}, reviewPageable_page=${reviewPage.number - 1})}">&laquo;</a>
                 </li>
-                <li class="page-item" th:each="pageNumber : ${#numbers.sequence(0, reviewPage.totalPages - 1)}"
-                    th:classappend="${pageNumber == reviewPage.number} ? 'active'">
+                
+                <!-- 첫 페이지 -->
+                <li th:if="${reviewPage.number > 2}" class="page-item">
                     <a class="page-link"
-                        th:href="@{/products/{id}(id=${product.id}, reviewPageable_page=${pageNumber})}"
-                        th:text="${pageNumber + 1}">1</a>
+                        th:href="@{/products/{id}(id=${product.id}, reviewPageable_page=0)}">1</a>
                 </li>
+                
+                <!-- 첫 페이지 근처 생략 표시 -->
+                <li th:if="${reviewPage.number > 3}" class="page-item">
+                    <span class="page-link" style="border: none; color: #6c757d;">...</span>
+                </li>
+                
+                <!-- 현재 페이지 주변 페이지들 -->
+                <li th:with="start=${reviewPage.number > 0 ? reviewPage.number - 1 : 0}, end=${reviewPage.number < reviewPage.totalPages - 1 ? reviewPage.number + 1 : reviewPage.totalPages - 1}">
+                    <li th:each="pageNumber : ${#numbers.sequence(start, end)}"
+                        th:classappend="${pageNumber == reviewPage.number} ? 'active'"
+                        class="page-item">
+                        <a class="page-link"
+                            th:href="@{/products/{id}(id=${product.id}, reviewPageable_page=${pageNumber})}"
+                            th:text="${pageNumber + 1}">1</a>
+                    </li>
+                </li>
+                
+                <!-- 마지막 페이지 근처 생략 표시 -->
+                <li th:if="${reviewPage.number < reviewPage.totalPages - 3}" class="page-item">
+                    <span class="page-link" style="border: none; color: #6c757d;">...</span>
+                </li>
+                
+                <!-- 마지막 페이지 -->
+                <li th:if="${reviewPage.number < reviewPage.totalPages - 2}" class="page-item">
+                    <a class="page-link"
+                        th:href="@{/products/{id}(id=${product.id}, reviewPageable_page=${reviewPage.totalPages - 1})}"
+                        th:text="${reviewPage.totalPages}">1</a>
+                </li>
+                
+                <!-- 다음 페이지 -->
                 <li class="page-item" th:classappend="${reviewPage.last} ? 'disabled'">
                     <a class="page-link"
                         th:href="@{/products/{id}(id=${product.id}, reviewPageable_page=${reviewPage.number + 1})}">&raquo;</a>

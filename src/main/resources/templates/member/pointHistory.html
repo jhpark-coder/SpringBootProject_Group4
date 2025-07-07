@@ -117,28 +117,35 @@
 
         .pagination {
             display: flex;
+            flex-direction: row;   /* 가로 정렬 */
             justify-content: center;
+            align-items: center;
+            gap: 8px;
             margin-top: 24px;
+            flex-wrap: wrap;
         }
-
-        .pagination .page-link {
-            color: #007bff;
-            border: 1px solid #dee2e6;
+        .pagination .page-link, .pagination .current {
+            display: inline-block;
+            min-width: 40px;
+            text-align: center;
             padding: 8px 12px;
-            margin: 0 2px;
+            border: 1px solid #dee2e6;
             border-radius: 4px;
+            color: #007bff;
             text-decoration: none;
+            transition: all 0.2s ease;
         }
-
-        .pagination .page-link:hover {
-            background-color: #007bff;
+        .pagination .current {
+            background: #007bff;
             color: white;
-        }
-
-        .pagination .page-item.active .page-link {
-            background-color: #007bff;
             border-color: #007bff;
-            color: white;
+            font-weight: bold;
+        }
+        .pagination .page-ellipsis {
+            color: #6c757d;
+            border: none;
+            padding: 8px 4px;
+            min-width: auto;
         }
 
         .back-button {
@@ -198,17 +205,46 @@
 
     <!-- 페이지네이션 -->
     <div th:if="${pointHistory.totalPages > 1}" class="pagination">
+        <!-- 이전 페이지 -->
         <div th:if="${pointHistory.hasPrevious()}" class="page-item">
             <a th:href="@{/api/points/history/page(page=${pointHistory.number - 1})}" class="page-link">이전</a>
         </div>
         
-        <div th:each="pageNum : ${#numbers.sequence(0, pointHistory.totalPages - 1)}" class="page-item">
-            <a th:href="@{/api/points/history/page(page=${pageNum})}" 
-               th:text="${pageNum + 1}"
-               th:class="${pageNum == pointHistory.number} ? 'page-link active' : 'page-link'"
-               class="page-link">1</a>
+        <!-- 첫 페이지 -->
+        <div th:if="${pointHistory.number > 2}" class="page-item">
+            <a th:href="@{/api/points/history/page(page=0)}" class="page-link">1</a>
         </div>
         
+        <!-- 첫 페이지 근처 생략 표시 -->
+        <div th:if="${pointHistory.number > 3}" class="page-item">
+            <span class="page-ellipsis">...</span>
+        </div>
+        
+        <!-- 현재 페이지 주변 페이지들 -->
+        <div th:with="start=${pointHistory.number > 0 ? pointHistory.number - 1 : 0}, end=${pointHistory.number < pointHistory.totalPages - 1 ? pointHistory.number + 1 : pointHistory.totalPages - 1}">
+            <div th:each="pageNum : ${#numbers.sequence(start, end)}" class="page-item">
+                <a th:if="${pageNum != pointHistory.number}" 
+                   th:href="@{/api/points/history/page(page=${pageNum})}" 
+                   class="page-link"
+                   th:text="${pageNum + 1}">1</a>
+                <span th:if="${pageNum == pointHistory.number}" 
+                      class="page-link current" 
+                      th:text="${pageNum + 1}">1</span>
+            </div>
+        </div>
+        
+        <!-- 마지막 페이지 근처 생략 표시 -->
+        <div th:if="${pointHistory.number < pointHistory.totalPages - 3}" class="page-item">
+            <span class="page-ellipsis">...</span>
+        </div>
+        
+        <!-- 마지막 페이지 -->
+        <div th:if="${pointHistory.number < pointHistory.totalPages - 2}" class="page-item">
+            <a th:href="@{/api/points/history/page(page=${pointHistory.totalPages - 1})}" 
+               class="page-link" th:text="${pointHistory.totalPages}">1</a>
+        </div>
+        
+        <!-- 다음 페이지 -->
         <div th:if="${pointHistory.hasNext()}" class="page-item">
             <a th:href="@{/api/points/history/page(page=${pointHistory.number + 1})}" class="page-link">다음</a>
         </div>

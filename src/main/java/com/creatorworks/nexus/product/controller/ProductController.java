@@ -4,6 +4,7 @@ import java.security.Principal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -230,6 +231,7 @@ public class ProductController {
         model.addAttribute("reviewKeyword", reviewKeyword);
         model.addAttribute("currentMember", currentMember);
         model.addAttribute("canWriteReview", canWriteReview);
+        model.addAttribute("canViewContent", canViewContent); // 구매 상태 추가
         model.addAttribute("existingReview", existingReview.orElse(null));
         // --- 좋아요 관련 모델 속성 추가 ---
         model.addAttribute("heartCount", heartCount);
@@ -283,6 +285,51 @@ public class ProductController {
     public ResponseEntity<List<ProductDto>> getPopularProducts(@RequestParam("secondaryCategory") String secondaryCategory) {
         List<ProductDto> popularProducts = productService.findTop3PopularProducts(secondaryCategory);
         return ResponseEntity.ok(popularProducts);
+    }
+
+    /**
+     * 구매 후 전체 콘텐츠를 반환하는 API 엔드포인트입니다.
+     * @param id 상품 ID
+     * @return 전체 콘텐츠 HTML
+     */
+    @GetMapping("/api/products/{id}/content")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> getFullContent(@PathVariable("id") Long id, Principal principal) {
+        Product product = productService.findProductById(id);
+        if (product == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 현재 사용자 정보
+        Member currentMember = null;
+        if (principal != null) {
+            currentMember = memberRepository.findByEmail(principal.getName());
+        }
+
+        // 구매 상태 확인
+        boolean canViewContent = false;
+        if (currentMember != null) {
+            boolean hasPurchased = productReviewService.hasUserPurchasedProduct(currentMember, product);
+            boolean isSeller = product.getSeller() != null && currentMember.getId().equals(product.getSeller().getId());
+            canViewContent = hasPurchased || isSeller || currentMember.getRole() == com.creatorworks.nexus.member.constant.Role.ADMIN;
+        }
+
+        // 전체 콘텐츠 렌더링 (구매한 사용자만)
+        String contentHtml = "";
+        String tiptapJson = product.getTiptapJson();
+        if (tiptapJson != null && !tiptapJson.isEmpty() && canViewContent) {
+            try {
+                TipTapDocument document = objectMapper.readValue(tiptapJson, TipTapDocument.class);
+                List<TipTapNode> nodesToRender = document.getContent();
+                contentHtml = tipTapRenderer.render(nodesToRender);
+            } catch (JsonProcessingException e) {
+                contentHtml = "<p>콘텐츠를 불러오는 데 실패했습니다.</p>";
+            }
+        }
+
+        Map<String, String> response = new HashMap<>();
+        response.put("contentHtml", contentHtml);
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -411,28 +458,27 @@ public class ProductController {
     public String categoryGridView(@PathVariable String categoryName,
                                    @RequestParam(value = "page", defaultValue = "1") int page,
                                    @RequestParam(value = "secondary", defaultValue = "all") String secondaryCategory,
-                                   Model model) {
+                                   Model model,
+                                   Principal principal) {
 
-        // 1. 초기 상품 데이터 로드 (페이지의 첫 16개)
-        // URL의 page 파라미터(uiPage)는 1부터 시작, 100개 단위. API 페이지는 16개 단위.
         long itemsPerApiPage = 16;
-        long apiPagesPerUiPage = 6; // 16 * 6 = 96개, 약 100개
+        long apiPagesPerUiPage = 6;
         long initialApiPage = (page - 1) * apiPagesPerUiPage;
 
         Pageable initialPageable = PageRequest.of((int)initialApiPage, (int)itemsPerApiPage, Sort.by(Sort.Direction.DESC, "regTime"));
-        ProductPageResponse initialProductPage = productService.findAllProducts(categoryName, secondaryCategory, initialPageable);
+        Member currentUser = null;
+        if (principal != null) {
+            currentUser = memberRepository.findByEmail(principal.getName());
+        }
+        ProductPageResponse initialProductPage = productService.findAllProducts(categoryName, secondaryCategory, initialPageable, currentUser);
 
-        // 2. 전체 2차 카테고리 목록 조회 (버튼용)
         List<String> secondaryCategories = categoryConfig.getSecondaryCategories(categoryName);
-        
-        // 3. 페이지네이션 계산 (전체 아이템 수 / 페이지당 아이템 100개)
         long totalItems = initialProductPage.getTotalElements();
         long itemsPerUiPage = itemsPerApiPage * apiPagesPerUiPage;
         long totalPages = (totalItems == 0) ? 1 : (long) Math.ceil((double) totalItems / itemsPerUiPage);
 
-        // 4. 뷰에 데이터 전달
         model.addAttribute("primaryCategory", categoryName);
-        model.addAttribute("secondaryCategory", secondaryCategory); // 현재 선택된 2차 카테고리
+        model.addAttribute("secondaryCategory", secondaryCategory);
         model.addAttribute("secondaryCategories", secondaryCategories);
         model.addAttribute("initialProductPage", initialProductPage);
         model.addAttribute("currentPage", page);
@@ -453,8 +499,13 @@ public class ProductController {
     public ProductPageResponse getProductsByCategory(
             @RequestParam("primary") String primaryCategory,
             @RequestParam(value = "secondary", required = false, defaultValue = "all") String secondaryCategory,
-            Pageable pageable) {
-        return productService.findAllProducts(primaryCategory, secondaryCategory, pageable);
+            Pageable pageable,
+            Principal principal) {
+        Member currentUser = null;
+        if (principal != null) {
+            currentUser = memberRepository.findByEmail(principal.getName());
+        }
+        return productService.findAllProducts(primaryCategory, secondaryCategory, pageable, currentUser);
     }
 
     // --- 좋아요 관련 API 추가 ---

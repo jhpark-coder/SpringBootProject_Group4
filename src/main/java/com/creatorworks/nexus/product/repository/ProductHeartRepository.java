@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Page;
 
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.product.entity.ProductHeart;
@@ -43,4 +44,7 @@ public interface ProductHeartRepository extends JpaRepository<ProductHeart, Long
     List<Long> findTopHeartedProductIds(@Param("excludedIds") List<Long> excludedIds, Pageable pageable);
 
     List<ProductHeart> findByMemberId(Long memberId);
+
+    // 특정 사용자가 좋아요한 ProductHeart를 Page로 반환
+    Page<ProductHeart> findByMemberId(Long memberId, Pageable pageable);
 } 

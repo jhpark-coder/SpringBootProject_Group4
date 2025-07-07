@@ -37,8 +37,10 @@ import com.creatorworks.nexus.order.entity.Order;
 import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.repository.ProductRepository;
+import com.creatorworks.nexus.product.dto.ProductDto;
 import com.creatorworks.nexus.product.service.RecentlyViewedProductRedisService;
 import com.creatorworks.nexus.product.service.ProductHeartService;
+import com.creatorworks.nexus.member.service.MemberFollowService;
 
 import lombok.RequiredArgsConstructor;
 import java.security.Principal;
@@ -60,6 +62,7 @@ public class MyPageController {
     private final OrderRepository orderRepository;
     private final NotificationService notificationService;
     private final ProductHeartService productHeartService;
+    private final MemberFollowService memberFollowService;
 
     @GetMapping("/my-page")
     public String myPage(@AuthenticationPrincipal Object principal, Model model) {
@@ -172,10 +175,16 @@ public class MyPageController {
         // 2. DB에서 최근 구매한 주문 4개를 가져온다.
         List<Order> recentOrders = orderRepository.findByBuyerOrderByOrderDateDesc(currentMember, topFour);
 
-        // 3. Order 목록에서 Product 목록만 추출한다.
-        //    (ProductDto를 사용하면 더 좋습니다. 여기서는 간단히 Product 엔티티를 그대로 사용합니다)
-        List<Product> recentProducts = recentOrders.stream()
+        // 3. Order 목록에서 Product 목록만 추출하고 팔로우 상태 정보를 추가한다.
+        List<ProductDto> recentProducts = recentOrders.stream()
                 .map(Order::getProduct) // 각 Order 객체에서 Product를 꺼냄
+                .map(product -> {
+                    boolean isFollowing = false;
+                    if (product.getSeller() != null) {
+                        isFollowing = memberFollowService.isFollowing(currentMember.getId(), product.getSeller().getId());
+                    }
+                    return new ProductDto(product, isFollowing);
+                })
                 .collect(Collectors.toList());
 
         // 4. Model에 'recentProducts'라는 이름으로 담아서 View로 전달한다.
@@ -201,10 +210,17 @@ public class MyPageController {
                     .filter(java.util.Objects::nonNull)
                     .collect(Collectors.toList());
 
-            // 4. 구매하지 않은 상품만 필터링하고 4개로 제한
-            List<Product> recentViewedProducts = sortedProducts.stream()
+            // 4. 구매하지 않은 상품만 필터링하고 4개로 제한, 팔로우 상태 정보 추가
+            List<ProductDto> recentViewedProducts = sortedProducts.stream()
                     .filter(product -> !orderRepository.existsByBuyerAndProduct(currentMember, product))
                     .limit(4)
+                    .map(product -> {
+                        boolean isFollowing = false;
+                        if (product.getSeller() != null) {
+                            isFollowing = memberFollowService.isFollowing(currentMember.getId(), product.getSeller().getId());
+                        }
+                        return new ProductDto(product, isFollowing);
+                    })
                     .collect(Collectors.toList());
 
             model.addAttribute("recentViewedProducts", recentViewedProducts);
@@ -304,7 +320,19 @@ public class MyPageController {
     public String likedProducts(Model model, Principal principal) {
         Member member = memberRepository.findByEmail(principal.getName());
         List<Product> likedProducts = productHeartService.getLikedProducts(member.getId());
-        model.addAttribute("likedProducts", likedProducts);
+        
+        // 팔로우 상태 정보 추가
+        List<ProductDto> likedProductsWithFollow = likedProducts.stream()
+                .map(product -> {
+                    boolean isFollowing = false;
+                    if (product.getSeller() != null) {
+                        isFollowing = memberFollowService.isFollowing(member.getId(), product.getSeller().getId());
+                    }
+                    return new ProductDto(product, isFollowing);
+                })
+                .collect(Collectors.toList());
+        
+        model.addAttribute("likedProducts", likedProductsWithFollow);
         return "member/likedProducts";
     }
 }

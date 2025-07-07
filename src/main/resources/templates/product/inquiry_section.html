@@ -6,6 +6,38 @@
         height: 100%;
         overflow: auto;
     }
+    .pagination {
+        display: flex;
+        flex-direction: row;   /* 가로 정렬 */
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin-top: 30px;
+        flex-wrap: wrap;
+    }
+    .pagination .page-link, .pagination .current {
+        display: inline-block;
+        min-width: 40px;
+        text-align: center;
+        padding: 8px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        color: #007bff;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    .pagination .current {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+        font-weight: bold;
+    }
+    .pagination .page-ellipsis {
+        color: #6c757d;
+        border: none;
+        padding: 8px 4px;
+        min-width: auto;
+    }
 </style>
 
 <div th:fragment="inquirySection(product, inquiryPage)">
@@ -96,17 +128,48 @@
 
         <!-- Pagination -->
         <nav th:if="${!inquiryPage.empty}" aria-label="Page navigation">
-            <ul class="pagination" style="justify-content: center;">
+            <ul class="pagination" style="justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <!-- 이전 페이지 -->
                 <li class="page-item" th:classappend="${inquiryPage.first} ? 'disabled'">
                     <a class="page-link"
                         th:href="@{/products/{id}(id=${product.id}, inquiryPageable_page=${inquiryPage.number - 1})}">&laquo;</a>
                 </li>
-                <li class="page-item" th:each="pageNumber : ${#numbers.sequence(0, inquiryPage.totalPages - 1)}"
-                    th:classappend="${pageNumber == inquiryPage.number} ? 'active'">
+                
+                <!-- 첫 페이지 -->
+                <li th:if="${inquiryPage.number > 2}" class="page-item">
                     <a class="page-link"
-                        th:href="@{/products/{id}(id=${product.id}, inquiryPageable_page=${pageNumber})}"
-                        th:text="${pageNumber + 1}">1</a>
+                        th:href="@{/products/{id}(id=${product.id}, inquiryPageable_page=0)}">1</a>
                 </li>
+                
+                <!-- 첫 페이지 근처 생략 표시 -->
+                <li th:if="${inquiryPage.number > 3}" class="page-item">
+                    <span class="page-link" style="border: none; color: #6c757d;">...</span>
+                </li>
+                
+                <!-- 현재 페이지 주변 페이지들 -->
+                <li th:with="start=${inquiryPage.number > 0 ? inquiryPage.number - 1 : 0}, end=${inquiryPage.number < inquiryPage.totalPages - 1 ? inquiryPage.number + 1 : inquiryPage.totalPages - 1}">
+                    <li th:each="pageNumber : ${#numbers.sequence(start, end)}"
+                        th:classappend="${pageNumber == inquiryPage.number} ? 'active'"
+                        class="page-item">
+                        <a class="page-link"
+                            th:href="@{/products/{id}(id=${product.id}, inquiryPageable_page=${pageNumber})}"
+                            th:text="${pageNumber + 1}">1</a>
+                    </li>
+                </li>
+                
+                <!-- 마지막 페이지 근처 생략 표시 -->
+                <li th:if="${inquiryPage.number < inquiryPage.totalPages - 3}" class="page-item">
+                    <span class="page-link" style="border: none; color: #6c757d;">...</span>
+                </li>
+                
+                <!-- 마지막 페이지 -->
+                <li th:if="${inquiryPage.number < inquiryPage.totalPages - 2}" class="page-item">
+                    <a class="page-link"
+                        th:href="@{/products/{id}(id=${product.id}, inquiryPageable_page=${inquiryPage.totalPages - 1})}"
+                        th:text="${inquiryPage.totalPages}">1</a>
+                </li>
+                
+                <!-- 다음 페이지 -->
                 <li class="page-item" th:classappend="${inquiryPage.last} ? 'disabled'">
                     <a class="page-link"
                         th:href="@{/products/{id}(id=${product.id}, inquiryPageable_page=${inquiryPage.number + 1})}">&raquo;</a>

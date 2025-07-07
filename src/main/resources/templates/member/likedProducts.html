@@ -57,6 +57,38 @@
     padding: 8px 16px;
     font-size: 14px;
 }
+    .pagination {
+        display: flex;
+        flex-direction: row;   /* 가로 정렬 */
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin-top: 30px;
+        flex-wrap: wrap;
+    }
+    .pagination .page-link, .pagination .current {
+        display: inline-block;
+        min-width: 40px;
+        text-align: center;
+        padding: 8px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        color: #007bff;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    .pagination .current {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+        font-weight: bold;
+    }
+    .pagination .page-ellipsis {
+        color: #6c757d;
+        border: none;
+        padding: 8px 4px;
+        min-width: auto;
+    }
 </style>
 </head>
 <body>
@@ -71,10 +103,62 @@
             <div class="product-info">
                 <h2 th:text="${product.name}">작품명</h2>
                 <p th:text="${product.description}">작품 설명</p>
+                <div class="seller-info">
+                    <span th:text="${product.sellerName}">판매자 이름</span>
+                </div>
+                <!-- 로그인한 경우이고 본인이 아닌 판매자일 때만 Follow 버튼 표시 -->
+                <button class="follow-btn"
+                    th:if="${product.sellerId != null and product.sellerId != #authentication.principal.id}"
+                    th:data-member-id="${product.sellerId}"
+                    th:classappend="${product.isFollowing} ? 'following' : ''"
+                    th:onclick="|toggleFollow(${product.sellerId}, this)|"
+                    sec:authorize="isAuthenticated()"
+                    th:text="${product.isFollowing} ? 'Following' : 'Follow'">Follow</button>
+                <!-- 비로그인인 경우 -->
+                <button class="follow-btn" th:if="${product.sellerId != null}"
+                    onclick="alert('로그인이 필요합니다.'); location.href='/members/login';"
+                    sec:authorize="!isAuthenticated()">Follow</button>
                 <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-primary">상세보기</a>
             </div>
         </div>
     </div>
+<!-- 페이지네이션 -->
+<div th:if="${totalPages > 1}" class="pagination">
+    <a th:if="${hasPrevious}"
+       th:href="@{/members/liked-products(page=${currentPage - 1})}"
+       class="page-link">이전</a>
+
+    <a th:if="${currentPage > 2}"
+       th:href="@{/members/liked-products(page=0)}"
+       class="page-link">1</a>
+       
+    <span th:if="${currentPage > 3}" class="page-ellipsis">...</span>
+
+    <span th:with="start=${currentPage > 0 ? currentPage - 1 : 0}, end=${currentPage < totalPages - 1 ? currentPage + 1 : totalPages - 1}">
+        <span th:each="pageNum : ${#numbers.sequence(start, end)}">
+            <a th:if="${pageNum != currentPage}"
+               th:href="@{/members/liked-products(page=${pageNum})}"
+               class="page-link"
+               th:text="${pageNum + 1}">1</a>
+            <span th:if="${pageNum == currentPage}"
+                  class="current"
+                  th:text="${pageNum + 1}">1</span>
+        </span>
+    </span>
+
+    <span th:if="${currentPage < totalPages - 3}" class="page-ellipsis">...</span>
+
+    <a th:if="${currentPage < totalPages - 2}"
+       th:href="@{/members/liked-products(page=${totalPages - 1})}"
+       class="page-link" th:text="${totalPages}">1</a>
+
+    <a th:if="${hasNext}"
+       th:href="@{/members/liked-products(page=${currentPage + 1})}"
+       class="page-link">다음</a>
 </div>
+</div>
+
+<!-- 팔로우 기능 스크립트 추가 -->
+<script th:src="@{/js/heartFollow.js}"></script>
 </body>
 </html> 
