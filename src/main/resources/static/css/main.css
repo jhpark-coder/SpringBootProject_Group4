@@ -8,7 +8,7 @@ body {
     margin: 0;
     font-family: 'Noto Sans KR', sans-serif;
     color: #000000;
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 * {
