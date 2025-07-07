@@ -93,6 +93,13 @@ public class SellerRequestService {
         return sellerRequestRepository.findByStatusOrderByRegTimeDesc(SellerRequest.RequestStatus.PENDING);
     }
 
+    // 특정 회원의 최신 작가신청 조회
+    @Transactional(readOnly = true)
+    public SellerRequest getLatestSellerRequest(Long memberId) {
+        List<SellerRequest> requests = sellerRequestRepository.findByMemberIdOrderByRegTimeDesc(memberId);
+        return requests.isEmpty() ? null : requests.get(0);
+    }
+
     // 신청 승인
     public void approveRequest(Long requestId) {
         SellerRequest sellerRequest = sellerRequestRepository.findById(requestId)

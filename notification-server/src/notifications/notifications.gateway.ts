@@ -15,13 +15,12 @@ import { CreateNotificationDto } from './dto/create-notification.dto';
 
 @WebSocketGateway({
   cors: {
-    origin: 'http://localhost:8080',
+    origin: ['http://localhost:8080', 'http://localhost:4000'],
     credentials: true,
   },
 })
 export class NotificationsGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 

@@ -77,7 +77,7 @@ public class SecurityConfig {
             // CSRF 보호를 활성화하고, 토큰을 JS가 읽을 수 있는 쿠키로 생성합니다.
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**", "/api/follow/**", "/api/faq/**")
+                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**", "/api/follow/**", "/api/faq/**", "/api/chat/**")
             )
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout", "/test/**", "/nestjstest").permitAll()
@@ -118,7 +118,7 @@ public class SecurityConfig {
             // CSRF 보호를 활성화하고, 토큰을 JS가 읽을 수 있는 쿠키로 생성합니다.
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**", "/api/follow/**", "/api/faq/**")
+                .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**", "/api/follow/**", "/api/faq/**", "/api/chat/**")
             )
             // 모든 요청을 허용합니다. (개발환경과 동일하게)
             .authorizeHttpRequests(authz -> authz
@@ -159,8 +159,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // 프론트엔드 개발 서버 주소 허용
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+        // 프론트엔드 개발 서버 주소 및 알림 서버 주소 허용
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
