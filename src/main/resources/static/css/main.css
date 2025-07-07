@@ -8,6 +8,7 @@ body {
     margin: 0;
     font-family: 'Noto Sans KR', sans-serif;
     color: #000000;
+    overflow: hidden;
 }
 
 * {
@@ -19,44 +20,82 @@ a {
     color: inherit;
 }
 
-/*슬라이드 css시작*/
-.main-slider {
-    position: relative; /* 화살표, 페이지네이션의 기준점 */
-    width: 100%;
-    overflow: hidden; /* 옆에 있는 슬라이드 숨기기 */
-    background-color: #fff;
+/* ================================================= */
+/* 슬라이드 섹션 시작 (충돌 해결 버전)                 */
+/* ================================================= */
+
+@media(min-width: 1920px){
+    .slideSection{
+        clip-path: inset(0 calc(50% - 960px));
+    }
 }
 
-/* 슬라이드들을 가로로 나열하기 위한 래퍼 */
-.slider-wrapper {
-    display: flex;
-    transition: transform 0.5s ease-in-out; /* 부드러운 슬라이드 효과 */
+.slideSection {
+    width: 100%;
+    height: 600px;
+    position: relative;
+    /* .container 클래스와의 충돌을 피하기 위해 flex 관련 속성을 내부로 이동 */
 }
 
-/* 개별 슬라이드 아이템 */
-.slide {
-    flex: 0 0 100%; /* 각 슬라이드가 컨테이너의 100% 너비를 차지하도록 */
-    width: 100%;
-    min-height: 500px; /* 슬라이드 최소 높이 지정 */
+.slideContainer {
+    height: 100%;
+    position: relative;
+}
+
+.slideWrap {
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0; /* JS에서 제어하기 전 초기 위치 명시 */
     display: flex;
-    align-items: center;
+}
+
+.slideWrap .slide {
+    width: 100%; /* 각 슬라이드의 고정 너비 */
+    height: 100%;
+    flex-shrink: 0;
+    padding: 0 20px;
+    display: flex;
     justify-content: center;
 }
 
-/* 슬라이드 내부 콘텐츠 (최대 너비 1180px) */
 .slide-content {
-    max-width: 1180px;
+    max-width: 1440px;
     width: 100%;
-    padding: 0 20px; /* 좌우 여백 */
-    display: grid; /* Grid 레이아웃 사용 */
-    grid-template-columns: 40% 60%; /* 텍스트와 이미지 영역 비율 */
+    height: 100%;
+    display: flex;
     align-items: center;
-    gap: 40px; /* 그리드 아이템 사이의 간격 */
+    justify-content: space-around;
+    gap: 20px;
 }
 
-/* 텍스트 영역 */
+/* 이전/다음 버튼 */
+/* .slideSection을 기준으로 위치를 잡도록 수정 */
+.btn-prev, .btn-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) rotate(-45deg);
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.btn-prev {
+    left: 100px;
+    border-top: 2px solid #555;
+    border-left: 2px solid #555;
+}
+
+.btn-next {
+    right: 100px;
+    border-bottom: 2px solid #555;
+    border-right: 2px solid #555;
+}
+
+/* 텍스트 및 버튼 스타일 */
 .slide-text h1 {
-    font-size: 3.5rem;
+    font-size: 3rem;
     font-weight: bold;
     line-height: 1.2;
     margin-bottom: 25px;
@@ -69,6 +108,7 @@ a {
     border-radius: 20px;
     text-decoration: none;
     color: #333;
+    background-color: #fff;
     transition: background-color 0.3s, color 0.3s;
 }
 
@@ -77,97 +117,63 @@ a {
     color: #fff;
 }
 
-/* 이미지 영역 (플레이스홀더) */
+/* 이미지 영역 스타일 */
 .slide-image {
+    width: 40%;
+    height: 80%;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 400px;
     background-color: #e0e0e0;
     color: #888;
-    font-size: 1.2rem;
+    font-size: 1rem;
     text-align: center;
 }
 
-
-/* 좌우 화살표 버튼 */
-.slider-arrow {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-    background-color: rgba(255, 255, 255, 0.7);
-    border: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    font-size: 24px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.slide-image.special-color {
+    background-color: #add8e6;
 }
 
-.slider-arrow.prev {
-    left: 40px;
-}
-
-.slider-arrow.next {
-    right: 40px;
-}
-
-/* 화살표 호버 시 배경 효과 (가상 요소 활용) */
-.slider-arrow::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.3);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    /* 버튼 자체에는 영향을 주지 않도록 z-index를 낮게 설정할 수 있으나,
-       여기서는 부모(.slider-arrow)의 크기에 맞춰 호버 영역을 만듭니다. */
-}
-
-/* 화살표 호버 시 가상 요소의 크기와 투명도를 변경 */
-.slider-arrow:hover::before {
-    transform: scaleY(calc(500px / 50px)); /* 슬라이드 높이 / 버튼 높이 */
-    opacity: 1;
-}
-
-.slider-arrow:hover {
-    background-color: transparent;
-    color: white;
-}
-
-
-/* 페이지네이션 */
-.slider-pagination {
-    position: absolute;
-    bottom: 30px;
+/* ★★★ 페이지네이션 스타일 시작 ★★★ */
+.pagination {
+    position: absolute; /* .slideSection을 기준으로 위치 지정 */
+    bottom: 30px;     /* 아래에서 30px 떨어진 곳에 위치 */
     left: 50%;
-    transform: translateX(-50%);
-    display: flex; /* 동적 생성을 위해 flex 사용 */
-    gap: 12px; /* 점 사이의 간격 */
-    z-index: 10;
+    transform: translateX(-50%); /* 정확한 중앙 정렬 */
+    z-index: 10;      /* 버튼 및 슬라이드보다 위에 보이도록 설정 */
+    display: flex;    /* 내부 a 태그들을 가로로 정렬 */
+    gap: 12px;        /* 점들 사이의 간격 */
 }
 
-.pagination-dot {
+.pagination a {
+    display: block;
     width: 12px;
     height: 12px;
-    border-radius: 50%;
-    background-color: #ccc;
+    border-radius: 50%; /* 원 모양으로 만들기 */
+    background-color: rgba(255, 255, 255, 0.5); /* 반투명 흰색 */
+    border: 1px solid rgba(0, 0, 0, 0.2);
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease, transform 0.3s ease; /* 부드러운 전환 효과 */
 }
 
-.pagination-dot.active {
-    background-color: #007bff;
+.pagination a:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+    transform: scale(1.2); /* 호버 시 약간 커지는 효과 */
 }
-/*슬라이드 css끝!*/
+
+.pagination a.active {
+    background-color: #ffffff; /* 활성화된 점은 흰색 */
+    border: 1px solid #333;
+    cursor: default;
+    transform: scale(1.2);
+}
+/* ★★★ 페이지네이션 스타일 끝 ★★★ */
+
+/* ================================================= */
+/* 슬라이드 섹션 끝                                  */
+/* ================================================= */
+
+/* --- 나머지 기존 CSS 코드는 여기에 그대로 유지 --- */
 
 /* 중앙 정렬을 위한 컨테이너 */
 .container {
@@ -478,47 +484,5 @@ a {
         font-size: 1.25rem;
         /* 20px */
     }
-    @media (max-width: 1280px) {
-        /* 화면이 좁아지면 화살표를 좀 더 안쪽으로 */
-        .slider-arrow.prev { left: 20px; }
-        .slider-arrow.next { right: 20px; }
-    }
 
-    @media (max-width: 768px) {
-        .slide {
-            min-height: auto;
-        }
-
-        .slide-content {
-            grid-template-columns: 1fr; /* 모바일에서는 세로로 쌓이도록 변경 */
-            padding: 40px 20px;
-            text-align: center;
-        }
-
-        .slide-text h1 {
-            font-size: 2.5rem;
-        }
-
-        /* 모바일에서는 이미지 영역이 위로 가도록 순서 변경 */
-        .slide:nth-child(3) .slide-image {
-            order: -1;
-        }
-
-        .slider-arrow {
-            width: 40px;
-            height: 40px;
-            font-size: 20px;
-        }
-
-        .slider-arrow.prev { left: 10px; }
-        .slider-arrow.next { right: 10px; }
-
-        .slider-arrow:hover::before {
-            /* 모바일에서는 호버 효과가 직관적이지 않으므로 비활성화 */
-            display: none;
-        }
-        .slider-arrow:hover {
-            background-color: rgba(255, 255, 255, 0.7);
-            color: #333;
-        }
 }
