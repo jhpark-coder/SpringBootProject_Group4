@@ -12,7 +12,7 @@
     <title>Nexus - 카테고리</title>
 </head>
 
-<body>
+<body class="category-page-active">
     <div layout:fragment="content">
         <div class="category-grid-container">
             <div class="category-header">
@@ -36,18 +36,18 @@
                 <!-- 서버에서 렌더링한 초기 상품 목록 -->
                 <div th:each="product : ${initialProductPage.products}" class="col-md-3">
                     <article class="grid-item">
-                        <a th:href="@{/products/{id}(id=${product.id})}">
-                            <div class="item-image-placeholder box"
-                                th:attr="data-img-url=${product.imageUrl}"></div>
-<!--                                th:style="'background-image: url(\'' + ${product.imageUrl} + '\');'"></div>-->
-                        </a>
+                        <div class="item-image-placeholder box"
+                                th:attr="data-img-url=${product.imageUrl}, data-i=${4}"></div>
+
                         <div class="item-info">
                             <div class="seller-info">
                                 <div class="seller-avatar"></div>
                                 <span class="seller-name" th:text="${product.sellerName}"></span>
                             </div>
                             <!-- 로그인한 사용자가 판매자 본인이 아닌 경우에만 팔로우 버튼 표시 -->
-                            <button class="btn follow-btn" 
+
+                            <!--팔로우 버튼-->
+                            <button class="btn follow-btn"
                                     th:if="${product.sellerId != null}"
                                     th:data-member-id="${product.sellerId}"
                                     th:onclick="|toggleFollow(${product.sellerId})|"
@@ -57,6 +57,8 @@
                                     th:if="${product.sellerId != null}"
                                     onclick="alert('로그인이 필요합니다.'); location.href='/members/login';"
                                     sec:authorize="!isAuthenticated()">Follow</button>
+
+                            <a th:href="@{/products/{id}(id=${product.id})}" class="grid-item-link"></a>
                         </div>
                     </article>
                 </div>

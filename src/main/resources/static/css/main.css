@@ -51,7 +51,7 @@ a {
 }
 
 .slideWrap .slide {
-    width: 100%; /* 각 슬라이드의 고정 너비 */
+    width: 100vw; /* 각 슬라이드의 고정 너비 */
     height: 100%;
     flex-shrink: 0;
     padding: 0 20px;
