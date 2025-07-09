@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{fragment/layout}">
+
+<th:block layout:fragment="css">
+    <style>
+        .fail-container {
+            max-width: 600px;
+            margin: 60px auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .fail-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            padding: 40px 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fail-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #dc3545, #fd7e14);
+        }
+
+        .fail-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            color: white;
+            font-size: 36px;
+        }
+
+        .fail-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 16px;
+        }
+
+        .fail-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 32px;
+        }
+
+        .error-info {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+
+        .error-message {
+            font-size: 16px;
+            font-weight: 600;
+            color: #dc3545;
+            margin-bottom: 12px;
+        }
+
+        .error-details {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .error-code {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #666;
+            display: inline-block;
+        }
+
+        .attempt-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 32px;
+        }
+
+        .attempt-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: #dc3545;
+            margin-bottom: 8px;
+        }
+
+        .attempt-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+
+        .payment-details {
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+
+        .payment-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .payment-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #222;
+        }
+
+        .balance-info {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 32px;
+        }
+
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .balance-amount {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #007bff;
+            border: 2px solid #007bff;
+        }
+
+        .btn-outline:hover {
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            color: white;
+            text-decoration: none;
+        }
+
+        .help-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 24px;
+            text-align: left;
+        }
+
+        .help-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 12px;
+        }
+
+        .help-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .help-list li {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .help-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #007bff;
+        }
+
+        @media (max-width: 768px) {
+            .fail-container {
+                margin: 40px auto;
+                padding: 0 16px;
+            }
+
+            .fail-card {
+                padding: 30px 20px;
+            }
+
+            .fail-title {
+                font-size: 24px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</th:block>
+
+<div layout:fragment="content" class="fail-container">
+    <div class="fail-card">
+        <div class="fail-icon">
+            <i class="fas fa-times"></i>
+        </div>
+
+        <h1 class="fail-title">포인트 충전 실패</h1>
+        <p class="fail-subtitle">결제 중 문제가 발생하여 포인트 충전에 실패했습니다.</p>
+
+        <div class="error-info">
+            <h4 class="error-message" th:text="${error_msg ?: '알 수 없는 오류'}">알 수 없는 오류</h4>
+            <p class="error-details">
+                잠시 후 다시 시도해 주시기 바랍니다. 동일한 문제가 계속 발생할 경우, 아래 오류 코드를 포함하여 고객센터로 문의해 주세요.
+            </p>
+            <div class="error-code">
+                오류 코드: <span th:text="${error_code ?: 'N/A'}">N/A</span>
+            </div>
+        </div>
+
+        <!-- 실패한 결제 시도 정보 -->
+        <div class="attempt-info">
+            <div class="attempt-label">결제 시도 금액</div>
+            <div class="attempt-amount" th:text="${#numbers.formatInteger(paymentAmount ?: 0, 3, 'COMMA')} + '원'">
+                10,000원</div>
+        </div>
+
+        <div class="payment-details">
+            <h4 style="margin-bottom: 16px; color: #222;">주문 정보</h4>
+            <div class="payment-detail-row" th:if="${merchantUid != null and merchantUid != 'N/A'}">
+                <span class="detail-label">주문번호</span>
+                <span class="detail-value" th:text="${merchantUid}">tx_123456789</span>
+            </div>
+            <div class="payment-detail-row" th:if="${impUid != null}">
+                <span class="detail-label">아임포트 번호</span>
+                <span class="detail-value" th:text="${impUid}">imp_123456789</span>
+            </div>
+            <div class="payment-detail-row">
+                <span class="detail-label">결제 일시</span>
+                <span class="detail-value"
+                    th:text="${#temporals.format(transactionDate ?: #temporals.createNow(), 'yyyy-MM-dd HH:mm')}">2025-01-01
+                    12:00</span>
+            </div>
+        </div>
+
+        <!-- 현재 포인트 정보 (선택적) -->
+        <div class="balance-info" th:if="${currentBalance != null}">
+            <div class="balance-label">현재 보유 포인트</div>
+            <div class="balance-amount" th:text="${#numbers.formatInteger(currentBalance, 3, 'COMMA')} + 'P'">123,456P
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <a th:href="@{/api/orders/points/charge-page}" class="btn btn-primary">다시 시도</a>
+            <a href="/main" class="btn btn-secondary">메인으로 돌아가기</a>
+        </div>
+
+        <!-- 도움말 섹션 -->
+        <div class="help-section">
+            <h5 class="help-title">이런 경우일 수 있어요</h5>
+            <ul class="help-list">
+                <li>카드 한도가 초과되었거나, 분실/정지된 카드입니다.</li>
+                <li>네트워크 연결이 불안정하여 결제가 중단되었습니다.</li>
+                <li>은행 시스템 점검 시간에는 결제가 원활하지 않을 수 있습니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+</html>

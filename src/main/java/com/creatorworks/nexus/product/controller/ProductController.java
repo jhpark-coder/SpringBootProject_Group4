@@ -78,6 +78,7 @@ public class ProductController {
 
 
 
+
     /**
      * 상품 목록 데이터를 JSON 형태로 반환하는 API 엔드포인트입니다. (무한 스크롤 기능에서 사용)
      * @GetMapping: HTTP GET 요청을 이 메소드에 매핑합니다.
@@ -501,4 +502,5 @@ public class ProductController {
         long heartCount = productService.getHeartCount(id);
         return ResponseEntity.ok(Map.of("heartCount", heartCount));
     }
+
 }

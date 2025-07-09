@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.creatorworks.nexus.member.dto.CustomUserDetails;
 import com.creatorworks.nexus.member.dto.MonthlyCategoryPurchaseDTO;
@@ -35,12 +37,13 @@ import com.creatorworks.nexus.notification.entity.Notification;
 import com.creatorworks.nexus.notification.service.NotificationService;
 import com.creatorworks.nexus.order.entity.Order;
 import com.creatorworks.nexus.order.repository.OrderRepository;
+import com.creatorworks.nexus.order.service.PointService;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.service.RecentlyViewedProductRedisService;
+import com.creatorworks.nexus.security.dto.UserAccount;
 
 import lombok.RequiredArgsConstructor;
-
 
 
 //20250630 차트 생성을 위해 작성됨
@@ -58,33 +61,24 @@ public class MyPageController {
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
     private final NotificationService notificationService;
+    private final PointService pointService;
 
     @GetMapping("/my-page")
     public String myPage(@AuthenticationPrincipal Object principal, Model model) {
-        // 1. 현재 로그인한 사용자의 ID를 안전하게 가져오기
-        String email = null;
-        
-        if (principal instanceof CustomUserDetails) {
-            // 일반 로그인 사용자
-            CustomUserDetails customUserDetails = (CustomUserDetails) principal;
-            email = customUserDetails.getUsername();
-        } else if (principal instanceof OAuth2User) {
-            // 소셜 로그인 사용자
-            OAuth2User oauth2User = (OAuth2User) principal;
-            email = oauth2User.getAttribute("email");
-        }
-        
-        if (email == null) {
-            throw new IllegalStateException("회원 정보를 찾을 수 없습니다.");
-        }
-        
-        Member currentMember = memberRepository.findByEmail(email);
-        
-        if (currentMember == null) {
-            throw new IllegalStateException("회원 정보를 찾을 수 없습니다.");
-        }
-
-
+        try {
+            // 1. 현재 로그인한 사용자의 ID를 안전하게 가져오기
+            log.info("마이페이지 접근 - Principal 타입: {}", principal != null ? principal.getClass().getSimpleName() : "null");
+            
+            String email = getEmailFromPrincipal(principal);
+            log.info("마이페이지 접근 - 이메일: {}", email);
+            
+            Member currentMember = memberRepository.findByEmail(email);
+            log.info("마이페이지 접근 - 회원 조회 결과: {}", currentMember != null ? "성공" : "실패");
+            
+            if (currentMember == null) {
+                log.error("회원 정보를 찾을 수 없습니다: {}", email);
+                throw new IllegalStateException("회원 정보를 찾을 수 없습니다.");
+            }
 
         Long currentMemberId = currentMember.getId();
 
@@ -168,12 +162,15 @@ public class MyPageController {
         Pageable topFour = PageRequest.of(0, 4);
 
         // 2. DB에서 최근 구매한 주문 4개를 가져온다.
-        List<Order> recentOrders = orderRepository.findByBuyerOrderByOrderDateDesc(currentMember, topFour);
+        org.springframework.data.domain.Page<Order> recentOrdersPage = orderRepository.findByBuyerOrderByOrderDateDesc(currentMember, topFour);
 
         // 3. Order 목록에서 Product 목록만 추출한다.
         //    (ProductDto를 사용하면 더 좋습니다. 여기서는 간단히 Product 엔티티를 그대로 사용합니다)
-        List<Product> recentProducts = recentOrders.stream()
-                .map(Order::getProduct) // 각 Order 객체에서 Product를 꺼냄
+        List<Product> recentProducts = recentOrdersPage.getContent().stream()
+                .flatMap(order -> order.getOrderItems().stream())
+                .filter(item -> item.getProduct() != null)
+                .map(item -> item.getProduct())
+                .distinct()
                 .collect(Collectors.toList());
 
         // 4. Model에 'recentProducts'라는 이름으로 담아서 View로 전달한다.
@@ -258,21 +255,15 @@ public class MyPageController {
         // ==========================================================
 
         return "member/myPage"; // myPage.html 템플릿을 보여줌
+        } catch (Exception e) {
+            log.error("마이페이지 접근 중 오류 발생", e);
+            throw e;
+        }
     }
 
     @GetMapping("/my-page/notifications")
     public String notificationHistory(@AuthenticationPrincipal Object principal, Model model) {
-        String email = null;
-        if (principal instanceof CustomUserDetails) {
-            email = ((CustomUserDetails) principal).getUsername();
-        } else if (principal instanceof OAuth2User) {
-            email = ((OAuth2User) principal).getAttribute("email");
-        }
-
-        if (email == null) {
-            return "redirect:/members/login"; // 로그인되지 않은 사용자는 로그인 페이지로
-        }
-
+        String email = getEmailFromPrincipal(principal);
         Member currentUser = memberRepository.findByEmail(email);
         if (currentUser != null) {
             // 관리자 권한 확인
@@ -296,5 +287,60 @@ public class MyPageController {
         }
         
         return "member/my-notifications"; // 알림 내역 페이지 템플릿 반환
+    }
+
+    @GetMapping("/my-page/points")
+    public String myPointHistory(@AuthenticationPrincipal Object principal, 
+                                 @RequestParam(defaultValue = "0") int page,
+                                 @RequestParam(defaultValue = "5") int size,
+                                 Model model) {
+        try {
+            String email = getEmailFromPrincipal(principal);
+            Member currentMember = memberRepository.findByEmail(email);
+
+            if (currentMember == null) {
+                log.error("회원 정보를 찾을 수 없습니다: {}", email);
+                model.addAttribute("currentBalance", 0L);
+                model.addAttribute("pointHistoryPage", null);
+                model.addAttribute("page", page);
+                model.addAttribute("size", size);
+                return "member/pointHistory";
+            }
+
+            Long currentBalance = pointService.getCurrentBalance(currentMember.getId());
+            Pageable pageable = PageRequest.of(page, size);
+            Page<com.creatorworks.nexus.order.service.PointService.PointHistoryDto> pointHistoryPage = pointService.getPointHistoryDtoList(currentMember.getId(), pageable);
+            
+            model.addAttribute("currentBalance", currentBalance != null ? currentBalance : 0L);
+            model.addAttribute("pointHistoryPage", pointHistoryPage);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+
+            return "member/pointHistory";
+        } catch (Exception e) {
+            log.error("포인트 내역 조회 중 오류 발생", e);
+            model.addAttribute("currentBalance", 0L);
+            model.addAttribute("pointHistoryPage", null);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            return "member/pointHistory";
+        }
+    }
+
+    private String getEmailFromPrincipal(Object principal) {
+        if (principal instanceof CustomUserDetails) {
+            return ((CustomUserDetails) principal).getUsername();
+        } else if (principal instanceof UserAccount) {
+            return ((UserAccount) principal).getUsername();
+        } else if (principal instanceof OAuth2User) {
+            // OAuth2User의 경우 email 속성을 시도하되, 없으면 getName() 사용
+            OAuth2User oauth2User = (OAuth2User) principal;
+            String email = oauth2User.getAttribute("email");
+            if (email != null && !email.isEmpty()) {
+                return email;
+            }
+            return oauth2User.getName();
+        }
+        throw new IllegalStateException("인증된 사용자 정보를 가져올 수 없습니다.");
     }
 }

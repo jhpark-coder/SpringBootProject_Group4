@@ -1,5 +1,18 @@
 package com.creatorworks.nexus.product.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.order.entity.Order;
@@ -9,16 +22,9 @@ import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.entity.ProductHeart;
 import com.creatorworks.nexus.product.repository.ProductHeartRepository;
 import com.creatorworks.nexus.product.repository.ProductRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -113,7 +119,11 @@ public class MainPageService {
         if(secondaryInterestCategories.isEmpty()) secondaryInterestCategories.add("__DUMMY__");
 
         // 3. 추천에서 제외할 상품 ID 목록 (1.구매, 2.좋아요, 3.최근조회)
-        List<Long> purchasedIds = purchasedOrders.stream().map(order -> order.getProduct().getId()).toList();
+        List<Long> purchasedIds = purchasedOrders.stream()
+                .flatMap(order -> order.getOrderItems().stream())
+                .filter(item -> item.getProduct() != null)
+                .map(item -> item.getProduct().getId())
+                .toList();
         List<Long> heartedIds = heartedList.stream().map(h -> h.getProduct().getId()).toList();
 
         // [수정] 수정 가능한 ArrayList로 생성하여 UnsupportedOperationException 방지

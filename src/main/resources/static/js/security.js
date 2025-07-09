@@ -226,11 +226,7 @@
                 }
             }
             
-            /* 스크린샷 시 미세한 효과 (일부 도구에서 감지 가능) */
-            body {
-                -webkit-filter: brightness(1.001);
-                filter: brightness(1.001);
-            }
+
             
             /* 이미지 보호 강화 */
             img {
