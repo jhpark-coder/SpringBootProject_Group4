@@ -80,6 +80,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(authz -> authz
                 // 구체적인 경로를 먼저 설정
+                .requestMatchers("/member/**").hasRole("USER")
                 .requestMatchers("/editor/**", "/editor").hasAnyRole("ADMIN", "SELLER")
                 .requestMatchers("/api/auctions/**").authenticated()
                 .requestMatchers("/api/follow/**").authenticated()
@@ -125,6 +126,7 @@ public class SecurityConfig {
             // 모든 요청을 허용합니다. (개발환경과 동일하게)
             .authorizeHttpRequests(authz -> authz
                 // 구체적인 경로를 먼저 설정
+                .requestMatchers("/member/**").hasRole("USER")
                 .requestMatchers("/editor/**", "/editor").hasAnyRole("ADMIN", "SELLER")
                 .requestMatchers("/api/auctions/**").authenticated()
                 .requestMatchers("/api/follow/**").authenticated()

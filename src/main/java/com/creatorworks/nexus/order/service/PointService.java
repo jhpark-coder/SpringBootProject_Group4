@@ -226,7 +226,7 @@ public class PointService {
             notificationDto.setMessage(message);
             notificationDto.setType("payment_success");
             notificationDto.setCategory(NotificationCategory.ADMIN);
-            notificationDto.setLink("/User/my-page/points");
+            notificationDto.setLink("/member/myPage/" + member.getId() + "/points");
             notificationDto.setAmount(chargedAmount);
             notificationDto.setPaymentMethod("포인트 충전");
             notificationDto.setOrderId("point_" + System.currentTimeMillis());
@@ -235,7 +235,7 @@ public class PointService {
             notificationService.sendPaymentNotification(notificationDto);
             
             // DB에 알림 저장
-            notificationService.savePaymentNotification(notificationDto, "/User/my-page/points");
+            notificationService.savePaymentNotification(notificationDto, "/member/myPage/" + member.getId() + "/points");
             
             log.info("포인트 충전 성공 알림 전송 완료: userId={}, chargedAmount={}, newBalance={}", 
                 member.getId(), chargedAmount, newBalance);

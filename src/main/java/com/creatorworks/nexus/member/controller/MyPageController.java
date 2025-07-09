@@ -26,6 +26,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -69,8 +70,8 @@ public class MyPageController {
     private final ProductService productService;
     private final MemberFollowService memberFollowService;
 
-    @GetMapping({"/User/my-page", "/members/my-page"})
-    public String myPage(@AuthenticationPrincipal Object principal, Model model) {
+    @GetMapping("/member/myPage/{memberId}")
+    public String myPage(@PathVariable("memberId") Long memberId, @AuthenticationPrincipal Object principal, Model model) {
         try {
             // 1. 현재 로그인한 사용자의 ID를 안전하게 가져오기
             log.info("마이페이지 접근 - Principal 타입: {}", principal != null ? principal.getClass().getSimpleName() : "null");
@@ -266,8 +267,8 @@ public class MyPageController {
         }
     }
 
-    @GetMapping({"/User/my-page/notifications", "/members/my-page/notifications"})
-    public String notificationHistory(@AuthenticationPrincipal Object principal, Model model) {
+    @GetMapping("/member/myPage/{memberId}/notifications")
+    public String notificationHistory(@PathVariable("memberId") Long memberId, @AuthenticationPrincipal Object principal, Model model) {
         String email = getEmailFromPrincipal(principal);
         Member currentUser = memberRepository.findByEmail(email);
         if (currentUser != null) {
@@ -352,8 +353,8 @@ public class MyPageController {
         }
     }
 
-    @GetMapping({"/User/my-page/points", "/members/my-page/points"})
-    public String myPointHistory(@AuthenticationPrincipal Object principal, 
+    @GetMapping("/member/myPage/{memberId}/points")
+    public String myPointHistory(@PathVariable("memberId") Long memberId, @AuthenticationPrincipal Object principal, 
                                  @RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "5") int size,
                                  Model model) {

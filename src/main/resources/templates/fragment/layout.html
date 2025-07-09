@@ -475,7 +475,7 @@
         };
         /*[# th:if="${#authorization.expression('isAuthenticated()')}"]*/
         window.currentUser = {
-            id: /*[[${#authentication.principal.id}]]*/ null,
+            id: /*[[${#authentication.principal instanceof T(com.creatorworks.nexus.member.dto.CustomUserDetails) ? #authentication.principal.id : null}]]*/ null,
             username: /*[[${#authentication.name}]]*/ null,
             roles: /*[[${#authentication.authorities.![authority]}]]*/[]
         };
