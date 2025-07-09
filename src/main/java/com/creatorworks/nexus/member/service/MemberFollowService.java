@@ -1,5 +1,6 @@
 package com.creatorworks.nexus.member.service;
 
+import com.creatorworks.nexus.member.dto.FollowingDto;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.entity.MemberFollow;
 import com.creatorworks.nexus.member.repository.MemberFollowRepository;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -124,6 +126,18 @@ public class MemberFollowService {
      */
     public List<Member> getFollowings(Long memberId) {
         return memberFollowRepository.findFollowingsByMemberId(memberId);
+    }
+
+    /**
+     * 사용자가 팔로우하는 사람 목록과 팔로우 날짜 조회
+     * @param memberId 사용자 ID
+     * @return 팔로잉 DTO 목록
+     */
+    public List<FollowingDto> getFollowingsWithDate(Long memberId) {
+        List<MemberFollow> memberFollows = memberFollowRepository.findFollowingsWithDateByMemberId(memberId);
+        return memberFollows.stream()
+                .map(mf -> new FollowingDto(mf.getFollowing(), mf.getRegTime()))
+                .collect(Collectors.toList());
     }
 
     /**

@@ -503,4 +503,35 @@ public class ProductController {
         return ResponseEntity.ok(Map.of("heartCount", heartCount));
     }
 
+    @GetMapping("/products/author")
+    public String authorProducts(@RequestParam Long authorId,
+                                @RequestParam(defaultValue = "0") int page,
+                                @RequestParam(defaultValue = "12") int size,
+                                Model model) {
+        try {
+            Member author = memberRepository.findById(authorId)
+                .orElseThrow(() -> new IllegalArgumentException("작가를 찾을 수 없습니다."));
+            
+            Pageable pageable = PageRequest.of(page, size, Sort.by("regTime").descending());
+            Page<Product> productPage = productService.findProductsBySeller(author, pageable);
+            
+            int totalPages = productPage.getTotalPages();
+            boolean hasPrevious = page > 0;
+            boolean hasNext = page < totalPages - 1;
+            
+            model.addAttribute("products", productPage.getContent());
+            model.addAttribute("authorName", author.getName());
+            model.addAttribute("authorId", authorId);
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", totalPages);
+            model.addAttribute("hasPrevious", hasPrevious);
+            model.addAttribute("hasNext", hasNext);
+            
+            return "product/authorProducts";
+        } catch (Exception e) {
+            log.error("작가별 상품 페이지 로드 중 오류 발생", e);
+            return "redirect:/";
+        }
+    }
+
 }

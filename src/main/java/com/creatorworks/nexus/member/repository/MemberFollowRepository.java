@@ -29,6 +29,10 @@ public interface MemberFollowRepository extends JpaRepository<MemberFollow, Long
     @Query("SELECT mf.following FROM MemberFollow mf WHERE mf.follower.id = :memberId")
     List<Member> findFollowingsByMemberId(@Param("memberId") Long memberId);
 
+    // 특정 사용자가 팔로우하는 사람 목록과 팔로우 날짜 조회
+    @Query("SELECT mf FROM MemberFollow mf WHERE mf.follower.id = :memberId ORDER BY mf.regTime DESC")
+    List<MemberFollow> findFollowingsWithDateByMemberId(@Param("memberId") Long memberId);
+
     // 특정 사용자의 팔로워 수 조회
     @Query("SELECT COUNT(mf) FROM MemberFollow mf WHERE mf.following.id = :memberId")
     long countFollowersByMemberId(@Param("memberId") Long memberId);
