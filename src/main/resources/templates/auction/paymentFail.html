@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>경매 결제 실패</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .fail-icon {
+            font-size: 60px;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #dc3545;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .error-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .error-details h3 {
+            margin-top: 0;
+            color: #495057;
+            text-align: center;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .failure-reason {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="fail-icon">✗</div>
+
+        <div class="header">
+            <h1>결제에 실패했습니다</h1>
+            <p>경매 낙찰 결제 처리 중 오류가 발생했습니다.</p>
+        </div>
+
+        <div class="error-details">
+            <h3>오류 정보</h3>
+            <div class="detail-row">
+                <span>결제 번호:</span>
+                <span th:text="${impUid}">-</span>
+            </div>
+            <div class="detail-row">
+                <span>결제 상태:</span>
+                <span style="color: #dc3545; font-weight: bold;">실패</span>
+            </div>
+            <div class="detail-row">
+                <span>실패 일시:</span>
+                <span th:text="${#dates.format(#dates.createNow(), 'yyyy-MM-dd HH:mm:ss')}">-</span>
+            </div>
+        </div>
+
+        <div class="failure-reason">
+            <strong>실패 사유:</strong>
+            <span th:text="${failureReason}">알 수 없는 오류</span>
+        </div>
+
+        <div class="button-group">
+            <a href="/" class="btn btn-primary">메인 페이지</a>
+            <a href="/auction" class="btn btn-secondary">경매 둘러보기</a>
+            <a href="javascript:history.back()" class="btn btn-danger">다시 시도</a>
+        </div>
+    </div>
+</body>
+
+</html>

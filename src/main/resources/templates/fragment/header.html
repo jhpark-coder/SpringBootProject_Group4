@@ -48,8 +48,9 @@
                 <!-- 3. 사용자 액션 영역 (로그인한 사용자만) -->
                 <div class="user-actions" sec:authorize="isAuthenticated()">
                     <!-- 포인트 버튼 -->
-                    <a href="/my-page/points" class="points-button">
-                        <span>보유한 포인트 : 1000</span>
+                    <a href="/api/orders/points/charge-page" class="points-button">
+                        <span>보유한 포인트 : <span
+                                th:text="${#numbers.formatInteger(currentPoint ?: 0, 3, 'COMMA')}">0</span>P</span>
                     </a>
                     <!-- 알림 아이콘 컨테이너 -->
                     <div class="bell-container" th:data-user-id="${#authentication.principal.id}">

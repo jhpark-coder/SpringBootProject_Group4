@@ -72,7 +72,6 @@ public class SecurityConfig {
     @Profile("dev")
     public SecurityFilterChain devFilterChain(HttpSecurity http) throws Exception {
         http
-            // 개발 환경에서는 CORS 설정도 동일하게 적용
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             // CSRF 보호를 활성화하고, 토큰을 JS가 읽을 수 있는 쿠키로 생성합니다.
             .csrf(csrf -> csrf
@@ -80,11 +79,14 @@ public class SecurityConfig {
                 .ignoringRequestMatchers("/", "/editor", "/h2-console/**", "/editor/api/upload", "/api/products/**", "/sentinel", "/api/korean/**", "/api/keyword/**", "/api/follow/**", "/api/faq/**", "/api/chat/**")
             )
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout", "/test/**", "/nestjstest").permitAll()
+                // 구체적인 경로를 먼저 설정
                 .requestMatchers("/editor/**", "/editor").hasAnyRole("ADMIN", "SELLER")
-                .requestMatchers("/api/korean/**", "/api/keyword/**").permitAll()
                 .requestMatchers("/api/follow/**").authenticated()
-                .requestMatchers("/api/**").permitAll()
+                .requestMatchers("/api/subscription/**").authenticated()
+                .requestMatchers("/api/auction-payment/**").authenticated()
+                .requestMatchers("/api/orders/points/charge-page").authenticated()
+                // 그 외 모든 경로는 허용 (가장 넓은 범위를 나중에)
+                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout", "/test/**", "/nestjstest", "/api/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(formLogin -> formLogin
@@ -113,7 +115,6 @@ public class SecurityConfig {
     @Profile("!dev")
     public SecurityFilterChain prodFilterChain(HttpSecurity http) throws Exception {
         http
-            // CORS 설정
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             // CSRF 보호를 활성화하고, 토큰을 JS가 읽을 수 있는 쿠키로 생성합니다.
             .csrf(csrf -> csrf
@@ -122,11 +123,14 @@ public class SecurityConfig {
             )
             // 모든 요청을 허용합니다. (개발환경과 동일하게)
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout", "/test/**", "/nestjstest").permitAll()
+                // 구체적인 경로를 먼저 설정
                 .requestMatchers("/editor/**", "/editor").hasAnyRole("ADMIN", "SELLER")
-                .requestMatchers("/api/korean/**", "/api/keyword/**").permitAll()
                 .requestMatchers("/api/follow/**").authenticated()
-                .requestMatchers("/api/**").permitAll()
+                .requestMatchers("/api/subscription/**").authenticated()
+                .requestMatchers("/api/auction-payment/**").authenticated()
+                .requestMatchers("/api/orders/points/charge-page").authenticated()
+                // 그 외 모든 경로는 허용
+                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout", "/test/**", "/nestjstest", "/api/**").permitAll()
                 .anyRequest().authenticated()
             )
             // 폼 로그인 설정

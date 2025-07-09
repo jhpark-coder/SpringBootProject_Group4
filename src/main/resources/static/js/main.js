@@ -1,9 +1,6 @@
 /**
- * Nexus Main Script
- *
- * 이 스크립트의 모든 코드는 jQuery의 $(document).ready() 내에서 실행됩니다.
- * 이는 페이지의 모든 DOM 요소와 jQuery 라이브러리가 완전히 로드되고 준비된 후에만
- * 코드가 실행되도록 보장하여, '$' is not defined 오류를 원천적으로 방지합니다.
+ * Nexus Main Script (Simplified)
+ * 동적 상품 목록을 로드하고, 완료 시 'pageReady' 이벤트를 발생시키는 역할에 집중합니다.
  */
 $(document).ready(function () {
     'use strict';
@@ -21,7 +18,10 @@ $(document).ready(function () {
     function loadProducts() {
         const gridContainer = $('#main-product-grid');
         if (gridContainer.length === 0) {
-            console.error('상품 그리드 컨테이너를 찾을 수 없습니다.');
+            // 메인 페이지가 아니므로 동적 컨텐츠 로딩이 없음.
+            // 즉시 'pageReady' 이벤트를 발생시켜 다른 페이지에서도 챗봇이 뜨게 함.
+            console.log("Main grid not found. Dispatching 'pageReady' immediately.");
+            document.dispatchEvent(new CustomEvent('pageReady'));
             return;
         }
 
@@ -34,13 +34,13 @@ $(document).ready(function () {
 
                 if (!products || products.length === 0) {
                     gridContainer.html('<p>표시할 상품이 없습니다.</p>');
-                    return;
+                    return; // 상품 렌더링 없이 done 콜백 종료
                 }
 
                 products.forEach(function (product) {
                     // sellerId가 있는 경우에만 팔로우 버튼 생성
                     const followButton = product.sellerId ?
-                        `<button class="btn follow-btn" 
+                        `<button class="btn follow-btn"
                                  data-member-id="${product.sellerId}"
                                  onclick="toggleFollow(${product.sellerId})">Follow</button>` : '';
 
@@ -63,25 +63,22 @@ $(document).ready(function () {
                     `;
                     gridContainer.append(productItem);
                 });
-                // 강제 리플로우를 requestAnimationFrame으로 개선
-                requestAnimationFrame(() => {
-                    if (gridContainer[0]) {
-                        gridContainer[0].style.opacity = '0.99';
-                        void gridContainer[0].offsetHeight;
-                    }
-                    requestAnimationFrame(() => {
-                        if (gridContainer[0]) {
-                            gridContainer[0].style.opacity = '';
-                        }
-                    });
-                });
             })
             .fail(function (error) {
                 console.error('추천 상품 데이터를 가져오는 중 오류 발생:', error);
                 gridContainer.html(`<p style="color: red;">추천 데이터를 불러오는데 실패했습니다.</p>`);
+            })
+            .always(function () {
+                // ★★★★★ 여기가 핵심 ★★★★★
+                // API 호출이 성공하든, 실패하든, 모든 작업이 끝나면 이벤트를 발생시킵니다.
+                console.log("Main content loading process finished. Dispatching 'pageReady' event.");
+                document.dispatchEvent(new CustomEvent('pageReady'));
             });
     }
 
     // 페이지 로드 시 바로 실행
     loadProducts();
-}); 
+
+    // toggleFollow와 같은 다른 전역 함수가 있었다면 여기에 유지합니다.
+    // window.toggleFollow = function(sellerId) { ... };
+});

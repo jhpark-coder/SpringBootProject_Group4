@@ -188,8 +188,11 @@ public class DataInitializer {
 
                             Order testOrder = Order.builder()
                                     .buyer(user)
-                                    .product(productToBuy)
+                                    .orderType(Order.OrderType.PRODUCT_PURCHASE)
+                                    .orderStatus(Order.OrderStatus.COMPLETED)
+                                    .totalAmount(productToBuy.getPrice())
                                     .orderDate(fixedOrderDate) // 고정된 2025년 날짜를 사용
+                                    .description("테스트 구매: " + productToBuy.getName())
                                     .build();
 
                             orderRepository.save(testOrder);
@@ -270,8 +273,11 @@ public class DataInitializer {
                     // 중복 구매는 허용한다고 가정하고 바로 생성
                     Order saleRecord = Order.builder()
                             .buyer(randomBuyer)
-                            .product(randomProduct)
+                            .orderType(Order.OrderType.PRODUCT_PURCHASE)
+                            .orderStatus(Order.OrderStatus.COMPLETED)
+                            .totalAmount(randomProduct.getPrice())
                             .orderDate(randomOrderDate)
+                            .description("테스트 판매: " + randomProduct.getName())
                             .build();
                     orderRepository.save(saleRecord);
                 }

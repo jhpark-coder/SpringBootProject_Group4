@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.creatorworks.nexus.notification.dto.FollowNotificationRequest;
+import com.creatorworks.nexus.notification.dto.PaymentNotificationRequest;
 import com.creatorworks.nexus.notification.dto.SellerRequestNotificationRequest;
 import com.creatorworks.nexus.notification.entity.Notification;
 import com.creatorworks.nexus.notification.repository.NotificationRepository;
@@ -37,6 +38,16 @@ public class NotificationService {
         } catch (Exception e) {
             // 실시간 알림 서버 에러는 로깅만 하고 계속 진행
             System.err.println("관리자 실시간 알림 전송 실패: " + e.getMessage());
+        }
+    }
+
+    // 결제 알림 전송 (실시간)
+    public void sendPaymentNotification(PaymentNotificationRequest dto) {
+        try {
+            restTemplate.postForObject(NESTJS_NOTIFY_URL, dto, Void.class);
+        } catch (Exception e) {
+            // 실시간 알림 서버 에러는 로깅만 하고 계속 진행
+            System.err.println("결제 실시간 알림 전송 실패: " + e.getMessage());
         }
     }
 
@@ -83,6 +94,20 @@ public class NotificationService {
         for (int i = 1; i < Math.min(stackTrace.length, 8); i++) {
             System.out.println("  at " + stackTrace[i]);
         }
+        Notification notification = Notification.builder()
+                .senderUserId(0L) // 시스템에서 보내는 알림이므로 0으로 설정
+                .targetUserId(dto.getTargetUserId())
+                .message(dto.getMessage())
+                .type(dto.getType())
+                .category(dto.getCategory())
+                .isRead(false)
+                .link(link)
+                .build();
+        return notificationRepository.save(notification);
+    }
+
+    // 결제 알림을 DB에 저장하는 메서드
+    public Notification savePaymentNotification(PaymentNotificationRequest dto, String link) {
         Notification notification = Notification.builder()
                 .senderUserId(0L) // 시스템에서 보내는 알림이므로 0으로 설정
                 .targetUserId(dto.getTargetUserId())

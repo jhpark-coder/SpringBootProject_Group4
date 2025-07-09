@@ -65,18 +65,18 @@
                     <div class="form-group">
                         <label>생년월일</label>
                         <div class="birthdate-group">
-                            <select name="birthYear" aria-label="출생 연도" id="birthYear">
-                                <option>----년</option>
+                            <select th:field="*{birthYear}" aria-label="출생 연도" id="birthYear">
+                                <option value="">----년</option>
                             </select>
                             <p class="fieldError" th:if="${#fields.hasErrors('birthYear')}" th:errors="*{birthYear}">
                                 Incorrect date</p>
-                            <select name="birthMonth" aria-label="출생 월" id="birthMonth">
-                                <option>--월</option>
+                            <select th:field="*{birthMonth}" aria-label="출생 월" id="birthMonth">
+                                <option value="">--월</option>
                             </select>
                             <p class="fieldError" th:if="${#fields.hasErrors('birthMonth')}" th:errors="*{birthMonth}">
                                 Incorrect date</p>
-                            <select name="birthDay" aria-label="출생 일" id="birthDay">
-                                <option>--일</option>
+                            <select th:field="*{birthDay}" aria-label="출생 일" id="birthDay">
+                                <option value="">--일</option>
                             </select>
                             <p class="fieldError" th:if="${#fields.hasErrors('birthDay')}" th:errors="*{birthDay}">
                                 Incorrect date</p>

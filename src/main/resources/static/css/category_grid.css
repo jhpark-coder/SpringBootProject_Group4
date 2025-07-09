@@ -1,5 +1,11 @@
 /* category_grid.css */
 
+body.category-page-active {
+    /* body에 이런 클래스를 추가하고 */
+    filter: none !important;
+    /* filter를 강제로 비활성화 */
+}
+
 .category-grid-container {
     max-width: 1200px;
     margin: 40px auto;
@@ -61,6 +67,8 @@
 
 /* Overriding .col-md-3 if necessary, or just using grid-item */
 .grid-item {
+    position: relative;
+    /* 이게 매우 중요합니다! */
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -71,29 +79,58 @@
     /* Gutter spacing */
     flex-basis: 25%;
     /* 4 items per row */
-    min-width: 280px;
+    /*min-width: 280px;*/
 }
 
-.grid-item a {
+.grid-item-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* 클릭 가능한 영역을 전체로 확장 */
+    z-index: 1;
+    /* 다른 요소들 위로 올라오도록 (필요 시 조절) */
+
+    /* 투명하게 만들지만, 개발 중 확인을 위해 임시 배경색을 줄 수도 있음 */
+    /* background-color: rgba(255, 0, 0, 0.1); */
+}
+
+/*.grid-item a {
     text-decoration: none;
     color: inherit;
     display: flex;
     flex-direction: column;
     height: 100%;
-}
+}*/
 
-.item-image-placeholder {
+.item-image-placeholder.box {
     width: 100%;
     padding-top: 100%;
-    /* 1:1 Aspect Ratio */
-    background-color: #f5f5f5;
+    /* 1:1 비율 */
+    border-radius: 8px;
+    position: relative;
+    z-index: 0;
+    /* 최하단 레이어 */
+    overflow: hidden;
+    /*background-image: var(--img-url);*/
     background-size: cover;
     background-position: center;
-    border-radius: 8px;
-    /* Rounded corners for the image */
+
+
+
 }
 
+.item-image-placeholder.box.is-visible {
+    opacity: 1;
+}
+
+
 .item-info {
+    position: relative;
+    /* 다른 요소들과의 쌓임 순서를 위해 */
+    z-index: 2;
+    /* 링크(1)보다 위에 있어서 Follow 버튼 등을 클릭할 수 있게 함 */
     padding: 15px 5px;
     /* Adjust padding */
     display: flex;
@@ -107,7 +144,6 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 12px;
 }
 
 .seller-avatar {
@@ -123,7 +159,8 @@
     font-weight: 500;
 }
 
-.subscribe-btn, .follow-btn {
+.subscribe-btn,
+.follow-btn {
     padding: 6px 14px;
     font-size: 0.85rem;
     font-weight: bold;
@@ -136,7 +173,8 @@
     transition: background-color 0.2s;
 }
 
-.subscribe-btn:hover, .follow-btn:hover {
+.subscribe-btn:hover,
+.follow-btn:hover {
     background-color: #0056b3;
 }
 
@@ -186,4 +224,59 @@
     font-size: 1.1rem;
     font-weight: bold;
     color: #555;
+}
+
+box.hide {
+    background-image: none !important;
+    opacity: 0 !important;
+    /* 조각들이 나타나야 하므로 원본은 다시 투명하게 */
+    transition: none !important;
+    /* transition 효과를 즉시 제거 */
+}
+
+.box.hide::after {
+    opacity: 0;
+}
+
+.fragment {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: var(--frag-width);
+    height: var(--frag-height);
+
+    background-image: var(--img-url);
+    background-size: var(--box-width) var(--box-height);
+    background-position: var(--x-offset) var(--y-offset);
+    background-repeat: no-repeat;
+
+    backface-visibility: hidden;
+    opacity: 0;
+    transform:
+        translate(var(--translate-x), var(--translate-y)) var(--rotateX) var(--rotateY) scale(0.8);
+
+
+    will-change: transform, opacity;
+    animation: flip var(--duration) linear var(--delay) forwards;
+}
+
+@keyframes flip {
+    0% {
+        transform:
+            translate(var(--translate-x), var(--translate-y)) var(--rotateX) var(--rotateY) scale(0.8);
+        opacity: 0;
+    }
+
+    70% {
+        transform:
+            translate(var(--translate-x), var(--translate-y)) rotateX(0) rotateY(0) scale(0.8);
+        opacity: 1;
+    }
+
+    100% {
+        transform:
+            translate(var(--translate-x), var(--translate-y)) rotateX(0) rotateY(0) scale(1.02);
+        opacity: 1;
+    }
 }

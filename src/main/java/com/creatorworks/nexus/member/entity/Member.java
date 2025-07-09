@@ -61,6 +61,9 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private Role role;
 
+    @Column(columnDefinition = "INT DEFAULT 0")
+    private Integer point;
+
     public Member update(String name) {
         this.name = name;
         return this;

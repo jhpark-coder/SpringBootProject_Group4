@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{fragment/layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>구독 성공 - Nexus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #fff;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .success-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .success-card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .success-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+        }
+
+        .success-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .success-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .success-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .success-content {
+            padding: 40px 30px;
+        }
+
+        .transaction-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #222;
+            font-weight: 600;
+        }
+
+        .balance-info {
+            background: #e3f2fd;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .balance-label {
+            font-size: 14px;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .balance-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #e9ecef;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .transaction-id {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .subscription-benefits {
+            background: #f0f8ff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .subscription-benefits h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+
+        .subscription-benefits ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .subscription-benefits li {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 6px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .subscription-benefits li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .success-container {
+                padding: 10px;
+            }
+
+            .success-header {
+                padding: 30px 20px;
+            }
+
+            .success-content {
+                padding: 30px 20px;
+            }
+
+            .action-buttons {
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div layout:fragment="content" class="success-container">
+        <div class="success-card">
+            <!-- 성공 헤더 -->
+            <div class="success-header">
+                <div class="success-icon">🎉</div>
+                <h1 class="success-title">구독 성공!</h1>
+                <p class="success-subtitle">정기 구독이 성공적으로 시작되었습니다</p>
+            </div>
+
+            <!-- 성공 내용 -->
+            <div class="success-content">
+                <!-- 구독 혜택 안내 -->
+                <div class="subscription-benefits">
+                    <h4>구독 혜택</h4>
+                    <ul>
+                        <li th:text="${authorName} + ' 작가님의 모든 작품을 무제한으로 감상할 수 있습니다'">작가님의 모든 작품을 무제한으로 감상할 수 있습니다</li>
+                        <li>신작이 업로드되면 즉시 알림을 받을 수 있습니다</li>
+                        <li>작가와 직접 소통할 수 있는 채팅 기능을 이용할 수 있습니다</li>
+                        <li>언제든지 구독을 해지할 수 있습니다</li>
+                    </ul>
+                </div>
+
+                <!-- 거래 정보 -->
+                <div class="transaction-info">
+                    <div class="info-row">
+                        <span class="info-label">구독 플랜</span>
+                        <span class="info-value" th:text="${plan == 'monthly' ? '월간 구독' : '연간 구독'}">월간 구독</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">결제 금액</span>
+                        <span class="info-value"
+                            th:text="${#numbers.formatInteger(amount ?: 0, 3, 'COMMA')} + '원'">9,900원</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">결제 방법</span>
+                        <span class="info-value">신용카드</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">구독 시작일</span>
+                        <span class="info-value"
+                            th:text="${#temporals.format(subscriptionDate ?: #temporals.createNow(), 'yyyy-MM-dd HH:mm')}">2025-01-01
+                            12:00</span>
+                    </div>
+                </div>
+
+                <!-- 현재 포인트 잔액 -->
+                <div class="balance-info">
+                    <div class="balance-label">현재 보유 포인트</div>
+                    <div class="balance-amount"
+                        th:text="${#numbers.formatInteger(currentBalance ?: 0, 3, 'COMMA')} + 'P'">1,000P</div>
+                </div>
+
+                <!-- 액션 버튼 -->
+                <div class="action-buttons">
+                    <a href="/members/myPage" class="btn btn-primary">마이페이지로 이동</a>
+                    <a href="/" class="btn btn-outline">상품 둘러보기</a>
+                    <a href="/api/subscription/history" class="btn btn-secondary">구독 내역 보기</a>
+                </div>
+
+                <!-- 거래번호 -->
+                <div class="transaction-id" th:if="${merchantUid != null and merchantUid != 'N/A'}">
+                    거래번호: <span th:text="${merchantUid}">subscription_123456789</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
