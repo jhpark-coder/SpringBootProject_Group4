@@ -1,5 +1,8 @@
 package com.creatorworks.nexus.member.controller;
 
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -7,8 +10,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.creatorworks.nexus.member.dto.CustomUserDetails;
 import com.creatorworks.nexus.member.dto.OAuthAttributesDto;
 import com.creatorworks.nexus.member.dto.SessionMemberFormDto;
+import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.service.SocialMemberService;
 
 import jakarta.servlet.http.HttpSession;
@@ -57,7 +62,13 @@ public class SocialMemberController {
                 return "member/socialMemberForm";
             }
 
-            socialMemberService.completeSocialSignUp(email, sessionMemberFormDto);
+            Member member = socialMemberService.completeSocialSignUp(email, sessionMemberFormDto);
+
+            // 수동 로그인 처리
+            CustomUserDetails userDetails = new CustomUserDetails(member);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
             // 사용 완료한 임시 세션 정보 제거
             httpSession.removeAttribute("needsAdditionalInfo");

@@ -58,9 +58,11 @@ $(document).ready(function () {
             data: JSON.stringify(formData),
             success: function (response) {
                 openPopup("개인정보가 성공적으로 수정되었습니다.");
-                $("#closePopup").off('click').on('click', function () {
-                    window.location.href = "/User/my-page";
-                });
+                if (window.currentUser && window.currentUser.id) {
+                    window.location.href = "/member/myPage/" + window.currentUser.id;
+                } else {
+                    window.location.href = "/"; // ID 정보가 없으면 메인으로
+                }
             },
             error: function (xhr) {
                 if (xhr.status === 400) {

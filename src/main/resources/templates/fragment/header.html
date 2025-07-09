@@ -28,7 +28,11 @@
                 <nav class="main-nav">
                     <ul>
                         <li><a href="#">Auction</a></li>
-                        <li sec:authorize="isAuthenticated()"><a href="/User/my-page">MyPage</a></li>
+                        <!-- MyPage 링크: 인증된 사용자 중 CustomUserDetails 타입인 경우에만 표시 -->
+                        <li sec:authorize="isAuthenticated()"
+                            th:if="${#authentication.principal instanceof T(com.creatorworks.nexus.member.dto.CustomUserDetails)}">
+                            <a th:href="@{'/member/myPage/' + ${#authentication.principal.id}}">MyPage</a>
+                        </li>
                         <li sec:authorize="hasRole('ROLE_USER') and !hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')">
                             <a th:href="@{/members/seller-register}">Register</a>
                         </li>
@@ -36,6 +40,7 @@
                                 href="/seller/dashboard">SellerPage</a></li>
                         <li sec:authorize="hasRole('ROLE_ADMIN')"><a
                                 href="/admin/seller-management">SellerManagement</a></li>
+                        <!-- 로그인/로그아웃 링크 -->
                         <li sec:authorize="isAnonymous()">
                             <a href="/members/login">Login</a>
                         </li>
@@ -46,7 +51,9 @@
                 </nav>
 
                 <!-- 3. 사용자 액션 영역 (로그인한 사용자만) -->
-                <div class="user-actions" sec:authorize="isAuthenticated()">
+                <!-- CustomUserDetails 타입의 인증된 사용자만 이 영역을 표시 -->
+                <div class="user-actions" sec:authorize="isAuthenticated()"
+                    th:if="${#authentication.principal instanceof T(com.creatorworks.nexus.member.dto.CustomUserDetails)}">
                     <!-- 포인트 버튼 -->
                     <a href="/api/orders/points/charge-page" class="points-button">
                         <span>보유한 포인트 : <span

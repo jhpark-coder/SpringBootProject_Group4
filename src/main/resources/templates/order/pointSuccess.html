@@ -263,7 +263,8 @@
         </div>
 
         <div class="action-buttons">
-            <a th:href="@{/User/my-page/points}" class="btn btn-primary">포인트 내역 확인</a>
+            <a th:href="@{|/member/myPage/${#authentication.principal.id}/points|}" class="btn btn-primary">포인트 내역
+                확인</a>
             <a th:href="@{/}" class="btn btn-secondary">메인으로 돌아가기</a>
         </div>
     </div>
