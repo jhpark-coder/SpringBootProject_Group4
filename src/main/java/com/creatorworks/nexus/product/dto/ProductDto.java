@@ -7,7 +7,7 @@ import com.creatorworks.nexus.product.entity.ProductItemTag;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public record ProductDto(
+public record   ProductDto(
         Long id,
         String name,
         Long price,

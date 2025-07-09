@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.order.entity.Order;
+import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.dto.PointChargeRequest;
 import com.creatorworks.nexus.product.dto.PointPurchaseRequest;
 import com.creatorworks.nexus.product.dto.PointResponse;
@@ -31,6 +33,7 @@ public class PointService {
     private final PointRepository pointRepository;
     private final MemberRepository memberRepository;
     private final ProductRepository productRepository;
+    private final OrderRepository orderRepository; // Order 생성용 추가
 
     /**
      * 포인트 충전
@@ -114,6 +117,15 @@ public class PointService {
                     .build();
         }
 
+        // 이미 구매한 상품인지 확인
+        if (orderRepository.existsByBuyerAndProduct(member, product)) {
+            return PointResponse.builder()
+                    .success(false)
+                    .message("이미 구매한 상품입니다.")
+                    .currentBalance(currentBalance)
+                    .build();
+        }
+
         // 포인트 차감
         Long newBalance = currentBalance - request.getPrice();
 
@@ -129,6 +141,15 @@ public class PointService {
                 .build();
 
         pointRepository.save(point);
+
+        // Order 엔티티 생성 (구매 이력 기록)
+        Order order = Order.builder()
+                .buyer(member)
+                .product(product)
+                .orderDate(LocalDateTime.now())
+                .build();
+
+        orderRepository.save(order);
 
         // 회원 포인트 업데이트
         member.setPoint(newBalance.intValue());

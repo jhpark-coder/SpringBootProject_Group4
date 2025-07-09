@@ -494,7 +494,7 @@
                     .then(data => {
                         console.log('서버 응답 데이터:', data);
                         if (data.success) {
-                            // 성공 시 성공 페이지로 리다이렉트
+                            // 성공 시 성공 페이지로 리다이렉트 (원래 상품 ID 포함)
                             const params = new URLSearchParams({
                                 amount: selectedPoint,
                                 paymentAmount: selectedPrice,
@@ -502,6 +502,14 @@
                                 merchantUid: rsp.merchant_uid,
                                 impUid: rsp.imp_uid
                             });
+                            
+                            // URL에서 returnProductId 파라미터 가져오기
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const returnProductId = urlParams.get('returnProductId');
+                            if (returnProductId) {
+                                params.append('returnProductId', returnProductId);
+                            }
+                            
                             window.location.href = '/api/points/charge/success?' + params.toString();
                         } else {
                             // 실패 시 실패 페이지로 리다이렉트

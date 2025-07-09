@@ -260,6 +260,7 @@ public class PointController {
      * @param paymentMethod 결제 방법
      * @param merchantUid 주문번호
      * @param impUid 아임포트 UID
+     * @param returnProductId 돌아갈 상품 ID (선택적)
      * @return 포인트 충전 성공 페이지
      */
     @GetMapping("/charge/success")
@@ -268,7 +269,8 @@ public class PointController {
                                @RequestParam(required = false) Long paymentAmount,
                                @RequestParam(required = false) String paymentMethod,
                                @RequestParam(required = false) String merchantUid,
-                               @RequestParam(required = false) String impUid) {
+                               @RequestParam(required = false) String impUid,
+                               @RequestParam(required = false) Long returnProductId) {
         if (principal == null) {
             return "redirect:/members/login";
         }
@@ -285,6 +287,9 @@ public class PointController {
         model.addAttribute("transactionDate", LocalDateTime.now());
         model.addAttribute("merchantUid", merchantUid != null ? merchantUid : "N/A");
         model.addAttribute("currentBalance", pointService.getCurrentBalance(member.getId()));
+        
+        // 돌아갈 상품 ID 추가
+        model.addAttribute("returnProductId", returnProductId);
 
         return "member/pointSuccess";
     }

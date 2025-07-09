@@ -56,6 +56,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.creatorworks.nexus.member.service.SubscriptionService;
 
 /**
  * @Controller: 이 클래스가 Spring MVC의 컨트롤러임을 나타냅니다.
@@ -80,6 +81,7 @@ public class ProductController {
     private final RedisTemplate<String, String> redisTemplate;
     private final RecentlyViewedProductRedisService recentlyViewedProductRedisService;
     private final PointService pointService;
+    private final SubscriptionService subscriptionService; // 구독 서비스 추가
 
 
 
@@ -180,10 +182,16 @@ public class ProductController {
                 // 2. 판매자 본인인지 확인 (ID를 직접 비교하여 안정성 확보)
                 boolean isSeller = product.getSeller() != null && currentMember.getId().equals(product.getSeller().getId());
 
-                // 3. 컨텐츠 열람 권한 설정 (구매자 또는 관리자 또는 판매자)
-                canViewContent = canWriteReview || isSeller || currentMember.getRole() == com.creatorworks.nexus.member.constant.Role.ADMIN;
+                // 3. 구독 상태 확인
+                boolean isSubscribed = false;
+                if (product.getSeller() != null) {
+                    isSubscribed = subscriptionService.isSubscribed(currentMember.getId(), product.getSeller().getId());
+                }
 
-                // 4. 이미 작성한 후기가 있는지 확인
+                // 4. 컨텐츠 열람 권한 설정 (구매자 또는 구독자 또는 관리자 또는 판매자)
+                canViewContent = canWriteReview || isSubscribed || isSeller || currentMember.getRole() == com.creatorworks.nexus.member.constant.Role.ADMIN;
+
+                // 5. 이미 작성한 후기가 있는지 확인
                 if (canWriteReview) {
                     existingReview = productReviewService.findReviewByWriterAndProduct(currentMember, product);
                 }
@@ -311,7 +319,14 @@ public class ProductController {
         if (currentMember != null) {
             boolean hasPurchased = productReviewService.hasUserPurchasedProduct(currentMember, product);
             boolean isSeller = product.getSeller() != null && currentMember.getId().equals(product.getSeller().getId());
-            canViewContent = hasPurchased || isSeller || currentMember.getRole() == com.creatorworks.nexus.member.constant.Role.ADMIN;
+            boolean isSubscribed = false;
+            
+            // 구독 상태 확인
+            if (product.getSeller() != null) {
+                isSubscribed = subscriptionService.isSubscribed(currentMember.getId(), product.getSeller().getId());
+            }
+            
+            canViewContent = hasPurchased || isSubscribed || isSeller || currentMember.getRole() == com.creatorworks.nexus.member.constant.Role.ADMIN;
         }
 
         // 전체 콘텐츠 렌더링 (구매한 사용자만)

@@ -168,6 +168,18 @@
         .tiptap-content {
             line-height: 1.6;
             color: #333;
+            /* 폰트 설정을 위한 기본값 - inherit 제거 */
+        }
+
+        /* 폰트 우선순위 강화 - inherit 제거하고 실제 폰트 적용 */
+        .tiptap-content[style*="font-family"],
+        .tiptap-content.font-loaded {
+            /* inherit 제거하고 실제 폰트가 적용되도록 함 */
+        }
+
+        /* 인라인 스타일로 적용된 폰트가 우선되도록 */
+        .tiptap-content[style*="font-family"] {
+            /* inherit 제거 */
         }
 
         .tiptap-content p {
@@ -293,6 +305,31 @@
             background-color: transparent;
             padding: 0;
             border-radius: 0;
+            font-family: inherit;
+        }
+
+        /* 커스텀 코드 블록에서도 폰트 적용 */
+        .tiptap-content .custom-code-block-wrapper {
+            font-family: inherit;
+        }
+
+        .tiptap-content .custom-code-block-wrapper .code-block-content {
+            font-family: inherit;
+        }
+
+        .tiptap-content .custom-code-block-wrapper .code-block-content code {
+            font-family: inherit !important;
+        }
+
+        .tiptap-content .custom-code-block-wrapper .language-selector {
+            font-family: inherit;
+        }
+
+        .tiptap-content .custom-code-block-wrapper .code-block-toolbar button {
+            font-family: inherit;
+        }
+
+        .tiptap-content .custom-code-block-wrapper .code-block-toolbar button span {
             font-family: inherit;
         }
 

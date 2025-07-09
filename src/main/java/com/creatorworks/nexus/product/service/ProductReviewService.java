@@ -41,13 +41,16 @@ public class ProductReviewService {
 
     /**
      * 특정 사용자가 특정 상품을 구매했는지 확인합니다.
+     * Order 엔티티를 통해 구매 이력을 확인합니다.
      */
     @Transactional(readOnly = true)
     public boolean hasUserPurchasedProduct(Member member, Product product) {
         if (member == null || product == null) {
             return false;
         }
+        
         // OrderRepository를 사용하여 구매 이력 확인
+        // 포인트 구매와 일반 구매 모두 Order 엔티티에 기록되므로 통합 확인 가능
         return orderRepository.existsByBuyerAndProduct(member, product);
     }
 

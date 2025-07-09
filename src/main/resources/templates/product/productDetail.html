@@ -11,12 +11,36 @@
     <link rel="stylesheet" th:href="@{/css/review.css}">
     <link rel="stylesheet" th:href="@{/css/inquiry.css}">
     <link rel="stylesheet" th:href="@{/css/heartFollow.css}">
+    
+    <!-- Google Fonts 로딩 개선 -->
     <th:block th:if="${product.fontFamily != null && !#strings.isEmpty(product.fontFamily)}">
-        <th:block th:with="cleanFont=${#strings.replace(#strings.substringBefore(product.fontFamily, ','), ' ', '+')}">
-            <link th:href="@{'https://fonts.googleapis.com/css2?family=' + ${cleanFont} + ':wght@400;700&display=swap'}"
-                rel="stylesheet">
+        <th:block th:with="rawFont=${#strings.substringBefore(product.fontFamily, ',')}">
+            <th:block th:with="cleanFont=${#strings.replace(rawFont, '''', '')}">
+                <th:block th:with="finalFont=${#strings.replace(cleanFont, ' ', '+')}">
+                    <link th:href="@{'https://fonts.googleapis.com/css2?family=' + ${finalFont} + ':wght@400;700&display=swap'}" rel="stylesheet">
+                </th:block>
+            </th:block>
         </th:block>
     </th:block>
+    
+    <!-- 폰트 적용을 위한 추가 CSS -->
+    <style th:if="${product.fontFamily != null && !#strings.isEmpty(product.fontFamily)}">
+        .tiptap-content {
+            font-family: [[${product.fontFamily}]], 'Noto Sans KR', Arial, sans-serif !important;
+        }
+        .tiptap-content * {
+            font-family: [[${product.fontFamily}]], 'Noto Sans KR', Arial, sans-serif !important;
+        }
+        .tiptap-content .custom-code-block-wrapper,
+        .tiptap-content .custom-code-block-wrapper *,
+        .tiptap-content .custom-code-block-wrapper .code-block-content,
+        .tiptap-content .custom-code-block-wrapper .code-block-content code,
+        .tiptap-content .custom-code-block-wrapper .language-selector,
+        .tiptap-content .custom-code-block-wrapper .code-block-toolbar button,
+        .tiptap-content .custom-code-block-wrapper .code-block-toolbar button span {
+            font-family: [[${product.fontFamily}]], 'Noto Sans KR', Arial, sans-serif !important;
+        }
+    </style>
 </th:block>
 
 <div layout:fragment="content" class="product-detail-page">
@@ -106,7 +130,7 @@
         <section class="description-section" th:object="${product}">
             <h2>작품 설명</h2>
             <div class="tiptap-content"
-                th:styleappend="|${product.backgroundColor != null and !#strings.isEmpty(product.backgroundColor) ? 'background-color: ' + product.backgroundColor + ';' : ''} ${product.fontFamily != null and !#strings.isEmpty(product.fontFamily) ? 'font-family: ''' + product.fontFamily + ''';' : ''}|"
+                th:styleappend="|${product.backgroundColor != null and !#strings.isEmpty(product.backgroundColor) ? 'background-color: ' + product.backgroundColor + ';' : ''} ${product.fontFamily != null and !#strings.isEmpty(product.fontFamily) ? 'font-family: ' + product.fontFamily + ';' : ''}|"
                 th:utext="${contentHtml}">
                 <!-- Tiptap 에디터로 작성된 본문 컨텐츠가 여기에 렌더링됩니다. -->
             </div>
@@ -138,11 +162,81 @@
     <!-- heartFollow.js 스크립트 추가 -->
     <script th:src="@{/js/heartFollow.js}"></script>
     
+    <!-- 폰트 로딩 확인 및 적용 스크립트 -->
+    <script th:if="${product.fontFamily != null && !#strings.isEmpty(product.fontFamily)}">
+        // 폰트 정보 디버깅
+        const fontFamily = '[[${product.fontFamily}]]';
+        console.log('=== 폰트 디버깅 정보 ===');
+        console.log('Product FontFamily:', fontFamily);
+        console.log('Product BackgroundColor:', '[[${product.backgroundColor}]]');
+        
+        // 폰트 로딩 확인 함수
+        function checkFontLoaded(fontFamily) {
+            return new Promise((resolve) => {
+                if (document.fonts && document.fonts.check) {
+                    // 폰트가 이미 로드되어 있는지 확인
+                    if (document.fonts.check(`12px ${fontFamily}`)) {
+                        resolve(true);
+                        return;
+                    }
+                    
+                    // 폰트 로딩 대기
+                    document.fonts.ready.then(() => {
+                        resolve(document.fonts.check(`12px ${fontFamily}`));
+                    });
+                } else {
+                    // 폰트 로딩 확인이 지원되지 않는 경우
+                    setTimeout(() => resolve(true), 1000);
+                }
+            });
+        }
+        
+        // 페이지 로드 시 폰트 적용
+        document.addEventListener('DOMContentLoaded', function() {
+            const fontFamily = '[[${product.fontFamily}]]';
+            const contentElement = document.querySelector('.tiptap-content');
+            
+            console.log('DOM 로드 완료');
+            console.log('FontFamily:', fontFamily);
+            console.log('ContentElement:', contentElement);
+            
+            if (fontFamily && contentElement) {
+                console.log('폰트 적용 시도:', fontFamily);
+                
+                // 폰트 로딩 확인 후 적용
+                checkFontLoaded(fontFamily).then((isLoaded) => {
+                    if (isLoaded) {
+                        console.log('폰트 로딩 완료:', fontFamily);
+                        // 메인 요소에 폰트 적용
+                        contentElement.style.fontFamily = fontFamily;
+                        contentElement.classList.add('font-loaded');
+                        
+                        // 모든 하위 요소에도 폰트 적용
+                        const allElements = contentElement.querySelectorAll('*');
+                        allElements.forEach(element => {
+                            element.style.fontFamily = fontFamily;
+                        });
+                        
+                        // 코드 블록 특별 처리
+                        const codeBlocks = contentElement.querySelectorAll('.custom-code-block-wrapper, .custom-code-block-wrapper *');
+                        codeBlocks.forEach(element => {
+                            element.style.fontFamily = fontFamily;
+                        });
+                        
+                        console.log('폰트 적용 완료 (모든 하위 요소 포함)');
+                    } else {
+                        console.log('폰트 로딩 실패, fallback 폰트 사용');
+                    }
+                });
+            }
+        });
+    </script>
+    
     <!-- 포인트 결제 함수 -->
     <script>
         function requestPointPay() {
             const productId = window.location.pathname.split('/').pop();
-            const price = /*[[${product.price}]]*/ 30; // 상품 가격 또는 기본값
+            const price = '[[${product.price}]]' || 30; // 상품 가격 또는 기본값
             
             if (!confirm(`${price}P로 이 상품을 구매하시겠습니까?`)) {
                 return;
@@ -165,7 +259,16 @@
                     // 페이지 새로고침 대신 실시간 업데이트
                     updateContentAfterPurchase();
                 } else {
-                    alert('포인트 결제 실패: ' + data.message);
+                    // 포인트 부족 시 포인트 충전 페이지로 이동
+                    if (data.message && data.message.includes('포인트가 부족')) {
+                        if (confirm('포인트가 부족합니다. 포인트 충전 페이지로 이동하시겠습니까?')) {
+                            // 원래 상품 ID를 URL 파라미터로 전달
+                            const returnProductId = window.location.pathname.split('/').pop();
+                            window.location.href = `/members/point?returnProductId=${returnProductId}`;
+                        }
+                    } else {
+                        alert('포인트 결제 실패: ' + data.message);
+                    }
                 }
             })
             .catch(error => {
@@ -196,6 +299,8 @@
                         const contentElement = document.querySelector('.tiptap-content');
                         if (contentElement) {
                             contentElement.innerHTML = data.contentHtml;
+                            // 폰트 다시 적용
+                            applyFontToContent();
                         }
                     }
                 })
@@ -204,6 +309,36 @@
                     // 실패 시 페이지 새로고침으로 폴백
                     window.location.reload();
                 });
+        }
+
+        // 폰트 적용 함수
+        function applyFontToContent() {
+            const fontFamily = '[[${product.fontFamily}]]';
+            const contentElement = document.querySelector('.tiptap-content');
+            
+            if (fontFamily && contentElement) {
+                checkFontLoaded(fontFamily).then((isLoaded) => {
+                    if (isLoaded) {
+                        // 메인 요소에 폰트 적용
+                        contentElement.style.fontFamily = fontFamily;
+                        contentElement.classList.add('font-loaded');
+                        
+                        // 모든 하위 요소에도 폰트 적용
+                        const allElements = contentElement.querySelectorAll('*');
+                        allElements.forEach(element => {
+                            element.style.fontFamily = fontFamily;
+                        });
+                        
+                        // 코드 블록 특별 처리
+                        const codeBlocks = contentElement.querySelectorAll('.custom-code-block-wrapper, .custom-code-block-wrapper *');
+                        codeBlocks.forEach(element => {
+                            element.style.fontFamily = fontFamily;
+                        });
+                        
+                        console.log('폰트 적용 완료 (모든 하위 요소 포함)');
+                    }
+                });
+            }
         }
 
         // 에디터 토글 기능
@@ -285,6 +420,8 @@
                         if (contentElement) {
                             contentElement.innerHTML = data.contentHtml;
                             console.log('콘텐츠 업데이트 완료');
+                            // 폰트 다시 적용
+                            applyFontToContent();
                         }
                     }
                 })

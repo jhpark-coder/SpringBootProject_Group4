@@ -144,19 +144,36 @@ public class TipTapRenderer {
                 }
                 return "";
             case "codeBlockNode":
-                String language = node.getAttrs() != null ? (String) node.getAttrs().get("language") : null;
-                String caption = node.getAttrs() != null ? (String) node.getAttrs().get("caption") : null;
-
-                String codeContent = "<pre><code";
-                if (language != null && !language.isEmpty()) {
-                    codeContent += " class=\"language-" + HtmlUtils.htmlEscape(language) + "\"";
-                }
-                codeContent += ">" + innerContent + "</code></pre>";
-
-                if (caption != null && !caption.isEmpty()) {
-                    return "<figure>" + codeContent + "<figcaption>" + HtmlUtils.htmlEscape(caption) + "</figcaption></figure>";
-                }
-                return codeContent;
+                Map<String, Object> codeBlockAttrs = node.getAttrs();
+                String language = codeBlockAttrs != null ? (String) codeBlockAttrs.getOrDefault("language", "auto") : "auto";
+                String caption = codeBlockAttrs != null ? (String) codeBlockAttrs.getOrDefault("caption", "") : "";
+                
+                StringBuilder codeBlockHtml = new StringBuilder();
+                codeBlockHtml.append("<div class=\"custom-code-block-wrapper\">");
+                codeBlockHtml.append("<div class=\"code-block-container\">");
+                codeBlockHtml.append("<div class=\"code-block-header\">");
+                codeBlockHtml.append("<select class=\"language-selector\" contenteditable=\"false\">");
+                codeBlockHtml.append("<option value=\"auto\"").append("auto".equals(language) ? " selected" : "").append(">auto</option>");
+                codeBlockHtml.append("<option value=\"java\"").append("java".equals(language) ? " selected" : "").append(">Java</option>");
+                codeBlockHtml.append("<option value=\"python\"").append("python".equals(language) ? " selected" : "").append(">Python</option>");
+                codeBlockHtml.append("<option value=\"javascript\"").append("javascript".equals(language) ? " selected" : "").append(">JavaScript</option>");
+                codeBlockHtml.append("<option value=\"typescript\"").append("typescript".equals(language) ? " selected" : "").append(">TypeScript</option>");
+                codeBlockHtml.append("<option value=\"html\"").append("html".equals(language) ? " selected" : "").append(">HTML</option>");
+                codeBlockHtml.append("<option value=\"css\"").append("css".equals(language) ? " selected" : "").append(">CSS</option>");
+                codeBlockHtml.append("</select>");
+                codeBlockHtml.append("<div class=\"code-block-toolbar\">");
+                codeBlockHtml.append("<button title=\"Copy code\"><span>Copy</span></button>");
+                codeBlockHtml.append("<button title=\"Add caption\"><span>Caption</span></button>");
+                codeBlockHtml.append("<button title=\"Delete node\"></button>");
+                codeBlockHtml.append("</div>");
+                codeBlockHtml.append("</div>");
+                codeBlockHtml.append("<pre class=\"code-block-content\" spellcheck=\"false\">");
+                codeBlockHtml.append("<code>").append(innerContent).append("</code>");
+                codeBlockHtml.append("</pre>");
+                codeBlockHtml.append("</div>");
+                codeBlockHtml.append("</div>");
+                
+                return codeBlockHtml.toString();
             case "audio":
                 Map<String, Object> audioAttrs = node.getAttrs();
                 if (audioAttrs != null && audioAttrs.get("src") != null) {
@@ -236,6 +253,7 @@ public class TipTapRenderer {
                     return "<div data-type=\"spacer\" style=\"height: " + HtmlUtils.htmlEscape(height) + ";\"></div>";
                 }
                 return "<div data-type=\"spacer\" style=\"height: 2rem;\"></div>"; // 기본값
+
             case "photoGrid":
                 Map<String, Object> gridAttrs = node.getAttrs();
                 if (gridAttrs != null && gridAttrs.get("items") instanceof List) {

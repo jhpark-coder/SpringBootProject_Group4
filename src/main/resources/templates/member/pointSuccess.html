@@ -179,6 +179,17 @@
             text-decoration: none;
         }
 
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            color: white;
+            text-decoration: none;
+        }
+
         .transaction-id {
             font-size: 12px;
             color: #999;
@@ -258,6 +269,10 @@
             <a href="/member/myPage" class="btn btn-primary">마이페이지로 이동</a>
             <a href="/products" class="btn btn-outline">상품 둘러보기</a>
             <a href="/api/points/history/page" class="btn btn-secondary">포인트 내역 보기</a>
+            <!-- 돌아갈 상품이 있는 경우에만 "작품으로 돌아가기" 버튼 표시 -->
+            <a th:if="${returnProductId != null}" 
+               th:href="@{'/products/' + ${returnProductId}}" 
+               class="btn btn-success">작품으로 돌아가기</a>
         </div>
         
         <div class="transaction-id" th:if="${merchantUid != null and merchantUid != 'N/A'}">
