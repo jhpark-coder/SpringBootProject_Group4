@@ -31,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 /**
  * @Service: 이 클래스가 비즈니스 로직을 처리하는 서비스 계층의 컴포넌트임을 Spring에 알립니다.
@@ -315,5 +316,22 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<Product> findProductsBySeller(Member seller, Pageable pageable) {
         return productRepository.findBySeller(seller, pageable);
+    }
+
+    /**
+     * 특정 사용자가 좋아요한 상품 목록을 조회합니다.
+     * @param userEmail 사용자 이메일
+     * @return 좋아요한 상품 목록
+     */
+    public List<Product> findLikedProductsByUser(String userEmail) {
+        Member member = memberRepository.findByEmail(userEmail);
+        if (member == null) {
+            return new ArrayList<>();
+        }
+        
+        List<ProductHeart> productHearts = productHeartRepository.findByMember(member);
+        return productHearts.stream()
+                .map(ProductHeart::getProduct)
+                .collect(Collectors.toList());
     }
 }
