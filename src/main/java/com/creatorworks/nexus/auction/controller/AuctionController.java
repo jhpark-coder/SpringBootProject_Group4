@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.creatorworks.nexus.auction.dto.AuctionSaveRequest;
@@ -20,13 +19,19 @@ import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/auctions")
 public class AuctionController {
     private final AuctionService auctionService;
 
-    @GetMapping("")
+    @GetMapping("/auctions")
     public String auctionPage() {
         return "auction";
+    }
+
+    @GetMapping("/auctions/{id}")
+    public String auctionDetail(@PathVariable Long id, Model model) {
+        Auction auction = auctionService.findAuctionById(id);
+        model.addAttribute("auction", auction);
+        return "auction/auctionDetail";
     }
 
     @PostMapping("/api/auctions")
@@ -51,7 +56,7 @@ public class AuctionController {
         return auctionService.findAuctionById(id);
     }
 
-    @GetMapping("/result/auction/{id}")
+    @GetMapping("/auction/result/{id}")
     public String auctionResult(@PathVariable Long id, Model model) {
         Auction auction = auctionService.findAuctionById(id);
         model.addAttribute("auction", auction);

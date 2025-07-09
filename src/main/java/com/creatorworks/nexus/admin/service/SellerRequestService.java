@@ -53,9 +53,9 @@ public class SellerRequestService {
 
     // Admin에게 신청 알림 보내기
     private void sendAdminNotification(Member member, SellerRequest request) {
-        // 1. 관리자용 알림 저장 (targetUserId = 0)
+        // 1. 관리자용 알림 저장 (targetUserId = 0, ADMIN 카테고리)
         SellerRequestNotificationRequest adminNotificationDto = new SellerRequestNotificationRequest();
-        adminNotificationDto.setTargetUserId(0L); // 관리자 알림
+        adminNotificationDto.setTargetUserId(0L); // 관리자 알림 (모든 관리자가 볼 수 있도록)
         adminNotificationDto.setMessage("새로운 작가 등록 신청이 있습니다. 신청자: " + member.getName() + " (" + member.getEmail() + ")");
         adminNotificationDto.setType("seller_request_received");
         adminNotificationDto.setCategory(NotificationCategory.ADMIN);
@@ -80,6 +80,7 @@ public class SellerRequestService {
 
         // 3. 관리자 그룹에 실시간 알림 전송용
         SellerRequestNotificationRequest broadcastDto = new SellerRequestNotificationRequest();
+        broadcastDto.setTargetUserId(0L); // 관리자 그룹 알림
         broadcastDto.setMessage("새로운 작가 등록 신청이 있습니다. 신청자: " + member.getName() + " (" + member.getEmail() + ")");
         broadcastDto.setType("seller_request_received");
         broadcastDto.setCategory(NotificationCategory.ADMIN);
