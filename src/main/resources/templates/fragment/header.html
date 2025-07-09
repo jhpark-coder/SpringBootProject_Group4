@@ -27,7 +27,7 @@
                 <!-- 2. 내비게이션 메뉴 -->
                 <nav class="main-nav">
                     <ul>
-                        <li><a href="#">Auction</a></li>
+                        <li><a href="/auctions/category/artwork">Auction</a></li>
                         <li sec:authorize="isAuthenticated()"><a href="/User/my-page">MyPage</a></li>
                         <li sec:authorize="hasRole('ROLE_USER') and !hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')">
                             <a th:href="@{/members/seller-register}">Register</a>

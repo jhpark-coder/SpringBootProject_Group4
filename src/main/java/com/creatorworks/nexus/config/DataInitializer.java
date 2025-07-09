@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.creatorworks.nexus.auction.entity.Auction;
+import com.creatorworks.nexus.auction.repository.AuctionRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 @Profile("dev") // 'dev' 프로필이 활성화될 때만 이 설정이 적용됩니다.
 @RequiredArgsConstructor
 public class DataInitializer {
-
+    private final AuctionRepository auctionRepository;
     private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
@@ -162,6 +164,49 @@ public class DataInitializer {
                     product.setViewCount(viewCount);
 
                     productRepository.save(product);
+                }
+                System.out.println("상품 데이터 생성이 완료되었습니다.");
+
+                for (int i = 1; i <= 1000; i++) {
+                    // 다양한 상품명 사용
+                    String name = productNames[i % productNames.length] + " " + (i / productNames.length + 1);
+                    int buyNowPrice = (int) (Math.random() * 90000) + 10000; // 10,000 ~ 99,999원
+                    int startBidPrice = buyNowPrice-1000; // 10,000 ~ 99,999원
+                    String description = descriptions[i % descriptions.length];
+
+                    // 로컬 static images 폴더의 webp 파일 사용 (1~100 범위)
+                    int imageId = (i % 100) + 1; // 1~100 범위로 제한
+                    String imageUrl = "/images/" + imageId + ".webp";
+
+                    int categoryIndex = (i - 1) % primaryCategories.length;
+                    String pCategory = primaryCategories[categoryIndex];
+                    String[] sCategories = secondaryCategories[categoryIndex];
+                    String sCategory = sCategories[((i - 1) / primaryCategories.length) % sCategories.length];
+
+                    Auction auction = Auction.builder()
+                            .seller(seller)
+                            .name(name)
+                            .buyNowPrice((long) buyNowPrice)
+                            .startBidPrice((long) startBidPrice)
+                            .description(description)
+                            .imageUrl(imageUrl)
+                            .workDescription("이 작품은 특별한 영감을 받아 제작되었습니다.")
+                            .primaryCategory(pCategory)
+                            .secondaryCategory(sCategory)
+                            .build();
+
+                    // 조회수 설정 (100~10000 사이의 랜덤 값, 일부는 높은 조회수)
+//                    long viewCount;
+//                    if (i % 10 == 0) {
+//                        // 10%는 높은 조회수 (5000~10000)
+//                        viewCount = (long) (Math.random() * 5000) + 5000;
+//                    } else {
+//                        // 90%는 일반적인 조회수 (100~5000)
+//                        viewCount = (long) (Math.random() * 4900) + 100;
+//                    }
+//                    auction.setViewCount(viewCount);
+
+                    auctionRepository.save(auction);
                 }
                 System.out.println("상품 데이터 생성이 완료되었습니다.");
             }
