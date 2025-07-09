@@ -87,6 +87,18 @@ public class FaqDataInitializer implements CommandLineRunner {
                 "환불은 언제 처리되나요?", 
                 "환불 요청이 승인되면 결제 수단에 따라 영업일 기준 3~5일 이내에 처리됩니다."),
             
+            createFaq(FaqCategory.PAYMENT, 6, 
+                "포인트 환불은 어떻게 신청하나요?", 
+                "마이페이지 > 환불 요청에서 신청할 수 있습니다. 최소 1,000P 이상부터 환불 가능하며, 계좌 정보를 입력하여 신청하시면 됩니다."),
+            
+            createFaq(FaqCategory.PAYMENT, 7, 
+                "포인트 환불 처리 기간은 얼마나 걸리나요?", 
+                "환불 요청 접수 후 관리자 검토를 거쳐 승인되면 3~5일 이내에 지정된 계좌로 입금됩니다."),
+            
+            createFaq(FaqCategory.PAYMENT, 8, 
+                "포인트 환불 수수료가 있나요?", 
+                "포인트 환불은 수수료 없이 처리됩니다. 단, 최소 환불 금액은 1,000P입니다."),
+            
             // 구독 서비스
             createFaq(FaqCategory.SUBSCRIPTION, 1, 
                 "구독 서비스는 어떤 혜택이 있나요?", 

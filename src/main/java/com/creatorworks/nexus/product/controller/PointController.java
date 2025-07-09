@@ -22,8 +22,10 @@ import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.product.dto.PointChargeRequest;
 import com.creatorworks.nexus.product.dto.PointPurchaseRequest;
+import com.creatorworks.nexus.product.dto.PointRefundRequest;
 import com.creatorworks.nexus.product.dto.PointResponse;
 import com.creatorworks.nexus.product.entity.Point;
+import com.creatorworks.nexus.product.entity.PointRefund;
 import com.creatorworks.nexus.product.service.PointService;
 
 import lombok.RequiredArgsConstructor;
@@ -329,5 +331,187 @@ public class PointController {
         model.addAttribute("currentBalance", pointService.getCurrentBalance(member.getId()));
 
         return "member/pointFail";
+    }
+
+    /**
+     * 포인트 환불 요청 API
+     * @param request 포인트 환불 요청
+     * @param principal 현재 로그인한 사용자
+     * @return 포인트 환불 요청 결과
+     */
+    @PostMapping("/refund/request")
+    @ResponseBody
+    public ResponseEntity<PointResponse> requestRefund(@RequestBody PointRefundRequest request, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.badRequest().body(
+                PointResponse.builder()
+                    .success(false)
+                    .message("로그인이 필요합니다.")
+                    .build()
+            );
+        }
+
+        Member member = memberRepository.findByEmail(principal.getName());
+        if (member == null) {
+            return ResponseEntity.badRequest().body(
+                PointResponse.builder()
+                    .success(false)
+                    .message("회원 정보를 찾을 수 없습니다.")
+                    .build()
+            );
+        }
+
+        try {
+            PointResponse response = pointService.requestRefund(member.getId(), request);
+            
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body(response);
+            }
+        } catch (IllegalArgumentException e) {
+            log.error("포인트 환불 요청 실패: 회원ID={}, 오류={}", member.getId(), e.getMessage());
+            return ResponseEntity.badRequest().body(
+                PointResponse.builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .build()
+            );
+        } catch (Exception e) {
+            log.error("포인트 환불 요청 중 예상치 못한 오류: 회원ID={}, 오류={}", member.getId(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                PointResponse.builder()
+                    .success(false)
+                    .message("포인트 환불 요청 중 오류가 발생했습니다.")
+                    .build()
+            );
+        }
+    }
+
+    /**
+     * 포인트 환불 요청 목록 조회 API
+     * @param principal 현재 로그인한 사용자
+     * @param pageable 페이징 정보
+     * @return 환불 요청 목록 페이지
+     */
+    @GetMapping("/refund/history")
+    @ResponseBody
+    public ResponseEntity<Page<PointRefund>> getRefundHistory(
+            Principal principal,
+            @PageableDefault(size = 20) Pageable pageable) {
+        
+        if (principal == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Member member = memberRepository.findByEmail(principal.getName());
+        if (member == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Page<PointRefund> refundHistory = pointService.getRefundHistory(member.getId(), pageable);
+        return ResponseEntity.ok(refundHistory);
+    }
+
+    /**
+     * 포인트 환불 요청 목록 페이지 (뷰)
+     * @param principal 현재 로그인한 사용자
+     * @param model 모델
+     * @param pageable 페이징 정보
+     * @return 환불 요청 목록 페이지
+     */
+    @GetMapping("/refund/history/page")
+    public String getRefundHistoryPage(
+            Principal principal,
+            Model model,
+            @PageableDefault(size = 20) Pageable pageable) {
+        
+        if (principal == null) {
+            return "redirect:/members/login";
+        }
+
+        Member member = memberRepository.findByEmail(principal.getName());
+        if (member == null) {
+            return "redirect:/members/login";
+        }
+
+        Long currentBalance = pointService.getCurrentBalance(member.getId());
+        Long refundableAmount = pointService.getRefundableAmount(member.getId());
+        Page<PointRefund> refundHistory = pointService.getRefundHistory(member.getId(), pageable);
+
+        model.addAttribute("currentBalance", currentBalance);
+        model.addAttribute("refundableAmount", refundableAmount);
+        model.addAttribute("refundHistory", refundHistory);
+        model.addAttribute("member", member);
+
+        return "member/pointRefundHistory";
+    }
+
+    /**
+     * 환불 가능한 포인트 금액 조회 API
+     * @param principal 현재 로그인한 사용자
+     * @return 환불 가능한 포인트 금액
+     */
+    @GetMapping("/refund/refundable-amount")
+    @ResponseBody
+    public ResponseEntity<PointResponse> getRefundableAmount(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.badRequest().body(
+                PointResponse.builder()
+                    .success(false)
+                    .message("로그인이 필요합니다.")
+                    .build()
+            );
+        }
+
+        Member member = memberRepository.findByEmail(principal.getName());
+        if (member == null) {
+            return ResponseEntity.badRequest().body(
+                PointResponse.builder()
+                    .success(false)
+                    .message("회원 정보를 찾을 수 없습니다.")
+                    .build()
+            );
+        }
+
+        Long refundableAmount = pointService.getRefundableAmount(member.getId());
+        Long currentBalance = pointService.getCurrentBalance(member.getId());
+        
+        return ResponseEntity.ok(
+            PointResponse.builder()
+                .success(true)
+                .currentBalance(currentBalance)
+                .amount(refundableAmount)
+                .message("환불 가능한 포인트 금액 조회 완료")
+                .build()
+        );
+    }
+
+    /**
+     * 포인트 환불 요청 페이지 (뷰)
+     * @param principal 현재 로그인한 사용자
+     * @param model 모델
+     * @return 포인트 환불 요청 페이지
+     */
+    @GetMapping("/refund/request/page")
+    public String getRefundRequestPage(Principal principal, Model model) {
+        
+        if (principal == null) {
+            return "redirect:/members/login";
+        }
+
+        Member member = memberRepository.findByEmail(principal.getName());
+        if (member == null) {
+            return "redirect:/members/login";
+        }
+
+        Long currentBalance = pointService.getCurrentBalance(member.getId());
+        Long refundableAmount = pointService.getRefundableAmount(member.getId());
+
+        model.addAttribute("currentBalance", currentBalance);
+        model.addAttribute("refundableAmount", refundableAmount);
+        model.addAttribute("member", member);
+
+        return "member/pointRefundRequest";
     }
 } 

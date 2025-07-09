@@ -50,7 +50,7 @@
             </div>
         </div>
 
-        <nav th:if="${!reviewPage.empty}" aria-label="Page navigation">
+        <nav th:if="${!reviewPage.empty and reviewPage.totalPages > 1}" aria-label="Page navigation">
             <ul class="pagination" style="justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
                 <!-- 이전 페이지 -->
                 <li class="page-item" th:classappend="${reviewPage.first} ? 'disabled'">
@@ -72,6 +72,7 @@
                 <!-- 현재 페이지 주변 페이지들 -->
                 <li th:with="start=${reviewPage.number > 0 ? reviewPage.number - 1 : 0}, end=${reviewPage.number < reviewPage.totalPages - 1 ? reviewPage.number + 1 : reviewPage.totalPages - 1}">
                     <li th:each="pageNumber : ${#numbers.sequence(start, end)}"
+                        th:if="${start != null and end != null and start <= end}"
                         th:classappend="${pageNumber == reviewPage.number} ? 'active'"
                         class="page-item">
                         <a class="page-link"
@@ -252,8 +253,18 @@
             const rating = ratingElement.value;
             const comment = form.querySelector('#reviewComment').value;
             const productId = /*[[${product.id}]]*/ null;
-            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+            
+            // CSRF 토큰 안전하게 가져오기
+            const csrfMeta = document.querySelector('meta[name="_csrf"]');
+            const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+            
+            if (!csrfMeta || !csrfHeaderMeta) {
+                alert('보안 토큰을 찾을 수 없습니다. 페이지를 새로고침해주세요.');
+                return;
+            }
+            
+            const csrfToken = csrfMeta.getAttribute('content');
+            const csrfHeader = csrfHeaderMeta.getAttribute('content');
 
             const reviewData = {
                 rating: parseInt(rating),
@@ -272,18 +283,16 @@
             })
                 .then(response => {
                     if (response.ok) {
-                        // 서버가 리다이렉션을 시도하는지 확인 (200 OK 상태지만, 응답 URL이 다를 경우)
-                        if (response.redirected) {
-                            window.location.href = response.url;
-                        } else {
-                            alert('후기가 성공적으로 등록되었습니다.');
-                            window.location.reload();
-                        }
+                        alert('후기가 성공적으로 등록되었습니다.');
+                        window.location.reload();
                     } else {
-                        response.json().then(data => {
-                            alert('후기 등록 실패: ' + (data.message || '알 수 없는 오류'));
-                        }).catch(() => {
-                            response.text().then(text => alert('후기 등록 실패: ' + text));
+                        return response.text().then(text => {
+                            try {
+                                const data = JSON.parse(text);
+                                alert('후기 등록 실패: ' + (data.message || '알 수 없는 오류'));
+                            } catch (e) {
+                                alert('후기 등록 실패: ' + text);
+                            }
                         });
                     }
                 })
@@ -302,8 +311,18 @@
             }
             const rating = ratingElement.value;
             const comment = document.getElementById('edit-comment').value;
-            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+            
+            // CSRF 토큰 안전하게 가져오기
+            const csrfMeta = document.querySelector('meta[name="_csrf"]');
+            const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+            
+            if (!csrfMeta || !csrfHeaderMeta) {
+                alert('보안 토큰을 찾을 수 없습니다. 페이지를 새로고침해주세요.');
+                return;
+            }
+            
+            const csrfToken = csrfMeta.getAttribute('content');
+            const csrfHeader = csrfHeaderMeta.getAttribute('content');
 
             const reviewData = {
                 rating: parseInt(rating),
@@ -325,10 +344,13 @@
                         alert('후기가 성공적으로 수정되었습니다.');
                         window.location.reload();
                     } else {
-                        response.json().then(data => {
-                            alert('후기 수정 실패: ' + (data.message || '알 수 없는 오류'));
-                        }).catch(() => {
-                            response.text().then(text => alert('후기 수정 실패: ' + text));
+                        return response.text().then(text => {
+                            try {
+                                const data = JSON.parse(text);
+                                alert('후기 수정 실패: ' + (data.message || '알 수 없는 오류'));
+                            } catch (e) {
+                                alert('후기 수정 실패: ' + text);
+                            }
                         });
                     }
                 })

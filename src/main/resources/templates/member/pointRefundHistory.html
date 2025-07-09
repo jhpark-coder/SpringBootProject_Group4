@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{fragment/layout}">
+
+<th:block layout:fragment="css">
+    <style>
+        .history-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .history-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .history-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 12px;
+        }
+
+        .history-subtitle {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .balance-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 24px;
+            color: white;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .balance-amount {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .refundable-amount {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            margin: 0 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #e1e5e9;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        .refund-table {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .refund-table th {
+            background: #f8f9fa;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .refund-table td {
+            padding: 16px;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .refund-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .amount-cell {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .date-cell {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .empty-text {
+            font-size: 16px;
+            margin-bottom: 24px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 30px;
+        }
+
+        .page-link {
+            display: inline-block;
+            padding: 8px 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .page-link:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+        }
+
+        .page-link.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .page-link.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</th:block>
+
+<div layout:fragment="content" class="history-container">
+    <div class="history-header">
+        <h1 class="history-title">포인트 환불 내역</h1>
+        <p class="history-subtitle">포인트 환불 요청 및 처리 현황을 확인할 수 있습니다.</p>
+    </div>
+
+    <div class="balance-info">
+        <div class="balance-label">현재 보유 포인트</div>
+        <div class="balance-amount" th:text="${#numbers.formatInteger(currentBalance ?: 0, 3, 'COMMA')} + 'P'">15,000P</div>
+        <div class="refundable-amount" th:text="'환불 가능: ' + ${#numbers.formatInteger(refundableAmount ?: 0, 3, 'COMMA')} + 'P'">환불 가능: 15,000P</div>
+    </div>
+
+    <div class="action-buttons">
+        <a href="/api/points/refund/request/page" class="btn btn-primary">환불 요청</a>
+        <a href="/api/points/history/page" class="btn btn-secondary">포인트 내역</a>
+    </div>
+
+    <div class="refund-table" th:if="${refundHistory != null and !refundHistory.empty}">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th>요청일</th>
+                    <th>환불 금액</th>
+                    <th>환불 사유</th>
+                    <th>상태</th>
+                    <th>처리일</th>
+                    <th>관리자 코멘트</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="refund : ${refundHistory.content}">
+                    <td class="date-cell" th:text="${#temporals.format(refund.regTime, 'yyyy-MM-dd HH:mm')}">2025-01-01 12:00</td>
+                    <td class="amount-cell" th:text="${#numbers.formatInteger(refund.amount, 3, 'COMMA')} + 'P'">10,000P</td>
+                    <td th:text="${refund.reason}">환불 사유</td>
+                    <td>
+                        <span class="status-badge" 
+                              th:class="${'status-' + refund.status.name().toLowerCase()}"
+                              th:text="${refund.status.description}">대기중</span>
+                    </td>
+                    <td class="date-cell" th:text="${refund.updateTime != null ? #temporals.format(refund.updateTime, 'yyyy-MM-dd HH:mm') : '-'}">-</td>
+                    <td th:text="${refund.adminComment != null ? refund.adminComment : '-'}">-</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="empty-state" th:if="${refundHistory == null or refundHistory.empty}">
+        <div class="empty-icon">📋</div>
+        <div class="empty-title">환불 내역이 없습니다</div>
+        <div class="empty-text">아직 포인트 환불 요청을 하지 않으셨습니다.</div>
+        <a href="/api/points/refund/request/page" class="btn btn-primary">첫 환불 요청하기</a>
+    </div>
+
+    <!-- 페이징 -->
+    <div class="pagination" th:if="${refundHistory != null and refundHistory.totalPages > 1}">
+        <a th:if="${refundHistory.first == false}" 
+           th:href="@{/api/points/refund/history/page(page=${refundHistory.number - 1})}" 
+           class="page-link">이전</a>
+        
+        <span th:each="pageNum : ${#numbers.sequence(0, refundHistory.totalPages - 1)}">
+            <a th:if="${pageNum != refundHistory.number}" 
+               th:href="@{/api/points/refund/history/page(page=${pageNum})}" 
+               class="page-link" th:text="${pageNum + 1}">1</a>
+            <span th:if="${pageNum == refundHistory.number}" 
+                  class="page-link active" th:text="${pageNum + 1}">1</span>
+        </span>
+        
+        <a th:if="${refundHistory.last == false}" 
+           th:href="@{/api/points/refund/history/page(page=${refundHistory.number + 1})}" 
+           class="page-link">다음</a>
+    </div>
+</div>
+
+</html> 

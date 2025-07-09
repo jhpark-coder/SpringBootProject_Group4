@@ -14,11 +14,11 @@ public interface MemberOrderRepository extends JpaRepository<MemberOrder, Long> 
     // MemberOrderRepository.java
     @Query("SELECT new com.creatorworks.nexus.member.dto.MonthlyCategoryPurchaseDTO(" +
             "    YEAR(o.orderDate), MONTH(o.orderDate), " +
-            "    p.primaryCategory, COUNT(o)) " + // secondaryCategory 조회 제거
+            "    COALESCE(p.primaryCategory, '기타'), COUNT(o)) " + // null 값을 '기타'로 처리
             "FROM Order o JOIN o.product p " +
             "WHERE o.buyer.id = :memberId AND o.orderDate BETWEEN :startDate AND :endDate " +
-            "GROUP BY YEAR(o.orderDate), MONTH(o.orderDate), p.primaryCategory " + // secondaryCategory 그룹핑 제거
-            "ORDER BY YEAR(o.orderDate), MONTH(o.orderDate), p.primaryCategory")
+            "GROUP BY YEAR(o.orderDate), MONTH(o.orderDate), COALESCE(p.primaryCategory, '기타') " + // null 값을 '기타'로 처리
+            "ORDER BY YEAR(o.orderDate), MONTH(o.orderDate), COALESCE(p.primaryCategory, '기타')")
     List<MonthlyCategoryPurchaseDTO> findMonthlyCategoryPurchases(
             @Param("memberId") Long memberId,
             @Param("startDate") LocalDateTime startDate,

@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,6 +120,8 @@ public class MyPageController {
         // 4-1. 모든 primaryCategory의 목록을 중복 없이 가져와 정렬합니다.
         List<String> categories = purchases.stream()
                 .map(MonthlyCategoryPurchaseDTO::primaryCategory)
+                .filter(Objects::nonNull) // null 값 필터링
+                .filter(category -> !category.equals("기타")) // '기타' 카테고리 제외
                 .distinct()
                 .sorted()
                 .collect(Collectors.toList());
@@ -141,7 +144,7 @@ public class MyPageController {
 
             // 해당 카테고리의 구매 기록만 필터링
             purchases.stream()
-                    .filter(p -> p.primaryCategory().equals(categoryName))
+                    .filter(p -> p.primaryCategory() != null && p.primaryCategory().equals(categoryName))
                     .forEach(p -> {
                         // 월(month) 정보를 인덱스로 변환 (예: 1월->0, 2월->1 ...)
                         int monthIndex = p.month() - 1; // 1월은 0번째 인덱스
@@ -252,6 +255,7 @@ public class MyPageController {
 
         // 2. Primary Category별로 데이터 가공
         Map<String, Long> primaryCategoryCounts = totalCounts.entrySet().stream()
+                .filter(entry -> entry.getKey() != null && entry.getKey().contains(":"))
                 .collect(Collectors.groupingBy(
                         entry -> entry.getKey().split(":")[0], // "artwork:포토그래피" -> "artwork"
                         Collectors.summingLong(Map.Entry::getValue)
@@ -259,6 +263,7 @@ public class MyPageController {
 
         // 3. Secondary Category별로 데이터 가공 (primary를 key로 가짐)
         Map<String, Map<String, Long>> secondaryCategoryData = totalCounts.entrySet().stream()
+                .filter(entry -> entry.getKey() != null && entry.getKey().contains(":"))
                 .collect(Collectors.groupingBy(
                         entry -> entry.getKey().split(":")[0], // "artwork"
                         Collectors.toMap(
