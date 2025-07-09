@@ -438,12 +438,10 @@
 
         // 포인트 결제 요청
         function requestPointPayment() {
-            if (selectedPoint < 1000) {
+            if (!selectedPoint || selectedPoint < 1000) {
                 alert('최소 1,000P 이상 선택해주세요.');
                 return;
             }
-
-            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
 
             if (!confirm(`${selectedPoint.toLocaleString()}P 충전을 진행하시겠습니까?\n결제 금액: ${selectedPrice.toLocaleString()}원`)) {
                 return;
@@ -452,7 +450,6 @@
             // 아임포트 결제 요청
             const IMP = window.IMP;
             IMP.init('imp20067661'); // 실제 가맹점 코드로 변경 필요
-
             IMP.request_pay({
                 pg: 'html5_inicis',
                 pay_method: paymentMethod === 'card' ? 'card' : paymentMethod === 'bank' ? 'trans' : 'phone',

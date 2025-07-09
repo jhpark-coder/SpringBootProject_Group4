@@ -225,8 +225,8 @@
             <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, pointHistoryPage.totalPages - 1)}"
                 th:classappend="${pageNum == pointHistoryPage.number} ? 'active' : ''">
                 <a class="page-link"
-                    th:href="@{|/member/myPage/${#authentication.principal.id}/points|(page=${pageNum}, size=${pointHistoryPage.size})}">
-                    ${pageNum + 1}</a>
+                    th:href="@{|/member/myPage/${#authentication.principal.id}/points|(page=${pageNum}, size=${pointHistoryPage.size})}"
+                    th:text="${pageNum + 1}"></a>
             </li>
             <li class="page-item" th:classappend="${pointHistoryPage.last} ? 'disabled' : ''">
                 <a class="page-link"

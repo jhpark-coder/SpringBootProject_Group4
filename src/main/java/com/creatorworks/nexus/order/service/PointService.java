@@ -194,20 +194,19 @@ public class PointService {
                 if (order.getProduct() == null) {
                     log.info("포인트 충전 Order 완료 처리: orderId={}", order.getId());
                 }
-                
                 // 포인트 추가 (지정된 point 사용)
                 Member member = order.getBuyer();
                 Long currentBalance = getCurrentBalance(member.getId());
                 Long newBalance = currentBalance + point;
                 member.setPoint(newBalance.intValue());
                 memberRepository.save(member);
-                
+                // Order의 totalAmount를 실제 충전 금액(point)으로 갱신
+                order.setTotalAmount(point);
+                orderRepository.save(order);
                 // 결제 완료 처리
                 paymentService.completePayment(impUid);
-                
                 // 포인트 충전 성공 알림 전송
                 sendPointChargeSuccessNotification(member, point, newBalance);
-                
                 log.info("포인트 충전 완료(지정): memberId={}, point={}, newBalance={}", member.getId(), point, newBalance);
             }
         }
