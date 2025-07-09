@@ -11,7 +11,7 @@ function toggleFollow(userId) {
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                alert(data.message);
+                showPopup(data.message);
                 return;
             }
 
@@ -66,12 +66,12 @@ function toggleFollow(userId) {
             }
 
             console.log('구독 토글 결과:', data);
-            
+
             // 팔로우 성공 시 알림 처리는 서버에서 WebSocket을 통해 자동으로 처리됨
         })
         .catch(error => {
             console.error('구독 토글 오류:', error);
-            alert('구독 기능을 사용할 수 없습니다.');
+            showPopup('구독 기능을 사용할 수 없습니다.');
         });
 }
 
@@ -86,7 +86,7 @@ function toggleLike(productId) {
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                alert(data.message);
+                showPopup(data.message);
                 return;
             }
 
@@ -110,7 +110,7 @@ function toggleLike(productId) {
         })
         .catch(error => {
             console.error('좋아요 토글 오류:', error);
-            alert('좋아요 기능을 사용할 수 없습니다.');
+            showPopup('좋아요 기능을 사용할 수 없습니다.');
         });
 }
 
@@ -139,6 +139,26 @@ function loadFollowStats(userId) {
         .catch(error => {
             console.error('구독 통계 로드 오류:', error);
         });
+}
+
+// === showPopup/closePopup 모달 함수 추가 ===
+function showPopup(message) {
+    let overlay = document.getElementById('popupOverlay');
+    let msg = document.getElementById('popupMessage');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'popupOverlay';
+        overlay.className = 'popup-overlay';
+        overlay.innerHTML = `<div class="popup-container"><p id="popupMessage" class="popup-message"></p><button class="popup-button" onclick="closePopup()">확인</button></div>`;
+        document.body.appendChild(overlay);
+        msg = document.getElementById('popupMessage');
+    }
+    msg.textContent = message;
+    overlay.style.display = 'flex';
+}
+function closePopup() {
+    const overlay = document.getElementById('popupOverlay');
+    if (overlay) overlay.style.display = 'none';
 }
 
 // 페이지 로드 시 초기화
