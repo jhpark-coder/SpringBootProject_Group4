@@ -467,7 +467,20 @@
 
     <!-- 인라인 스크립트 (기존과 동일) -->
     <script th:inline="javascript">
-        window.currentUser = { /* ... */ };
+        /*<![CDATA[*/
+        window.currentUser = {
+            id: null,
+            username: null,
+            roles: []
+        };
+        /*[# th:if="${#authorization.expression('isAuthenticated()')}"]*/
+        window.currentUser = {
+            id: /*[[${#authentication.principal.id}]]*/ null,
+            username: /*[[${#authentication.name}]]*/ null,
+            roles: /*[[${#authentication.authorities.![authority]}]]*/[]
+        };
+        /*[/]*/
+        /*]]>*/
     </script>
     <script>
         $(document).ready(function () { /* ... 기존 Stomp/Socket.IO 로직 ... */ });

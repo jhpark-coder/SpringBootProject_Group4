@@ -20,14 +20,18 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.creatorworks.nexus.member.dto.CustomUserDetails;
+import com.creatorworks.nexus.member.dto.MemberModifyDto;
 import com.creatorworks.nexus.member.dto.MonthlyCategoryPurchaseDTO;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberOrderRepository;
@@ -169,9 +173,8 @@ public class MyPageController {
         // 3. Order 목록에서 Product 목록만 추출한다.
         //    (ProductDto를 사용하면 더 좋습니다. 여기서는 간단히 Product 엔티티를 그대로 사용합니다)
         List<Product> recentProducts = recentOrdersPage.getContent().stream()
-                .flatMap(order -> order.getOrderItems().stream())
-                .filter(item -> item.getProduct() != null)
-                .map(item -> item.getProduct())
+                .filter(order -> order.getProduct() != null)
+                .map(order -> order.getProduct())
                 .distinct()
                 .collect(Collectors.toList());
 
@@ -384,6 +387,69 @@ public class MyPageController {
             model.addAttribute("page", page);
             model.addAttribute("size", size);
             return "member/pointHistory";
+        }
+    }
+
+    @GetMapping("/members/modify")
+    public String memberModifyPage(@AuthenticationPrincipal Object principal, Model model) {
+        try {
+            String email = getEmailFromPrincipal(principal);
+            Member currentMember = memberRepository.findByEmail(email);
+            
+            if (currentMember == null) {
+                return "redirect:/members/login";
+            }
+            
+            // 현재 사용자 정보로 MemberModifyDto 생성
+            MemberModifyDto memberModifyDto = new MemberModifyDto();
+            memberModifyDto.setEmail(currentMember.getEmail());
+            memberModifyDto.setName(currentMember.getName());
+            memberModifyDto.setGender(currentMember.getGender());
+            memberModifyDto.setBirthYear(currentMember.getBirthYear());
+            memberModifyDto.setBirthMonth(currentMember.getBirthMonth());
+            memberModifyDto.setBirthDay(currentMember.getBirthDay());
+            
+            model.addAttribute("memberModifyDto", memberModifyDto);
+            return "member/memberModify";
+        } catch (Exception e) {
+            log.error("개인정보수정 페이지 로드 중 오류: {}", e.getMessage());
+            return "redirect:/members/login";
+        }
+    }
+
+    @PostMapping("/members/modify")
+    public ResponseEntity<Map<String, Object>> memberModify(@RequestBody MemberModifyDto memberModifyDto, 
+                                                           @AuthenticationPrincipal Object principal) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String email = getEmailFromPrincipal(principal);
+            Member currentMember = memberRepository.findByEmail(email);
+            
+            if (currentMember == null) {
+                response.put("success", false);
+                response.put("message", "로그인이 필요합니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // 회원 정보 업데이트
+            currentMember.setName(memberModifyDto.getName());
+            currentMember.setGender(memberModifyDto.getGender());
+            currentMember.setBirthYear(memberModifyDto.getBirthYear());
+            currentMember.setBirthMonth(memberModifyDto.getBirthMonth());
+            currentMember.setBirthDay(memberModifyDto.getBirthDay());
+            
+            memberRepository.save(currentMember);
+            
+            response.put("success", true);
+            response.put("message", "개인정보가 성공적으로 수정되었습니다.");
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("개인정보 수정 중 오류: {}", e.getMessage());
+            response.put("success", false);
+            response.put("message", "개인정보 수정 중 오류가 발생했습니다.");
+            return ResponseEntity.badRequest().body(response);
         }
     }
 

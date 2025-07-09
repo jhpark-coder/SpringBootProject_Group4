@@ -711,13 +711,16 @@ function App() {
       const auctionEndTime = new Date();
       auctionEndTime.setDate(auctionEndTime.getDate() + durationInDays);
 
+      // 한국 시간대로 변환 (UTC+9)
+      const koreanTime = new Date(auctionEndTime.getTime() + (9 * 60 * 60 * 1000));
+
       payload = {
         name: projectSettings.title,
         tiptapJson: JSON.stringify(jsonContent),
         description: htmlContent,
         startBidPrice: projectSettings.startBidPrice,
         buyNowPrice: projectSettings.buyNowPrice,
-        auctionEndTime: auctionEndTime.toISOString(),
+        auctionEndTime: koreanTime.toISOString(),
         imageUrl: projectSettings.coverImage,
         primaryCategory: primaryCategory,
         secondaryCategory: secondaryCategory,
@@ -733,15 +736,23 @@ function App() {
 
     // 4. 서버로 데이터 전송 (fetch API 사용)
     try {
-      const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-      const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+      const csrfTokenElement = document.querySelector('meta[name="_csrf"]');
+      const csrfHeaderElement = document.querySelector('meta[name="_csrf_header"]');
 
       const headers = {
         'Content-Type': 'application/json',
       };
 
-      if (csrfHeader && csrfToken) {
-        headers[csrfHeader] = csrfToken;
+      if (csrfHeaderElement && csrfTokenElement) {
+        const csrfToken = csrfTokenElement.getAttribute('content');
+        const csrfHeader = csrfHeaderElement.getAttribute('content');
+
+        if (csrfHeader && csrfToken) {
+          headers[csrfHeader] = csrfToken;
+          console.log('CSRF 토큰 설정됨:', csrfHeader, csrfToken);
+        }
+      } else {
+        console.warn('CSRF 메타 태그를 찾을 수 없습니다.');
       }
 
       const response = await fetch(apiUrl, {

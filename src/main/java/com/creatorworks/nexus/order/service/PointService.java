@@ -15,10 +15,7 @@ import com.creatorworks.nexus.notification.service.NotificationService;
 import com.creatorworks.nexus.order.entity.Order;
 import com.creatorworks.nexus.order.entity.Order.OrderStatus;
 import com.creatorworks.nexus.order.entity.Order.OrderType;
-import com.creatorworks.nexus.order.entity.OrderItem;
-import com.creatorworks.nexus.order.entity.OrderItem.ItemType;
 import com.creatorworks.nexus.order.entity.Payment;
-import com.creatorworks.nexus.order.repository.OrderItemRepository;
 import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.order.repository.PaymentRepository;
 import com.creatorworks.nexus.product.entity.Product;
@@ -36,7 +33,7 @@ public class PointService {
     private final MemberRepository memberRepository;
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
+
     private final PaymentRepository paymentRepository;
     private final PaymentService paymentService;
     private final NotificationService notificationService;
@@ -57,33 +54,18 @@ public class PointService {
                 throw new IllegalArgumentException("이미 처리된 결제입니다: " + impUid);
             }
 
-            // 주문 생성
+            // 주문 생성 (포인트 충전은 상품과 무관하므로 product는 null)
             Order order = Order.builder()
                     .buyer(member)
                     .orderType(OrderType.POINT_PURCHASE)
                     .orderStatus(OrderStatus.PENDING)
                     .totalAmount(amount)
                     .description("포인트 충전: " + amount + "원")
+                    .product(null) // 포인트 충전은 상품과 무관
                     .build();
 
             order = orderRepository.save(order);
             System.out.println("[LOG] order saved: orderId=" + order.getId()); // TODO: 테스트 후 삭제
-
-            // 주문 항목 생성
-            OrderItem orderItem = OrderItem.builder()
-                    .order(order)
-                    .product(null) // 포인트 충전은 상품과 무관
-                    .author(null)
-                    .price(amount)
-                    .quantity(1)
-                    .itemType(ItemType.POINT_CHARGE)
-                    .itemName("포인트 충전")
-                    .description("포인트 " + amount + "원 충전")
-                    .build();
-
-            order.addOrderItem(orderItem);
-            orderItemRepository.save(orderItem);
-            System.out.println("[LOG] orderItem added"); // TODO: 테스트 후 삭제
 
             // 결제 정보 생성
             Payment payment = paymentService.processPointPayment(order, amount, merchantUid);
@@ -116,31 +98,17 @@ public class PointService {
             throw new IllegalArgumentException("포인트가 부족합니다. 현재 잔액: " + currentBalance + "원, 필요 금액: " + totalAmount + "원");
         }
 
-        // 주문 생성
+        // 주문 생성 (상품 구매이므로 product 설정)
         Order order = Order.builder()
                 .buyer(member)
                 .orderType(OrderType.PRODUCT_PURCHASE)
                 .orderStatus(OrderStatus.PENDING)
                 .totalAmount(totalAmount)
                 .description("포인트로 상품 구매: " + product.getName())
+                .product(product) // 상품 구매이므로 product 설정
                 .build();
 
         order = orderRepository.save(order);
-
-        // 주문 항목 생성
-        OrderItem orderItem = OrderItem.builder()
-                .order(order)
-                .product(product)
-                .author(product.getSeller())
-                .price(product.getPrice())
-                .quantity(quantity)
-                .itemType(ItemType.PRODUCT)
-                .itemName(product.getName())
-                .description(product.getDescription())
-                .build();
-
-        order.addOrderItem(orderItem);
-        orderItemRepository.save(orderItem);
 
         // 결제 정보 생성 (포인트 결제)
         String merchantUid = "point_" + System.currentTimeMillis();
@@ -188,31 +156,17 @@ public class PointService {
         Long currentBalance = getCurrentBalance(memberId);
         Long newBalance = currentBalance + amount;
 
-        // 주문 생성 (관리자 지급)
+        // 주문 생성 (관리자 지급, 포인트 충전은 상품과 무관)
         Order order = Order.builder()
                 .buyer(member)
                 .orderType(OrderType.POINT_PURCHASE)
                 .orderStatus(OrderStatus.COMPLETED) // 관리자 지급은 바로 완료
                 .totalAmount(amount)
                 .description("관리자 지급: " + description)
+                .product(null) // 포인트 충전은 상품과 무관
                 .build();
 
         order = orderRepository.save(order);
-
-        // 주문 항목 생성
-        OrderItem orderItem = OrderItem.builder()
-                .order(order)
-                .product(null)
-                .author(null)
-                .price(amount)
-                .quantity(1)
-                .itemType(ItemType.POINT_CHARGE)
-                .itemName("관리자 포인트 지급")
-                .description(description)
-                .build();
-
-        order.addOrderItem(orderItem);
-        orderItemRepository.save(orderItem);
 
         // 결제 정보 생성 (관리자 지급)
         String merchantUid = "admin_" + System.currentTimeMillis();
@@ -236,22 +190,9 @@ public class PointService {
             Payment payment = paymentOpt.get();
             Order order = payment.getOrder();
             if (order.getOrderType() == OrderType.POINT_PURCHASE) {
-                // OrderItem이 없으면 생성
-                if (order.getOrderItems() == null || order.getOrderItems().isEmpty()) {
-                    OrderItem orderItem = OrderItem.builder()
-                            .order(order)
-                            .product(null)
-                            .author(null)
-                            .price(point)
-                            .quantity(1)
-                            .itemType(ItemType.POINT_CHARGE)
-                            .itemName("포인트 충전")
-                            .description("포인트 " + point + "원 충전")
-                            .build();
-                    
-                    order.addOrderItem(orderItem);
-                    orderItemRepository.save(orderItem);
-                    log.info("포인트 충전 OrderItem 생성: orderId={}, itemId={}", order.getId(), orderItem.getId());
+                // Order에 product가 설정되어 있지 않으면 설정 (포인트 충전은 상품과 무관)
+                if (order.getProduct() == null) {
+                    log.info("포인트 충전 Order 완료 처리: orderId={}", order.getId());
                 }
                 
                 // 포인트 추가 (지정된 point 사용)
