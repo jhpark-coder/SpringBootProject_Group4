@@ -12,6 +12,8 @@
     <link rel="stylesheet" th:href="@{/css/inquiry.css}">
     <link rel="stylesheet" th:href="@{/css/heartFollow.css}">
     
+    <link rel="stylesheet" th:href="@{/css/paywall.css}">
+    
     <!-- Google Fonts 로딩 개선 -->
     <th:block th:if="${product.fontFamily != null && !#strings.isEmpty(product.fontFamily)}">
         <th:block th:with="rawFont=${#strings.substringBefore(product.fontFamily, ',')}">
@@ -124,6 +126,26 @@
         <!-- Description Section (Full Width) -->
         <section class="description-section" th:object="${product}">
             <h2>작품 설명</h2>
+            
+            <!-- 페이월 안내 메시지 (구매하지 않은 경우) -->
+            <th:block th:if="${!canViewContent}">
+                <div class="paywall-notice">
+                    <div class="paywall-content">
+                        <div class="paywall-icon">
+                            <i class="fa fa-lock"></i>
+                        </div>
+                        <div class="paywall-text">
+                            <h3>이 아래부터는 유료 콘텐츠입니다</h3>
+                            <p>포인트 결제를 통해 전체 콘텐츠를 이용하세요</p>
+                            <div class="paywall-price">
+                                <span class="price-amount" th:text="${product.price != null} ? ${product.price} + 'P' : '30P'">30P</span>
+                                <span class="price-label">로 구매하기</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </th:block>
+            
             <div class="tiptap-content"
                 th:styleappend="|${product.backgroundColor != null and !#strings.isEmpty(product.backgroundColor) ? 'background-color: ' + product.backgroundColor + ';' : ''} ${product.fontFamily != null and !#strings.isEmpty(product.fontFamily) ? 'font-family: ' + product.fontFamily + ';' : ''}|"
                 th:utext="${contentHtml}">
@@ -274,6 +296,12 @@
                         <p class="purchase-message">전체 콘텐츠를 확인할 수 있습니다.</p>
                     </div>
                 `;
+            }
+
+            // 페이월 안내 메시지 숨기기
+            const paywallNotice = document.querySelector('.paywall-notice');
+            if (paywallNotice) {
+                paywallNotice.style.display = 'none';
             }
 
             // 전체 콘텐츠를 다시 로드

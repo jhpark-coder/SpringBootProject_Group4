@@ -29,7 +29,9 @@ public class GlobalModelAttributes {
         try {
             Member member = memberRepository.findByEmail(principal.getName());
             if (member != null) {
-                return pointService.getCurrentBalance(member.getId());
+                Long balance = pointService.getCurrentBalance(member.getId());
+                // 음수 보호: 최소 0으로 반환
+                return Math.max(0, balance);
             }
         } catch (Exception e) {
             // 로그인은 되어 있지만 포인트 조회 중 오류가 발생한 경우

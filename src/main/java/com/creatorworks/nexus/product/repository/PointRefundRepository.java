@@ -47,6 +47,14 @@ public interface PointRefundRepository extends JpaRepository<PointRefund, Long> 
     boolean existsByMemberIdAndStatus(Long memberId, RefundStatus status);
     
     /**
+     * 특정 회원의 특정 상태들의 환불 요청이 있는지 확인합니다.
+     * @param memberId 회원 ID
+     * @param statuses 환불 상태 목록
+     * @return 해당 상태의 환불 요청 존재 여부
+     */
+    boolean existsByMemberIdAndStatusIn(Long memberId, List<RefundStatus> statuses);
+    
+    /**
      * 특정 환불 UID로 환불 요청을 조회합니다.
      * @param refundUid 환불 UID
      * @return 환불 요청
@@ -58,7 +66,7 @@ public interface PointRefundRepository extends JpaRepository<PointRefund, Long> 
      * @param memberId 회원 ID
      * @return 총 환불 요청 금액
      */
-    @Query("SELECT COALESCE(SUM(pr.amount), 0) FROM PointRefund pr WHERE pr.member.id = :memberId AND pr.status IN ('PENDING', 'APPROVED')")
+    @Query("SELECT COALESCE(SUM(pr.amount), 0) FROM PointRefund pr WHERE pr.member.id = :memberId AND pr.status IN ('PENDING', 'PROCESSING')")
     Long calculateTotalRefundRequestAmount(@Param("memberId") Long memberId);
     
     /**

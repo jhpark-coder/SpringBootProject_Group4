@@ -80,17 +80,17 @@ public class PointRefundAdminController {
 
         // 통계 정보
         long totalRefunds = pointRefundRepository.count();
-        long pendingRefunds = pointRefundRepository.countByStatus(RefundStatus.PENDING);
-        long approvedRefunds = pointRefundRepository.countByStatus(RefundStatus.APPROVED);
+        long processingRefunds = pointRefundRepository.countByStatus(RefundStatus.PROCESSING);
         long completedRefunds = pointRefundRepository.countByStatus(RefundStatus.COMPLETED);
+        long failedRefunds = pointRefundRepository.countByStatus(RefundStatus.FAILED);
 
         model.addAttribute("refunds", refundPage.getContent());
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", refundPage.getTotalPages());
         model.addAttribute("totalRefunds", totalRefunds);
-        model.addAttribute("pendingRefunds", pendingRefunds);
-        model.addAttribute("approvedRefunds", approvedRefunds);
+        model.addAttribute("processingRefunds", processingRefunds);
         model.addAttribute("completedRefunds", completedRefunds);
+        model.addAttribute("failedRefunds", failedRefunds);
         model.addAttribute("currentStatus", status);
 
         return "admin/pointRefundList";
@@ -125,74 +125,14 @@ public class PointRefundAdminController {
     }
 
     /**
-     * 환불 요청 처리 API
-     * @param refundId 환불 요청 ID
-     * @param request 처리 요청 (approved: 승인여부, comment: 관리자 코멘트)
-     * @param principal 현재 로그인한 사용자
-     * @return 처리 결과
-     */
-    @PostMapping("/{refundId}/process")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> processRefund(
-            @PathVariable Long refundId,
-            @RequestBody Map<String, Object> request,
-            Principal principal) {
-        
-        if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("success", false, "message", "로그인이 필요합니다."));
-        }
-
-        Member member = memberRepository.findByEmail(principal.getName());
-        if (member == null || !member.getRole().name().equals("ADMIN")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("success", false, "message", "관리자 권한이 필요합니다."));
-        }
-
-        try {
-            Boolean approved = (Boolean) request.get("approved");
-            String comment = (String) request.get("comment");
-
-            if (approved == null) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("success", false, "message", "승인 여부를 지정해주세요."));
-            }
-
-            PointResponse response = pointService.processRefund(refundId, approved, comment);
-
-            if (response.isSuccess()) {
-                return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", response.getMessage()
-                ));
-            } else {
-                return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", response.getMessage()
-                ));
-            }
-        } catch (IllegalArgumentException e) {
-            log.error("환불 처리 실패: 환불ID={}, 오류={}", refundId, e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", e.getMessage()
-            ));
-        } catch (Exception e) {
-            log.error("환불 처리 중 예상치 못한 오류: 환불ID={}, 오류={}", refundId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("success", false, "message", "환불 처리 중 오류가 발생했습니다."));
-        }
-    }
-
-    /**
-     * 환불 완료 처리 API
+     * 환불 재처리 API (실패한 환불 요청에 대해)
      * @param refundId 환불 요청 ID
      * @param principal 현재 로그인한 사용자
      * @return 처리 결과
      */
-    @PostMapping("/{refundId}/complete")
+    @PostMapping("/{refundId}/retry")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> completeRefund(
+    public ResponseEntity<Map<String, Object>> retryRefund(
             @PathVariable Long refundId,
             Principal principal) {
         
@@ -208,29 +148,38 @@ public class PointRefundAdminController {
         }
 
         try {
-            PointResponse response = pointService.completeRefund(refundId);
+            PointRefund refund = pointRefundRepository.findById(refundId)
+                    .orElseThrow(() -> new IllegalArgumentException("환불 요청을 찾을 수 없습니다."));
 
-            if (response.isSuccess()) {
-                return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", response.getMessage()
-                ));
-            } else {
+            if (refund.getStatus() != RefundStatus.FAILED) {
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", response.getMessage()
+                    "message", "실패한 환불 요청만 재처리할 수 있습니다."
                 ));
             }
+
+            // 환불 재처리 로직 (실제로는 아임포트 API 재호출)
+            refund.setStatus(RefundStatus.PROCESSING);
+            refund.setAdminComment("관리자에 의한 재처리");
+            pointRefundRepository.save(refund);
+
+            log.info("환불 재처리 시작: 환불ID={}, 회원ID={}, 환불금액={}", 
+                    refundId, refund.getMember().getId(), refund.getAmount());
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "환불 재처리가 시작되었습니다."
+            ));
         } catch (IllegalArgumentException e) {
-            log.error("환불 완료 처리 실패: 환불ID={}, 오류={}", refundId, e.getMessage());
+            log.error("환불 재처리 실패: 환불ID={}, 오류={}", refundId, e.getMessage());
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
                 "message", e.getMessage()
             ));
         } catch (Exception e) {
-            log.error("환불 완료 처리 중 예상치 못한 오류: 환불ID={}, 오류={}", refundId, e.getMessage());
+            log.error("환불 재처리 중 예상치 못한 오류: 환불ID={}, 오류={}", refundId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("success", false, "message", "환불 완료 처리 중 오류가 발생했습니다."));
+                    .body(Map.of("success", false, "message", "환불 재처리 중 오류가 발생했습니다."));
         }
     }
 } 

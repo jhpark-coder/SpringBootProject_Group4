@@ -17,6 +17,8 @@ import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.order.entity.Order;
 import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.entity.Product;
+import com.creatorworks.nexus.product.entity.PointRefund;
+import com.creatorworks.nexus.product.repository.PointRefundRepository;
 import com.creatorworks.nexus.product.repository.ProductInquiryRepository;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.repository.ProductReviewRepository;
@@ -34,6 +36,7 @@ public class DataInitializer {
     private final OrderRepository orderRepository;
     private final ProductReviewRepository productReviewRepository;
     private final ProductInquiryRepository productInquiryRepository;
+    private final PointRefundRepository pointRefundRepository;
 
     @Bean
     public CommandLineRunner initData() {
@@ -325,6 +328,37 @@ public class DataInitializer {
                 }
 
                 System.out.println("샘플 후기 " + reviewCount + "건, 문의 " + inquiryCount + "건 생성 완료");
+            }
+
+            // 포인트 환불 상태 업데이트 (기존 APPROVED -> COMPLETED, REJECTED -> FAILED)
+            System.out.println("포인트 환불 상태 업데이트를 시작합니다.");
+            try {
+                // APPROVED 상태의 환불 요청을 COMPLETED로 업데이트
+                List<PointRefund> allRefunds = pointRefundRepository.findAll();
+                int approvedCount = 0;
+                int rejectedCount = 0;
+                
+                for (PointRefund refund : allRefunds) {
+                    if ("APPROVED".equals(refund.getStatus().name())) {
+                        refund.setStatus(PointRefund.RefundStatus.COMPLETED);
+                        approvedCount++;
+                    } else if ("REJECTED".equals(refund.getStatus().name())) {
+                        refund.setStatus(PointRefund.RefundStatus.FAILED);
+                        rejectedCount++;
+                    }
+                }
+                
+                if (approvedCount > 0 || rejectedCount > 0) {
+                    pointRefundRepository.saveAll(allRefunds);
+                    if (approvedCount > 0) {
+                        System.out.println("APPROVED 상태의 환불 요청 " + approvedCount + "건을 COMPLETED로 업데이트했습니다.");
+                    }
+                    if (rejectedCount > 0) {
+                        System.out.println("REJECTED 상태의 환불 요청 " + rejectedCount + "건을 FAILED로 업데이트했습니다.");
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("포인트 환불 상태 업데이트 중 오류 발생: " + e.getMessage());
             }
         };
     }

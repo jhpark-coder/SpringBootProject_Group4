@@ -32,17 +32,17 @@ public interface PointRepository extends JpaRepository<Point, Long> {
     /**
      * 특정 회원의 포인트 잔액을 계산합니다.
      * @param memberId 회원 ID
-     * @return 포인트 잔액
+     * @return 포인트 잔액 (최소 0)
      */
-    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Point p WHERE p.member.id = :memberId")
+    @Query("SELECT GREATEST(COALESCE(SUM(p.amount), 0), 0) FROM Point p WHERE p.member.id = :memberId")
     Long calculateBalanceByMemberId(@Param("memberId") Long memberId);
     
     /**
      * 특정 회원의 포인트 잔액을 계산합니다.
      * @param member 회원
-     * @return 포인트 잔액
+     * @return 포인트 잔액 (최소 0)
      */
-    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Point p WHERE p.member = :member")
+    @Query("SELECT GREATEST(COALESCE(SUM(p.amount), 0), 0) FROM Point p WHERE p.member = :member")
     Long calculateBalanceByMember(@Param("member") Member member);
     
     /**
