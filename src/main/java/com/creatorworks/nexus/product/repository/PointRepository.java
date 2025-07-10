@@ -53,6 +53,14 @@ public interface PointRepository extends JpaRepository<Point, Long> {
     Point findByImpUid(String impUid);
     
     /**
+     * 특정 회원의 특정 타입 포인트 내역을 조회합니다.
+     * @param memberId 회원 ID
+     * @param type 포인트 타입
+     * @return 포인트 내역 목록
+     */
+    List<Point> findByMemberIdAndTypeOrderByRegTimeDesc(Long memberId, Point.PointType type);
+    
+    /**
      * 특정 주문 UID로 포인트 내역을 조회합니다.
      * @param merchantUid 주문 UID
      * @return 포인트 내역

@@ -61,10 +61,20 @@ public class PointRefund extends BaseEntity {
     @Column(length = 50)
     private String refundUid; // 환불 고유 ID
     
+    @Column(length = 50)
+    private String originalImpUid; // 원본 결제 아임포트 UID
+    
+    @Column(length = 50)
+    private String originalMerchantUid; // 원본 결제 주문 UID
+    
+    @Column
+    private Long originalAmount; // 원본 결제 금액 (원)
+    
     @Builder
     public PointRefund(Member member, Long amount, String reason, String bankCode, 
                       String accountNumber, String accountHolder, String phoneNumber, 
-                      RefundStatus status, String adminComment, String refundUid) {
+                      RefundStatus status, String adminComment, String refundUid,
+                      String originalImpUid, String originalMerchantUid, Long originalAmount) {
         this.member = member;
         this.amount = amount;
         this.reason = reason;
@@ -75,6 +85,9 @@ public class PointRefund extends BaseEntity {
         this.status = status;
         this.adminComment = adminComment;
         this.refundUid = refundUid;
+        this.originalImpUid = originalImpUid;
+        this.originalMerchantUid = originalMerchantUid;
+        this.originalAmount = originalAmount;
     }
     
     public enum RefundStatus {

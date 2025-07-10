@@ -1,6 +1,8 @@
 package com.creatorworks.nexus.product.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -327,6 +329,26 @@ public class PointService {
         // 환불 UID 생성
         String refundUid = "refund_" + UUID.randomUUID().toString().replace("-", "");
 
+        // 원본 결제 정보 찾기 (최근 충전 내역에서)
+        String originalImpUid = null;
+        String originalMerchantUid = null;
+        Long originalAmount = null;
+        
+        // 최근 충전 내역 조회 (환불 가능한 충전 내역 찾기)
+        List<Point> chargeHistory = pointRepository.findByMemberIdAndTypeOrderByRegTimeDesc(memberId, PointType.CHARGE);
+        for (Point charge : chargeHistory) {
+            if (charge.getImpUid() != null && !charge.getImpUid().isEmpty()) {
+                // 아임포트 결제 정보 조회
+                Map<String, Object> paymentInfo = iamportRefundService.getOriginalPaymentInfo(charge.getImpUid());
+                if ((Boolean) paymentInfo.get("success")) {
+                    originalImpUid = charge.getImpUid();
+                    originalMerchantUid = charge.getMerchantUid();
+                    originalAmount = (Long) paymentInfo.get("amount");
+                    break;
+                }
+            }
+        }
+
         // 환불 요청 저장 (처리 중 상태로 시작)
         PointRefund refund = PointRefund.builder()
                 .member(member)
@@ -338,6 +360,9 @@ public class PointService {
                 .phoneNumber(request.getPhoneNumber())
                 .status(RefundStatus.PROCESSING)
                 .refundUid(refundUid)
+                .originalImpUid(originalImpUid)
+                .originalMerchantUid(originalMerchantUid)
+                .originalAmount(originalAmount)
                 .build();
 
         pointRefundRepository.save(refund);
@@ -378,12 +403,20 @@ public class PointService {
                 refund.setAdminComment("자동 환불 처리 완료");
                 pointRefundRepository.save(refund);
 
-                log.info("포인트 자동 환불 완료: 회원ID={}, 환불금액={}, 환불UID={}, 잔액={}", 
-                        memberId, request.getAmount(), refundUid, newBalance);
+                // 환불 결과 메시지 구성
+                String resultMessage = (String) refundResult.get("message");
+                if (refund.getOriginalImpUid() != null) {
+                    resultMessage += " (실제 결제 환불 처리됨)";
+                } else {
+                    resultMessage += " (포인트 차감만 처리됨)";
+                }
+
+                log.info("포인트 자동 환불 완료: 회원ID={}, 환불금액={}, 환불UID={}, 원본결제={}, 잔액={}", 
+                        memberId, request.getAmount(), refundUid, refund.getOriginalImpUid(), newBalance);
 
                 return PointResponse.builder()
                         .success(true)
-                        .message("포인트 환불이 성공적으로 처리되었습니다.")
+                        .message(resultMessage)
                         .currentBalance(newBalance)
                         .amount(-request.getAmount())
                         .description("포인트 환불 완료")

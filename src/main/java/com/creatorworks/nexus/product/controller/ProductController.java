@@ -200,6 +200,7 @@ public class ProductController {
         
         // Tiptap JSON 컨텐츠 처리
         String contentHtml = "";
+        boolean hasPaywall = false; // 페이월 존재 여부 확인
         String tiptapJson = product.getTiptapJson();
         if (tiptapJson != null && !tiptapJson.isEmpty()) {
             try {
@@ -207,7 +208,15 @@ public class ProductController {
                 TipTapDocument document = objectMapper.readValue(tiptapJson, TipTapDocument.class);
                 List<TipTapNode> nodesToRender = document.getContent();
 
-                if (!canViewContent) { // isPurchased 대신 canViewContent 사용
+                // 페이월 노드가 있는지 확인
+                for (TipTapNode node : nodesToRender) {
+                    if ("paywall".equals(node.getType())) {
+                        hasPaywall = true;
+                        break;
+                    }
+                }
+
+                if (!canViewContent && hasPaywall) { // 페이월이 있고 구매하지 않은 경우에만 콘텐츠 제한
                     int paywallIndex = -1;
                     for (int i = 0; i < nodesToRender.size(); i++) {
                         if ("paywall".equals(nodesToRender.get(i).getType())) {
@@ -240,6 +249,7 @@ public class ProductController {
         model.addAttribute("currentMember", currentMember);
         model.addAttribute("canWriteReview", canWriteReview);
         model.addAttribute("canViewContent", canViewContent); // 구매 상태 추가
+        model.addAttribute("hasPaywall", hasPaywall); // 페이월 존재 여부 추가
         model.addAttribute("existingReview", existingReview.orElse(null));
         // --- 좋아요 관련 모델 속성 추가 ---
         model.addAttribute("heartCount", heartCount);
