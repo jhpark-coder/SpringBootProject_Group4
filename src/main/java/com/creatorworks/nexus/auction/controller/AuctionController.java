@@ -95,7 +95,7 @@ public class AuctionController {
         model.addAttribute("primaryCategory", categoryName);
         model.addAttribute("secondaryCategory", secondaryCategory); // 현재 선택된 2차 카테고리
         model.addAttribute("secondaryCategories", secondaryCategories);
-        model.addAttribute("initialProductPage", initialAuctionPage);
+        model.addAttribute("initialAuctionPage", initialAuctionPage);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", totalPages);
 
