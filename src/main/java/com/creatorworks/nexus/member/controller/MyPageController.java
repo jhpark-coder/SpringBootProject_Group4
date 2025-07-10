@@ -1,8 +1,10 @@
 package com.creatorworks.nexus.member.controller;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -216,41 +218,64 @@ public class MyPageController {
         // ==========================================================
 
 
-        // ==========================================================
-        //      ★★★ 카테고리 통계 조회/가공 로직 추가 ★★★
-        // ==========================================================
-        Map<String, Long> totalCounts = new HashMap<>();
+            // ==========================================================
+            //      ★★★ [최종] 최근 본 상품 내역을 활용한 사용자별 카테고리 통계 ★★★
+            // ==========================================================
 
-        // 1. 최근 7일간의 모든 카테고리 조회수를 합산
-        for (int i = 0; i < 7; i++) {
-            String dailyCountKey = "categoryViewCount:" + LocalDate.now().minusDays(i).format(DateTimeFormatter.ISO_LOCAL_DATE);
-            Set<ZSetOperations.TypedTuple<String>> dailyTuples = redisTemplate.opsForZSet().rangeWithScores(dailyCountKey, 0, -1);
+            // 현재 로그인된 사용자의 ID를 가져옵니다.
+            //            Long currentMemberId = currentMember.getId();
 
-            if (dailyTuples != null) {
-                for (ZSetOperations.TypedTuple<String> tuple : dailyTuples) {
-                    String categoryMember = tuple.getValue();
-                    long count = tuple.getScore().longValue();
-                    totalCounts.merge(categoryMember, count, Long::sum);
+            // 합산 결과를 저장할 Map 초기화
+            Map<String, Long> totalCounts = new HashMap<>();
+
+            // 1. Redis에서 최근 7일간의 조회 기록(상품 ID) 가져오기
+            String viewHistoryKey = "viewHistory:" + currentMemberId;
+            // 7일 전의 시간을 score(timestamp)로 계산
+            double sevenDaysAgoScore = Instant.now().minus(7, ChronoUnit.DAYS).toEpochMilli();
+
+            // ZSet에서 7일 전 score 이후의 모든 데이터를 한 번에 조회 (rangeByScore)
+            Set<String> viewedProductIdsIn7Days = redisTemplate.opsForZSet()
+                    .rangeByScore(viewHistoryKey, sevenDaysAgoScore, Double.MAX_VALUE);
+
+            if (viewedProductIdsIn7Days != null && !viewedProductIdsIn7Days.isEmpty()) {
+
+                // 2. 조회된 상품 ID들로 Product 엔티티를 DB에서 한 번에 조회
+                List<Long> productIds = viewedProductIdsIn7Days.stream()
+                        .map(Long::parseLong)
+                        .collect(Collectors.toList());
+
+                List<Product> products = productRepository.findAllById(productIds);
+
+                // 3. 카테고리별 조회수 집계 (메모리에서 처리)
+                for (Product product : products) {
+                    // Product 엔티티의 primary, secondary 카테고리 필드가 모두 존재할 경우에만 처리
+                    if (product.getPrimaryCategory() != null && product.getSecondaryCategory() != null) {
+
+                        // "artwork:포토그래피" 와 같은 형식의 통계용 키(key)를 생성
+                        String categoryString = product.getPrimaryCategory() + ":" + product.getSecondaryCategory();
+
+                        // 해당 카테고리의 카운트를 1씩 증가시킴
+                        totalCounts.merge(categoryString, 1L, Long::sum);
+                    }
                 }
             }
-        }
 
-        // 2. Primary Category별로 데이터 가공
-        Map<String, Long> primaryCategoryCounts = totalCounts.entrySet().stream()
-                .collect(Collectors.groupingBy(
-                        entry -> entry.getKey().split(":")[0], // "artwork:포토그래피" -> "artwork"
-                        Collectors.summingLong(Map.Entry::getValue)
-                ));
+// 4. Primary Category별로 데이터 가공 (기존 코드와 동일)
+            Map<String, Long> primaryCategoryCounts = totalCounts.entrySet().stream()
+                    .collect(Collectors.groupingBy(
+                            entry -> entry.getKey().split(":")[0], // "artwork:포토그래피" -> "artwork"
+                            Collectors.summingLong(Map.Entry::getValue)
+                    ));
 
-        // 3. Secondary Category별로 데이터 가공 (primary를 key로 가짐)
-        Map<String, Map<String, Long>> secondaryCategoryData = totalCounts.entrySet().stream()
-                .collect(Collectors.groupingBy(
-                        entry -> entry.getKey().split(":")[0], // "artwork"
-                        Collectors.toMap(
-                                entry -> entry.getKey().split(":")[1], // "포토그래피"
-                                Map.Entry::getValue
-                        )
-                ));
+                    // 5. Secondary Category별로 데이터 가공 (기존 코드와 동일)
+                    Map<String, Map<String, Long>> secondaryCategoryData = totalCounts.entrySet().stream()
+                    .collect(Collectors.groupingBy(
+                            entry -> entry.getKey().split(":")[0], // "artwork"
+                            Collectors.toMap(
+                                    entry -> entry.getKey().split(":")[1], // "포토그래피"
+                                    Map.Entry::getValue
+                            )
+                    ));
 
         model.addAttribute("primaryCategoryData", primaryCategoryCounts);
         model.addAttribute("secondaryCategoryData", secondaryCategoryData);

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragment/layout_auction}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/category_grid.css}">
+        <link rel="stylesheet" th:href="@{/css/auctionTimer.css}">
+        <link rel="stylesheet" th:href="@{/css/heartFollow.css}">
+    </th:block>
+    <title>Nexus - 카테고리</title>
+</head>
+
+<body class="category-page-active">
+<div layout:fragment="content">
+    <div class="category-grid-container">
+        <div class="category-header">
+            <h1 th:text="${primaryCategory}">아트워크</h1>
+            <nav class="secondary-category-nav">
+                <ul>
+                    <li>
+                        <a th:href="@{/auctions/category/{name}(name=${primaryCategory}, page=1, secondary='all')}"
+                           th:classappend="${secondaryCategory == 'all' ? 'active' : ''}">모두 보기</a>
+                    </li>
+                    <li th:each="category : ${secondaryCategories}">
+                        <a th:href="@{/auctions/category/{name}(name=${primaryCategory}, page=1, secondary=${category})}"
+                           th:text="${category}"
+                           th:classappend="${secondaryCategory == category ? 'active' : ''}"></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <div id="auction-grid" class="row">
+            <!-- 서버에서 렌더링한 초기 상품 목록 -->
+            <div th:each="auction, stat : ${initialAuctionPage.auctions}" class="col-md-3">
+                <article class="grid-item">
+                    <!-- 애니메이션 대상: .box 클래스와 data-* 속성 포함 -->
+                    <div class="item-image-placeholder box" th:data-img-url="${auction.imageUrl}"
+                         th:data-i="${stat.index % 14}">
+                    </div>
+                    <div class="countdown-timer" th:if="${auction.auctionEndTime != null}" th:data-endtime="${auction.auctionEndTime}">
+                        --일 --:--:--
+                    </div>
+
+                    <!-- 상품 정보 -->
+                    <div class="item-info">
+                        <div class="seller-info">
+                            <div class="seller-avatar"></div>
+                            <span class="seller-name" th:text="${auction.sellerName}"></span>
+                        </div>
+                        <!-- 로그인한 사용자가 판매자 본인이 아닌 경우에만 팔로우 버튼 표시 -->
+                        <button class="btn follow-btn" th:if="${auction.sellerId != null}"
+                                th:data-member-id="${auction.sellerId}" th:onclick="|toggleFollow(${auction.sellerId})|"
+                                sec:authorize="isAuthenticated()">Follow</button>
+                        <!-- 비로그인 사용자에게는 로그인 유도 -->
+                        <button class="btn follow-btn" th:if="${auction.sellerId != null}"
+                                onclick="alert('로그인이 필요합니다.'); location.href='/members/login';"
+                                sec:authorize="!isAuthenticated()">Follow</button>
+                    </div>
+
+                    <!-- 전체를 덮는 투명 링크 -->
+                    <a th:href="@{/auctions/{id}(id=${auction.id})}" class="grid-item-link"></a>
+                </article>
+            </div>
+            <!-- JS를 통해 동적으로 추가될 상품들 -->
+        </div>
+
+        <div id="loading-spinner" style="display: none; text-align: center; padding: 20px;">
+            <p>로딩 중...</p>
+        </div>
+
+        <!-- 페이지네이션 컨트롤 -->
+        <div id="pagination-controls" class="pagination-controls" th:if="${totalPages > 1}">
+            <a th:if="${currentPage > 1}"
+               th:href="@{/auctions/category/{name}(name=${primaryCategory}, page=${currentPage - 1}, secondary=${secondaryCategory})}"
+               class="btn page-btn">
+                &lt; 이전 페이지
+            </a>
+            <span class="current-page-display" th:text="|${currentPage} / ${totalPages}|">1 / 50</span>
+            <a th:if="${currentPage < totalPages}"
+               th:href="@{/auctions/category/{name}(name=${primaryCategory}, page=${currentPage + 1}, secondary=${secondaryCategory})}"
+               class="btn page-btn">
+                다음 페이지 &gt;
+            </a>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="script">
+    <script th:src="@{/js/heartFollow.js}"></script>
+    <script th:src="@{/js/grid-animation-auction.js}"></script>
+    <script th:src="@{/js/chat-buttons.js}"></script>
+    <script th:src="@{/js/countdown.js}"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        $(document).ready(function () {
+            // 서버로부터 전달받는 값들
+            const primaryCategory = /*[[${primaryCategory}]]*/ 'default';
+            const secondaryCategory = /*[[${secondaryCategory}]]*/ 'all';
+            const totalPages = /*[[${totalPages}]]*/ 1;
+
+            // 무한 스크롤 상태 관리 변수
+            let currentPage = 1; // 서버는 0-based index, JS는 1부터 다음 페이지 요청
+            let isLoading = false;
+            let noMoreData = /*[[${initialAuctionPage.isLast}]]*/ false;
+            let errorCount = 0;
+            const maxErrorCount = 3;
+            let totalAnimations = 0;
+            let completedAnimations = 0;
+
+            /**
+             * 애니메이션이 적용될 수 있는 올바른 HTML 구조로 상품 카드를 생성합니다.
+             * @param {object} product - 상품 정보 객체
+             * @param {number} index - 현재 로드된 목록에서의 인덱스
+             * @returns {string} - 생성된 HTML 문자열
+             */
+            function createAuctionCard(auction, index) {
+                // Thymeleaf가 처음 렌더링하는 구조와 동일하게 맞춥니다.
+
+                // 1. Follow 버튼 HTML 생성
+                const followButtonHtml = auction.sellerId ?
+                    `<button class="btn follow-btn"
+                             data-member-id="${auction.sellerId}"
+                             onclick="toggleFollow(${auction.sellerId})">Follow</button>` : '';
+
+                 const countdownHtml = auction.auctionEndTime ?
+                `<div class="countdown-timer" data-endtime="${auction.auctionEndTime}">--일 --:--:--</div>` : '';
+
+                // 2. data-i 값을 동적으로 계산하여 다양한 애니메이션 효과 적용
+                const existingItemCount = $('#auction-grid .grid-item').length;
+                const dataI = (existingItemCount + index) % 14;
+
+                // 3. 최종 HTML 구조 반환
+                return `
+                    <div class="col-md-3">
+                        <article class="grid-item">
+                            <!-- 애니메이션 대상: .box 클래스와 data-* 속성 포함 -->
+                            <div class="item-image-placeholder box"
+                                 data-img-url="${auction.imageUrl}"
+                                 data-i="${dataI}">
+                            </div>
+                             ${countdownHtml}
+
+                            <!-- 상품 정보 -->
+                            <div class="item-info">
+                                <div class="seller-info">
+                                    <div class="seller-avatar"></div>
+                                    <span class="seller-name">${auction.sellerName}</span>
+                                </div>
+                                ${followButtonHtml}
+                            </div>
+
+                            <!-- 전체를 덮는 투명 링크 -->
+                            <a href="/auctions/${auction.id}" class="grid-item-link"></a>
+                        </article>
+                    </div>
+                `;
+            }
+
+            /**
+             * 에러 메시지를 표시합니다.
+             * @param {string} message - 표시할 에러 메시지
+             */
+            function showError(message) {
+                const errorHtml = `
+                    <div class="error-message" style="text-align: center; padding: 20px; color: #dc3545; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; margin: 20px 0;">
+                        <p style="margin: 0; font-weight: 500;">${message}</p>
+                        <button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">다시 시도</button>
+                    </div>
+                `;
+                $('#loading-spinner').hide().after(errorHtml);
+            }
+
+            /**
+             * 모든 애니메이션이 완료되었는지 확인하고 챗봇 버튼을 표시합니다.
+             */
+            function checkAllAnimationsComplete() {
+                const allGridItems = document.querySelectorAll('.grid-item');
+                const loadedItems = document.querySelectorAll('.grid-item.loaded');
+
+                // 모든 그리드 아이템이 로드되었는지 확인
+                if (allGridItems.length > 0 && allGridItems.length === loadedItems.length) {
+                    // 챗봇 버튼 표시
+                    showChatbotButton();
+                }
+            }
+
+            /**
+             * 챗봇 버튼을 표시합니다.
+             */
+            function showChatbotButton() {
+                const chatbotBtn = document.querySelector('.chatbot-btn');
+                const chatBtn = document.querySelector('.chat-btn');
+
+                if (chatbotBtn && !chatbotBtn.classList.contains('show')) {
+                    chatbotBtn.classList.add('show');
+                    chatbotBtn.style.opacity = '1';
+                    chatbotBtn.style.transform = 'translateY(0) scale(1)';
+                }
+
+                if (chatBtn && !chatBtn.classList.contains('show')) {
+                    chatBtn.classList.add('show');
+                    chatBtn.style.opacity = '1';
+                    chatBtn.style.transform = 'translateY(0) scale(1)';
+                }
+
+                // 챗봇 버튼이 표시된 후 약간의 지연을 두고 챗봇 초기화
+                setTimeout(() => {
+                    if (typeof window.showChatbotButton === 'function') {
+                        window.showChatbotButton();
+                    } else if (typeof initializeChatComponents === 'function') {
+                        initializeChatComponents();
+                    }
+                }, 1000);
+            }
+
+            /**
+             * 다음 페이지의 상품들을 비동기(AJAX)로 로드합니다.
+             */
+            function loadAuctions() {
+                // 이미 로딩 중이거나 더 이상 데이터가 없으면 함수를 즉시 종료
+                if (isLoading || noMoreData || currentPage >= totalPages) {
+                    return;
+                }
+
+                // 에러 횟수가 최대치를 초과하면 더 이상 시도하지 않음
+                if (errorCount >= maxErrorCount) {
+                    showError('연속적인 오류가 발생했습니다. 페이지를 새로고침해주세요.');
+                    return;
+                }
+
+                isLoading = true;
+                $('#loading-spinner').show();
+
+                // API 엔드포인트
+                const url = `/api/auctions/category?primary=${primaryCategory}&secondary=${secondaryCategory}&page=${currentPage}&size=16&sort=regTime,desc`;
+
+                $.get(url, function (response) {
+                    const auctions = response.auctions;
+                    if (auctions && auctions.length > 0) {
+                        // 받은 상품 데이터로 카드 HTML을 만들어 페이지에 추가
+                        auctions.forEach((auction, index) => {
+                            $('#auction-grid').append(createAuctionCard(auction, index));
+                        });
+
+                        currentPage++; // 다음 페이지 번호 준비
+                        errorCount = 0; // 성공 시 에러 카운트 리셋
+
+                        // ==================== [수정된 부분] ====================
+                        // 이제 애니메이션 초기화 함수만 호출하면,
+                        // 애니메이션이 끝난 후 이벤트 리스너가 알아서 카운트다운을 실행합니다.
+                        if (typeof initGridAnimations === 'function') {
+                            initGridAnimations();
+                        }
+                        // ==========================================================
+
+                        // *** 가장 중요한 연동 부분 ***
+                        // 새로 추가된 카드들에 그리드 애니메이션을 적용하도록 초기화 함수를 호출합니다.
+                        if (typeof initGridAnimations === 'function') {
+                            // 약간의 지연 후 애니메이션 시작 (DOM 업데이트 완료 대기)
+                            setTimeout(() => {
+                                initGridAnimations();
+
+                                // 새로 추가된 애니메이션들이 완료되었는지 확인
+                                setTimeout(() => {
+                                    checkAllAnimationsComplete();
+                                }, 2000); // 애니메이션 완료 대기 시간
+                            }, 200);
+                        }
+                    }
+
+                    // 서버가 마지막 페이지라고 알려주면, 더 이상 로드하지 않도록 설정
+                    if (response.isLast) {
+                        noMoreData = true;
+                    }
+
+                }).fail(function (xhr, status, error) {
+                    console.error("상품 로딩 중 오류 발생:", status, error);
+                    errorCount++;
+
+                    let errorMessage = '상품을 불러오는 중 오류가 발생했습니다.';
+                    if (xhr.status === 404) {
+                        errorMessage = '요청한 페이지를 찾을 수 없습니다.';
+                    } else if (xhr.status === 500) {
+                        errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                    } else if (xhr.status === 0) {
+                        errorMessage = '네트워크 연결을 확인해주세요.';
+                    }
+
+                    if (errorCount >= maxErrorCount) {
+                        showError(errorMessage);
+                    } else {
+                        // 일시적인 오류인 경우 3초 후 재시도
+                        setTimeout(() => {
+                            isLoading = false;
+                            $('#loading-spinner').hide();
+                            loadAuctions();
+                        }, 3000);
+                    }
+                }).always(function () {
+                    // 로딩 스피너를 숨기고 로딩 상태를 해제
+                    $('#loading-spinner').hide();
+                    isLoading = false;
+                });
+            }
+
+            // 윈도우 스크롤 이벤트에 loadAuctions 함수를 연결
+            $(window).scroll(function () {
+                // 페이지 끝에서 300px 위 지점에 도달하면 다음 페이지 로드
+                if ($(window).scrollTop() + $(window).height() > $(document).height() - 300) {
+                    loadAuctions();
+                }
+            });
+
+            // 페이지 로드 완료 후 초기 애니메이션 시작을 위한 지연
+            setTimeout(() => {
+                if (typeof initGridAnimations === 'function') {
+                    initGridAnimations();
+
+                    // 초기 애니메이션 완료 확인
+                    setTimeout(() => {
+                        checkAllAnimationsComplete();
+                    }, 2000);
+                }
+            }, 500);
+        });
+        /*]]>*/
+    </script>
+</th:block>
+
+</body>
+
+</html>

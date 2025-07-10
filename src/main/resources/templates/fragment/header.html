@@ -22,33 +22,33 @@
                 </a>
             </div>
 
-            <!-- 모바일 레이아웃을 위해 내비게이션과 액션 버튼을 한번 더 묶음 -->
-            <div class="nav-actions-wrapper">
-                <!-- 2. 내비게이션 메뉴 -->
-                <nav class="main-nav">
-                    <ul>
-                        <li><a href="#">Auction</a></li>
-                        <!-- MyPage 링크: 인증된 사용자 중 CustomUserDetails 타입인 경우에만 표시 -->
-                        <li sec:authorize="isAuthenticated()"
-                            th:if="${#authentication.principal instanceof T(com.creatorworks.nexus.member.dto.CustomUserDetails)}">
-                            <a th:href="@{'/member/myPage/' + ${#authentication.principal.id}}">MyPage</a>
-                        </li>
-                        <li sec:authorize="hasRole('ROLE_USER') and !hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')">
-                            <a th:href="@{/members/seller-register}">Register</a>
-                        </li>
-                        <li sec:authorize="hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')"><a
-                                href="/seller/dashboard">SellerPage</a></li>
-                        <li sec:authorize="hasRole('ROLE_ADMIN')"><a
-                                href="/admin/seller-management">SellerManagement</a></li>
-                        <!-- 로그인/로그아웃 링크 -->
-                        <li sec:authorize="isAnonymous()">
-                            <a href="/members/login">Login</a>
-                        </li>
-                        <li sec:authorize="isAuthenticated()">
-                            <a href="/members/logout">Logout</a>
-                        </li>
-                    </ul>
-                </nav>
+        <!-- 모바일 레이아웃을 위해 내비게이션과 액션 버튼을 한번 더 묶음 -->
+        <div class="nav-actions-wrapper">
+            <!-- 2. 내비게이션 메뉴 -->
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="/auctions/category/artwork">Auction</a></li>
+                    <!-- MyPage 링크: 인증된 사용자 중 CustomUserDetails 타입인 경우에만 표시 -->
+                    <li sec:authorize="isAuthenticated()"
+                        th:if="${#authentication.principal instanceof T(com.creatorworks.nexus.member.dto.CustomUserDetails)}">
+                        <a th:href="@{'/member/myPage/' + ${#authentication.principal.id}}">MyPage</a>
+                    </li>
+                    <li sec:authorize="hasRole('ROLE_USER') and !hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')">
+                        <a th:href="@{/members/seller-register}">Register</a>
+                    </li>
+                    <li sec:authorize="hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')"><a
+                            href="/seller/dashboard">SellerPage</a></li>
+                    <li sec:authorize="hasRole('ROLE_ADMIN')"><a
+                            href="/admin/seller-management">SellerManagement</a></li>
+                    <!-- 로그인/로그아웃 링크 -->
+                    <li sec:authorize="isAnonymous()">
+                        <a href="/members/login">Login</a>
+                    </li>
+                    <li sec:authorize="isAuthenticated()">
+                        <a href="/members/logout">Logout</a>
+                    </li>
+                </ul>
+            </nav>
 
                 <!-- 3. 사용자 액션 영역 (로그인한 사용자만) -->
                 <!-- CustomUserDetails 타입의 인증된 사용자만 이 영역을 표시 -->
