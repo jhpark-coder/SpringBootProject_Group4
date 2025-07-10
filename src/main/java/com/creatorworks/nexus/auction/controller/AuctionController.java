@@ -109,12 +109,4 @@ public class AuctionController {
      * @param pageable 페이징 정보
      * @return 페이징 처리된 상품 데이터
      */
-    @GetMapping("/api/auctions/category")
-    @ResponseBody
-    public AuctionPageResponse getProductsByCategory(
-            @RequestParam("primary") String primaryCategory,
-            @RequestParam(value = "secondary", required = false, defaultValue = "all") String secondaryCategory,
-            Pageable pageable) {
-        return auctionService.findAllAuctions(primaryCategory, secondaryCategory, pageable);
-    }
 }

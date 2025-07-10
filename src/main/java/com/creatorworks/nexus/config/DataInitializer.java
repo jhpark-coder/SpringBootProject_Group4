@@ -208,7 +208,7 @@ public class DataInitializer {
 
                     auctionRepository.save(auction);
                 }
-                System.out.println("상품 데이터 생성이 완료되었습니다.");
+                System.out.println("경매Auction0 데이터 생성이 완료되었습니다.");
             }
 
             // 임시 구매 데이터 생성 (usertest가 최근 6개월간 다양한 상품을 구매)

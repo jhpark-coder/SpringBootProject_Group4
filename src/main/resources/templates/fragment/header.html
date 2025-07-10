@@ -27,7 +27,7 @@
             <!-- 2. 내비게이션 메뉴 -->
             <nav class="main-nav">
                 <ul>
-                    <li><a href="#">Auction</a></li>
+                    <li><a href="/auctions/category/artwork">Auction</a></li>
                     <!-- MyPage 링크: 인증된 사용자 중 CustomUserDetails 타입인 경우에만 표시 -->
                     <li sec:authorize="isAuthenticated()"
                         th:if="${#authentication.principal instanceof T(com.creatorworks.nexus.member.dto.CustomUserDetails)}">
