@@ -52,6 +52,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.creatorworks.nexus.order.entity.Order;
+import com.creatorworks.nexus.order.repository.OrderRepository;
+import com.creatorworks.nexus.order.service.PointService;
 
 /**
  * @Controller: 이 클래스가 Spring MVC의 컨트롤러임을 나타냅니다.
@@ -75,6 +78,8 @@ public class ProductController {
     private final MemberFollowService memberFollowService;
     private final RedisTemplate<String, String> redisTemplate;
     private final RecentlyViewedProductRedisService recentlyViewedProductRedisService;
+    private final OrderRepository orderRepository;
+    private final PointService pointService;
 
 
 
@@ -183,6 +188,7 @@ public class ProductController {
         
         // Tiptap JSON 컨텐츠 처리
         String contentHtml = "";
+        boolean hasPaywall = false; // 페이월 존재 여부 확인
         String tiptapJson = product.getTiptapJson();
         if (tiptapJson != null && !tiptapJson.isEmpty()) {
             try {
@@ -190,7 +196,15 @@ public class ProductController {
                 TipTapDocument document = objectMapper.readValue(tiptapJson, TipTapDocument.class);
                 List<TipTapNode> nodesToRender = document.getContent();
 
-                if (!canViewContent) { // isPurchased 대신 canViewContent 사용
+                // 페이월 노드가 있는지 확인
+                for (TipTapNode node : nodesToRender) {
+                    if ("paywall".equals(node.getType())) {
+                        hasPaywall = true;
+                        break;
+                    }
+                }
+
+                if (!canViewContent && hasPaywall) { // 페이월이 있고 구매하지 않은 경우에만 콘텐츠 제한
                     int paywallIndex = -1;
                     for (int i = 0; i < nodesToRender.size(); i++) {
                         if ("paywall".equals(nodesToRender.get(i).getType())) {
@@ -222,6 +236,8 @@ public class ProductController {
         model.addAttribute("reviewKeyword", reviewKeyword);
         model.addAttribute("currentMember", currentMember);
         model.addAttribute("canWriteReview", canWriteReview);
+        model.addAttribute("canViewContent", canViewContent);
+        model.addAttribute("hasPaywall", hasPaywall); // 페이월 존재 여부 추가
         model.addAttribute("existingReview", existingReview.orElse(null));
         // --- 좋아요 관련 모델 속성 추가 ---
         model.addAttribute("heartCount", heartCount);
@@ -501,6 +517,100 @@ public class ProductController {
     public ResponseEntity<Map<String, Object>> getHeartCount(@PathVariable Long id) {
         long heartCount = productService.getHeartCount(id);
         return ResponseEntity.ok(Map.of("heartCount", heartCount));
+    }
+
+    /**
+     * 포인트로 상품 구매 API
+     */
+    @PostMapping("/api/products/{id}/purchase/point")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> purchaseWithPoint(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> request,
+            Principal principal) {
+
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("success", false, "message", "로그인이 필요합니다."));
+        }
+
+        Member member = memberRepository.findByEmail(principal.getName());
+        if (member == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("success", false, "message", "회원 정보를 찾을 수 없습니다."));
+        }
+
+        try {
+            // 기존의 직접 포인트 차감/Order 생성 코드 삭제
+            Order order = pointService.purchaseWithPoint(member.getId(), id, 1); // 단일 구매만 지원
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "포인트 구매가 완료되었습니다.",
+                "currentBalance", member.getPoint()
+            ));
+
+        } catch (IllegalArgumentException e) {
+            log.error("포인트 구매 실패: 상품ID={}, 회원ID={}, 오류={}", id, member.getId(), e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false, 
+                "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            log.error("포인트 구매 중 오류: 상품ID={}, 회원ID={}, 오류={}", id, member.getId(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "포인트 구매 중 오류가 발생했습니다."));
+        }
+    }
+
+    /**
+     * 구매 후 콘텐츠 조회 API
+     */
+    @GetMapping("/api/products/{id}/content")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getProductContent(@PathVariable Long id, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("success", false, "message", "로그인이 필요합니다."));
+        }
+
+        Member member = memberRepository.findByEmail(principal.getName());
+        if (member == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("success", false, "message", "회원 정보를 찾을 수 없습니다."));
+        }
+
+        try {
+            Product product = productService.findProductById(id);
+            
+            // 구매 여부 확인
+            if (!productReviewService.hasUserPurchasedProduct(member, product)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("success", false, "message", "구매 후에 콘텐츠를 확인할 수 있습니다."));
+            }
+
+            // Tiptap JSON을 HTML로 변환
+            String contentHtml = "";
+            String tiptapJson = product.getTiptapJson();
+            if (tiptapJson != null && !tiptapJson.isEmpty()) {
+                try {
+                    TipTapDocument document = objectMapper.readValue(tiptapJson, TipTapDocument.class);
+                    contentHtml = tipTapRenderer.render(document.getContent());
+                } catch (JsonProcessingException e) {
+                    log.error("Tiptap JSON 파싱 오류: {}", e.getMessage());
+                }
+            }
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "contentHtml", contentHtml
+            ));
+
+        } catch (Exception e) {
+            log.error("콘텐츠 조회 중 오류: 상품ID={}, 회원ID={}, 오류={}", id, member.getId(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "콘텐츠 조회 중 오류가 발생했습니다."));
+        }
     }
 
 }

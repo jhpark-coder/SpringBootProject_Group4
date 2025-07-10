@@ -165,14 +165,19 @@ const ChatDashboard = () => {
     const removeUser = (username) => {
         setUsers(prev => {
             const newUsers = new Map(prev);
-            newUsers.delete(username);
+            const user = newUsers.get(username);
+            if (user) {
+                // 사용자를 삭제하지 않고 상태만 offline으로 변경
+                newUsers.set(username, {
+                    ...user,
+                    status: 'offline'
+                });
+            }
             return newUsers;
         });
 
-        if (currentUser === username) {
-            setCurrentUser(null);
-            setMessages([]);
-        }
+        // 현재 선택된 사용자가 오프라인이 되어도 채팅방은 유지
+        // 채팅 내역은 DB에 저장되어 있으므로 계속 볼 수 있음
     };
 
     const handleUserMessage = (data) => {
@@ -273,7 +278,7 @@ const ChatDashboard = () => {
                     </small>
                 </div>
                 <ChatStats
-                    onlineUsers={users.size}
+                    onlineUsers={Array.from(users.values()).filter(user => user.status === 'online').length}
                     totalMessages={calculateUnreadChatRooms()}
                 />
             </div>

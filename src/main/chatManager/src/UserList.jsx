@@ -35,10 +35,14 @@ const UserList = ({ users, currentUser, onSelectUser, unreadCounts }) => {
         return new Date(b.lastMessage.timestamp) - new Date(a.lastMessage.timestamp);
     });
 
+    // 온라인/오프라인 사용자 수 계산
+    const onlineCount = sortedUsers.filter(user => user.status === 'online').length;
+    const offlineCount = sortedUsers.filter(user => user.status === 'offline').length;
+
     return (
         <div className="user-list">
             <div className="user-list-header">
-                <h6 className="mb-0">접속한 사용자 ({sortedUsers.length})</h6>
+                <h6 className="mb-0">사용자 목록 (온라인: {onlineCount}, 오프라인: {offlineCount})</h6>
             </div>
             <div className="users-container">
                 {sortedUsers.length === 0 ? (
@@ -50,7 +54,7 @@ const UserList = ({ users, currentUser, onSelectUser, unreadCounts }) => {
                     sortedUsers.map((user) => (
                         <div
                             key={user.username}
-                            className={`user-item ${currentUser === user.username ? 'active' : ''}`}
+                            className={`user-item ${currentUser === user.username ? 'active' : ''} ${user.status === 'offline' ? 'offline' : ''}`}
                             onClick={() => onSelectUser(user.username)}
                         >
                             <div className="user-avatar">
@@ -62,6 +66,9 @@ const UserList = ({ users, currentUser, onSelectUser, unreadCounts }) => {
                             <div className="user-info">
                                 <div className="user-header">
                                     <span className="username">{user.username}</span>
+                                    {user.status === 'offline' && (
+                                        <span className="offline-label">(오프라인)</span>
+                                    )}
                                     {user.lastMessage && (
                                         <span className="message-time">
                                             {formatTime(user.lastMessage.timestamp)}

@@ -237,10 +237,17 @@ class NotificationList {
         if (type === 'seller_approved') {
             const isSuccess = await this.markAsRead(notificationId);
             if (isSuccess) {
-                // 로그아웃 후 로그인 페이지로 이동하라는 정보를 세션 스토리지에 저장
-                sessionStorage.setItem('post_logout_redirect', '/members/login');
-                sessionStorage.setItem('post_logout_message', '작가 등급이 승인되었습니다. 변경된 권한을 적용하기 위해 다시 로그인해주세요.');
-                window.location.href = '/members/logout';
+                // 기존 토스트 알림 함수 사용
+                if (window.notificationBadge && typeof window.notificationBadge.showNotificationToast === 'function') {
+                    window.notificationBadge.showNotificationToast({
+                        message: '권한이 변경되었습니다. 다시 로그인해주세요.'
+                    });
+                }
+                setTimeout(() => {
+                    sessionStorage.setItem('post_logout_redirect', '/members/login');
+                    sessionStorage.setItem('post_logout_message', '작가 등급이 승인되었습니다. 변경된 권한을 적용하기 위해 다시 로그인해주세요.');
+                    window.location.href = '/members/logout';
+                }, 1500);
             }
             return; // 페이지 이동을 막기 위해 여기서 함수 종료
         }
