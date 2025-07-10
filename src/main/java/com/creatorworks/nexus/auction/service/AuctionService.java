@@ -2,6 +2,14 @@ package com.creatorworks.nexus.auction.service;
 
 import java.util.List;
 
+import com.creatorworks.nexus.auction.Specification.AuctionSpecification;
+import com.creatorworks.nexus.auction.dto.AuctionDto;
+import com.creatorworks.nexus.auction.dto.AuctionPageResponse;
+import com.creatorworks.nexus.product.dto.ProductDto;
+import com.creatorworks.nexus.product.dto.ProductPageResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -105,5 +113,25 @@ public class AuctionService {
 
             auctionItemTagRepository.save(auctionItemTag);
         }
+    }
+
+    public AuctionPageResponse findAllAuctions(String primaryCategory, String secondaryCategory, Pageable pageable){
+        Specification<Auction> spec = Specification.where(AuctionSpecification.byCategory(primaryCategory, secondaryCategory));
+        Page<Auction> auctionPage = auctionRepository.findAll(spec, pageable);
+
+        List<AuctionDto> auctionDtos = auctionPage.getContent().stream()
+                .map(AuctionDto::new)
+                .toList();
+
+        return new AuctionPageResponse(
+                auctionDtos,
+                auctionPage.getNumber(),
+                auctionPage.getTotalPages(),
+                auctionPage.getTotalElements(),
+                auctionPage.getSize(),
+                auctionPage.isFirst(),
+                auctionPage.isLast()
+        );
+
     }
 }

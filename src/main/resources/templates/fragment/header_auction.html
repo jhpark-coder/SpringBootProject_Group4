@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+<div class="site-header" th:fragment="header_auction">
+  <div class="header-container">
+    <!-- 1. 로고 -->
+    <div class="logo">
+      <a href="/">
+        <!-- SVG의 사각형 부분을 로고로 사용 -->
+        <svg class="logo-img" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" fill="#E5EDFF" />
+        </svg>
+      </a>
+    </div>
+
+    <!-- 모바일 레이아웃을 위해 내비게이션과 액션 버튼을 한번 더 묶음 -->
+    <div class="nav-actions-wrapper">
+      <!-- 2. 내비게이션 메뉴 -->
+      <nav class="main-nav">
+        <ul>
+          <li><a href="/products/category/artwork">Post</a></li>
+          <!-- MyPage 링크: 인증된 사용자 중 CustomUserDetails 타입인 경우에만 표시 -->
+          <li sec:authorize="isAuthenticated()"
+              th:if="${#authentication.principal instanceof T(com.creatorworks.nexus.member.dto.CustomUserDetails)}">
+            <a th:href="@{'/member/myPage/' + ${#authentication.principal.id}}">MyPage</a>
+          </li>
+          <li sec:authorize="hasRole('ROLE_USER') and !hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')">
+            <a th:href="@{/members/seller-register}">Register</a>
+          </li>
+          <li sec:authorize="hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')"><a
+                  href="/seller/dashboard">SellerPage</a></li>
+          <li sec:authorize="hasRole('ROLE_ADMIN')"><a
+                  href="/admin/seller-management">SellerManagement</a></li>
+          <!-- 로그인/로그아웃 링크 -->
+          <li sec:authorize="isAnonymous()">
+            <a href="/members/login">Login</a>
+          </li>
+          <li sec:authorize="isAuthenticated()">
+            <a href="/members/logout">Logout</a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- 3. 사용자 액션 영역 (로그인한 사용자만) -->
+      <!-- CustomUserDetails 타입의 인증된 사용자만 이 영역을 표시 -->
+      <div class="user-actions" sec:authorize="isAuthenticated()"
+           th:if="${#authentication.principal instanceof T(com.creatorworks.nexus.member.dto.CustomUserDetails)}">
+        <!-- 포인트 버튼 -->
+        <a href="/api/orders/points/charge-page" class="points-button">
+                        <span>보유한 포인트 : <span
+                                th:text="${#numbers.formatInteger(currentPoint ?: 0, 3, 'COMMA')}">0</span>P</span>
+        </a>
+        <!-- 알림 아이콘 컨테이너 -->
+        <div class="bell-container" th:data-user-id="${#authentication.principal.id}">
+          <a href="#" id="notification-bell-anchor" class="notification-icon-wrapper">
+            <svg class="bell-icon" viewBox="0 0 25 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                      d="M24.31 25.3333C24.07 25.7374 23.74 26.0728 23.33 26.306C22.93 26.5392 22.47 26.6619 22 26.6619C21.53 26.6619 21.07 26.5392 20.67 26.306C20.26 26.0728 19.93 25.7374 19.69 25.3333M20 8.00001C20 5.87827 19.16 3.84345 17.66 2.34315C16.16 0.842854 14.12 0 12 0C9.88001 0 7.84001 0.842854 6.34001 2.34315C4.84001 3.84345 4.00001 5.87827 4.00001 8.00001C4.00001 17.3333 0 20 0 20H24C24 20 20 17.3333 20 8.00001Z"
+                      stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
+          </a>
+          <!-- 알림 모달은 bell-container 내부에 위치 -->
+          <div id="notificationModal" class="notification-modal" style="display: none;">
+            <!-- 모달 헤더 -->
+            <div class="notification-modal-header">
+              <span>알림</span>
+              <button id="markAllReadBtn" class="mark-all-read-btn">전체 읽음</button>
+            </div>
+            <!-- 카테고리 필터 바 추가 -->
+            <div class="notification-filter-bar">
+              <button class="filter-btn" data-category="all">전체</button>
+              <button class="filter-btn" data-category="social">소셜</button>
+              <button class="filter-btn" data-category="product">상품</button>
+              <button class="filter-btn" data-category="auction">경매</button>
+              <button class="filter-btn" data-category="admin">관리자</button>
+            </div>
+            <!-- 알림 목록이 표시될 영역 -->
+            <div class="notification-modal-list" id="notificationList">
+              <!-- notification-list.js가 이 안에 내용을 채웁니다. -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<nav class="category-nav" th:fragment="category-nav_auction">
+  <ul>
+    <li><a href="/auctions/category/artwork">아트워크</a></li>
+    <li><a href="/auctions/category/graphic-design">그래픽디자인</a></li>
+    <li><a href="/auctions/category/character">캐릭터</a></li>
+    <li><a href="/auctions/category/frontend">프론트엔드</a></li>
+    <li><a href="/auctions/category/python">Python</a></li>
+    <li><a href="/auctions/category/java">Java</a></li>
+  </ul>
+</nav>
+</body>
+
+</html>
