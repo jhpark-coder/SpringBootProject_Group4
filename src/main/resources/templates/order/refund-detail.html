@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{fragment/layout}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>환불 상세 - Nexus</title>
+    <style>
+        .refund-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .refund-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .refund-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .refund-title {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .refund-subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .detail-section {
+            margin-bottom: 30px;
+        }
+
+        .detail-section h3 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+
+        .detail-row {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .detail-label {
+            width: 120px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .detail-value {
+            flex: 1;
+            color: #666;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-processing {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-cancelled {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .amount {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 18px;
+        }
+
+        .date {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -22px;
+            top: 5px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #007bff;
+        }
+
+        .timeline-date {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .timeline-content {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div layout:fragment="content" class="refund-container">
+        <div class="refund-card">
+            <div class="refund-header">
+                <h1 class="refund-title">환불 상세 정보</h1>
+                <p class="refund-subtitle">환불 요청의 상세 정보를 확인합니다.</p>
+            </div>
+
+            <!-- 알림 메시지 -->
+            <div id="alertMessage" class="alert" style="display: none;"></div>
+
+            <!-- 기본 정보 -->
+            <div class="detail-section">
+                <h3>기본 정보</h3>
+                <div class="detail-row">
+                    <div class="detail-label">환불 번호</div>
+                    <div class="detail-value" th:text="${refund.id}">1</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">신청자</div>
+                    <div class="detail-value" th:text="${refund.member.email}">user@example.com</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">환불 유형</div>
+                    <div class="detail-value" th:text="${refund.refundType.description}">결제 환불</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">환불 금액</div>
+                    <div class="detail-value amount"
+                        th:text="${#numbers.formatInteger(refund.amount, 3, 'COMMA') + '원'}">10,000원</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">환불 사유</div>
+                    <div class="detail-value" th:text="${refund.reason}">환불 사유</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">현재 상태</div>
+                    <div class="detail-value">
+                        <span th:class="${'status-badge status-' + #strings.toLowerCase(refund.refundStatus.name())}"
+                            th:text="${refund.refundStatus.description}">대기중</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 환불 계좌 정보 (결제 환불인 경우) -->
+            <div class="detail-section" th:if="${refund.bankCode != null and refund.bankCode != ''}">
+                <h3>환불 계좌 정보</h3>
+                <div class="detail-row">
+                    <div class="detail-label">은행</div>
+                    <div class="detail-value" th:text="${refund.bankCode}">신한은행</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">계좌번호</div>
+                    <div class="detail-value" th:text="${refund.accountNumber}">123-456-789</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">예금주명</div>
+                    <div class="detail-value" th:text="${refund.accountHolder}">홍길동</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">연락처</div>
+                    <div class="detail-value" th:text="${refund.phoneNumber}">010-1234-5678</div>
+                </div>
+            </div>
+
+            <!-- 원본 결제 정보 -->
+            <div class="detail-section" th:if="${refund.originalImpUid != null and refund.originalImpUid != ''}">
+                <h3>원본 결제 정보</h3>
+                <div class="detail-row">
+                    <div class="detail-label">결제 UID</div>
+                    <div class="detail-value" th:text="${refund.originalImpUid}">imp_123456</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">주문 UID</div>
+                    <div class="detail-value" th:text="${refund.originalMerchantUid}">merchant_123456</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">원본 결제 금액</div>
+                    <div class="detail-value amount"
+                        th:text="${refund.originalAmount != null ? #numbers.formatInteger(refund.originalAmount, 3, 'COMMA') + '원' : '-'}">
+                        10,000원</div>
+                </div>
+            </div>
+
+            <!-- 처리 정보 -->
+            <div class="detail-section" th:if="${refund.refundUid != null and refund.refundUid != ''}">
+                <h3>처리 정보</h3>
+                <div class="detail-row">
+                    <div class="detail-label">환불 UID</div>
+                    <div class="detail-value" th:text="${refund.refundUid}">refund_123456</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">처리 일시</div>
+                    <div class="detail-value date"
+                        th:text="${refund.refundDate != null ? #temporals.format(refund.refundDate, 'yyyy-MM-dd HH:mm') : '-'}">
+                        2024-01-01 12:00</div>
+                </div>
+            </div>
+
+            <!-- 관리자 코멘트 -->
+            <div class="detail-section" th:if="${refund.adminComment != null and refund.adminComment != ''}">
+                <h3>관리자 코멘트</h3>
+                <div class="detail-value" th:text="${refund.adminComment}">관리자 코멘트</div>
+            </div>
+
+            <!-- 실패 사유 -->
+            <div class="detail-section" th:if="${refund.failureReason != null and refund.failureReason != ''}">
+                <h3>실패 사유</h3>
+                <div class="detail-value" th:text="${refund.failureReason}">실패 사유</div>
+            </div>
+
+            <!-- 처리 이력 -->
+            <div class="detail-section">
+                <h3>처리 이력</h3>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-date"
+                            th:text="${#temporals.format(refund.requestDate, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00
+                        </div>
+                        <div class="timeline-content">
+                            <strong>환불 요청</strong><br>
+                            환불이 신청되었습니다.
+                        </div>
+                    </div>
+
+                    <div class="timeline-item"
+                        th:if="${refund.refundStatus.name() == 'PROCESSING' or refund.refundStatus.name() == 'COMPLETED' or refund.refundStatus.name() == 'FAILED'}">
+                        <div class="timeline-date"
+                            th:text="${refund.refundDate != null ? #temporals.format(refund.refundDate, 'yyyy-MM-dd HH:mm') : #temporals.format(refund.requestDate, 'yyyy-MM-dd HH:mm')}">
+                            2024-01-01 12:00</div>
+                        <div class="timeline-content">
+                            <strong>환불 처리</strong><br>
+                            환불이 처리되었습니다.
+                        </div>
+                    </div>
+
+                    <div class="timeline-item" th:if="${refund.refundStatus.name() == 'CANCELLED'}">
+                        <div class="timeline-date"
+                            th:text="${#temporals.format(refund.requestDate, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00
+                        </div>
+                        <div class="timeline-content">
+                            <strong>환불 취소</strong><br>
+                            환불 요청이 취소되었습니다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 작업 버튼 -->
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="/refund/my-refunds" class="btn btn-secondary">목록으로</a>
+                <button th:if="${refund.refundStatus.name() == 'PENDING'}"
+                    th:onclick="'cancelRefund(' + ${refund.id} + ')'" class="btn btn-danger">환불 취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        function cancelRefund(refundId) {
+            if (!confirm('환불 요청을 취소하시겠습니까?')) {
+                return;
+            }
+
+            fetch(`/refund/cancel/${refundId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(result => {
+                    const alertDiv = document.getElementById('alertMessage');
+                    alertDiv.style.display = 'block';
+
+                    if (result.success) {
+                        alertDiv.className = 'alert alert-success';
+                        alertDiv.textContent = '환불 요청이 취소되었습니다.';
+
+                        setTimeout(() => {
+                            window.location.href = '/refund/my-refunds';
+                        }, 2000);
+                    } else {
+                        alertDiv.className = 'alert alert-danger';
+                        alertDiv.textContent = result.message || '환불 취소 중 오류가 발생했습니다.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    const alertDiv = document.getElementById('alertMessage');
+                    alertDiv.style.display = 'block';
+                    alertDiv.className = 'alert alert-danger';
+                    alertDiv.textContent = '환불 취소 중 오류가 발생했습니다.';
+                });
+        }
+    </script>
+</body>
+
+</html>

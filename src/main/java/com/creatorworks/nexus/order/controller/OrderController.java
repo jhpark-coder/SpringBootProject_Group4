@@ -27,6 +27,7 @@ import com.creatorworks.nexus.order.entity.Payment.PaymentStatus;
 import com.creatorworks.nexus.order.service.OrderService;
 import com.creatorworks.nexus.order.service.PaymentService;
 import com.creatorworks.nexus.order.service.PointService;
+import com.creatorworks.nexus.order.service.RefundService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,7 @@ public class OrderController {
     private final PaymentService paymentService;
     private final PointService pointService;
     private final MemberRepository memberRepository;
+    private final RefundService refundService;
 
     // === 주문 조회 ===
 
@@ -425,7 +427,16 @@ public class OrderController {
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
         model.addAttribute("Name", member.getName());
-
+        // 주요 통계값 추가
+        long totalPurchaseCount = orders.getTotalElements();
+        long totalUsedPoint = orders.getContent().stream().mapToLong(Order::getTotalAmount).sum();
+        long totalRefundCount = refundService.getMyRefundsCount(member.getId());
+        Long totalRefundPoint = refundService.getTotalCompletedRefundAmount(member.getId());
+        if (totalRefundPoint == null) totalRefundPoint = 0L;
+        model.addAttribute("totalPurchaseCount", totalPurchaseCount);
+        model.addAttribute("totalUsedPoint", totalUsedPoint);
+        model.addAttribute("totalRefundCount", totalRefundCount);
+        model.addAttribute("totalRefundPoint", totalRefundPoint);
         return "order/orderList";
     }
 

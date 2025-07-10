@@ -48,7 +48,7 @@
                             <td th:text="${#temporals.format(product.regTime, 'yyyy-MM-dd HH:mm')}"></td>
                             <td><a th:href="@{/products/{id}(id=${product.id})}" th:text="${product.name}"></a></td>
                             <td th:text="${product.primaryCategory} + ' > ' + ${product.secondaryCategory}"></td>
-                            <td th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + '원'"></td>
+                            <td th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT') + '원'}"></td>
                             <td th:text="${product.viewCount}"></td>
                             <td>
                                 <a th:href="@{/editor/product/{id}(id=${product.id})}" class="btn-sm btn-outline">수정</a>

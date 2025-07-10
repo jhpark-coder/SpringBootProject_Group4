@@ -287,7 +287,7 @@
             <div class="point-info-row">
                 <span class="point-info-label">현재 보유 포인트</span>
                 <span class="point-info-value"
-                    th:text="${#numbers.formatInteger(currentPoint ?: 0, 3, 'COMMA')} + 'P'">0P</span>
+                    th:text="${#numbers.formatInteger(currentPoint ?: 0, 1, 'COMMA')} + 'P'">0P</span>
             </div>
             <div class="point-info-row">
                 <span class="point-info-label">충전할 포인트</span>
@@ -444,7 +444,7 @@
                 return;
             }
 
-                            if (!confirm(`${selectedPoint.toLocaleString()}P 충전을 진행하시겠습니까?\n결제 금액: ${selectedPrice.toLocaleString()}P`)) {
+            if (!confirm(`${selectedPoint.toLocaleString()}P 충전을 진행하시겠습니까?\n결제 금액: ${selectedPrice.toLocaleString()}P`)) {
                 return;
             }
 

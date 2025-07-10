@@ -239,7 +239,7 @@
                             onclick="alert('로그인이 필요합니다.'); location.href='/members/login';"
                             sec:authorize="!isAuthenticated()">Follow</button>
                     </div>
-                    <div class="product-price" th:text="${#numbers.formatInteger(product.price, 3, 'COMMA')} + 'P'">0P
+                    <div class="product-price" th:text="${#numbers.formatInteger(product.price, 1, 'COMMA')} + 'P'">0P
                     </div>
                 </div>
             </div>

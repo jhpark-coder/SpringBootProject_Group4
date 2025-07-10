@@ -90,6 +90,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/orders/points/charge-page").authenticated()
                 .requestMatchers("/api/orders/list").authenticated()
                 .requestMatchers("/api/orders/payment/**").authenticated()
+                .requestMatchers("/refund/**").authenticated()
+                .requestMatchers("/admin/refund/**").hasRole("ADMIN")
                 // 그 외 모든 경로는 허용 (가장 넓은 범위를 나중에)
                 .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout", "/test/**", "/nestjstest", "/api/**").permitAll()
                 .anyRequest().authenticated()
@@ -139,6 +141,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/orders/points/charge-page").authenticated()
                 .requestMatchers("/api/orders/list").authenticated()
                 .requestMatchers("/api/orders/payment/**").authenticated()
+                .requestMatchers("/refund/**").authenticated()
+                .requestMatchers("/admin/refund/**").hasRole("ADMIN")
                 // 그 외 모든 경로는 허용
                 .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout", "/test/**", "/nestjstest", "/api/**").permitAll()
                 .anyRequest().authenticated()
