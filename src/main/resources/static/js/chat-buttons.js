@@ -788,12 +788,21 @@ function initializeChatComponents() {
     }
 
     chatButton.addEventListener('click', function () {
-        // 새로운 Socket.IO 기반 채팅 기능 호출
-        console.log('상담원 버튼 클릭됨 - Socket.IO 채팅 시작');
-        if (typeof openChat === 'function') {
-            openChat();
+        // 관리자인지 확인
+        const isAdmin = window.currentUser && window.currentUser.roles && window.currentUser.roles.includes('ROLE_ADMIN');
+
+        if (isAdmin) {
+            // 관리자인 경우 채팅관리 페이지로 이동
+            console.log('관리자 상담원 버튼 클릭 - 채팅관리 페이지로 이동');
+            window.location.href = '/chat-manager';
         } else {
-            console.warn('openChat 함수를 찾을 수 없습니다. chat.js가 로드되었는지 확인하세요.');
+            // 일반 사용자인 경우 기존 채팅 기능 실행
+            console.log('상담원 버튼 클릭됨 - Socket.IO 채팅 시작');
+            if (typeof openChat === 'function') {
+                openChat();
+            } else {
+                console.warn('openChat 함수를 찾을 수 없습니다. chat.js가 로드되었는지 확인하세요.');
+            }
         }
     });
 } 

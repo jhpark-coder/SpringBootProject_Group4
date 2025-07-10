@@ -225,7 +225,7 @@
         <p class="success-subtitle">포인트가 성공적으로 충전되었습니다.</p>
 
         <div class="point-info">
-            <div class="point-amount" th:text="${#numbers.formatInteger(amount ?: 0, 3, 'COMMA')} + 'P'">+10,000P</div>
+            <div class="point-amount" th:text="${#numbers.formatInteger(amount ?: 0, 1, 'COMMA')} + 'P'">+10000P</div>
             <div class="point-label">충전된 포인트</div>
         </div>
 
@@ -258,7 +258,7 @@
 
         <div class="balance-info" th:if="${currentBalance != null}">
             <div class="balance-label">현재 보유 포인트</div>
-            <div class="balance-amount" th:text="${#numbers.formatInteger(currentBalance, 3, 'COMMA')} + 'P'">123,456P
+            <div class="balance-amount" th:text="${#numbers.formatInteger(currentBalance, 1, 'COMMA')} + 'P'">123456P
             </div>
         </div>
 

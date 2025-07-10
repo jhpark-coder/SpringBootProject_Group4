@@ -332,7 +332,7 @@
         <!-- 현재 포인트 정보 (선택적) -->
         <div class="balance-info" th:if="${currentBalance != null}">
             <div class="balance-label">현재 보유 포인트</div>
-            <div class="balance-amount" th:text="${#numbers.formatInteger(currentBalance, 3, 'COMMA')} + 'P'">123,456P
+            <div class="balance-amount" th:text="${#numbers.formatInteger(currentBalance, 1, 'COMMA')} + 'P'">123456P
             </div>
         </div>
 

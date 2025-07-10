@@ -252,7 +252,7 @@
                     <tr th:each="payment : ${payments}">
                         <td th:text="${payment.impUid}">-</td>
                         <td th:text="${payment.auctionTitle}">-</td>
-                        <td class="amount" th:text="${#numbers.formatInteger(payment.amount, 3, 'COMMA')} + '원'">-</td>
+                        <td class="amount" th:text="${#numbers.formatInteger(payment.amount, 3, 'COMMA') + '원'}">-</td>
                         <td>
                             <span
                                 th:class="${'status ' + (payment.status == 'SUCCESS' ? 'success' : payment.status == 'FAILED' ? 'failed' : 'cancelled')}"

@@ -276,7 +276,7 @@
                 <div class="balance-info">
                     <div class="balance-label">현재 보유 포인트</div>
                     <div class="balance-amount"
-                        th:text="${#numbers.formatInteger(currentBalance ?: 0, 3, 'COMMA')} + 'P'">1,000P</div>
+                        th:text="${#numbers.formatInteger(currentBalance ?: 0, 1, 'COMMA')} + 'P'">1000P</div>
                 </div>
 
                 <!-- 액션 버튼 -->

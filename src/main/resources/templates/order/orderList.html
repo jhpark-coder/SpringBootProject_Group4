@@ -28,7 +28,7 @@
             <a href="/members/modify" class="btn btn-solid">개인정보수정</a>
             <a th:href="@{|/member/myPage/${#authentication.principal.id}/notifications|}"
                 class="btn btn-solid">알림내역</a>
-            <a href="/User/orderList" class="btn btn-solid">구매내역</a>
+            <a th:href="@{/api/orders/list}" class="btn btn-solid">구매내역</a>
             <a href="#" class="btn btn-solid">참여중인 경매</a>
         </aside>
 
@@ -38,11 +38,24 @@
                     <h2>구매한 작품 현황</h2>
                 </header>
 
-                <!-- 디버깅용 정보 표시 -->
-                <div style="padding: 1rem; background-color: #f0f0f0; margin-bottom: 1rem;">
-                    <p>주문 목록 개수: <span th:text="${orderList != null ? orderList.totalElements : 'null'}">0</span></p>
-                    <p>주문 목록 내용: <span th:text="${orderList != null && orderList.hasContent() ? '있음' : '없음'}">없음</span>
-                    </p>
+                <!-- 주요 통계 카드 -->
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-number" th:text="${totalPurchaseCount}">0</div>
+                        <div class="stat-label">전체 구매</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" th:text="${totalUsedPoint} + 'P'">0P</div>
+                        <div class="stat-label">총 사용 포인트</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" th:text="${totalRefundCount}">0</div>
+                        <div class="stat-label">전체 환불</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" th:text="${totalRefundPoint} + 'P'">0P</div>
+                        <div class="stat-label">총 환불 포인트</div>
+                    </div>
                 </div>
 
                 <!-- 주문 목록이 있을 때만 테이블 표시 -->
@@ -53,9 +66,10 @@
                                 <th style="text-align:left; padding:8px;">주문번호</th>
                                 <th style="text-align:left; padding:8px;">주문타입</th>
                                 <th style="text-align:left; padding:8px;">주문상태</th>
-                                <th style="text-align:left; padding:8px;">총금액</th>
+                                <th style="text-align:left; padding:8px;">포인트</th>
                                 <th style="text-align:left; padding:8px;">구입일</th>
                                 <th style="text-align:left; padding:8px;">설명</th>
+                                <th style="text-align:left; padding:8px;">작업</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -63,11 +77,15 @@
                                 <td th:text="${order.id}">-</td>
                                 <td th:text="${order.orderType != null ? order.orderType.description : '-'}">-</td>
                                 <td th:text="${order.orderStatus != null ? order.orderStatus.description : '-'}">-</td>
-                                <td th:text="${order.totalAmount != null ? order.totalAmount + '원' : '-'}">-</td>
+                                <td th:text="${order.totalAmount != null ? order.totalAmount + 'P' : '-'}">-</td>
                                 <td
                                     th:text="${order.orderDate != null ? #temporals.format(order.orderDate, 'yyyy-MM-dd HH:mm') : '-'}">
                                     -</td>
                                 <td th:text="${order.description != null ? order.description : '-'}">-</td>
+                                <td>
+                                    <a th:href="@{/refund/request/{orderId}(orderId=${order.id})}"
+                                        class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;">환불 신청</a>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -83,14 +101,14 @@
                     style="margin-top:1rem;">
                     <ul class="pagination" style="justify-content:center;">
                         <li class="page-item" th:classappend="${startPage == 0} ? 'disabled'">
-                            <a class="page-link" th:href="@{/User/orderList(page=${startPage - 1})}">«</a>
+                            <a class="page-link" th:href="@{/api/orders/list(page=${startPage - 1})}">«</a>
                         </li>
                         <li class="page-item" th:each="p : ${#numbers.sequence(startPage, endPage)}"
                             th:classappend="${p == orderList.number} ? 'active'">
-                            <a class="page-link" th:href="@{/User/orderList(page=${p})}" th:text="${p + 1}"></a>
+                            <a class="page-link" th:href="@{/api/orders/list(page=${p})}" th:text="${p + 1}"></a>
                         </li>
                         <li class="page-item" th:classappend="${endPage >= orderList.totalPages - 1} ? 'disabled'">
-                            <a class="page-link" th:href="@{/User/orderList(page=${endPage + 1})}">»</a>
+                            <a class="page-link" th:href="@{/api/orders/list(page=${endPage + 1})}">»</a>
                         </li>
                     </ul>
                 </nav>
