@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>환불 요청 상세 - 관리자</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <!-- jQuery -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <!-- iamport.payment.js -->
+    <script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.1.8.js"></script>
+    <style>
+        .detail-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .detail-section {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .detail-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .detail-row {
+            display: flex;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        .detail-label {
+            width: 150px;
+            font-weight: bold;
+            color: #666;
+        }
+        .detail-value {
+            flex: 1;
+            color: #333;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-processing { background-color: #fff3cd; color: #856404; }
+        .status-completed { background-color: #d4edda; color: #155724; }
+        .status-failed { background-color: #f8d7da; color: #721c24; }
+        .status-cancelled { background-color: #e2e3e5; color: #383d41; }
+        .action-buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn:hover { opacity: 0.8; }
+        .payment-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .no-payment {
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="detail-container">
+        <h1>환불 요청 상세</h1>
+        
+        <!-- 기본 정보 -->
+        <div class="detail-section">
+            <div class="detail-title">기본 정보</div>
+            <div class="detail-row">
+                <div class="detail-label">환불 ID</div>
+                <div class="detail-value" th:text="${refund.id}">1</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">회원 이메일</div>
+                <div class="detail-value" th:text="${refund.member.email}">user@example.com</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">환불 금액</div>
+                <div class="detail-value" th:text="${#numbers.formatInteger(refund.amount, 3, 'COMMA')} + 'P'">10,000P</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">환불 사유</div>
+                <div class="detail-value" th:text="${refund.reason}">개인 사정</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">상태</div>
+                <div class="detail-value">
+                    <span th:class="${'status-badge status-' + refund.status.name().toLowerCase()}" 
+                          th:text="${refund.status.description}">처리중</span>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">요청일</div>
+                <div class="detail-value" th:text="${#temporals.format(refund.regTime, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 12:00:00</div>
+            </div>
+        </div>
+        
+        <!-- 원본 결제 정보 -->
+        <div class="detail-section">
+            <div class="detail-title">원본 결제 정보</div>
+            <div th:if="${refund.originalImpUid != null}">
+                <div class="detail-row">
+                    <div class="detail-label">아임포트 UID</div>
+                    <div class="detail-value" th:text="${refund.originalImpUid}">imp_123456</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">주문 UID</div>
+                    <div class="detail-value" th:text="${refund.originalMerchantUid}">merchant_123456</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">원본 결제 금액</div>
+                    <div class="detail-value" th:text="${refund.originalAmount != null ? #numbers.formatInteger(refund.originalAmount, 3, 'COMMA') + '원' : '정보 없음'}">10,000원</div>
+                </div>
+                <div class="payment-info">
+                    <strong>실제 결제 환불 처리 가능</strong><br>
+                    이 환불 요청은 실제 결제 내역이 있어 아임포트를 통해 실제 금액 환불이 가능합니다.
+                </div>
+            </div>
+            <div th:unless="${refund.originalImpUid != null}" class="no-payment">
+                <div class="detail-row">
+                    <div class="detail-label">원본 결제</div>
+                    <div class="detail-value">결제 내역 없음 (보너스 포인트 등)</div>
+                </div>
+                <div class="payment-info">
+                    <strong>포인트 차감만 처리</strong><br>
+                    이 환불 요청은 실제 결제 내역이 없어 포인트 차감만 처리됩니다.
+                </div>
+            </div>
+        </div>
+        
+        <!-- 환불 계좌 정보 -->
+        <div class="detail-section">
+            <div class="detail-title">환불 계좌 정보</div>
+            <div class="detail-row">
+                <div class="detail-label">은행</div>
+                <div class="detail-value" th:text="${refund.bankCode}">신한은행</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">계좌번호</div>
+                <div class="detail-value" th:text="${refund.accountNumber}">123-456-789</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">예금주</div>
+                <div class="detail-value" th:text="${refund.accountHolder}">홍길동</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">연락처</div>
+                <div class="detail-value" th:text="${refund.phoneNumber}">010-1234-5678</div>
+            </div>
+        </div>
+        
+        <!-- 관리자 코멘트 -->
+        <div class="detail-section">
+            <div class="detail-title">관리자 코멘트</div>
+            <div class="detail-row">
+                <div class="detail-label">코멘트</div>
+                <div class="detail-value" th:text="${refund.adminComment != null ? refund.adminComment : '코멘트 없음'}">-</div>
+            </div>
+        </div>
+        
+        <!-- 작업 버튼 -->
+        <div class="action-buttons">
+            <a th:if="${refund.status.name() == 'FAILED'}" 
+               th:href="@{/admin/point-refunds/{id}/retry(id=${refund.id})}"
+               onclick="return confirm('환불을 재처리하시겠습니까?')"
+               class="btn btn-primary">재처리</a>
+            <a th:href="@{/admin/point-refunds}" class="btn btn-secondary">목록으로</a>
+        </div>
+    </div>
+    
+    <script>
+        // 아임포트 초기화
+        var IMP = window.IMP;
+        IMP.init('channel-key-169a5aa7-ef59-45ee-a715-66c274540c8a'); // KG이니시스 채널키
+    </script>
+</body>
+</html> 

@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
     layout:decorate="~{fragment/layout}">
+<head>
+    <!-- jQuery -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <!-- iamport.payment.js -->
+    <script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.1.8.js"></script>
+</head>
 
 <th:block layout:fragment="css">
     <style>
@@ -294,5 +300,13 @@
            class="page-link">다음</a>
     </div>
 </div>
+
+<th:block layout:fragment="script">
+    <script>
+        // 아임포트 초기화
+        var IMP = window.IMP;
+        IMP.init('channel-key-169a5aa7-ef59-45ee-a715-66c274540c8a'); // KG이니시스 채널키
+    </script>
+</th:block>
 
 </html> 

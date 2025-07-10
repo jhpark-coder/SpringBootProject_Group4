@@ -81,6 +81,32 @@
     color: rgba(255, 255, 255, 0.9);
 }
 
+/* 무료 콘텐츠 표시 스타일 */
+.no-purchase-needed {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    border-radius: 12px;
+    color: white;
+    margin: 10px 0;
+}
+
+.free-content-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.free-content-message {
+    margin: 0;
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
     .paywall-content {
@@ -102,5 +128,13 @@
     
     .paywall-icon {
         font-size: 36px;
+    }
+    
+    .no-purchase-needed {
+        padding: 15px;
+    }
+    
+    .free-content-message {
+        font-size: 14px;
     }
 } 

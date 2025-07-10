@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-    layout:decorate="~{fragment/layout}">
+      layout:decorate="~{fragment/layout}">
+<head>
+    <!-- jQuery -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <!-- iamport.payment.js -->
+    <script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.1.8.js"></script>
+</head>
 
 <th:block layout:fragment="css">
     <style>
@@ -231,7 +237,8 @@
                 • 환불 처리: 즉시 자동 처리<br>
                 • 환불 수수료: 없음<br>
                 • 한 번에 하나의 환불 요청만 가능합니다<br>
-                • 환불은 아임포트를 통해 자동으로 처리됩니다
+                • 실제 결제 내역이 있는 경우: 실제 금액 환불 + 포인트 차감<br>
+                • 보너스 포인트 등: 포인트 차감만 처리
             </div>
         </div>
 
@@ -359,6 +366,10 @@
 
 <th:block layout:fragment="script">
     <script>
+        // 아임포트 초기화
+        var IMP = window.IMP;
+        IMP.init('channel-key-169a5aa7-ef59-45ee-a715-66c274540c8a'); // KG이니시스 채널키
+        
         document.getElementById('refundForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -412,6 +423,41 @@
                 errorAlert.style.display = 'block';
                 successAlert.style.display = 'none';
             }
+        }
+        
+        // 아임포트 환불 처리 함수 (실제 결제 내역이 있는 경우)
+        function processIamportRefund(originalImpUid, amount, reason, accountInfo) {
+            return new Promise((resolve, reject) => {
+                // 아임포트 환불 API 호출
+                IMP.request_pay({
+                    pg: 'inicis_v2', // KG이니시스 v2
+                    pay_method: 'card',
+                    merchant_uid: 'refund_' + new Date().getTime(),
+                    amount: amount,
+                    name: '포인트 환불',
+                    buyer_email: 'refund@example.com',
+                    buyer_name: accountInfo.accountHolder,
+                    buyer_tel: accountInfo.phoneNumber,
+                    custom_data: {
+                        original_imp_uid: originalImpUid,
+                        refund_reason: reason
+                    }
+                }, function(rsp) {
+                    if (rsp.success) {
+                        resolve({
+                            success: true,
+                            imp_uid: rsp.imp_uid,
+                            merchant_uid: rsp.merchant_uid,
+                            amount: rsp.paid_amount
+                        });
+                    } else {
+                        reject({
+                            success: false,
+                            error_msg: rsp.error_msg
+                        });
+                    }
+                });
+            });
         }
 
         // 계좌번호 입력 시 숫자만 허용
