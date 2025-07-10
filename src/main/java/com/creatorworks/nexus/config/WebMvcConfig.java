@@ -28,6 +28,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // Editor SPA 라우팅
         registry.addResourceHandler("/editor/**")
                 .addResourceLocations("classpath:/static/editor/")
                 .resourceChain(true)
@@ -39,5 +40,22 @@ public class WebMvcConfig implements WebMvcConfigurer {
                                 : new ClassPathResource("/static/editor/index.html");
                     }
                 });
+        
+        // Chat Manager SPA 라우팅
+        registry.addResourceHandler("/chat-manager", "/chat-manager/**")
+                .addResourceLocations("classpath:/static/chat-manager/")
+                .resourceChain(true)
+                .addResolver(new PathResourceResolver() {
+                    @Override
+                    protected Resource getResource(String resourcePath, Resource location) throws IOException {
+                        Resource requestedResource = location.createRelative(resourcePath);
+                        return requestedResource.exists() && requestedResource.isReadable() ? requestedResource
+                                : new ClassPathResource("/static/chat-manager/index.html");
+                    }
+                });
+        
+        // Chat Manager Assets 라우팅
+        registry.addResourceHandler("/assets/**")
+                .addResourceLocations("classpath:/static/chat-manager/assets/");
     }
 } 

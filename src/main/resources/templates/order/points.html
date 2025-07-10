@@ -438,12 +438,13 @@
 
         // 포인트 결제 요청
         function requestPointPayment() {
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
             if (!selectedPoint || selectedPoint < 1000) {
                 alert('최소 1,000P 이상 선택해주세요.');
                 return;
             }
 
-            if (!confirm(`${selectedPoint.toLocaleString()}P 충전을 진행하시겠습니까?\n결제 금액: ${selectedPrice.toLocaleString()}원`)) {
+                            if (!confirm(`${selectedPoint.toLocaleString()}P 충전을 진행하시겠습니까?\n결제 금액: ${selectedPrice.toLocaleString()}P`)) {
                 return;
             }
 

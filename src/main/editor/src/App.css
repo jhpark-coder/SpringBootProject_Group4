@@ -204,11 +204,13 @@
 }
 
 .video-container {
+  position: relative;
   margin: 1rem auto;
   /* Center the container */
 }
 
 .image-container {
+  position: relative;
   margin: 1rem auto;
 }
 
@@ -273,6 +275,7 @@
 }
 
 .audio-wrapper {
+  position: relative;
   padding: 1rem 0;
   max-width: 50%;
   margin: 0 auto;

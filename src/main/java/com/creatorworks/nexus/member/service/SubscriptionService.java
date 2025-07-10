@@ -6,7 +6,6 @@ import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.entity.Subscription;
 import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.member.repository.SubscriptionRepository;
-import com.creatorworks.nexus.notification.service.NotificationService;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,6 @@ public class SubscriptionService {
     private final MemberRepository memberRepository;
     private final ProductRepository productRepository;
     private final IamportService iamportService;
-    private final NotificationService notificationService;
 
     /**
      * 구독 생성

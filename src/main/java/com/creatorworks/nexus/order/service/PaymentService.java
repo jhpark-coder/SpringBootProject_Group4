@@ -213,8 +213,8 @@ public class PaymentService {
             
             if (member != null) {
                 String paymentMethod = getPaymentMethodDisplayName(payment.getPaymentType());
-                String message = String.format("결제가 성공적으로 완료되었습니다. 금액: %,d원, 결제수단: %s", 
-                    payment.getAmount(), paymentMethod);
+                String message = String.format("결제가 성공적으로 완료되었습니다. 금액: %,d%s, 결제수단: %s", 
+                    payment.getAmount(), payment.getPaymentType() == PaymentType.POINT ? "P" : "원", paymentMethod);
                 
                 PaymentNotificationRequest notificationDto = new PaymentNotificationRequest();
                 notificationDto.setTargetUserId(member.getId());
@@ -250,8 +250,8 @@ public class PaymentService {
             
             if (member != null) {
                 String paymentMethod = getPaymentMethodDisplayName(payment.getPaymentType());
-                String message = String.format("결제가 실패했습니다. 금액: %,d원, 결제수단: %s, 사유: %s", 
-                    payment.getAmount(), paymentMethod, failureReason);
+                String message = String.format("결제가 실패했습니다. 금액: %,d%s, 결제수단: %s, 사유: %s", 
+                    payment.getAmount(), payment.getPaymentType() == PaymentType.POINT ? "P" : "원", paymentMethod, failureReason);
                 
                 PaymentNotificationRequest notificationDto = new PaymentNotificationRequest();
                 notificationDto.setTargetUserId(member.getId());
@@ -288,8 +288,8 @@ public class PaymentService {
             
             if (member != null) {
                 String paymentMethod = getPaymentMethodDisplayName(payment.getPaymentType());
-                String message = String.format("결제가 취소되었습니다. 금액: %,d원, 결제수단: %s", 
-                    payment.getAmount(), paymentMethod);
+                String message = String.format("결제가 취소되었습니다. 금액: %,d%s, 결제수단: %s", 
+                    payment.getAmount(), payment.getPaymentType() == PaymentType.POINT ? "P" : "원", paymentMethod);
                 
                 PaymentNotificationRequest notificationDto = new PaymentNotificationRequest();
                 notificationDto.setTargetUserId(member.getId());

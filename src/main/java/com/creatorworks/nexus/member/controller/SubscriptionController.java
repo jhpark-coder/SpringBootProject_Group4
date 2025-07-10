@@ -75,7 +75,7 @@ public class SubscriptionController {
             }
 
             // 구독 서비스를 통한 구독 생성
-            Subscription subscription = subscriptionService.createSubscription(request, member.getId());
+            subscriptionService.createSubscription(request, member.getId());
 
             log.info("구독 생성 완료: 회원ID={}, 플랜={}, 작가={}, 금액={}",
                     member.getId(), request.getPlan(), request.getAuthorName(), request.getAmount());

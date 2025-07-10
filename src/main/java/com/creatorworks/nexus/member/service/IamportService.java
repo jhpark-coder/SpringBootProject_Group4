@@ -1,6 +1,5 @@
 package com.creatorworks.nexus.member.service;
 
-import com.creatorworks.nexus.member.entity.Subscription;
 import com.creatorworks.nexus.member.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

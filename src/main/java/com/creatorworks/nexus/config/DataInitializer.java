@@ -124,7 +124,7 @@ public class DataInitializer {
                         "독특한 스타일과 개성이 돋보이는 작품입니다."
                 };
 
-                for (int i = 1; i <= 1000; i++) {
+                for (int i = 1; i <= 100;i++) {
                     // 다양한 상품명 사용
                     String name = productNames[i % productNames.length] + " " + (i / productNames.length + 1);
                     int price = (int) (Math.random() * 90000) + 10000; // 10,000 ~ 99,999원

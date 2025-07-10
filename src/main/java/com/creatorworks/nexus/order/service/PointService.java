@@ -95,7 +95,7 @@ public class PointService {
         // 포인트 잔액 확인
         Long currentBalance = getCurrentBalance(memberId);
         if (currentBalance < totalAmount) {
-            throw new IllegalArgumentException("포인트가 부족합니다. 현재 잔액: " + currentBalance + "원, 필요 금액: " + totalAmount + "원");
+            throw new IllegalArgumentException("포인트가 부족합니다. 현재 잔액: " + currentBalance + "P, 필요 금액: " + totalAmount + "P");
         }
 
         // 주문 생성 (상품 구매이므로 product 설정)
@@ -122,6 +122,9 @@ public class PointService {
         // 주문 완료 처리
         order.complete();
         payment.complete();
+
+        // 포인트 구매 성공 알림 전송
+        sendPointPurchaseSuccessNotification(member, product, totalAmount, member.getPoint().longValue());
 
         return orderRepository.save(order);
     }
@@ -217,7 +220,7 @@ public class PointService {
      */
     private void sendPointChargeSuccessNotification(Member member, Long chargedAmount, Long newBalance) {
         try {
-            String message = String.format("포인트가 성공적으로 충전되었습니다. 충전 금액: %,d원, 현재 잔액: %,d원", 
+            String message = String.format("포인트가 성공적으로 충전되었습니다. 충전 금액: %,dP, 현재 잔액: %,dP", 
                 chargedAmount, newBalance);
             
             PaymentNotificationRequest notificationDto = new PaymentNotificationRequest();
@@ -245,7 +248,7 @@ public class PointService {
 
     private void sendPointChargeFailureNotification(Member member, Long failedAmount, String reason) {
         try {
-            String message = String.format("포인트 충전에 실패했습니다. 시도 금액: %,d원, 사유: %s", failedAmount, reason);
+            String message = String.format("포인트 충전에 실패했습니다. 시도 금액: %,dP, 사유: %s", failedAmount, reason);
             
             PaymentNotificationRequest notificationDto = new PaymentNotificationRequest();
             notificationDto.setTargetUserId(member.getId());
@@ -267,6 +270,37 @@ public class PointService {
                 member.getId(), failedAmount, reason);
         } catch (Exception e) {
             log.error("포인트 충전 실패 알림 전송 실패: userId={}, error={}", member.getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * 포인트 구매 성공 알림 전송
+     */
+    private void sendPointPurchaseSuccessNotification(Member member, Product product, Long totalAmount, Long newBalance) {
+        try {
+            String message = String.format("포인트로 상품을 성공적으로 구매했습니다. 구매 금액: %,dP, 현재 잔액: %,dP", 
+                totalAmount, newBalance);
+            
+            PaymentNotificationRequest notificationDto = new PaymentNotificationRequest();
+            notificationDto.setTargetUserId(member.getId());
+            notificationDto.setMessage(message);
+            notificationDto.setType("payment_success");
+            notificationDto.setCategory(NotificationCategory.ADMIN);
+            notificationDto.setLink("/api/orders/list");
+            notificationDto.setAmount(totalAmount);
+            notificationDto.setPaymentMethod("포인트 구매");
+            notificationDto.setOrderId("point_purchase_" + System.currentTimeMillis());
+            
+            // 실시간 알림 전송
+            notificationService.sendPaymentNotification(notificationDto);
+            
+            // DB에 알림 저장
+            notificationService.savePaymentNotification(notificationDto, "/member/myPage/" + member.getId() + "/points");
+            
+            log.info("포인트 구매 성공 알림 전송 완료: userId={}, totalAmount={}, newBalance={}", 
+                member.getId(), totalAmount, newBalance);
+        } catch (Exception e) {
+            log.error("포인트 구매 성공 알림 전송 실패: userId={}, error={}", member.getId(), e.getMessage());
         }
     }
 

@@ -30,7 +30,7 @@
         }
 
         .user-list {
-            width: 300px;
+            width: 360px;
             border-right: 1px solid #dee2e6;
             background: #f8f9fa;
             overflow-y: auto;
@@ -85,6 +85,22 @@
 
         .user-status.offline {
             background-color: #dc3545;
+        }
+
+        .user-item.offline {
+            opacity: 0.7;
+        }
+
+        .user-item.offline .username {
+            color: #6c757d;
+        }
+
+        .offline-label {
+            font-size: 0.75rem;
+            color: #dc3545;
+            margin-left: 0.5rem;
+            display: inline-block;
+            vertical-align: middle;
         }
 
         .message {
@@ -334,13 +350,16 @@
 
             removeUser(username) {
                 if (this.users.has(username)) {
-                    this.users.delete(username);
+                    // 사용자를 삭제하지 않고 상태만 offline으로 변경
+                    const user = this.users.get(username);
+                    this.users.set(username, {
+                        ...user,
+                        status: 'offline'
+                    });
                     this.renderUserList();
 
-                    // 현재 선택된 사용자가 나간 경우
-                    if (this.currentUser === username) {
-                        this.selectUser(null);
-                    }
+                    // 현재 선택된 사용자가 오프라인이 되어도 채팅방은 유지
+                    // 채팅 내역은 DB에 저장되어 있으므로 계속 볼 수 있음
                 }
             }
 
@@ -348,12 +367,36 @@
                 const container = document.getElementById('users-container');
                 container.innerHTML = '';
 
+                // 온라인/오프라인 사용자 수 계산
+                let onlineCount = 0;
+                let offlineCount = 0;
+                this.users.forEach((user) => {
+                    if (user.status === 'online') {
+                        onlineCount++;
+                    } else {
+                        offlineCount++;
+                    }
+                });
+
+                // 헤더 업데이트
+                const headerElement = document.querySelector('.user-list .p-3 h6');
+                if (headerElement) {
+                    headerElement.textContent = `사용자 목록 (온라인: ${onlineCount}, 오프라인: ${offlineCount})`;
+                }
+
                 this.users.forEach((user, username) => {
                     const userElement = document.createElement('div');
                     userElement.className = 'user-item';
+                    
+                    // 사용자 상태에 따른 클래스 추가
+                    if (user.status === 'offline') {
+                        userElement.classList.add('offline');
+                    }
+                    
                     userElement.innerHTML = `
                         <span class="user-status ${user.status}"></span>
-                        <span>${username}</span>
+                        <span class="username">${username}</span>
+                        ${user.status === 'offline' ? '<span class="offline-label">(오프라인)</span>' : ''}
                     `;
 
                     userElement.addEventListener('click', () => {
