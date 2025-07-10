@@ -172,12 +172,14 @@
 </th:block>
 
 <div layout:fragment="content" class="point-history-container">
-    <a href="/User/my-page" class="back-button">
-        <i class="fas fa-arrow-left"></i> 마이페이지로 돌아가기
-    </a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">포인트 내역</h1>
+        <a th:href="@{|/member/myPage/${#authentication.principal.id}|}" class="back-button">
+            <i class="fas fa-arrow-left"></i> 마이페이지로 돌아가기
+        </a>
+    </div>
 
-    <div class="point-history-header">
-        <h1>포인트 내역</h1>
+    <div class="current-balance-card mb-4">
         <div class="point-balance-info">
             <span class="point-balance-label">현재 보유 포인트</span>
             <span class="point-balance-value" th:text="${currentBalance != null ? currentBalance : 0} + 'P'">0P</span>
@@ -213,29 +215,30 @@
     </div>
 
     <!-- 페이지네이션 -->
-    <div class="pagination" th:if="${pointHistoryPage != null && pointHistoryPage.totalPages > 0}">
-        <!-- 이전 페이지 버튼 -->
-        <a th:if="${pointHistoryPage.number > 0}"
-            th:href="@{'/User/my-page/points'(page=${pointHistoryPage.number - 1}, size=${pointHistoryPage.size})}"
-            class="page-link">&lt;&lt;</a>
-        <span th:unless="${pointHistoryPage.number > 0}" class="page-link disabled">&lt;&lt;</span>
-
-        <!-- 페이지 번호들 -->
-        <th:block th:with="start=${T(java.lang.Math).max(0, pointHistoryPage.number - 2)}, 
-                           end=${T(java.lang.Math).min(pointHistoryPage.totalPages - 1, pointHistoryPage.number + 2)}">
-            <a th:each="pageNum : ${#numbers.sequence(start, end)}"
-                th:href="@{'/User/my-page/points'(page=${pageNum}, size=${pointHistoryPage.size})}"
-                th:text="${pageNum + 1}"
-                th:class="${'page-link' + (pageNum == pointHistoryPage.number ? ' active' : '')}"></a>
-        </th:block>
-
-        <!-- 다음 페이지 버튼 -->
-        <a th:if="${pointHistoryPage.number < pointHistoryPage.totalPages - 1}"
-            th:href="@{'/User/my-page/points'(page=${pointHistoryPage.number + 1}, size=${pointHistoryPage.size})}"
-            class="page-link">&gt;&gt;</a>
-        <span th:unless="${pointHistoryPage.number < pointHistoryPage.totalPages - 1}"
-            class="page-link disabled">&gt;&gt;</span>
-    </div>
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center" th:if="${!pointHistoryPage.isEmpty()}">
+            <li class="page-item" th:classappend="${pointHistoryPage.first} ? 'disabled' : ''">
+                <a class="page-link"
+                    th:href="@{|/member/myPage/${#authentication.principal.id}/points|(page=${pointHistoryPage.number - 1}, size=${pointHistoryPage.size})}">
+                    이전</a>
+            </li>
+            <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, pointHistoryPage.totalPages - 1)}"
+                th:classappend="${pageNum == pointHistoryPage.number} ? 'active' : ''">
+                <a class="page-link"
+                    th:href="@{|/member/myPage/${#authentication.principal.id}/points|(page=${pageNum}, size=${pointHistoryPage.size})}"
+                    th:text="${pageNum + 1}"></a>
+            </li>
+            <li class="page-item" th:classappend="${pointHistoryPage.last} ? 'disabled' : ''">
+                <a class="page-link"
+                    th:href="@{|/member/myPage/${#authentication.principal.id}/points|(page=${pointHistoryPage.number + 1}, size=${pointHistoryPage.size})}">
+                    다음</a>
+            </li>
+        </ul>
+    </nav>
 </div>
+
+<script th:src="@{/js/pointHistory.js}"></script>
+
+</body>
 
 </html>

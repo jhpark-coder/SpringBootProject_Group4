@@ -1,18 +1,16 @@
 package com.creatorworks.nexus.member.service;
 
-import java.util.Collections;
 import java.util.UUID;
 
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import com.creatorworks.nexus.member.constant.Role;
+import com.creatorworks.nexus.member.dto.CustomUserDetails;
 import com.creatorworks.nexus.member.dto.OAuthAttributesDto;
 import com.creatorworks.nexus.member.dto.SessionMemberDto;
 import com.creatorworks.nexus.member.dto.SessionMemberFormDto;
@@ -58,11 +56,8 @@ public class SocialMemberService implements OAuth2UserService<OAuth2UserRequest,
             httpSession.setAttribute("member", new SessionMemberDto(member));
         }
         
-        return new DefaultOAuth2User(
-                Collections.singleton(new SimpleGrantedAuthority(member.getRole().name())),
-                attributes.getAttributes(),
-                "email"
-        );
+        // DefaultOAuth2User 대신 CustomUserDetails를 반환하도록 변경
+        return new CustomUserDetails(member, attributes.getAttributes());
     }
 
     private Member saveOrUpdate(OAuthAttributesDto attributes) {
@@ -157,7 +152,7 @@ public class SocialMemberService implements OAuth2UserService<OAuth2UserRequest,
         
         memberRepository.save(member);
     }
-    public void completeSocialSignUp(String email, SessionMemberFormDto formDto) {
+    public Member completeSocialSignUp(String email, SessionMemberFormDto formDto) {
         // 1. 이메일로 다시 한번 확인 (그 사이에 다른 경로로 가입했을 경우 대비)
         if (memberRepository.findByEmail(email) != null) {
             throw new IllegalStateException("이미 가입된 이메일입니다.");
@@ -179,9 +174,10 @@ public class SocialMemberService implements OAuth2UserService<OAuth2UserRequest,
                 .build();
 
         // 3. 드디어 최종 저장!
-        memberRepository.save(member);
+        Member savedMember = memberRepository.save(member);
 
         // 4. (중요) 저장된 완전한 정보를 바탕으로 새로운 세션 생성
-        httpSession.setAttribute("member", new SessionMemberDto(member));
+        httpSession.setAttribute("member", new SessionMemberDto(savedMember));
+        return savedMember;
     }
 }

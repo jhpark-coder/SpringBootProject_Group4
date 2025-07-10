@@ -17,10 +17,7 @@ import com.creatorworks.nexus.order.dto.TopSellingProductDto;
 import com.creatorworks.nexus.order.entity.Order;
 import com.creatorworks.nexus.order.entity.Order.OrderStatus;
 import com.creatorworks.nexus.order.entity.Order.OrderType;
-import com.creatorworks.nexus.order.entity.OrderItem;
-import com.creatorworks.nexus.order.entity.OrderItem.ItemType;
 import com.creatorworks.nexus.order.entity.Payment;
-import com.creatorworks.nexus.order.repository.OrderItemRepository;
 import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.order.repository.PaymentRepository;
 import com.creatorworks.nexus.product.entity.Product;
@@ -36,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
+
     private final PaymentRepository paymentRepository;
     private final MemberRepository memberRepository;
     private final ProductRepository productRepository;
@@ -48,38 +45,19 @@ public class OrderService {
     /**
      * 주문을 생성합니다.
      */
-    public Order createOrder(Member buyer, OrderType orderType, Long totalAmount, String description) {
+    public Order createOrder(Member buyer, OrderType orderType, Long totalAmount, String description, Product product) {
         Order order = Order.builder()
                 .buyer(buyer)
                 .orderType(orderType)
                 .orderStatus(OrderStatus.PENDING)
                 .totalAmount(totalAmount)
                 .description(description)
+                .product(product)
                 .build();
-
         return orderRepository.save(order);
     }
 
-    /**
-     * 주문에 항목을 추가합니다.
-     */
-    public OrderItem addOrderItem(Order order, Product product, Member author, 
-                                Long price, Integer quantity, ItemType itemType,
-                                String itemName, String description) {
-        OrderItem orderItem = OrderItem.builder()
-                .order(order)
-                .product(product)
-                .author(author)
-                .price(price)
-                .quantity(quantity)
-                .itemType(itemType)
-                .itemName(itemName)
-                .description(description)
-                .build();
 
-        order.addOrderItem(orderItem);
-        return orderItemRepository.save(orderItem);
-    }
 
     /**
      * 주문을 완료 처리합니다.
@@ -162,13 +140,17 @@ public class OrderService {
 
         Long totalAmount = product.getPrice() * quantity;
 
-        // 주문 생성
-        Order order = createOrder(buyer, OrderType.PRODUCT_PURCHASE, totalAmount, 
-                                "상품 구매: " + product.getName());
+        // 주문 생성 (상품 구매이므로 product 설정)
+        Order order = Order.builder()
+                .buyer(buyer)
+                .orderType(OrderType.PRODUCT_PURCHASE)
+                .orderStatus(OrderStatus.PENDING)
+                .totalAmount(totalAmount)
+                .description("상품 구매: " + product.getName())
+                .product(product) // 상품 구매이므로 product 설정
+                .build();
 
-        // 주문 항목 추가
-        addOrderItem(order, product, product.getSeller(), product.getPrice(), quantity,
-                   ItemType.PRODUCT, product.getName(), product.getDescription());
+        order = orderRepository.save(order);
 
         // 결제 정보 생성
         Payment payment = paymentService.processCardPayment(order, totalAmount, impUid, 
@@ -201,13 +183,17 @@ public class OrderService {
 
         Long totalAmount = amount * months;
 
-        // 주문 생성
-        Order order = createOrder(subscriber, OrderType.SUBSCRIPTION, totalAmount,
-                                "구독: " + author.getName() + " (" + months + "개월)");
+        // 주문 생성 (구독이므로 product는 null, author 정보는 description에 포함)
+        Order order = Order.builder()
+                .buyer(subscriber)
+                .orderType(OrderType.SUBSCRIPTION)
+                .orderStatus(OrderStatus.PENDING)
+                .totalAmount(totalAmount)
+                .description("구독: " + author.getName() + " (" + months + "개월)")
+                .product(null) // 구독은 상품과 무관
+                .build();
 
-        // 주문 항목 추가
-        addOrderItem(order, null, author, amount, months, ItemType.SUBSCRIPTION,
-                   author.getName() + " 구독", author.getName() + " 작가 구독 " + months + "개월");
+        order = orderRepository.save(order);
 
         // 정기결제 정보 생성
         LocalDateTime nextBillingDate = LocalDateTime.now().plusMonths(1);

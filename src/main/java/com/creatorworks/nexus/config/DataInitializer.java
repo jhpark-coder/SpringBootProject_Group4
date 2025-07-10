@@ -238,6 +238,7 @@ public class DataInitializer {
                                     .totalAmount(productToBuy.getPrice())
                                     .orderDate(fixedOrderDate) // 고정된 2025년 날짜를 사용
                                     .description("테스트 구매: " + productToBuy.getName())
+                                    .product(productToBuy)
                                     .build();
 
                             orderRepository.save(testOrder);
@@ -255,11 +256,7 @@ public class DataInitializer {
 
             // 1. 테스트용 가상 구매자 목록 생성
             List<Member> virtualBuyers = new ArrayList<>();
-            // 이미 생성된 user도 구매자 목록에 포함
-            if (user != null) {
-                virtualBuyers.add(user);
-            }
-
+            // usertest는 제외하고 가상 구매자만 추가
             // (이름, 이메일, 성별, 출생년도) 정보로 가상 구매자 10명 추가 생성
             String[][] buyerInfos = {
                     {"김이십", "buyer1@test.com", "Male", "1998"},
@@ -287,8 +284,8 @@ public class DataInitializer {
                             .birthMonth("01").birthDay("01") // 생일은 임의로 통일
                             .build();
                     memberRepository.save(buyer);
-                    virtualBuyers.add(buyer);
                 }
+                virtualBuyers.add(buyer); // usertest는 포함하지 않음
             }
             System.out.println("가상 구매자 " + virtualBuyers.size() + "명 준비 완료.");
 
@@ -323,6 +320,7 @@ public class DataInitializer {
                             .totalAmount(randomProduct.getPrice())
                             .orderDate(randomOrderDate)
                             .description("테스트 판매: " + randomProduct.getName())
+                            .product(randomProduct)
                             .build();
                     orderRepository.save(saleRecord);
                 }

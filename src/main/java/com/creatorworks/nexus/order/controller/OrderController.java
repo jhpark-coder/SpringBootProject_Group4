@@ -291,7 +291,7 @@ public class OrderController {
                 if (paymentOpt.isEmpty()) {
                     // === 결제 정보가 없으면 주문/결제 정보 새로 생성 ===
                     Member member = getMemberFromPrincipal(principal);
-                    order = orderService.createOrder(member, OrderType.POINT_PURCHASE, amount, "포인트 충전");
+                    order = orderService.createOrder(member, OrderType.POINT_PURCHASE, amount, "포인트 충전", null);
                     paymentService.createPayment(order, Payment.PaymentType.POINT, amount, impUid, merchantUid, null, null, null);
                 } else {
                     order = paymentOpt.get().getOrder();
@@ -414,13 +414,19 @@ public class OrderController {
         Pageable pageable = PageRequest.of(page, size);
         
         Page<Order> orders = orderService.getOrdersByBuyer(member, pageable);
-        
-        model.addAttribute("orders", orders.getContent());
+
+        int startPage = Math.max(0, page - 2);
+        int endPage = Math.min(orders.getTotalPages() - 1, page + 2);
+
+        model.addAttribute("orderList", orders);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", orders.getTotalPages());
         model.addAttribute("totalElements", orders.getTotalElements());
-        
-        return "order/list";
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
+        model.addAttribute("Name", member.getName());
+
+        return "order/orderList";
     }
 
     /**

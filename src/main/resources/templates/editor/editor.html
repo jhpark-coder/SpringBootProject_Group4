@@ -3,11 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}" th:if="${_csrf != null}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" th:if="${_csrf != null}" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus Editor</title>
-    <script type="module" crossorigin src="/assets/index-D_nz_iJg.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CmbrnTS2.css">
+    <script type="module" crossorigin src="/editor/assets/index-DhXCz5Yu.js"></script>
+    <link rel="stylesheet" crossorigin href="/editor/assets/index-BFMI_UiY.css">
 </head>
 
 <body>

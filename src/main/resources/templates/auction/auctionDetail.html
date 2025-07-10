@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>경매 상세</title>
+
+    <!-- Google Fonts 로딩 스크립트 -->
+    <script th:inline="javascript">
+        // Google Fonts 목록
+        const GOOGLE_FONTS = [
+            { name: 'Noto Sans KR', family: "'Noto Sans KR', sans-serif" },
+            { name: 'Nanum Gothic', family: "'Nanum Gothic', sans-serif" },
+            { name: 'Black Han Sans', family: "'Black Han Sans', sans-serif" },
+            { name: 'Roboto', family: "'Roboto', sans-serif" },
+            { name: 'Montserrat', family: "'Montserrat', sans-serif" },
+            { name: 'Playfair Display', family: "'Playfair Display', serif" },
+            { name: 'Source Code Pro', family: "'Source Code Pro', monospace" }
+        ];
+
+        // Google Fonts 로딩 함수
+        function loadGoogleFont(fontName) {
+            const fontId = `google-font-${fontName.replace(/\s/g, '-')}`;
+            if (document.getElementById(fontId)) {
+                return; // 이미 로드된 폰트는 다시 로드하지 않음
+            }
+            const link = document.createElement('link');
+            link.id = fontId;
+            link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s/g, '+')}:wght@400;700&display=swap`;
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+        }
+
+        // 페이지 로드 시 저장된 폰트 로드
+        document.addEventListener('DOMContentLoaded', function () {
+            const savedFontFamily = /*[[${auction.fontFamily}]]*/ 'Arial, sans-serif';
+            if (savedFontFamily) {
+                const selectedFont = GOOGLE_FONTS.find(f => f.family === savedFontFamily);
+                if (selectedFont) {
+                    console.log('Loading Google Font for auction detail page:', selectedFont.name);
+                    loadGoogleFont(selectedFont.name);
+                }
+            }
+        });
+    </script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .detail-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auction-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .info-section h3 {
+            color: #007bff;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+
+        .info-item {
+            margin-bottom: 10px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .info-value {
+            color: #333;
+        }
+
+        .auction-image {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auction-image img {
+            max-width: 400px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-section {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 0 10px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .price-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .price-info h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.5em;
+        }
+
+        .price-amount {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="detail-container">
+        <h1>🏷️ 경매 상세 정보</h1>
+
+        <!-- 가격 정보 -->
+        <div class="price-info">
+            <h2>현재 입찰 정보</h2>
+            <div class="price-amount">
+                <span th:text="${#numbers.formatInteger(auction.startBidPrice, 3, 'COMMA')}">0</span>원
+            </div>
+            <p>시작 입찰가</p>
+        </div>
+
+        <!-- 경매 이미지 -->
+        <div class="auction-image" th:if="${auction.imageUrl != null and !auction.imageUrl.isEmpty()}">
+            <img th:src="${auction.imageUrl}" th:alt="${auction.name}" />
+        </div>
+
+        <!-- 경매 정보 -->
+        <div class="auction-info">
+            <div class="info-section">
+                <h3>기본 정보</h3>
+                <div class="info-item">
+                    <span class="info-label">경매 ID:</span>
+                    <span class="info-value" th:text="${auction.id}"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">프로젝트명:</span>
+                    <span class="info-value" th:text="${auction.name}"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">판매자:</span>
+                    <span class="info-value" th:text="${auction.seller.name}"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">등록일:</span>
+                    <span class="info-value"
+                        th:text="${#temporals.format(auction.regTime, 'yyyy-MM-dd HH:mm:ss')}"></span>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3>경매 정보</h3>
+                <div class="info-item">
+                    <span class="info-label">시작 입찰가:</span>
+                    <span class="info-value">
+                        <span th:text="${#numbers.formatInteger(auction.startBidPrice, 3, 'COMMA')}">0</span>원
+                    </span>
+                </div>
+                <div class="info-item" th:if="${auction.buyNowPrice != null}">
+                    <span class="info-label">즉시 구매가:</span>
+                    <span class="info-value">
+                        <span th:text="${#numbers.formatInteger(auction.buyNowPrice, 3, 'COMMA')}">0</span>원
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">경매 종료일:</span>
+                    <span class="info-value"
+                        th:text="${#temporals.format(auction.auctionEndTime, 'yyyy-MM-dd HH:mm:ss')}"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">카테고리:</span>
+                    <span class="info-value"
+                        th:text="${auction.primaryCategory} + ' > ' + ${auction.secondaryCategory}"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 작품 설명 -->
+        <div class="content-section" th:if="${auction.workDescription != null and !auction.workDescription.isEmpty()}">
+            <h3>작품 설명</h3>
+            <p th:text="${auction.workDescription}"></p>
+        </div>
+
+        <!-- 프로젝트 내용 -->
+        <div class="content-section" th:style="'background-color: ' + ${auction.backgroundColor ?: '#ffffff'} + ';'">
+            <h3>프로젝트 내용</h3>
+            <div class="prose max-w-none"
+                th:style="'font-family: &quot;' + (${auction.fontFamily} ?: 'inherit') + '&quot;, sans-serif;'"
+                th:utext="${auction.description}">
+            </div>
+        </div>
+
+        <!-- 액션 버튼 -->
+        <div class="action-buttons">
+            <a href="/auctions" class="btn btn-secondary">경매 목록으로</a>
+            <a href="/" class="btn btn-primary">홈으로</a>
+            <a th:href="@{/auction/result/{id}(id=${auction.id})}" class="btn btn-success">경매 결과 보기</a>
+        </div>
+    </div>
+</body>
+
+</html>

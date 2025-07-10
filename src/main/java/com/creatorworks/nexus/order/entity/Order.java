@@ -1,11 +1,10 @@
 package com.creatorworks.nexus.order.entity;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.creatorworks.nexus.global.BaseEntity;
 import com.creatorworks.nexus.member.entity.Member;
+import com.creatorworks.nexus.product.entity.Product;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -18,7 +17,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -59,22 +57,26 @@ public class Order extends BaseEntity {
     @Column(length = 500)
     private String description; // 주문 설명
 
-    // 기존 product 필드는 제거하고 OrderItem으로 대체
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> orderItems = new ArrayList<>();
+    // 단일 주문을 위한 상품 정보 (홈페이지에서는 모든 주문이 단일 주문)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
+    private Product product;
+
+
 
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Payment payment;
 
     @Builder
     public Order(Member buyer, OrderType orderType, OrderStatus orderStatus, 
-                Long totalAmount, LocalDateTime orderDate, String description) {
+                Long totalAmount, LocalDateTime orderDate, String description, Product product) {
         this.buyer = buyer;
         this.orderType = orderType;
         this.orderStatus = orderStatus;
         this.totalAmount = totalAmount;
         this.orderDate = (orderDate != null) ? orderDate : LocalDateTime.now();
         this.description = description;
+        this.product = product;
     }
 
     // 주문 상태 변경 메서드들
@@ -90,11 +92,7 @@ public class Order extends BaseEntity {
         this.orderStatus = OrderStatus.FAILED;
     }
 
-    // OrderItem 추가 메서드
-    public void addOrderItem(OrderItem orderItem) {
-        orderItems.add(orderItem);
-        orderItem.setOrder(this);
-    }
+
 
     // Payment 설정 메서드
     public void setPayment(Payment payment) {

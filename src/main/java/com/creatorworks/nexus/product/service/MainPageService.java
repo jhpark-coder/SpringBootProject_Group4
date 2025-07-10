@@ -120,9 +120,8 @@ public class MainPageService {
 
         // 3. 추천에서 제외할 상품 ID 목록 (1.구매, 2.좋아요, 3.최근조회)
         List<Long> purchasedIds = purchasedOrders.stream()
-                .flatMap(order -> order.getOrderItems().stream())
-                .filter(item -> item.getProduct() != null)
-                .map(item -> item.getProduct().getId())
+                .filter(order -> order.getProduct() != null)
+                .map(order -> order.getProduct().getId())
                 .toList();
         List<Long> heartedIds = heartedList.stream().map(h -> h.getProduct().getId()).toList();
 

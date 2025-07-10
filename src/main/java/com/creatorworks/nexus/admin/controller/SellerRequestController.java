@@ -1,5 +1,7 @@
 package com.creatorworks.nexus.admin.controller;
 
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,8 +17,6 @@ import com.creatorworks.nexus.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/seller-request")
 @RequiredArgsConstructor
@@ -26,9 +26,9 @@ public class SellerRequestController {
     private final MemberRepository memberRepository;
 
     @PostMapping("/apply")
-    public ResponseEntity<String> applyForSeller(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<String> applyForSeller(@AuthenticationPrincipal Object principal) {
         try {
-            String email = userDetails.getUsername();
+            String email = getEmailFromPrincipal(principal);
             Member member = memberRepository.findByEmail(email);
             if (member == null) {
                 throw new IllegalArgumentException("회원을 찾을 수 없습니다.");
@@ -44,9 +44,9 @@ public class SellerRequestController {
     }
 
     @GetMapping("/status")
-    public ResponseEntity<Object> getSellerRequestStatus(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<Object> getSellerRequestStatus(@AuthenticationPrincipal Object principal) {
         try {
-            String email = userDetails.getUsername();
+            String email = getEmailFromPrincipal(principal);
             Member member = memberRepository.findByEmail(email);
             if (member == null) {
                 return ResponseEntity.badRequest().body("회원을 찾을 수 없습니다.");
@@ -66,6 +66,20 @@ public class SellerRequestController {
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("상태 확인 중 오류가 발생했습니다.");
+        }
+    }
+
+    private String getEmailFromPrincipal(Object principal) {
+        if (principal == null) {
+            throw new IllegalArgumentException("로그인이 필요합니다.");
+        }
+        
+        if (principal instanceof UserDetails) {
+            return ((UserDetails) principal).getUsername();
+        } else if (principal instanceof org.springframework.security.oauth2.core.user.OAuth2User) {
+            return ((org.springframework.security.oauth2.core.user.OAuth2User) principal).getName();
+        } else {
+            return principal.toString();
         }
     }
 } 

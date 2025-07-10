@@ -1,0 +1,102 @@
+<html layout:decorate="~{fragment/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/myPage.css}">
+        <link rel="stylesheet" th:href="@{/css/inquiry.css}">
+        <style>
+            td {
+                align-content: center;
+            }
+        </style>
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content" class="page-container">
+        <!-- 1. 왼쪽 고정 메뉴 (사이드바) -->
+        <aside class="profile-sidebar">
+            <div class="profile-pic"></div>
+            <h2 class="profile-name" th:text="${Name} + ' 님'" sec:authentication="name">홍길동 님</h2>
+
+            <div class="button-group">
+                <a th:href="@{/members/liked-products}" class="btn btn-outline">찜목록</a>
+                <a th:href="@{/members/following-products}" class="btn btn-outline">구독목록</a>
+            </div>
+
+            <a href="/members/modify" class="btn btn-solid">개인정보수정</a>
+            <a th:href="@{|/member/myPage/${#authentication.principal.id}/notifications|}"
+                class="btn btn-solid">알림내역</a>
+            <a href="/User/orderList" class="btn btn-solid">구매내역</a>
+            <a href="#" class="btn btn-solid">참여중인 경매</a>
+        </aside>
+
+        <main class="main-content">
+            <section class="content-section">
+                <header class="section-header">
+                    <h2>구매한 작품 현황</h2>
+                </header>
+
+                <!-- 디버깅용 정보 표시 -->
+                <div style="padding: 1rem; background-color: #f0f0f0; margin-bottom: 1rem;">
+                    <p>주문 목록 개수: <span th:text="${orderList != null ? orderList.totalElements : 'null'}">0</span></p>
+                    <p>주문 목록 내용: <span th:text="${orderList != null && orderList.hasContent() ? '있음' : '없음'}">없음</span>
+                    </p>
+                </div>
+
+                <!-- 주문 목록이 있을 때만 테이블 표시 -->
+                <div th:if="${orderList != null && orderList.hasContent()}">
+                    <table class="table" style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left; padding:8px;">주문번호</th>
+                                <th style="text-align:left; padding:8px;">주문타입</th>
+                                <th style="text-align:left; padding:8px;">주문상태</th>
+                                <th style="text-align:left; padding:8px;">총금액</th>
+                                <th style="text-align:left; padding:8px;">구입일</th>
+                                <th style="text-align:left; padding:8px;">설명</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="order : ${orderList.content}" style="border-top:1px solid #ddd;">
+                                <td th:text="${order.id}">-</td>
+                                <td th:text="${order.orderType != null ? order.orderType.description : '-'}">-</td>
+                                <td th:text="${order.orderStatus != null ? order.orderStatus.description : '-'}">-</td>
+                                <td th:text="${order.totalAmount != null ? order.totalAmount + '원' : '-'}">-</td>
+                                <td
+                                    th:text="${order.orderDate != null ? #temporals.format(order.orderDate, 'yyyy-MM-dd HH:mm') : '-'}">
+                                    -</td>
+                                <td th:text="${order.description != null ? order.description : '-'}">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 주문 목록이 없을 때 메시지 표시 -->
+                <div th:if="${orderList == null || !orderList.hasContent()}" style="padding:2rem; text-align:center;">
+                    <p>구매한 작품이 없습니다.</p>
+                </div>
+
+                <!-- 페이징 네비게이션 -->
+                <nav th:if="${orderList != null && orderList.totalPages > 0}" aria-label="Page navigation"
+                    style="margin-top:1rem;">
+                    <ul class="pagination" style="justify-content:center;">
+                        <li class="page-item" th:classappend="${startPage == 0} ? 'disabled'">
+                            <a class="page-link" th:href="@{/User/orderList(page=${startPage - 1})}">«</a>
+                        </li>
+                        <li class="page-item" th:each="p : ${#numbers.sequence(startPage, endPage)}"
+                            th:classappend="${p == orderList.number} ? 'active'">
+                            <a class="page-link" th:href="@{/User/orderList(page=${p})}" th:text="${p + 1}"></a>
+                        </li>
+                        <li class="page-item" th:classappend="${endPage >= orderList.totalPages - 1} ? 'disabled'">
+                            <a class="page-link" th:href="@{/User/orderList(page=${endPage + 1})}">»</a>
+                        </li>
+                    </ul>
+                </nav>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>

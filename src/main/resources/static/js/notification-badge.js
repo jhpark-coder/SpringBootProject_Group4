@@ -1,3 +1,4 @@
+console.log('notification-badge.js loaded');
 // 알림 배지 관리
 class NotificationBadge {
     constructor(badge) {
@@ -390,6 +391,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // 로그인한 사용자일 경우에만 알림 관련 모든 기능을 초기화합니다.
     if (window.currentUser && window.currentUser.id) {
         console.log('🔔 로그인 상태 확인됨 - NotificationBadge 초기화 시작');
+        console.log('🔔 현재 사용자 정보:', window.currentUser);
 
         // 기존 인스턴스가 있다면 해제
         if (window.notificationBadge) {
@@ -449,6 +451,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     } else {
         console.log('🔔 비로그인 상태 - 알림 기능을 초기화하지 않습니다.');
+        console.log('🔔 window.currentUser:', window.currentUser);
     }
 });
 

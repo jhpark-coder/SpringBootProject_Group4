@@ -20,19 +20,24 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.creatorworks.nexus.member.dto.CustomUserDetails;
+import com.creatorworks.nexus.member.dto.MemberModifyDto;
 import com.creatorworks.nexus.member.dto.MonthlyCategoryPurchaseDTO;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberOrderRepository;
 import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.member.service.MemberFollowService;
 import com.creatorworks.nexus.notification.entity.Notification;
 import com.creatorworks.nexus.notification.service.NotificationService;
 import com.creatorworks.nexus.order.entity.Order;
@@ -40,6 +45,7 @@ import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.order.service.PointService;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.repository.ProductRepository;
+import com.creatorworks.nexus.product.service.ProductService;
 import com.creatorworks.nexus.product.service.RecentlyViewedProductRedisService;
 import com.creatorworks.nexus.security.dto.UserAccount;
 
@@ -48,7 +54,6 @@ import lombok.RequiredArgsConstructor;
 
 //20250630 차트 생성을 위해 작성됨
 @Controller
-@RequestMapping(value = "/User")
 @RequiredArgsConstructor
 public class MyPageController {
 
@@ -62,9 +67,11 @@ public class MyPageController {
     private final OrderRepository orderRepository;
     private final NotificationService notificationService;
     private final PointService pointService;
+    private final ProductService productService;
+    private final MemberFollowService memberFollowService;
 
-    @GetMapping("/my-page")
-    public String myPage(@AuthenticationPrincipal Object principal, Model model) {
+    @GetMapping("/member/myPage/{memberId}")
+    public String myPage(@PathVariable("memberId") Long memberId, @AuthenticationPrincipal Object principal, Model model) {
         try {
             // 1. 현재 로그인한 사용자의 ID를 안전하게 가져오기
             log.info("마이페이지 접근 - Principal 타입: {}", principal != null ? principal.getClass().getSimpleName() : "null");
@@ -167,9 +174,8 @@ public class MyPageController {
         // 3. Order 목록에서 Product 목록만 추출한다.
         //    (ProductDto를 사용하면 더 좋습니다. 여기서는 간단히 Product 엔티티를 그대로 사용합니다)
         List<Product> recentProducts = recentOrdersPage.getContent().stream()
-                .flatMap(order -> order.getOrderItems().stream())
-                .filter(item -> item.getProduct() != null)
-                .map(item -> item.getProduct())
+                .filter(order -> order.getProduct() != null)
+                .map(order -> order.getProduct())
                 .distinct()
                 .collect(Collectors.toList());
 
@@ -261,8 +267,8 @@ public class MyPageController {
         }
     }
 
-    @GetMapping("/my-page/notifications")
-    public String notificationHistory(@AuthenticationPrincipal Object principal, Model model) {
+    @GetMapping("/member/myPage/{memberId}/notifications")
+    public String notificationHistory(@PathVariable("memberId") Long memberId, @AuthenticationPrincipal Object principal, Model model) {
         String email = getEmailFromPrincipal(principal);
         Member currentUser = memberRepository.findByEmail(email);
         if (currentUser != null) {
@@ -289,8 +295,66 @@ public class MyPageController {
         return "member/my-notifications"; // 알림 내역 페이지 템플릿 반환
     }
 
-    @GetMapping("/my-page/points")
-    public String myPointHistory(@AuthenticationPrincipal Object principal, 
+    @GetMapping("/members/liked-products")
+    public String likedProducts(@AuthenticationPrincipal Object principal, Model model) {
+        try {
+            String email = getEmailFromPrincipal(principal);
+            Member currentMember = memberRepository.findByEmail(email);
+            
+            if (currentMember == null) {
+                log.error("회원 정보를 찾을 수 없습니다: {}", email);
+                throw new IllegalStateException("회원 정보를 찾을 수 없습니다.");
+            }
+            
+            // 1. 현재 사용자가 좋아요한 상품 목록을 조회
+            List<Product> likedProducts = productService.findLikedProductsByUser(email);
+
+            model.addAttribute("likedProducts", likedProducts);
+            model.addAttribute("Name", currentMember.getName());
+            
+            return "member/likedProducts";
+        } catch (Exception e) {
+            log.error("좋아요한 상품 페이지 로드 중 오류 발생", e);
+            return "redirect:/";
+        }
+    }
+    
+    @GetMapping("/members/following-products")
+    public String followingProducts(@AuthenticationPrincipal Object principal, Model model) {
+        try {
+            String email = getEmailFromPrincipal(principal);
+            Member currentMember = memberRepository.findByEmail(email);
+            
+            if (currentMember == null) {
+                log.error("회원 정보를 찾을 수 없습니다: {}", email);
+                throw new IllegalStateException("회원 정보를 찾을 수 없습니다.");
+            }
+            
+            // 1. 현재 사용자가 팔로우하는 사용자 목록 조회
+            List<Member> followingMembers = memberFollowService.getFollowings(currentMember.getId());
+            
+            // 2. 팔로우하는 사용자들이 등록한 상품 목록 조회
+            List<Product> followingProducts = new ArrayList<>();
+            for (Member followingMember : followingMembers) {
+                List<Product> memberProducts = productService.findProductsBySeller(followingMember, PageRequest.of(0, 10)).getContent();
+                followingProducts.addAll(memberProducts);
+            }
+            
+            // 3. 최신순으로 정렬 (등록일 기준)
+            followingProducts.sort((p1, p2) -> p2.getRegTime().compareTo(p1.getRegTime()));
+
+            model.addAttribute("followingProducts", followingProducts);
+            model.addAttribute("Name", currentMember.getName());
+            
+            return "member/followingProducts";
+        } catch (Exception e) {
+            log.error("팔로잉 상품 페이지 로드 중 오류 발생", e);
+            return "redirect:/";
+        }
+    }
+
+    @GetMapping("/member/myPage/{memberId}/points")
+    public String myPointHistory(@PathVariable("memberId") Long memberId, @AuthenticationPrincipal Object principal, 
                                  @RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "5") int size,
                                  Model model) {
@@ -324,6 +388,69 @@ public class MyPageController {
             model.addAttribute("page", page);
             model.addAttribute("size", size);
             return "member/pointHistory";
+        }
+    }
+
+    @GetMapping("/members/modify")
+    public String memberModifyPage(@AuthenticationPrincipal Object principal, Model model) {
+        try {
+            String email = getEmailFromPrincipal(principal);
+            Member currentMember = memberRepository.findByEmail(email);
+            
+            if (currentMember == null) {
+                return "redirect:/members/login";
+            }
+            
+            // 현재 사용자 정보로 MemberModifyDto 생성
+            MemberModifyDto memberModifyDto = new MemberModifyDto();
+            memberModifyDto.setEmail(currentMember.getEmail());
+            memberModifyDto.setName(currentMember.getName());
+            memberModifyDto.setGender(currentMember.getGender());
+            memberModifyDto.setBirthYear(currentMember.getBirthYear());
+            memberModifyDto.setBirthMonth(currentMember.getBirthMonth());
+            memberModifyDto.setBirthDay(currentMember.getBirthDay());
+            
+            model.addAttribute("memberModifyDto", memberModifyDto);
+            return "member/memberModify";
+        } catch (Exception e) {
+            log.error("개인정보수정 페이지 로드 중 오류: {}", e.getMessage());
+            return "redirect:/members/login";
+        }
+    }
+
+    @PostMapping("/members/modify")
+    public ResponseEntity<Map<String, Object>> memberModify(@RequestBody MemberModifyDto memberModifyDto, 
+                                                           @AuthenticationPrincipal Object principal) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String email = getEmailFromPrincipal(principal);
+            Member currentMember = memberRepository.findByEmail(email);
+            
+            if (currentMember == null) {
+                response.put("success", false);
+                response.put("message", "로그인이 필요합니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // 회원 정보 업데이트
+            currentMember.setName(memberModifyDto.getName());
+            currentMember.setGender(memberModifyDto.getGender());
+            currentMember.setBirthYear(memberModifyDto.getBirthYear());
+            currentMember.setBirthMonth(memberModifyDto.getBirthMonth());
+            currentMember.setBirthDay(memberModifyDto.getBirthDay());
+            
+            memberRepository.save(currentMember);
+            
+            response.put("success", true);
+            response.put("message", "개인정보가 성공적으로 수정되었습니다.");
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("개인정보 수정 중 오류: {}", e.getMessage());
+            response.put("success", false);
+            response.put("message", "개인정보 수정 중 오류가 발생했습니다.");
+            return ResponseEntity.badRequest().body(response);
         }
     }
 

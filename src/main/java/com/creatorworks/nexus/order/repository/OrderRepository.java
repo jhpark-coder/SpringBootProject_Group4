@@ -78,8 +78,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * @param product 상품
      * @return 구매했다면 true, 아니면 false
      */
-    @Query("SELECT EXISTS(SELECT 1 FROM Order o JOIN o.orderItems oi " +
-           "WHERE o.buyer = :buyer AND oi.product = :product AND o.orderStatus = 'COMPLETED')")
+    @Query("SELECT EXISTS(SELECT 1 FROM Order o " +
+           "WHERE o.buyer = :buyer AND o.product = :product AND o.orderStatus = 'COMPLETED')")
     boolean existsByBuyerAndProduct(@Param("buyer") Member buyer, @Param("product") Product product);
     
     /**
@@ -87,8 +87,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * @param productId 상품 ID
      * @return 구매 횟수
      */
-    @Query("SELECT COUNT(oi) FROM Order o JOIN o.orderItems oi " +
-           "WHERE oi.product.id = :productId AND o.orderStatus = 'COMPLETED'")
+    @Query("SELECT COUNT(o) FROM Order o " +
+           "WHERE o.product.id = :productId AND o.orderStatus = 'COMPLETED'")
     long countByProductId(@Param("productId") Long productId);
 
     /**
@@ -109,13 +109,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * @return TopSellingProductDto 목록
      */
     @Query("SELECT new com.creatorworks.nexus.order.dto.TopSellingProductDto(" +
-            "  p.id, p.name, p.imageUrl, p.seller.name, COUNT(oi.id)) " +
-            "FROM Order o JOIN o.orderItems oi JOIN oi.product p " +
-            "WHERE p.seller = :seller " +
+            "  o.product.id, o.product.name, o.product.imageUrl, o.product.seller.name, COUNT(o.id)) " +
+            "FROM Order o " +
+            "WHERE o.product.seller = :seller " +
             "  AND o.orderDate BETWEEN :startDate AND :endDate " +
             "  AND o.orderStatus = 'COMPLETED' " +
-            "GROUP BY p.id, p.name, p.imageUrl, p.seller.name " +
-            "ORDER BY COUNT(oi.id) DESC, p.name ASC")
+            "  AND o.product IS NOT NULL " +
+            "GROUP BY o.product.id, o.product.name, o.product.imageUrl, o.product.seller.name " +
+            "ORDER BY COUNT(o.id) DESC, o.product.name ASC")
     List<TopSellingProductDto> findTopSellingProductsBySeller(
             @Param("seller") Member seller,
             @Param("startDate") LocalDateTime startDate,
@@ -128,9 +129,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // 1. 월별 판매 현황 조회
     @Query("SELECT new com.creatorworks.nexus.order.dto.MonthlySalesDto(" +
             "  YEAR(o.orderDate), MONTH(o.orderDate), COUNT(o.id)) " +
-            "FROM Order o JOIN o.orderItems oi JOIN oi.product p " +
-            "WHERE p.seller = :seller AND o.orderDate >= :startDate " +
-            "  AND o.orderStatus = 'COMPLETED' " +
+            "FROM Order o " +
+            "WHERE o.product.seller = :seller AND o.orderDate >= :startDate " +
+            "  AND o.orderStatus = 'COMPLETED' AND o.product IS NOT NULL " +
             "GROUP BY YEAR(o.orderDate), MONTH(o.orderDate) " +
             "ORDER BY YEAR(o.orderDate), MONTH(o.orderDate)")
     List<MonthlySalesDto> findMonthlySalesBySeller(@Param("seller") Member seller, @Param("startDate") LocalDateTime startDate);
@@ -138,8 +139,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // 2. 구매자 성별 비율 조회
     @Query("SELECT new com.creatorworks.nexus.order.dto.GenderRatioDto(" +
             "  o.buyer.gender, COUNT(DISTINCT o.buyer.id)) " +
-            "FROM Order o JOIN o.orderItems oi JOIN oi.product p " +
-            "WHERE p.seller = :seller AND o.orderStatus = 'COMPLETED' " +
+            "FROM Order o " +
+            "WHERE o.product.seller = :seller AND o.orderStatus = 'COMPLETED' AND o.product IS NOT NULL " +
             "GROUP BY o.buyer.gender")
     List<GenderRatioDto> findGenderRatioBySeller(@Param("seller") Member seller);
 
@@ -153,9 +154,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "    WHEN (YEAR(CURRENT_DATE) - CAST(o.buyer.birthYear AS INTEGER)) >= 10 THEN '10대' " +
             "    ELSE '기타' END, " +
             "  COUNT(DISTINCT o.buyer.id)) " +
-            "FROM Order o JOIN o.orderItems oi JOIN oi.product p " +
-            "WHERE p.seller = :seller AND o.buyer.birthYear != 'N/A' " +
-            "  AND o.orderStatus = 'COMPLETED' " +
+            "FROM Order o " +
+            "WHERE o.product.seller = :seller AND o.buyer.birthYear != 'N/A' " +
+            "  AND o.orderStatus = 'COMPLETED' AND o.product IS NOT NULL " +
             "GROUP BY CASE " +
             "    WHEN (YEAR(CURRENT_DATE) - CAST(o.buyer.birthYear AS INTEGER)) >= 50 THEN '50대 이상' " +
             "    WHEN (YEAR(CURRENT_DATE) - CAST(o.buyer.birthYear AS INTEGER)) >= 40 THEN '40대' " +
@@ -166,24 +167,24 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<AgeRatioDto> findAgeRatioBySeller(@Param("seller") Member seller);
 
     // ★★★ 특정 판매자의 총 판매 건수를 조회하는 메서드 추가 ★★★
-    @Query("SELECT COUNT(o) FROM Order o JOIN o.orderItems oi JOIN oi.product p " +
-           "WHERE p.seller = :seller AND o.orderStatus = 'COMPLETED'")
+    @Query("SELECT COUNT(o) FROM Order o " +
+           "WHERE o.product.seller = :seller AND o.orderStatus = 'COMPLETED' AND o.product IS NOT NULL")
     long countByProductSeller(@Param("seller") Member seller);
 
     /**
      * [수정] 가장 많이 팔린 상품 ID 목록 조회 (비로그인 사용자용)
      */
-    @Query("SELECT oi.product.id FROM Order o JOIN o.orderItems oi " +
-           "WHERE o.orderStatus = 'COMPLETED' " +
-           "GROUP BY oi.product.id ORDER BY COUNT(oi.product.id) DESC")
+    @Query("SELECT o.product.id FROM Order o " +
+           "WHERE o.orderStatus = 'COMPLETED' AND o.product IS NOT NULL " +
+           "GROUP BY o.product.id ORDER BY COUNT(o.product.id) DESC")
     List<Long> findTopSellingProductIds(Pageable pageable);
 
     /**
      * [추가] 특정 상품들을 제외하고 가장 많이 팔린 상품 ID 목록 조회 (로그인 사용자 추천 채우기용)
      */
-    @Query("SELECT oi.product.id FROM Order o JOIN o.orderItems oi " +
-            "WHERE oi.product.id NOT IN :excludedIds AND o.orderStatus = 'COMPLETED' " +
-            "GROUP BY oi.product.id ORDER BY COUNT(oi.product.id) DESC")
+    @Query("SELECT o.product.id FROM Order o " +
+            "WHERE o.product.id NOT IN :excludedIds AND o.orderStatus = 'COMPLETED' AND o.product IS NOT NULL " +
+            "GROUP BY o.product.id ORDER BY COUNT(o.product.id) DESC")
     List<Long> findTopSellingProductIds(@Param("excludedIds") List<Long> excludedIds, Pageable pageable);
 
     List<Order> findByBuyer(Member member);

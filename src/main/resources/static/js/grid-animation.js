@@ -108,7 +108,7 @@ const initGridAnimations = () => {
 
         // 2. 애니메이션 객체 생성
         const gridAnimation = new GridAnimation(box);
-        const type = box.hasAttribute('data-i') ? parseInt(box.getAttribute('data-i')) : (index % 14);
+        const type = box.hasAttribute('data-i') ? parseInt(box.getAttribute('data-i')) : 4;
         gridAnimation.setType(type);
 
         // 3. 객체 저장 및 초기화 완료 표시

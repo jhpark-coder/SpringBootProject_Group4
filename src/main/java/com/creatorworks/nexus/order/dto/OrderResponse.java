@@ -1,7 +1,6 @@
 package com.creatorworks.nexus.order.dto;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import com.creatorworks.nexus.order.entity.Order;
 import com.creatorworks.nexus.order.entity.Order.OrderStatus;
@@ -21,19 +20,18 @@ public class OrderResponse {
     private Long totalAmount;
     private LocalDateTime orderDate;
     private String description;
-    private List<OrderItemResponse> orderItems;
+    private ProductResponse product;
     private PaymentResponse payment;
     
     @Getter
     @Setter
     @Builder
-    public static class OrderItemResponse {
-        private Long itemId;
-        private String itemName;
-        private String itemType;
+    public static class ProductResponse {
+        private Long productId;
+        private String productName;
+        private String productImageUrl;
+        private String sellerName;
         private Long price;
-        private Integer quantity;
-        private String description;
     }
     
     @Getter
@@ -52,6 +50,17 @@ public class OrderResponse {
     }
     
     public static OrderResponse from(Order order) {
+        ProductResponse productResponse = null;
+        if (order.getProduct() != null) {
+            productResponse = ProductResponse.builder()
+                    .productId(order.getProduct().getId())
+                    .productName(order.getProduct().getName())
+                    .productImageUrl(order.getProduct().getImageUrl())
+                    .sellerName(order.getProduct().getSeller().getName())
+                    .price(order.getProduct().getPrice())
+                    .build();
+        }
+        
         return OrderResponse.builder()
                 .orderId(order.getId())
                 .orderType(order.getOrderType())
@@ -59,6 +68,7 @@ public class OrderResponse {
                 .totalAmount(order.getTotalAmount())
                 .orderDate(order.getOrderDate())
                 .description(order.getDescription())
+                .product(productResponse)
                 .build();
     }
 } 
