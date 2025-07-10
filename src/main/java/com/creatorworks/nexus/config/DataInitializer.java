@@ -182,12 +182,15 @@ public class DataInitializer {
                     String pCategory = primaryCategories[categoryIndex];
                     String[] sCategories = secondaryCategories[categoryIndex];
                     String sCategory = sCategories[((i - 1) / primaryCategories.length) % sCategories.length];
+                    LocalDateTime now = LocalDateTime.now();
+                    int endTimeNum = (int)(Math.random()*10);
 
                     Auction auction = Auction.builder()
                             .seller(seller)
                             .name(name)
                             .buyNowPrice((long) buyNowPrice)
                             .startBidPrice((long) startBidPrice)
+                            .auctionEndTime(now.plusDays(endTimeNum))
                             .description(description)
                             .imageUrl(imageUrl)
                             .workDescription("이 작품은 특별한 영감을 받아 제작되었습니다.")
