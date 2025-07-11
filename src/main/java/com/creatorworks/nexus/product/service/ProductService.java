@@ -330,22 +330,21 @@ public class ProductService {
     public Page<Product> findProductsBySeller(Member seller, Pageable pageable) {
         return productRepository.findBySeller(seller, pageable);
     }
-    
+
     /**
-     * 팔로우한 작가들의 작품들을 페이징하여 조회
-     * @param memberEmail 팔로우하는 사용자 이메일
+     * 특정 판매자 ID로 등록한 상품 목록을 페이징하여 조회합니다.
+     * @param sellerId 조회할 판매자 ID
      * @param pageable 페이징 정보
-     * @return 팔로우한 작가들의 작품 목록
+     * @return 페이징된 상품 Page 객체
      */
     @Transactional(readOnly = true)
-    public Page<Product> getFollowingProducts(String memberEmail, Pageable pageable) {
-        Member member = memberRepository.findByEmail(memberEmail);
-        if (member == null) {
-            throw new IllegalArgumentException("사용자를 찾을 수 없습니다: " + memberEmail);
-        }
-        
-        return productRepository.findByFollowingMembers(member.getId(), pageable);
+    public Page<Product> findProductsBySellerId(Long sellerId, Pageable pageable) {
+        Member seller = memberRepository.findById(sellerId)
+                .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다: " + sellerId));
+        return productRepository.findBySeller(seller, pageable);
     }
+    
+
 
     // 좋아요한 작품 페이지네이션
     @Transactional(readOnly = true)

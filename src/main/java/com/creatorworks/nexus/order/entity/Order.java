@@ -33,10 +33,21 @@ public class Order extends BaseEntity {
     @Column(name = "order_date", nullable = false)
     private LocalDateTime orderDate;
 
+    @Column(name = "is_read", nullable = false)
+    private Boolean isRead = false;
+
     @Builder
     public Order(Member buyer, Product product, LocalDateTime orderDate) {
         this.buyer = buyer;
         this.product = product;
         this.orderDate = (orderDate != null) ? orderDate : LocalDateTime.now();
+        this.isRead = false; // 기본값은 false
+    }
+
+    /**
+     * 구매한 상품을 읽음 처리
+     */
+    public void markAsRead() {
+        this.isRead = true;
     }
 }

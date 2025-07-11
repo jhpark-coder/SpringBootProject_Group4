@@ -4,6 +4,7 @@ import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -13,12 +14,20 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.member.repository.MemberFollowRepository;
 import com.creatorworks.nexus.member.service.MemberFollowService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.creatorworks.nexus.product.entity.Product;
+import com.creatorworks.nexus.product.service.ProductService;
 
 @Controller
 @RequestMapping("/api/follow")
@@ -27,6 +36,8 @@ public class MemberFollowController {
 
     private final MemberFollowService memberFollowService;
     private final MemberRepository memberRepository;
+    private final MemberFollowRepository memberFollowRepository;
+    private final ProductService productService;
 
     /**
      * 팔로우/언팔로우 토글 API
@@ -178,18 +189,79 @@ public class MemberFollowController {
      *
      * @param memberId 사용자 ID
      * @param model 모델
+     * @param page 페이지 번호
      * @return 팔로잉 목록 페이지
      */
     @GetMapping("/{memberId}/followings/page")
-    public String getFollowingsPage(@PathVariable Long memberId, Model model) {
-        List<Member> followings = memberFollowService.getFollowings(memberId);
+    public String getFollowingsPage(@PathVariable Long memberId, Model model,
+                                   @RequestParam(defaultValue = "0") int page) {
+        // 페이징 처리 (한 페이지당 10명)
+        Pageable pageable = PageRequest.of(page, 10);
+        
+        // 팔로잉 목록 조회 (페이징 적용)
+        Page<Member> followingsPage = memberFollowRepository.findFollowingsByMemberIdWithPaging(memberId, pageable);
+        List<Member> followings = followingsPage.getContent();
+        
         long followingCount = memberFollowService.getFollowingCount(memberId);
 
         model.addAttribute("followings", followings);
         model.addAttribute("followingCount", followingCount);
         model.addAttribute("memberId", memberId);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", followingsPage.getTotalPages());
+        model.addAttribute("totalElements", followingsPage.getTotalElements());
 
-        return "member/followings";
+        return "member/followingList";
+    }
+
+    /**
+     * 작가의 작품 목록 페이지
+     *
+     * @param artistId 작가 ID
+     * @param model 모델
+     * @param page 페이지 번호
+     * @return 작가의 작품 목록 페이지
+     */
+    @GetMapping("/artist/{artistId}/works")
+    public String getArtistWorksPage(@PathVariable Long artistId, Model model,
+                                    @RequestParam(defaultValue = "0") int page) {
+        // 작가 정보 조회
+        Member artist = memberRepository.findById(artistId)
+                .orElseThrow(() -> new IllegalArgumentException("작가를 찾을 수 없습니다."));
+        
+        // 페이징 처리 (한 페이지당 12개 작품)
+        Pageable pageable = PageRequest.of(page, 12);
+        
+        // 작가의 작품 목록 조회
+        Page<Product> artistProductsPage = productService.findProductsBySellerId(artistId, pageable);
+        List<Product> artistProducts = artistProductsPage.getContent();
+        
+        // 팔로우 상태 확인 (현재 로그인한 사용자가 이 작가를 팔로우하고 있는지)
+        boolean isFollowing = false;
+        if (SecurityContextHolder.getContext().getAuthentication() != null &&
+            SecurityContextHolder.getContext().getAuthentication().isAuthenticated() &&
+            !SecurityContextHolder.getContext().getAuthentication().getName().equals("anonymousUser")) {
+            String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+            Member currentUser = memberRepository.findByEmail(currentUserEmail);
+            if (currentUser != null) {
+                isFollowing = memberFollowService.isFollowing(currentUser.getId(), artistId);
+            }
+        }
+        
+        // 팔로우 통계 정보
+        long followerCount = memberFollowService.getFollowerCount(artistId);
+        long followingCount = memberFollowService.getFollowingCount(artistId);
+        
+        model.addAttribute("artist", artist);
+        model.addAttribute("artistProducts", artistProducts);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", artistProductsPage.getTotalPages());
+        model.addAttribute("totalElements", artistProductsPage.getTotalElements());
+        model.addAttribute("isFollowing", isFollowing);
+        model.addAttribute("followerCount", followerCount);
+        model.addAttribute("followingCount", followingCount);
+
+        return "member/artistWorks";
     }
 
     /**

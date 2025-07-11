@@ -117,53 +117,7 @@ public class MemberController {
         return "member/likedProducts";
     }
 
-    @GetMapping("/following-products")
-    public String followingProducts(Model model, Principal principal,
-                                  @RequestParam(defaultValue = "0") int page) {
-        if (principal == null) {
-            return "redirect:/members/login";
-        }
-        
-        Member member = memberRepository.findByEmail(principal.getName());
-        if (member == null) {
-            return "redirect:/members/login";
-        }
-        
-        try {
-            // 페이징 처리
-            Pageable pageable = PageRequest.of(page, 12); // 한 페이지당 12개 작품
-            
-            // 팔로우한 작가들의 작품들을 가져오기
-            Page<Product> followingProducts = productService.getFollowingProducts(principal.getName(), pageable);
-            
-            // 팔로우 상태 정보 추가
-            List<ProductDto> followingProductsWithFollow = followingProducts.getContent().stream()
-                    .map(product -> {
-                        boolean isFollowing = false;
-                        if (product.getSeller() != null) {
-                            isFollowing = memberFollowService.isFollowing(member.getId(), product.getSeller().getId());
-                        }
-                        return new ProductDto(product, isFollowing);
-                    })
-                    .collect(Collectors.toList());
-            
-            model.addAttribute("followingProducts", followingProductsWithFollow);
-            model.addAttribute("currentPage", page);
-            model.addAttribute("totalPages", followingProducts.getTotalPages());
-            model.addAttribute("totalElements", followingProducts.getTotalElements());
-            model.addAttribute("hasNext", followingProducts.hasNext());
-            model.addAttribute("hasPrevious", followingProducts.hasPrevious());
-            
-            // 팔로우한 작가 수
-            long followingCount = memberFollowService.getFollowingCount(principal.getName());
-            model.addAttribute("followingCount", followingCount);
-            
-        } catch (Exception e) {
-            model.addAttribute("error", "팔로우한 작품 목록을 불러오는데 실패했습니다.");
-        }
-        
-        return "member/followingProducts";
-    }
+
 
     // 구독 결제 API
     @PostMapping("/api/subscription/start")

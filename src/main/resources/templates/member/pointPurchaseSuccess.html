@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{fragment/layout}">
+
+<head>
+    <th:block layout:fragment="css">
+        <style>
+            .success-container {
+                max-width: 600px;
+                margin: 50px auto;
+                padding: 40px;
+                background: white;
+                border-radius: 15px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                text-align: center;
+            }
+
+            .success-icon {
+                width: 80px;
+                height: 80px;
+                background: #28a745;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 30px;
+                color: white;
+                font-size: 40px;
+            }
+
+            .success-title {
+                font-size: 28px;
+                font-weight: bold;
+                color: #333;
+                margin-bottom: 15px;
+            }
+
+            .success-message {
+                font-size: 16px;
+                color: #666;
+                margin-bottom: 30px;
+                line-height: 1.6;
+            }
+
+            .purchase-details {
+                background: #f8f9fa;
+                padding: 25px;
+                border-radius: 10px;
+                margin-bottom: 30px;
+                text-align: left;
+            }
+
+            .detail-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 12px;
+                padding: 8px 0;
+                border-bottom: 1px solid #e9ecef;
+            }
+
+            .detail-row:last-child {
+                border-bottom: none;
+                margin-bottom: 0;
+                font-weight: bold;
+                color: #007bff;
+            }
+
+            .detail-label {
+                color: #666;
+                font-weight: 500;
+            }
+
+            .detail-value {
+                color: #333;
+                font-weight: 600;
+            }
+
+            .balance-info {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                margin-bottom: 30px;
+            }
+
+            .balance-label {
+                font-size: 14px;
+                margin-bottom: 5px;
+                opacity: 0.9;
+            }
+
+            .balance-amount {
+                font-size: 24px;
+                font-weight: bold;
+            }
+
+            .action-buttons {
+                display: flex;
+                gap: 15px;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .btn {
+                padding: 12px 24px;
+                border-radius: 8px;
+                text-decoration: none;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                border: none;
+                cursor: pointer;
+                font-size: 14px;
+            }
+
+            .btn-primary {
+                background: #007bff;
+                color: white;
+            }
+
+            .btn-primary:hover {
+                background: #0056b3;
+                transform: translateY(-2px);
+            }
+
+            .btn-outline {
+                background: transparent;
+                color: #007bff;
+                border: 2px solid #007bff;
+            }
+
+            .btn-outline:hover {
+                background: #007bff;
+                color: white;
+                transform: translateY(-2px);
+            }
+
+            .btn-success {
+                background: #28a745;
+                color: white;
+            }
+
+            .btn-success:hover {
+                background: #1e7e34;
+                transform: translateY(-2px);
+            }
+
+            .btn-secondary {
+                background: #6c757d;
+                color: white;
+            }
+
+            .btn-secondary:hover {
+                background: #545b62;
+                transform: translateY(-2px);
+            }
+
+            .refund-notice {
+                background: #fff3cd;
+                border: 1px solid #ffeaa7;
+                color: #856404;
+                padding: 15px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                font-size: 14px;
+                line-height: 1.5;
+            }
+
+            .refund-notice strong {
+                color: #d63031;
+            }
+
+            .transaction-id {
+                font-size: 12px;
+                color: #999;
+                margin-top: 20px;
+                padding-top: 15px;
+                border-top: 1px solid #eee;
+            }
+        </style>
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content" class="success-container">
+        <div class="success-icon">
+            ✓
+        </div>
+        
+        <h1 class="success-title">구매 완료!</h1>
+        <p class="success-message">
+            포인트로 상품을 성공적으로 구매했습니다.<br>
+            이제 전체 콘텐츠를 확인할 수 있습니다.
+        </p>
+
+        <div class="refund-notice">
+            <strong>환불 안내:</strong> 구매한 상품을 한 번이라도 확인하면 환불이 불가능합니다.<br>
+            환불을 원하시면 상품을 확인하기 전에 환불 신청을 해주세요.
+        </div>
+
+        <div class="purchase-details">
+            <div class="detail-row">
+                <span class="detail-label">상품명</span>
+                <span class="detail-value" th:text="${productName}">상품명</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">사용 포인트</span>
+                <span class="detail-value" th:text="${#numbers.formatInteger(usedPoints ?: 0, 3, 'COMMA')} + 'P'">30P</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">구매 일시</span>
+                <span class="detail-value" th:text="${#temporals.format(purchaseDate ?: #temporals.createNow(), 'yyyy-MM-dd HH:mm')}">2025-01-01 12:00</span>
+            </div>
+        </div>
+
+        <div class="balance-info">
+            <div class="balance-label">현재 보유 포인트</div>
+            <div class="balance-amount" th:text="${#numbers.formatInteger(currentBalance ?: 0, 3, 'COMMA')} + 'P'">15,000P</div>
+        </div>
+        
+        <div class="action-buttons">
+            <a th:href="@{'/products/' + ${productId}}" class="btn btn-success">작품 보기</a>
+            <a href="/User/my-page" class="btn btn-primary">마이페이지</a>
+            <a href="/products" class="btn btn-outline">상품 둘러보기</a>
+            <a href="/api/points/history/page" class="btn btn-secondary">포인트 내역</a>
+        </div>
+        
+        <div class="transaction-id" th:if="${merchantUid != null and merchantUid != 'N/A'}">
+            거래번호: <span th:text="${merchantUid}">purchase_123456789</span>
+        </div>
+    </div>
+</body>
+
+</html> 

@@ -134,4 +134,20 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Long> findTopSellingProductIds(@Param("excludedIds") List<Long> excludedIds, Pageable pageable);
 
     List<Order> findByBuyer(Member member);
+
+    /**
+     * 특정 사용자가 특정 상품을 구매했고 아직 읽지 않은 주문을 조회합니다.
+     * @param buyer 구매자
+     * @param product 상품
+     * @return 읽지 않은 주문 (없으면 null)
+     */
+    @Query("SELECT o FROM Order o WHERE o.buyer = :buyer AND o.product = :product AND o.isRead = false")
+    Order findByBuyerAndProductAndIsReadFalse(@Param("buyer") Member buyer, @Param("product") Product product);
+
+    /**
+     * 특정 사용자가 구매한 상품 중 아직 읽지 않은 상품 목록을 조회합니다.
+     * @param buyer 구매자
+     * @return 읽지 않은 주문 목록
+     */
+    List<Order> findByBuyerAndIsReadFalse(Member buyer);
 }

@@ -479,4 +479,35 @@ public class PointService {
         Long refundableAmount = currentBalance - pendingRefundAmount;
         return Math.max(0, refundableAmount);
     }
+
+    /**
+     * 상품을 읽음 처리 (환불 불가능하게 만듦)
+     * @param memberId 회원 ID
+     * @param productId 상품 ID
+     * @return 읽음 처리 성공 여부
+     */
+    @Transactional
+    public boolean markProductAsRead(Long memberId, Long productId) {
+        // 회원 조회
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+
+        // 상품 조회
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+
+        // 해당 상품을 구매했고 아직 읽지 않은 주문 조회
+        Order unreadOrder = orderRepository.findByBuyerAndProductAndIsReadFalse(member, product);
+        
+        if (unreadOrder == null) {
+            return false; // 구매하지 않았거나 이미 읽은 상품
+        }
+
+        // 읽음 처리
+        unreadOrder.markAsRead();
+        orderRepository.save(unreadOrder);
+
+        log.info("상품 읽음 처리 완료: 회원ID={}, 상품ID={}", memberId, productId);
+        return true;
+    }
 } 

@@ -17,7 +17,7 @@
 
             <div class="button-group">
                 <a href="/members/liked-products" class="btn btn-outline">좋아요한 작품</a>
-                <a href="/members/following-products" class="btn btn-outline">팔로잉 목록</a>
+                <a th:href="@{/api/follow/{memberId}/followings/page(memberId=${#authentication.principal.id})}" class="btn btn-outline">팔로우 목록</a>
             </div>
 
             <a href="/api/points/history/page" class="btn btn-solid">포인트 내역</a>

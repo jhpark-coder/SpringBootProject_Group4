@@ -2,6 +2,7 @@ package com.creatorworks.nexus.product.controller;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,8 @@ import com.creatorworks.nexus.product.dto.PointRefundRequest;
 import com.creatorworks.nexus.product.dto.PointResponse;
 import com.creatorworks.nexus.product.entity.Point;
 import com.creatorworks.nexus.product.entity.PointRefund;
+import com.creatorworks.nexus.product.entity.Product;
+import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.service.PointService;
 
 import lombok.RequiredArgsConstructor;
@@ -39,6 +42,7 @@ public class PointController {
 
     private final PointService pointService;
     private final MemberRepository memberRepository;
+    private final ProductRepository productRepository;
 
     /**
      * 포인트 충전 API
@@ -485,6 +489,96 @@ public class PointController {
                 .message("환불 가능한 포인트 금액 조회 완료")
                 .build()
         );
+    }
+
+    /**
+     * 포인트 구매 완료 페이지
+     * @param model 모델
+     * @param principal 현재 로그인한 사용자
+     * @param productId 상품 ID
+     * @param usedPoints 사용한 포인트
+     * @param merchantUid 주문번호
+     * @return 포인트 구매 완료 페이지
+     */
+    @GetMapping("/purchase/success")
+    public String purchaseSuccess(Model model, Principal principal,
+                                 @RequestParam(required = false) Long productId,
+                                 @RequestParam(required = false) Long usedPoints,
+                                 @RequestParam(required = false) String merchantUid) {
+        if (principal == null) {
+            return "redirect:/members/login";
+        }
+
+        Member member = memberRepository.findByEmail(principal.getName());
+        if (member == null) {
+            return "redirect:/members/login";
+        }
+
+        // 상품 정보 조회
+        String productName = "상품명";
+        if (productId != null) {
+            try {
+                Product product = productRepository.findById(productId).orElse(null);
+                if (product != null) {
+                    productName = product.getName();
+                }
+            } catch (Exception e) {
+                log.warn("상품 정보 조회 실패: productId={}", productId);
+            }
+        }
+
+        model.addAttribute("productId", productId);
+        model.addAttribute("productName", productName);
+        model.addAttribute("usedPoints", usedPoints != null ? usedPoints : 0L);
+        model.addAttribute("purchaseDate", LocalDateTime.now());
+        model.addAttribute("currentBalance", pointService.getCurrentBalance(member.getId()));
+        model.addAttribute("merchantUid", merchantUid != null ? merchantUid : "N/A");
+
+        return "member/pointPurchaseSuccess";
+    }
+
+    /**
+     * 상품 읽음 처리 API (환불 불가능하게 만듦)
+     * @param productId 상품 ID
+     * @param principal 현재 로그인한 사용자
+     * @return 읽음 처리 결과
+     */
+    @PostMapping("/products/{productId}/mark-as-read")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> markProductAsRead(
+            @PathVariable Long productId,
+            Principal principal) {
+        
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("success", false, "message", "로그인이 필요합니다."));
+        }
+
+        Member member = memberRepository.findByEmail(principal.getName());
+        if (member == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("success", false, "message", "회원 정보를 찾을 수 없습니다."));
+        }
+
+        try {
+            boolean result = pointService.markProductAsRead(member.getId(), productId);
+            
+            if (result) {
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "상품을 읽음 처리했습니다."
+                ));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "구매하지 않은 상품이거나 이미 읽은 상품입니다."
+                ));
+            }
+        } catch (Exception e) {
+            log.error("상품 읽음 처리 실패: 상품ID={}, 회원ID={}, 오류={}", productId, member.getId(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "상품 읽음 처리 중 오류가 발생했습니다."));
+        }
     }
 
     /**

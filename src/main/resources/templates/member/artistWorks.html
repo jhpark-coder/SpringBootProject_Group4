@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{fragment/layout}">
+
+<th:block layout:fragment="css">
+    <style>
+        .artist-works-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .artist-header {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .artist-profile {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .artist-info {
+            flex: 1;
+        }
+
+        .artist-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 8px;
+        }
+
+        .artist-stats {
+            display: flex;
+            gap: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .follow-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .follow-button:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 113, 222, 0.4);
+        }
+
+        .follow-button.following {
+            background: #28a745;
+        }
+
+        .follow-button.following:hover {
+            background: #218838;
+        }
+
+        .works-header {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .works-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 8px;
+        }
+
+        .works-count {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .works-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .work-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .work-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .work-image {
+            width: 100%;
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            background-color: #f8f9fa;
+        }
+
+        .work-info {
+            padding: 16px;
+        }
+
+        .work-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .work-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: #007bff;
+            margin-bottom: 8px;
+        }
+
+        .work-category {
+            font-size: 12px;
+            color: #666;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .empty-works {
+            text-align: center;
+            padding: 60px 24px;
+            color: #666;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .empty-works i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 16px;
+        }
+
+        .back-button {
+            display: inline-block;
+            background: #6c757d;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-bottom: 24px;
+            transition: background-color 0.3s;
+        }
+
+        .back-button:hover {
+            background: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+
+        .pagination {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .pagination .page-link, .pagination .current {
+            display: inline-block;
+            min-width: 40px;
+            text-align: center;
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            color: #007bff;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .pagination .current {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+            font-weight: bold;
+        }
+
+        .pagination .page-ellipsis {
+            color: #6c757d;
+            border: none;
+            padding: 8px 4px;
+            min-width: auto;
+        }
+    </style>
+</th:block>
+
+<div layout:fragment="content" class="artist-works-container">
+    <a th:href="@{/api/follow/{memberId}/followings/page(memberId=${#authentication.principal.id})}" class="back-button">
+        <i class="fas fa-arrow-left"></i> 팔로우 목록으로 돌아가기
+    </a>
+
+    <div class="artist-header">
+        <div class="artist-profile" th:text="${artist.name != null ? artist.name.substring(0, 1) : 'U'}">
+            U
+        </div>
+        <div class="artist-info">
+            <div class="artist-name" th:text="${artist.name}">작가명</div>
+            <div class="artist-stats">
+                <span>팔로워 <span th:text="${followerCount}">0</span>명</span>
+                <span>팔로잉 <span th:text="${followingCount}">0</span>명</span>
+                <span>작품 <span th:text="${totalElements}">0</span>개</span>
+            </div>
+        </div>
+        <button class="follow-button" 
+                th:if="${artist.id != #authentication.principal.id}"
+                th:data-member-id="${artist.id}"
+                th:classappend="${isFollowing} ? 'following' : ''"
+                th:onclick="|toggleFollow(${artist.id}, this)|"
+                sec:authorize="isAuthenticated()"
+                th:text="${isFollowing} ? 'Following' : 'Follow'">Follow</button>
+    </div>
+
+    <div class="works-header">
+        <h2 th:text="${artist.name} + '님의 작품'">작가명님의 작품</h2>
+        <div class="works-count" th:text="'총 ' + ${totalElements} + '개의 작품'">총 0개의 작품</div>
+    </div>
+
+    <div th:if="${artistProducts.empty}" class="empty-works">
+        <i class="fas fa-palette"></i>
+        <p>아직 등록된 작품이 없습니다.</p>
+        <p>새로운 작품을 기다려보세요!</p>
+    </div>
+
+    <div th:if="${!#lists.isEmpty(artistProducts)}" class="works-grid">
+        <div th:each="product : ${artistProducts}" class="work-card" 
+             th:onclick="'viewProduct(' + ${product.id} + ')'">
+            <div class="work-image" 
+                 th:style="'background-image: url(\'' + ${product.imageUrl} + '\');'">
+            </div>
+            <div class="work-info">
+                <div class="work-title" th:text="${product.name}">작품 제목</div>
+                <div class="work-price" th:text="${#numbers.formatInteger(product.price, 3, 'COMMA')} + '원'">0원</div>
+                <div class="work-category" th:text="${product.primaryCategory}">카테고리</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이징 -->
+    <div th:if="${totalPages > 1}" class="pagination">
+        <!-- 이전 페이지 -->
+        <a th:if="${currentPage > 0}" 
+           th:href="@{/api/follow/artist/{artistId}/works(artistId=${artist.id}, page=${currentPage - 1})}"
+           class="page-link">이전</a>
+        
+        <!-- 페이지 번호들 -->
+        <span th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}" 
+              th:if="${pageNum >= currentPage - 2 and pageNum <= currentPage + 2}">
+            <a th:if="${pageNum != currentPage}" 
+               th:href="@{/api/follow/artist/{artistId}/works(artistId=${artist.id}, page=${pageNum})}"
+               class="page-link" th:text="${pageNum + 1}">1</a>
+            <span th:if="${pageNum == currentPage}" 
+                  class="current" th:text="${pageNum + 1}">1</span>
+        </span>
+        
+        <!-- 다음 페이지 -->
+        <a th:if="${currentPage < totalPages - 1}" 
+           th:href="@{/api/follow/artist/{artistId}/works(artistId=${artist.id}, page=${currentPage + 1})}"
+           class="page-link">다음</a>
+    </div>
+</div>
+
+<th:block layout:fragment="script">
+    <script>
+        // 작품 상세 페이지로 이동
+        function viewProduct(productId) {
+            window.location.href = '/products/' + productId;
+        }
+
+        // 팔로우 토글
+        function toggleFollow(userId, clickedBtn) {
+            if (!clickedBtn) return;
+
+            // 중복 클릭 방지
+            clickedBtn.disabled = true;
+
+            // Optimistic UI
+            const isUnfollowing = clickedBtn.classList.contains('following');
+            if (isUnfollowing) {
+                clickedBtn.classList.remove('following');
+                clickedBtn.textContent = 'Follow';
+            } else {
+                clickedBtn.classList.add('following');
+                clickedBtn.textContent = 'Following';
+            }
+
+            fetch(`/api/follow/${userId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    // 실패 시 원래대로 복구
+                    if (isUnfollowing) {
+                        clickedBtn.classList.add('following');
+                        clickedBtn.textContent = 'Following';
+                    } else {
+                        clickedBtn.classList.remove('following');
+                        clickedBtn.textContent = 'Follow';
+                    }
+                    alert(data.message);
+                    return;
+                }
+                // 성공 시 최종 상태 반영
+                if (data.isFollowing) {
+                    clickedBtn.classList.add('following');
+                    clickedBtn.textContent = 'Following';
+                } else {
+                    clickedBtn.classList.remove('following');
+                    clickedBtn.textContent = 'Follow';
+                }
+            })
+            .catch(error => {
+                console.error('팔로우 오류:', error);
+                alert('팔로우 기능에 문제가 발생했습니다.');
+                // 실패 복구
+                if (isUnfollowing) {
+                    clickedBtn.classList.add('following');
+                    clickedBtn.textContent = 'Following';
+                } else {
+                    clickedBtn.classList.remove('following');
+                    clickedBtn.textContent = 'Follow';
+                }
+            })
+            .finally(() => {
+                clickedBtn.disabled = false;
+            });
+        }
+    </script>
+</th:block>
+
+</html> 
