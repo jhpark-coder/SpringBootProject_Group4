@@ -5,10 +5,8 @@ import java.util.List;
 import com.creatorworks.nexus.auction.Specification.AuctionSpecification;
 import com.creatorworks.nexus.auction.dto.AuctionDto;
 import com.creatorworks.nexus.auction.dto.AuctionPageResponse;
+import com.creatorworks.nexus.auction.repository.AuctionPaymentRepository;
 import com.creatorworks.nexus.order.repository.OrderRepository;
-import com.creatorworks.nexus.product.dto.ProductDto;
-import com.creatorworks.nexus.product.dto.ProductPageResponse;
-import com.creatorworks.nexus.product.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -35,7 +33,7 @@ public class AuctionService {
     private final MemberRepository memberRepository;
     private final ItemTagRepository itemTagRepository;
     private final AuctionItemTagRepository auctionItemTagRepository;
-    private final OrderRepository orderRepository;
+    private final AuctionPaymentRepository auctionPaymentRepository;
 
     @Transactional
     public Auction saveAuction(AuctionSaveRequest request, String userEmail) {
@@ -157,6 +155,6 @@ public class AuctionService {
             return false;
         }
         // OrderRepository를 사용하여 구매 이력 확인
-        return orderRepository.existsByBuyerAndAuction(member, auction);
+        return auctionPaymentRepository.hasSuccessfulPayment(member, auction);
     }
 }

@@ -2,7 +2,9 @@ package com.creatorworks.nexus.auction.controller;
 
 import com.creatorworks.nexus.auction.dto.AuctionPaymentRequest;
 import com.creatorworks.nexus.auction.dto.AuctionPaymentResponse;
+import com.creatorworks.nexus.auction.entity.Auction;
 import com.creatorworks.nexus.auction.service.AuctionPaymentService;
+import com.creatorworks.nexus.auction.service.AuctionService;
 import com.creatorworks.nexus.member.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +26,7 @@ import java.util.List;
 public class AuctionPaymentController {
 
     private final AuctionPaymentService auctionPaymentService;
-
+    private final AuctionService auctionService;
     /**
      * 경매 결제 처리 API
      */
@@ -164,7 +166,23 @@ public class AuctionPaymentController {
      */
     @GetMapping("/payment-page/{auctionId}")
     public String showPaymentPage(@PathVariable Long auctionId, Model model) {
+        // [추가된 로직] 경매 ID로 경매 정보를 서버에서 직접 조회합니다.
+        Auction auction = auctionService.findAuctionById(auctionId);
+
+        // [추가된 로직] 조회된 정보에서 '즉시 입찰가'를 가져옵니다.
+        Long price = auction.getBuyNowPrice();
+
+        // [안전장치] 만약 즉시 입찰가가 없거나, 조회된 경매가 없다면 원래 상품 페이지로 돌려보냅니다.
+        if (auction == null || price == null) {
+            log.warn("잘못된 결제 시도: 경매 ID {}에 대한 즉시 입찰 정보가 없습니다.", auctionId);
+            return "redirect:/auctions/" + auctionId; // 경매 상세 페이지 주소로 변경
+        }
+
+        // 모델에 경매 ID와 '서버에서 직접 조회한 안전한 가격'을 담습니다.
         model.addAttribute("auctionId", auctionId);
+        model.addAttribute("price", price); // price 정보를 추가로 담아줍니다.
+
+        // 결제 페이지(auction/payment.html)로 이동합니다.
         return "auction/payment";
     }
 
