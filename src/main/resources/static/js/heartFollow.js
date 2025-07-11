@@ -320,7 +320,7 @@ function requestPointPay() {
                     if (confirm('포인트가 부족합니다. 포인트 충전 페이지로 이동하시겠습니까?')) {
                         // 원래 상품 ID를 URL 파라미터로 전달
                         const returnProductId = window.location.pathname.split('/').pop();
-                        window.location.href = `/members/point?returnProductId=${returnProductId}`;
+                        window.location.href = `/api/orders/points/charge-page?returnProductId=${returnProductId}`;
                     }
                 } else {
                     alert('포인트 결제 실패: ' + data.message);
