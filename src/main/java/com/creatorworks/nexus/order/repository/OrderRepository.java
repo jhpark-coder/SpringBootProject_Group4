@@ -188,4 +188,34 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Long> findTopSellingProductIds(@Param("excludedIds") List<Long> excludedIds, Pageable pageable);
 
     List<Order> findByBuyer(Member member);
+
+    // === isRead 관련 쿼리 ===
+    
+    /**
+     * 특정 사용자가 특정 상품을 구매했지만 아직 읽지 않은 주문을 조회합니다.
+     */
+    @Query("SELECT o FROM Order o WHERE o.buyer = :buyer AND o.product.id = :productId " +
+           "AND o.orderType = 'PRODUCT_PURCHASE' AND o.orderStatus = 'COMPLETED' AND o.isRead = false")
+    Optional<Order> findUnreadPurchaseByBuyerAndProduct(@Param("buyer") Member buyer, @Param("productId") Long productId);
+    
+    /**
+     * 특정 사용자의 읽지 않은 포인트 구매 주문 목록을 조회합니다.
+     */
+    @Query("SELECT o FROM Order o WHERE o.buyer = :buyer AND o.orderType = 'PRODUCT_PURCHASE' " +
+           "AND o.orderStatus = 'COMPLETED' AND o.isRead = false")
+    List<Order> findUnreadPurchasesByBuyer(@Param("buyer") Member buyer);
+    
+    /**
+     * 특정 사용자가 특정 상품을 구매하고 읽었는지 확인합니다.
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM Order o WHERE o.buyer = :buyer AND o.product.id = :productId " +
+           "AND o.orderType = 'PRODUCT_PURCHASE' AND o.orderStatus = 'COMPLETED' AND o.isRead = true)")
+    boolean existsReadPurchaseByBuyerAndProductId(@Param("buyer") Member buyer, @Param("productId") Long productId);
+
+    /**
+     * 특정 사용자가 특정 상품을 구매했는지 확인합니다 (읽음 여부 무관).
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM Order o WHERE o.buyer = :buyer AND o.product.id = :productId " +
+           "AND o.orderType = 'PRODUCT_PURCHASE' AND o.orderStatus = 'COMPLETED')")
+    boolean existsByBuyerAndProductId(@Param("buyer") Member buyer, @Param("productId") Long productId);
 }

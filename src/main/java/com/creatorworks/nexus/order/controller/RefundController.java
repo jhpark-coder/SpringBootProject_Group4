@@ -19,9 +19,12 @@ import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.order.dto.RefundRequest;
 import com.creatorworks.nexus.order.dto.RefundResponse;
+import com.creatorworks.nexus.order.entity.Order;
+import com.creatorworks.nexus.order.entity.Payment;
 import com.creatorworks.nexus.order.entity.Refund;
 import com.creatorworks.nexus.order.entity.Refund.RefundStatus;
 import com.creatorworks.nexus.order.service.RefundService;
+import com.creatorworks.nexus.order.service.OrderService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +37,7 @@ public class RefundController {
 
     private final RefundService refundService;
     private final MemberRepository memberRepository;
+    private final OrderService orderService;
 
     /**
      * 환불 요청 페이지
@@ -49,9 +53,21 @@ public class RefundController {
                 throw new RuntimeException("사용자를 찾을 수 없습니다.");
             }
 
-            // 주문 정보 조회 (실제로는 OrderService를 통해 조회해야 함)
+            // 주문 정보 조회
+            Order order = orderService.findById(orderId).orElse(null);
+            if (order == null || !order.getBuyer().getId().equals(member.getId())) {
+                return "redirect:/error?message=주문 정보를 찾을 수 없습니다.";
+            }
+
             model.addAttribute("orderId", orderId);
             model.addAttribute("member", member);
+            model.addAttribute("order", order);
+            
+            // 포인트 구매 상품인지 확인
+            boolean isPointPurchase = order.getOrderType() == Order.OrderType.PRODUCT_PURCHASE && 
+                                    order.getPayment() != null && 
+                                    order.getPayment().getPaymentType() == Payment.PaymentType.POINT;
+            model.addAttribute("isPointPurchase", isPointPurchase);
             
             return "order/refund-request";
         } catch (Exception e) {
@@ -73,6 +89,21 @@ public class RefundController {
             Member member = memberRepository.findByEmail(username);
             if (member == null) {
                 throw new RuntimeException("사용자를 찾을 수 없습니다.");
+            }
+
+            // 포인트 구매 상품의 경우 자동으로 구매 금액 설정
+            if (request.getOrderId() != null) {
+                Order order = orderService.findById(request.getOrderId()).orElse(null);
+                if (order != null && 
+                    order.getOrderType() == Order.OrderType.PRODUCT_PURCHASE && 
+                    order.getPayment() != null && 
+                    order.getPayment().getPaymentType() == Payment.PaymentType.POINT) {
+                    
+                    // 포인트 구매 상품의 경우 구매 금액으로 자동 설정
+                    request.setAmount(order.getTotalAmount());
+                    log.info("포인트 구매 상품 환불 요청: 주문ID={}, 자동 설정 금액={}", 
+                            request.getOrderId(), request.getAmount());
+                }
             }
 
             // 환불 요청 처리

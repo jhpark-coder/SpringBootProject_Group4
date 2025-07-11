@@ -67,6 +67,9 @@ public class Order extends BaseEntity {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Payment payment;
 
+    @Column(name = "is_read", nullable = false)
+    private Boolean isRead = false; // 구매한 상품을 실제로 확인했는지 여부
+
     @Builder
     public Order(Member buyer, OrderType orderType, OrderStatus orderStatus, 
                 Long totalAmount, LocalDateTime orderDate, String description, Product product) {
@@ -77,6 +80,7 @@ public class Order extends BaseEntity {
         this.orderDate = (orderDate != null) ? orderDate : LocalDateTime.now();
         this.description = description;
         this.product = product;
+        this.isRead = false; // 기본값은 false
     }
 
     // 주문 상태 변경 메서드들
@@ -98,6 +102,19 @@ public class Order extends BaseEntity {
     public void setPayment(Payment payment) {
         this.payment = payment;
         payment.setOrder(this);
+    }
+
+    // isRead 상태 변경 메서드
+    public void markAsRead() {
+        this.isRead = true;
+    }
+
+    public void markAsUnread() {
+        this.isRead = false;
+    }
+
+    public boolean isRead() {
+        return this.isRead;
     }
 
     public enum OrderType {

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
@@ -28,6 +29,7 @@ import com.creatorworks.nexus.order.service.OrderService;
 import com.creatorworks.nexus.order.service.PaymentService;
 import com.creatorworks.nexus.order.service.PointService;
 import com.creatorworks.nexus.order.service.RefundService;
+import com.creatorworks.nexus.order.repository.OrderRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +45,7 @@ public class OrderController {
     private final PointService pointService;
     private final MemberRepository memberRepository;
     private final RefundService refundService;
+    private final OrderRepository orderRepository;
 
     // === 주문 조회 ===
 
@@ -99,6 +102,11 @@ public class OrderController {
             Order order = orderOpt.get();
             // 본인의 주문만 조회 가능
             if (order.getBuyer().getId().equals(member.getId())) {
+                // 주문 상세 조회 시 isRead를 true로 변경
+                if (!order.isRead()) {
+                    order.markAsRead();
+                    orderRepository.save(order);
+                }
                 return ResponseEntity.ok(order);
             }
         }
@@ -263,6 +271,93 @@ public class OrderController {
         model.addAttribute("impUid", impUid);
         model.addAttribute("currentBalance", pointService.getCurrentBalance(member.getId()));
         return "order/pointSuccess";
+    }
+
+    /**
+     * 포인트로 상품 구매 완료 페이지
+     */
+    @GetMapping("/points/purchase/success")
+    public String pointPurchaseSuccess(
+        @RequestParam Long orderId,
+        Model model,
+        Principal principal
+    ) {
+        Member member = getMemberFromPrincipal(principal);
+        
+        // 주문 정보 조회
+        Optional<Order> orderOpt = orderService.findById(orderId);
+        if (orderOpt.isEmpty() || !orderOpt.get().getBuyer().getId().equals(member.getId())) {
+            return "redirect:/error/404";
+        }
+        
+        Order order = orderOpt.get();
+        
+        model.addAttribute("orderId", orderId);
+        model.addAttribute("totalAmount", order.getTotalAmount());
+        model.addAttribute("orderDate", order.getOrderDate());
+        model.addAttribute("currentBalance", pointService.getCurrentBalance(member.getId()));
+        
+        // 상품 정보가 있는 경우
+        if (order.getProduct() != null) {
+            model.addAttribute("productName", order.getProduct().getName());
+        }
+        
+        return "order/pointPurchaseSuccess";
+    }
+
+    /**
+     * 상품 읽음 처리 API
+     */
+    @PostMapping("/points/products/{productId}/mark-as-read")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> markProductAsRead(
+        @PathVariable Long productId,
+        Principal principal
+    ) {
+        try {
+            Member member = getMemberFromPrincipal(principal);
+            pointService.markProductAsRead(member.getId(), productId);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "상품이 읽음 처리되었습니다.");
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * 상품 구매 여부 확인 API
+     */
+    @GetMapping("/points/products/{productId}/purchase-status")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getProductPurchaseStatus(
+        @PathVariable Long productId,
+        Principal principal
+    ) {
+        try {
+            Member member = getMemberFromPrincipal(principal);
+            boolean hasPurchased = pointService.hasPurchasedProduct(member.getId(), productId);
+            boolean hasRead = pointService.hasReadProduct(member.getId(), productId);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("hasPurchased", hasPurchased);
+            response.put("hasRead", hasRead);
+            response.put("canRefund", hasPurchased && !hasRead);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     @GetMapping("/payment/fail")

@@ -27,10 +27,10 @@
     <!-- 폰트 적용을 위한 추가 CSS -->
     <style th:if="${product.fontFamily != null && !#strings.isEmpty(product.fontFamily)}">
         .tiptap-content {
-            font-family: [[${product.fontFamily}]], 'Noto Sans KR', Arial, sans-serif !important;
+            font-family: /*[[${product.fontFamily}]]*/ 'Noto Sans KR', Arial, sans-serif !important;
         }
         .tiptap-content * {
-            font-family: [[${product.fontFamily}]], 'Noto Sans KR', Arial, sans-serif !important;
+            font-family: /*[[${product.fontFamily}]]*/ 'Noto Sans KR', Arial, sans-serif !important;
         }
         .tiptap-content .custom-code-block-wrapper,
         .tiptap-content .custom-code-block-wrapper *,
@@ -39,7 +39,7 @@
         .tiptap-content .custom-code-block-wrapper .language-selector,
         .tiptap-content .custom-code-block-wrapper .code-block-toolbar button,
         .tiptap-content .custom-code-block-wrapper .code-block-toolbar button span {
-            font-family: [[${product.fontFamily}]], 'Noto Sans KR', Arial, sans-serif !important;
+            font-family: /*[[${product.fontFamily}]]*/ 'Noto Sans KR', Arial, sans-serif !important;
         }
     </style>
 </th:block>
@@ -345,6 +345,59 @@
             }
         }
 
+        // 상품 읽음 처리 함수
+        function markProductAsRead() {
+            const productId = window.location.pathname.split('/').pop();
+            
+            fetch(`/points/products/${productId}/mark-as-read`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('상품 읽음 처리 완료');
+                } else {
+                    console.warn('상품 읽음 처리 실패:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('상품 읽음 처리 오류:', error);
+            });
+        }
+
+        // CSRF 토큰 가져오기
+        function getCsrfToken() {
+            const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+            if (token) return token;
+            
+            // 쿠키에서 XSRF-TOKEN 찾기
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'XSRF-TOKEN') {
+                    return decodeURIComponent(value);
+                }
+            }
+            return null;
+        }
+
+        // 페이지 로드 시 읽음 처리 (구매한 상품인 경우)
+        document.addEventListener('DOMContentLoaded', function() {
+            const canViewContent = /*[[${canViewContent}]]*/ false;
+            const productId = window.location.pathname.split('/').pop();
+            
+            // 구매한 상품이고 콘텐츠를 볼 수 있는 경우에만 읽음 처리
+            if (canViewContent && productId) {
+                // 약간의 지연을 두어 페이지 로딩이 완료된 후 읽음 처리
+                setTimeout(() => {
+                    markProductAsRead();
+                }, 1000);
+            }
+        });
 
     </script>
 </th:block>
