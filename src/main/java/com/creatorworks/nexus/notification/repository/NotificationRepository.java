@@ -32,4 +32,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     // 관리자용: 개인 + 관리자 알림의 안읽은 개수 조회
     @Query("SELECT COUNT(n) FROM Notification n WHERE (n.targetUserId = :userId OR (n.targetUserId = 0 AND n.category = :adminCategory)) AND n.isRead = false")
     long countUserAndAdminUnreadNotifications(@Param("userId") Long userId, @Param("adminCategory") NotificationCategory adminCategory);
+
+    // 좋아요 알림 중복 체크 (sender, target, type, productId)
+    boolean existsBySenderUserIdAndTargetUserIdAndTypeAndProductId(Long senderUserId, Long targetUserId, String type, Long productId);
 }

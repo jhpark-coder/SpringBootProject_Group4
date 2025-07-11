@@ -22,7 +22,8 @@ public record ProductDto(
         Long sellerId,
         java.time.LocalDateTime regTime,
         java.time.LocalDateTime updateTime,
-        List<String> tags
+        List<String> tags,
+        boolean isFollowing // 내가 팔로우 중인지
 ) {
     public ProductDto(Product product) {
         this(
@@ -43,7 +44,32 @@ public record ProductDto(
                 product.getUpdateTime(),
                 product.getItemTags().stream()
                         .map(productItemTag -> productItemTag.getItemTag().getName())
-                        .collect(Collectors.toList())
+                        .collect(Collectors.toList()),
+                false // 기본값은 팔로우하지 않은 상태
+        );
+    }
+
+    public ProductDto(Product product, boolean isFollowing) {
+        this(
+                product.getId(),
+                product.getName(),
+                product.getPrice(),
+                product.getDescription(),
+                product.getWorkDescription(),
+                product.getTiptapJson(),
+                product.getImageUrl(),
+                product.getPrimaryCategory(),
+                product.getSecondaryCategory(),
+                product.getBackgroundColor(),
+                product.getFontFamily(),
+                (product.getSeller() != null) ? product.getSeller().getName() : "Unknown",
+                (product.getSeller() != null) ? product.getSeller().getId() : null,
+                product.getRegTime(),
+                product.getUpdateTime(),
+                product.getItemTags().stream()
+                        .map(productItemTag -> productItemTag.getItemTag().getName())
+                        .collect(Collectors.toList()),
+                isFollowing
         );
     }
 } 

@@ -1,82 +1,142 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{fragment/layout}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{fragment/layout}">
 
 <head>
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/myPage.css}">
+        <style>
+            .product-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 24px;
+                margin-top: 20px;
+            }
+
+            .product-card {
+                background: #fff;
+                border: 1px solid #e0e0e0;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+                padding: 16px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                transition: box-shadow 0.2s;
+                width: 100%;
+                min-height: 320px;
+            }
+
+            .product-card:hover {
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
+            }
+
+            .product-image {
+                width: 100%;
+                max-width: 180px;
+                height: 180px;
+                object-fit: cover;
+                border-radius: 8px;
+                margin-bottom: 16px;
+            }
+
+            .product-info {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .product-info h2 {
+                font-size: 18px;
+                margin: 8px 0 4px 0;
+                text-align: center;
+                width: 100%;
+            }
+
+            .product-info p {
+                font-size: 14px;
+                color: #555;
+                text-align: center;
+                margin-bottom: 10px;
+                width: 100%;
+                word-break: break-all;
+            }
+
+            .btn.btn-primary {
+                margin-top: auto;
+                padding: 8px 16px;
+                font-size: 14px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+        </style>
+    </th:block>
     <title>좋아요한 작품</title>
-    <style>
-        .liked-products-container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 20px;
-        }
-
-        .product-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 24px;
-        }
-
-        .product-card {
-            background: #fff;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            transition: box-shadow 0.2s;
-        }
-
-        .product-card:hover {
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
-        }
-
-        .product-image {
-            width: 160px;
-            height: 160px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 12px;
-        }
-
-        .product-info h2 {
-            font-size: 18px;
-            margin: 8px 0 4px 0;
-            text-align: center;
-        }
-
-        .product-info p {
-            font-size: 14px;
-            color: #555;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .btn.btn-primary {
-            margin-top: auto;
-            padding: 8px 16px;
-            font-size: 14px;
-        }
-    </style>
 </head>
 
 <body>
-    <div layout:fragment="content" class="liked-products-container">
-        <h1>좋아요한 작품</h1>
-        <div th:if="${likedProducts.isEmpty()}">
-            <p>좋아요한 작품이 없습니다.</p>
-        </div>
-        <div class="product-list" th:if="${!likedProducts.isEmpty()}">
-            <div th:each="product : ${likedProducts}" class="product-card">
-                <img th:src="${product.imageUrl}" alt="작품 이미지" class="product-image" />
-                <div class="product-info">
-                    <h2 th:text="${product.name}">작품명</h2>
-                    <p th:text="${product.description}">작품 설명</p>
-                    <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-primary">상세보기</a>
+    <div layout:fragment="content" class="subpage-container">
+        <!-- 왼쪽 사이드바 -->
+        <div th:replace="~{fragment/myPage_sidebar}"></div>
+
+        <!-- 오른쪽 메인 콘텐츠 -->
+        <main class="subpage-content">
+            <div class="page-header">
+                <h1 class="page-title">좋아요한 작품</h1>
+                <p class="page-subtitle">마음에 드는 작품들을 한눈에 확인할 수 있습니다.</p>
+            </div>
+
+            <!-- 통계 정보 (전체 개수만) -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${likedProducts != null ? likedProducts.size() : 0}">0</div>
+                    <div class="stat-label">좋아요한 작품</div>
                 </div>
             </div>
-        </div>
+
+            <!-- 좋아요한 작품 목록 -->
+            <div class="content-table">
+                <div th:if="${likedProducts == null || likedProducts.isEmpty()}" class="empty-state">
+                    <h3>좋아요한 작품이 없습니다</h3>
+                    <p>마음에 드는 작품에 좋아요를 눌러보세요.</p>
+                    <a href="/products/category/artwork" class="btn btn-primary">상품 둘러보기</a>
+                </div>
+
+                <div th:if="${likedProducts != null && !likedProducts.isEmpty()}" class="product-grid">
+                    <div th:each="product : ${likedProducts}" class="product-card">
+                        <img th:src="${product.imageUrl}" alt="작품 이미지" class="product-image" />
+                        <div class="product-info">
+                            <h2 th:text="${product.name}">작품명</h2>
+                            <p th:text="${product.description}">작품 설명</p>
+                            <div th:if="${product.price != null}"
+                                style="font-weight:bold; color:#007bff; margin-bottom:8px;">
+                                <span th:text="${product.price}"></span>P
+                            </div>
+                            <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-primary">상세보기</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 페이징 -->
+            <nav th:if="${totalPages > 0}" aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a class="page-link" th:href="@{/members/liked-products(page=${currentPage - 1})}">&laquo;</a>
+                    </li>
+                    <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:classappend="${pageNum == currentPage} ? 'active'">
+                        <a class="page-link" th:href="@{/members/liked-products(page=${pageNum})}"
+                            th:text="${pageNum + 1}">1</a>
+                    </li>
+                    <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                        <a class="page-link" th:href="@{/members/liked-products(page=${currentPage + 1})}">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        </main>
     </div>
 </body>
 

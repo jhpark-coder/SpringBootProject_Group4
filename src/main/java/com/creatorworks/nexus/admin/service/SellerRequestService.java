@@ -125,7 +125,7 @@ public class SellerRequestService {
         notificationDto.setCategory(NotificationCategory.ADMIN);
         
         // DB 저장과 실시간 알림 전송
-        notificationService.saveNotification(notificationDto, "/seller/dashboard");
+        notificationService.saveNotification(notificationDto, "/members/login");
         notificationService.sendNotification(notificationDto);
     }
 

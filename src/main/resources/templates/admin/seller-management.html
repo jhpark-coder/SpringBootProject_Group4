@@ -1,12 +1,10 @@
 <!DOCTYPE html>
-<html layout:decorate="~{fragment/layout}"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html layout:decorate="~{fragment/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <title>작가관리 - Nexus</title>
-    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
 </head>
 
 <th:block layout:fragment="css">
@@ -100,66 +98,13 @@
             color: #666;
             font-size: 0.9rem;
         }
-
-        /* 팝업 스타일 */
-        .popup-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-        }
-
-        .popup-container {
-            background-color: #ffffff;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-
-        .popup-message {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: #333;
-            margin: 0;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-
-        .popup-button {
-            background-color: #007bff;
-            color: #ffffff;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 30px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
-        }
-
-        .popup-button:hover {
-            background-color: #0056b3;
-        }
-
-        .popup-overlay.show {
-            display: flex;
-        }
     </style>
 </th:block>
 
 <div layout:fragment="content">
     <div class="seller-management-container">
         <h1 class="page-title">작가 등록 신청 관리</h1>
-        
+
         <!-- 임시 데이터로 테이블 구성 -->
         <table class="seller-requests-table">
             <thead>
@@ -178,12 +123,13 @@
                         현재 처리 대기 중인 작가 등록 신청이 없습니다.
                     </td>
                 </tr>
-                
+
                 <!-- 실제 데이터가 있을 때 표시할 행들 -->
                 <tr th:each="request : ${sellerRequests}">
                     <td th:text="${request.member.name}">신청자명</td>
                     <td th:text="${request.member.email}">이메일</td>
-                    <td class="request-date" th:text="${#temporals.format(request.regTime, 'yyyy-MM-dd HH:mm')}">신청일</td>
+                    <td class="request-date" th:text="${#temporals.format(request.regTime, 'yyyy-MM-dd HH:mm')}">신청일
+                    </td>
                     <td><span class="status-pending" th:text="${request.status.description}">대기중</span></td>
                     <td>
                         <div class="action-buttons">
@@ -196,33 +142,36 @@
         </table>
     </div>
 
-    <!-- 팝업 오버레이 -->
-    <div id="popupOverlay" class="popup-overlay">
-        <div class="popup-container">
-            <p id="popupMessage" class="popup-message"></p>
-            <button class="popup-button" onclick="closePopup()">확인</button>
-        </div>
-    </div>
-
-    <!-- 확인 모달 오버레이 -->
+    <!-- 확인 모달 -->
     <div id="confirmOverlay" class="popup-overlay">
         <div class="popup-container">
             <p id="confirmMessage" class="popup-message"></p>
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <button class="popup-button" onclick="confirmYes()">예</button>
-                <button class="popup-button" onclick="confirmNo()" style="background-color: #6c757d;">아니오</button>
+            <div class="popup-btn-group">
+                <button onclick="confirmYes()" class="popup-button">예</button>
+                <button onclick="confirmNo()" class="popup-button popup-cancel">아니오</button>
             </div>
         </div>
     </div>
 
-    <!-- 입력 모달 오버레이 -->
+    <!-- 입력 모달 -->
     <div id="inputOverlay" class="popup-overlay">
         <div class="popup-container">
             <p id="inputMessage" class="popup-message"></p>
-            <input type="text" id="inputField" style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;" placeholder="입력해주세요">
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <button class="popup-button" onclick="inputConfirm()">확인</button>
-                <button class="popup-button" onclick="inputCancel()" style="background-color: #6c757d;">취소</button>
+            <textarea id="inputField" placeholder="거절 사유를 입력하세요 (선택사항)"
+                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; resize: vertical; min-height: 80px;"></textarea>
+            <div class="popup-btn-group">
+                <button onclick="inputConfirm()" class="popup-button">확인</button>
+                <button onclick="inputCancel()" class="popup-button popup-cancel">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 결과 팝업 -->
+    <div id="popupOverlay" class="popup-overlay">
+        <div class="popup-container">
+            <p id="popupMessage" class="popup-message"></p>
+            <div class="popup-btn-group">
+                <button onclick="closePopup()" class="popup-button">확인</button>
             </div>
         </div>
     </div>
@@ -247,104 +196,119 @@
 
         // 확인 모달 표시
         function showConfirmModal(message) {
-            $("#confirmMessage").text(message);
-            $("#confirmOverlay").addClass("show");
+            document.getElementById("confirmMessage").textContent = message;
+            document.getElementById("confirmOverlay").classList.add("show");
         }
 
         // 입력 모달 표시
         function showInputModal(message) {
-            $("#inputMessage").text(message);
-            $("#inputField").val('');
-            $("#inputOverlay").addClass("show");
-            $("#inputField").focus();
+            document.getElementById("inputMessage").textContent = message;
+            document.getElementById("inputField").value = '';
+            document.getElementById("inputOverlay").classList.add("show");
+            document.getElementById("inputField").focus();
         }
 
         // 확인 모달 - 예 버튼
         function confirmYes() {
-            $("#confirmOverlay").removeClass("show");
-            
+            document.getElementById("confirmOverlay").classList.remove("show");
+
             if (currentAction === 'approve') {
-                $.ajax({
-                    url: '/admin/seller-request/' + currentRequestId + '/approve',
-                    type: 'POST',
-                    success: function(response) {
-                        showPopup(response);
-                    },
-                    error: function(xhr) {
-                        showPopup('오류 발생: ' + xhr.responseText);
-                    }
-                });
+                const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+
+                if (csrfToken && csrfHeader) {
+                    headers[csrfHeader] = csrfToken;
+                }
+
+                fetch('/admin/seller-request/' + currentRequestId + '/approve', {
+                    method: 'POST',
+                    headers: headers
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status);
+                        }
+                        return response.text();
+                    })
+                    .then(data => {
+                        showPopup(data);
+                        // 승인 성공 시 로그인 페이지로 리다이렉트
+                        setTimeout(() => {
+                            window.location.href = '/member/loginForm';
+                        }, 2000); // 2초 후 리다이렉트
+                    })
+                    .catch(error => {
+                        showPopup('오류 발생: ' + error.message);
+                    });
             }
         }
 
         // 확인 모달 - 아니오 버튼
         function confirmNo() {
-            $("#confirmOverlay").removeClass("show");
+            document.getElementById("confirmOverlay").classList.remove("show");
             currentRequestId = null;
             currentAction = null;
         }
 
         // 입력 모달 - 확인 버튼
         function inputConfirm() {
-            var reason = $("#inputField").val();
-            $("#inputOverlay").removeClass("show");
-            
+            var reason = document.getElementById("inputField").value;
+            document.getElementById("inputOverlay").classList.remove("show");
+
             if (currentAction === 'reject') {
-                showConfirmModal('이 신청을 거절하시겠습니까?');
-                // 거절 사유를 임시 저장
-                window.tempRejectReason = reason;
+                const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+
+                if (csrfToken && csrfHeader) {
+                    headers[csrfHeader] = csrfToken;
+                }
+
+                fetch('/admin/seller-request/' + currentRequestId + '/reject?reason=' + encodeURIComponent(reason), {
+                    method: 'POST',
+                    headers: headers
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status);
+                        }
+                        return response.text();
+                    })
+                    .then(data => {
+                        showPopup(data);
+                    })
+                    .catch(error => {
+                        showPopup('오류 발생: ' + error.message);
+                    });
             }
         }
 
         // 입력 모달 - 취소 버튼
         function inputCancel() {
-            $("#inputOverlay").removeClass("show");
+            document.getElementById("inputOverlay").classList.remove("show");
             currentRequestId = null;
             currentAction = null;
         }
 
-        // 확인 모달 - 예 버튼 (거절용)
-        function confirmYes() {
-            $("#confirmOverlay").removeClass("show");
-            
-            if (currentAction === 'approve') {
-                $.ajax({
-                    url: '/admin/seller-request/' + currentRequestId + '/approve',
-                    type: 'POST',
-                    success: function(response) {
-                        showPopup(response);
-                    },
-                    error: function(xhr) {
-                        showPopup('오류 발생: ' + xhr.responseText);
-                    }
-                });
-            } else if (currentAction === 'reject') {
-                $.ajax({
-                    url: '/admin/seller-request/' + currentRequestId + '/reject',
-                    type: 'POST',
-                    data: { reason: window.tempRejectReason || '관리자에 의해 거절되었습니다.' },
-                    success: function(response) {
-                        showPopup(response);
-                    },
-                    error: function(xhr) {
-                        showPopup('오류 발생: ' + xhr.responseText);
-                    }
-                });
-            }
-        }
-
         // 팝업 표시 함수
         function showPopup(message) {
-            $("#popupMessage").text(message);
-            $("#popupOverlay").addClass("show");
+            document.getElementById("popupMessage").textContent = message;
+            document.getElementById("popupOverlay").classList.add("show");
         }
 
         // 팝업 닫기 함수
         function closePopup() {
-            $("#popupOverlay").removeClass("show");
+            document.getElementById("popupOverlay").classList.remove("show");
             location.reload(); // 팝업 닫을 때 페이지 새로고침
         }
     </script>
 </th:block>
 
-</html> 
+</html>

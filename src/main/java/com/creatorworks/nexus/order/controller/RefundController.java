@@ -133,6 +133,7 @@ public class RefundController {
             model.addAttribute("currentPage", page);
             model.addAttribute("pageSize", size);
             model.addAttribute("member", member);
+            model.addAttribute("Name", member.getName());
             model.addAttribute("pendingCount", pendingCount);
             model.addAttribute("completedCount", completedCount);
             model.addAttribute("failedCount", failedCount);

@@ -1,0 +1,20 @@
+<!-- 마이페이지 사이드바 Fragment -->
+<aside class="subpage-sidebar" xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <div class="profile-pic"></div>
+
+    <h2 class="profile-name" th:text="${Name} + ' 님'" sec:authentication="name">홍길동 님</h2>
+
+    <div class="button-group">
+        <a th:href="@{/members/liked-products}" class="btn btn-outline">찜목록</a>
+        <a th:href="@{/members/followings}" class="btn btn-outline">팔로잉 목록</a>
+    </div>
+
+
+    <a th:href="@{/members/modify}" class="btn btn-solid">개인정보수정</a>
+    <a th:href="@{/member/myPage/{id}/points(id=${#authentication.principal.id})}" class="btn btn-solid">포인트 내역</a>
+    <a th:href="@{/api/orders/list}" class="btn btn-solid">구매내역</a>
+    <a th:href="@{/refund/my-refunds}" class="btn btn-solid">환불 내역</a>
+    <a th:href="@{/member/myPage/{id}/notifications(id=${#authentication.principal.id})}" class="btn btn-solid">알림내역</a>
+    <a href="#" class="btn btn-solid">참여중인 경매</a>
+</aside>

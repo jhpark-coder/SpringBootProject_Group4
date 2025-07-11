@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
-
+import com.creatorworks.nexus.member.service.MemberFollowService;
 import com.creatorworks.nexus.product.dto.ProductDto;
 import com.creatorworks.nexus.product.dto.ProductPageResponse;
 import com.creatorworks.nexus.product.dto.ProductSaveRequest;
@@ -26,6 +26,8 @@ import com.creatorworks.nexus.product.repository.ProductHeartRepository;
 import com.creatorworks.nexus.product.repository.ProductItemTagRepository;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.specification.ProductSpecification;
+import com.creatorworks.nexus.notification.service.NotificationService;
+import com.creatorworks.nexus.notification.dto.FollowNotificationRequest;
 
 import lombok.RequiredArgsConstructor;
 
@@ -49,6 +51,8 @@ public class ProductService {
     private final ItemTagRepository itemTagRepository;
     private final ProductItemTagRepository productItemTagRepository;
     private final ProductHeartRepository productHeartRepository;
+    private final MemberFollowService memberFollowService;
+    private final NotificationService notificationService;
 
     /**
      * 특정 1차 카테고리에 속하는 중복되지 않는 2차 카테고리 목록을 조회합니다.
@@ -72,6 +76,39 @@ public class ProductService {
 
         List<ProductDto> productDtos = productPage.getContent().stream()
                 .map(ProductDto::new)
+                .toList();
+
+        return new ProductPageResponse(
+                productDtos,
+                productPage.getNumber(),
+                productPage.getTotalPages(),
+                productPage.getTotalElements(),
+                productPage.getSize(),
+                productPage.isFirst(),
+                productPage.isLast()
+        );
+    }
+
+    /**
+     * 카테고리와 페이징 정보를 기반으로 상품 목록을 조회합니다. (팔로우 상태 포함)
+     * @param primaryCategory 1차 카테고리
+     * @param secondaryCategory 2차 카테고리
+     * @param pageable 페이징 정보
+     * @param currentUser 현재 로그인한 사용자
+     * @return 페이징된 상품 응답 DTO
+     */
+    public ProductPageResponse findAllProducts(String primaryCategory, String secondaryCategory, Pageable pageable, Member currentUser) {
+        Specification<Product> spec = Specification.where(ProductSpecification.byCategory(primaryCategory, secondaryCategory));
+        Page<Product> productPage = productRepository.findAll(spec, pageable);
+
+        List<ProductDto> productDtos = productPage.getContent().stream()
+                .map(product -> {
+                    boolean isFollowing = false;
+                    if (currentUser != null && product.getSeller() != null) {
+                        isFollowing = memberFollowService.isFollowing(currentUser.getId(), product.getSeller().getId());
+                    }
+                    return new ProductDto(product, isFollowing);
+                })
                 .toList();
 
         return new ProductPageResponse(
@@ -259,6 +296,38 @@ public class ProductService {
             heart.setMember(member);
             heart.setProduct(product);
             productHeartRepository.save(heart);
+
+            // 최초 좋아요에만 알림
+            String message = member.getName() + "님이 내 작품 '" + product.getName() + "'에 좋아요를 눌렀습니다";
+            String link = "/products/" + productId;
+            
+            // 좋아요 알림 저장 및 실시간 전송
+            var savedNotification = notificationService.saveLikeNotification(
+                member.getId(),
+                product.getSeller().getId(),
+                productId,
+                message,
+                link
+            );
+            
+            if (savedNotification != null) {
+                // 새로운 좋아요 알림인 경우에만 WebSocket 전송
+                System.out.println("[알림 DB 저장 완료] 좋아요 알림, notificationId=" + savedNotification.getId());
+                
+                // FollowNotificationRequest를 사용하여 실시간 알림 전송
+                FollowNotificationRequest likeNotificationRequest = new FollowNotificationRequest();
+                likeNotificationRequest.setTargetUserId(product.getSeller().getId());
+                likeNotificationRequest.setSenderUserId(member.getId());
+                likeNotificationRequest.setMessage(message);
+                likeNotificationRequest.setType("like");
+                likeNotificationRequest.setCategory(com.creatorworks.nexus.notification.entity.NotificationCategory.SOCIAL);
+                likeNotificationRequest.setLink(link);
+                
+                notificationService.sendNotification(likeNotificationRequest);
+            } else {
+                // 중복 좋아요 알림인 경우
+                System.out.println("[알림 중복 방지] 이미 존재하는 좋아요 알림");
+            }
 
             return true;
         }

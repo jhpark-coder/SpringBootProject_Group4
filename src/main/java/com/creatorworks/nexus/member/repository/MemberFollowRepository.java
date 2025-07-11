@@ -43,4 +43,8 @@ public interface MemberFollowRepository extends JpaRepository<MemberFollow, Long
     // 팔로우 관계 존재 여부 확인 (ID로)
     @Query("SELECT CASE WHEN COUNT(mf) > 0 THEN true ELSE false END FROM MemberFollow mf WHERE mf.follower.id = :followerId AND mf.following.id = :followingId")
     boolean existsByFollowerIdAndFollowingId(@Param("followerId") Long followerId, @Param("followingId") Long followingId);
+
+    // 특정 사용자가 팔로우하는 사람 목록을 팔로우 날짜와 함께 조회
+    @Query("SELECT mf FROM MemberFollow mf WHERE mf.follower.id = :memberId ORDER BY mf.regTime DESC")
+    List<MemberFollow> findFollowingsWithDateByMemberId(@Param("memberId") Long memberId);
 } 

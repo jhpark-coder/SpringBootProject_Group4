@@ -1,6 +1,7 @@
 package com.creatorworks.nexus.notification.dto;
 
 import com.creatorworks.nexus.notification.entity.NotificationCategory;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,4 +34,10 @@ public class FollowNotificationRequest { // 팔로우 알림 왔을때 요청 �
 
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
+
+    public NotificationCategory getCategory() { return category; }
+    public void setCategory(NotificationCategory category) { this.category = category; }
+
+    public String getLink() { return link; }
+    public void setLink(String link) { this.link = link; }
 } 

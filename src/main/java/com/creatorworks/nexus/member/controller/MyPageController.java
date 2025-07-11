@@ -1,9 +1,7 @@
 package com.creatorworks.nexus.member.controller;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,7 +19,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -34,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.creatorworks.nexus.member.dto.CustomUserDetails;
+import com.creatorworks.nexus.member.dto.FollowingDto;
 import com.creatorworks.nexus.member.dto.MemberModifyDto;
 import com.creatorworks.nexus.member.dto.MonthlyCategoryPurchaseDTO;
 import com.creatorworks.nexus.member.entity.Member;
@@ -313,6 +311,7 @@ public class MyPageController {
                 notifications = notificationService.getNotificationsByUserId(currentUser.getId());
             }
             model.addAttribute("notifications", notifications);
+            model.addAttribute("Name", currentUser.getName());
         } else {
             model.addAttribute("notifications", Collections.emptyList());
         }
@@ -344,8 +343,11 @@ public class MyPageController {
         }
     }
     
-    @GetMapping("/members/following-products")
-    public String followingProducts(@AuthenticationPrincipal Object principal, Model model) {
+    @GetMapping("/members/followings")
+    public String followings(@AuthenticationPrincipal Object principal, 
+                            @RequestParam(defaultValue = "0") int page,
+                            @RequestParam(defaultValue = "10") int size,
+                            Model model) {
         try {
             String email = getEmailFromPrincipal(principal);
             Member currentMember = memberRepository.findByEmail(email);
@@ -355,25 +357,30 @@ public class MyPageController {
                 throw new IllegalStateException("회원 정보를 찾을 수 없습니다.");
             }
             
-            // 1. 현재 사용자가 팔로우하는 사용자 목록 조회
-            List<Member> followingMembers = memberFollowService.getFollowings(currentMember.getId());
+            // 팔로잉 목록 조회 (페이징 적용) - FollowingDto 사용
+            List<FollowingDto> allFollowings = memberFollowService.getFollowingsWithDate(currentMember.getId());
+            long followingCount = allFollowings.size();
             
-            // 2. 팔로우하는 사용자들이 등록한 상품 목록 조회
-            List<Product> followingProducts = new ArrayList<>();
-            for (Member followingMember : followingMembers) {
-                List<Product> memberProducts = productService.findProductsBySeller(followingMember, PageRequest.of(0, 10)).getContent();
-                followingProducts.addAll(memberProducts);
-            }
+            // 페이징 처리
+            int startIndex = page * size;
+            int endIndex = Math.min(startIndex + size, allFollowings.size());
+            List<FollowingDto> followings = allFollowings.subList(startIndex, endIndex);
             
-            // 3. 최신순으로 정렬 (등록일 기준)
-            followingProducts.sort((p1, p2) -> p2.getRegTime().compareTo(p1.getRegTime()));
-
-            model.addAttribute("followingProducts", followingProducts);
+            int totalPages = (int) Math.ceil((double) followingCount / size);
+            boolean hasPrevious = page > 0;
+            boolean hasNext = page < totalPages - 1;
+            
+            model.addAttribute("followings", followings);
+            model.addAttribute("followingCount", followingCount);
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", totalPages);
+            model.addAttribute("hasPrevious", hasPrevious);
+            model.addAttribute("hasNext", hasNext);
             model.addAttribute("Name", currentMember.getName());
             
             return "member/followingProducts";
         } catch (Exception e) {
-            log.error("팔로잉 상품 페이지 로드 중 오류 발생", e);
+            log.error("팔로잉 목록 페이지 로드 중 오류 발생", e);
             return "redirect:/";
         }
     }
@@ -404,6 +411,7 @@ public class MyPageController {
             model.addAttribute("pointHistoryPage", pointHistoryPage);
             model.addAttribute("page", page);
             model.addAttribute("size", size);
+            model.addAttribute("Name", currentMember.getName());
 
             return "member/pointHistory";
         } catch (Exception e) {
@@ -436,6 +444,7 @@ public class MyPageController {
             memberModifyDto.setBirthDay(currentMember.getBirthDay());
             
             model.addAttribute("memberModifyDto", memberModifyDto);
+            model.addAttribute("Name", currentMember.getName());
             return "member/memberModify";
         } catch (Exception e) {
             log.error("개인정보수정 페이지 로드 중 오류: {}", e.getMessage());

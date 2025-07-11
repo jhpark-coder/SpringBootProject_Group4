@@ -45,15 +45,16 @@
                     <tbody>
                         <tr th:each="inq : ${inquiryPage.content}" style="border-top:1px solid #ddd;">
                             <td th:text="${#temporals.format(inq.regTime, 'yyyy-MM-dd HH:mm')}"></td>
-                            <td><a th:href="@{/products/{id}(id=${inq.product.id})}" th:text="${inq.product.name}"></a>
-                            </td>
+                            <td th:text="${inq.product.name}"></td>
                             <td th:text="${inq.writer.name}"></td>
                             <td th:text="${inq.content}"></td>
                             <td>
-                                <span th:if="${inq.children.isEmpty()}" style="color: red; font-weight: bold;"
-                                    th:text="'미답변'"></span>
-                                <span th:unless="${inq.children.isEmpty()}" style="color: blue; font-weight: bold;"
-                                    th:text="'답변완료'"></span>
+                                <span th:if="${inq.children.isEmpty()}">
+                                    <a th:href="@{/products/{id}(id=${inq.product.id})}"
+                                        style="color: red; font-weight: bold; text-decoration: underline;">미답변</a>
+                                </span>
+                                <span th:unless="${inq.children.isEmpty()}"
+                                    style="color: blue; font-weight: bold;">답변완료</span>
                             </td>
                         </tr>
                     </tbody>

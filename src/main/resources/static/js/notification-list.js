@@ -244,8 +244,6 @@ class NotificationList {
                     });
                 }
                 setTimeout(() => {
-                    sessionStorage.setItem('post_logout_redirect', '/members/login');
-                    sessionStorage.setItem('post_logout_message', '작가 등급이 승인되었습니다. 변경된 권한을 적용하기 위해 다시 로그인해주세요.');
                     window.location.href = '/members/logout';
                 }, 1500);
             }

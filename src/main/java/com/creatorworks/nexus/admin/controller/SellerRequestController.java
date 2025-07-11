@@ -46,25 +46,33 @@ public class SellerRequestController {
     @GetMapping("/status")
     public ResponseEntity<Object> getSellerRequestStatus(@AuthenticationPrincipal Object principal) {
         try {
+            System.out.println("[SellerRequestController] principal: " + principal);
             String email = getEmailFromPrincipal(principal);
+            System.out.println("[SellerRequestController] 추출된 email: " + email);
             Member member = memberRepository.findByEmail(email);
+            System.out.println("[SellerRequestController] 조회된 member: " + member);
             if (member == null) {
+                System.out.println("[SellerRequestController] 회원을 찾을 수 없습니다. (email: " + email + ")");
                 return ResponseEntity.badRequest().body("회원을 찾을 수 없습니다.");
             }
 
             SellerRequest sellerRequest = sellerRequestService.getLatestSellerRequest(member.getId());
-            
+            System.out.println("[SellerRequestController] 조회된 sellerRequest: " + sellerRequest);
             if (sellerRequest == null) {
+                System.out.println("[SellerRequestController] 신청 내역 없음");
                 return ResponseEntity.ok(Map.of("status", "NONE", "message", "신청 내역이 없습니다."));
             }
 
+            System.out.println("[SellerRequestController] 신청 상태: " + sellerRequest.getStatus());
             return ResponseEntity.ok(Map.of(
                 "status", sellerRequest.getStatus().name(),
                 "message", sellerRequest.getStatus().getDescription(),
-                "requestDate", sellerRequest.getRegTime(),
-                "reason", sellerRequest.getReason()
+                "requestDate", sellerRequest.getRegTime() != null ? sellerRequest.getRegTime() : "",
+                "reason", sellerRequest.getReason() != null ? sellerRequest.getReason() : ""
             ));
         } catch (Exception e) {
+            System.out.println("[SellerRequestController] 예외 발생: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body("상태 확인 중 오류가 발생했습니다.");
         }
     }

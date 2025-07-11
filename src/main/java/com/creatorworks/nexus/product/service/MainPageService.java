@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.member.service.MemberFollowService;
 import com.creatorworks.nexus.order.entity.Order;
 import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.dto.ProductDto;
@@ -37,6 +38,7 @@ public class MainPageService {
     private final ProductHeartRepository productHeartRepository;
     private final OrderRepository orderRepository;
     private final RecentlyViewedProductRedisService recentlyViewedProductRedisService;
+    private final MemberFollowService memberFollowService;
 
     private static final int RECOMMENDATION_LIMIT = 12; // 메인에 보여줄 상품 개수
 
@@ -49,9 +51,10 @@ public class MainPageService {
      */
     public List<ProductDto> getProductsForMainPage(String userEmail) {
         List<Product> finalProducts = new ArrayList<>();
+        Member member = null;
 
         if (userEmail != null) {
-            Member member = memberRepository.findByEmail(userEmail);
+            member = memberRepository.findByEmail(userEmail);
             if (member != null) {
                 // --- 로그인 사용자 로직 ---
                 log.info("로그인 사용자 '{}'의 추천 로직을 시작합니다.", userEmail);
@@ -76,9 +79,18 @@ public class MainPageService {
         }
 
         log.info("최종적으로 {}개의 상품을 메인 페이지에 반환합니다.", finalProducts.size());
+        
+        // 팔로우 상태를 포함하여 ProductDto로 변환
+        final Member memberForLambda = member;
         return finalProducts.stream()
                 .distinct() // 중복 제거
-                .map(ProductDto::new)
+                .map(product -> {
+                    boolean isFollowing = false;
+                    if (memberForLambda != null && product.getSeller() != null) {
+                        isFollowing = memberFollowService.isFollowing(memberForLambda.getId(), product.getSeller().getId());
+                    }
+                    return new ProductDto(product, isFollowing);
+                })
                 .collect(Collectors.toList());
     }
 

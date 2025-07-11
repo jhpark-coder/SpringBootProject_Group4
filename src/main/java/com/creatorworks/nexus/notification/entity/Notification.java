@@ -42,6 +42,8 @@ public class Notification { // 알림 데이터
     @Column(nullable = true)
     private String link;         // 연결 링크(눌렀을 때 이동할 URL)
 
+    private Long productId; // 좋아요 알림의 경우 작품 ID
+
     private LocalDateTime createdAt;
 
     @PrePersist
