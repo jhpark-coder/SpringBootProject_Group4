@@ -1,7 +1,9 @@
 /* 구독 기능 스타일 */
 
 /* 구독 버튼 스타일 - 더 구체적인 선택자 사용 */
-button.follow-btn, a.follow-btn, .btn.follow-btn {
+button.follow-btn,
+a.follow-btn,
+.btn.follow-btn {
     background: #0071DE !important;
     border: none !important;
     color: white !important;
@@ -19,15 +21,22 @@ button.follow-btn, a.follow-btn, .btn.follow-btn {
     align-items: center !important;
     justify-content: center !important;
     box-sizing: border-box !important;
+    /* 투명 링크 위에 올라오도록 z-index 설정 */
+    position: relative !important;
+    z-index: 10 !important;
 }
 
-button.follow-btn:hover, a.follow-btn:hover, .btn.follow-btn:hover {
+button.follow-btn:hover,
+a.follow-btn:hover,
+.btn.follow-btn:hover {
     background: #0056b3 !important;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 113, 222, 0.4) !important;
 }
 
-button.follow-btn.following, a.follow-btn.following, .btn.follow-btn.following {
+button.follow-btn.following,
+a.follow-btn.following,
+.btn.follow-btn.following {
     background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%) !important;
     position: relative;
     /* 기존 텍스트 숨기기 */
@@ -37,7 +46,9 @@ button.follow-btn.following, a.follow-btn.following, .btn.follow-btn.following {
     width: auto !important;
 }
 
-button.follow-btn.following::before, a.follow-btn.following::before, .btn.follow-btn.following::before {
+button.follow-btn.following::before,
+a.follow-btn.following::before,
+.btn.follow-btn.following::before {
     content: "Following";
     position: absolute;
     top: 50%;
@@ -49,12 +60,16 @@ button.follow-btn.following::before, a.follow-btn.following::before, .btn.follow
     letter-spacing: 0.8px;
 }
 
-button.follow-btn.following:hover, a.follow-btn.following:hover, .btn.follow-btn.following:hover {
+button.follow-btn.following:hover,
+a.follow-btn.following:hover,
+.btn.follow-btn.following:hover {
     background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%) !important;
     box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4) !important;
 }
 
-button.follow-btn.following:hover::before, a.follow-btn.following:hover::before, .btn.follow-btn.following:hover::before {
+button.follow-btn.following:hover::before,
+a.follow-btn.following:hover::before,
+.btn.follow-btn.following:hover::before {
     content: "Unfollow";
     font-size: 15px;
     letter-spacing: 0.8px;

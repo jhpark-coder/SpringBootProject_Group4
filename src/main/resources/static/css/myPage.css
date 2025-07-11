@@ -10,48 +10,69 @@ body {
     margin: 0;
     font-family: 'Noto Sans KR', sans-serif;
     background-color: #fff;
-    /* 이미지의 검은 배경 대신 콘텐츠가 잘 보이도록 밝은 회색으로 설정 */
 }
 
-/* 전체 페이지 컨테이너 */
+/* 마이페이지 메인용 컨테이너 (flex 레이아웃) */
 .page-container {
     display: flex;
     flex-direction: row;
     gap: 40px;
-    /* 사이드바와 메인 콘텐츠 사이 간격 */
     max-width: 1440px;
     margin: 0 auto;
     padding: 40px 20px;
-    /* 페이지 좌우, 상하 여백 */
+}
+
+/* 마이페이지 하위 세부페이지용 컨테이너 (flex 레이아웃) */
+.subpage-container {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 40px 20px;
 }
 
 /* 1. 왼쪽 프로필 사이드바 */
 .profile-sidebar {
-    /* 레이아웃 */
     flex-basis: 200px;
-    /* 기본 너비 */
     flex-shrink: 0;
-    /* 화면이 줄어도 너비 유지 */
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 20px;
     padding: 25px;
 
-    /* 스크롤 따라가기(Sticky) */
     position: sticky;
     top: 10rem;
-    /* 화면 상단에서 40px 떨어진 위치에 고정 */
     align-self: flex-start;
-    /* sticky를 위해 부모 높이에 맞춰 늘어나지 않도록 함 */
     max-height: calc(100vh - 80px);
 
-    /* 디자인 */
     background: var(--primary-blue);
     color: var(--text-light);
     border-radius: 15px;
     height: fit-content;
-    /* 내용물 높이에 맞춤 */
+}
+
+/* 서브페이지용 사이드바 (프로필 사이드바와 동일) */
+.subpage-sidebar {
+    flex-basis: 200px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 25px;
+
+    position: sticky;
+    top: 10rem;
+    align-self: flex-start;
+    max-height: calc(100vh - 80px);
+
+    background: var(--primary-blue);
+    color: var(--text-light);
+    border-radius: 15px;
+    height: fit-content;
+    min-width: 200px;
 }
 
 .profile-pic {
@@ -86,7 +107,6 @@ body {
     border: 2px solid var(--text-light);
     color: var(--text-light);
     flex-grow: 1;
-    /* button-group 안에서 공간을 동일하게 차지 */
 }
 
 .btn-solid {
@@ -106,13 +126,19 @@ body {
 /* 2. 오른쪽 메인 콘텐츠 */
 .main-content {
     flex-grow: 1;
-    /* 남은 공간을 모두 차지 */
     display: flex;
     flex-direction: column;
     gap: 60px;
-    /* 콘텐츠 섹션 간의 세로 간격 */
     min-width: 0;
-    /* flex 자식 요소가 부모를 넘어가지 않게 함 */
+}
+
+/* 서브페이지 메인 콘텐츠 */
+.subpage-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    min-width: 0;
 }
 
 .content-section {
@@ -148,7 +174,6 @@ body {
 
 .chart-item {
     flex: 1;
-    /* 공간을 균등하게 나눔 */
 }
 
 .chart-item h3 {
@@ -161,7 +186,6 @@ body {
 .chart-placeholder {
     width: 100%;
     height: 350px;
-    /*background-color: var(--light-gray);*/
     border-radius: 10px;
 }
 
@@ -169,15 +193,11 @@ body {
 .product-grid {
     display: flex;
     flex-wrap: wrap;
-    /* 아이템이 넘치면 다음 줄로 */
     gap: 20px;
     min-height: 250px;
 }
 
 .product-card {
-    /* 유연한 너비 설정: 4열 기준 */
-    /* 100% 너비를 4로 나누고, 틈새(gap) 공간을 뺀 값 */
-    /* 20px(gap) * 3/4 = 15px */
     flex-basis: calc(25% - 15px);
     flex-grow: 1;
     display: flex;
@@ -188,11 +208,11 @@ body {
 .product-image-placeholder {
     width: 100%;
     padding-top: 100%;
-    /* 1:1 비율의 정사각형 */
     background-color: var(--light-gray);
     border-radius: 10px;
     background-position: center;
     background-repeat: no-repeat;
+    background-size: cover;
 }
 
 .product-info {
@@ -205,16 +225,7 @@ body {
 .seller-info {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-.seller-info {
-    display: flex;
-    align-items: center;
     gap: 10px;
-    font-size: 0.9rem;
-    font-weight: 500;
 }
 
 .seller-avatar {
@@ -224,89 +235,33 @@ body {
     border-radius: 50%;
 }
 
-.subscribe-btn,
 .follow-btn {
+    padding: 8px 16px;
     background-color: var(--primary-blue);
     color: var(--text-light);
-    padding: 10px 20px;
-    border-radius: 25px;
-    text-decoration: none;
+    border: none;
+    border-radius: 8px;
     font-size: 0.8rem;
     font-weight: 500;
-    border: none;
     cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.subscribe-btn:hover,
-.follow-btn:hover {
-    background-color: #0074e9;
-}
-
-.subscribe-btn.following,
-.follow-btn.following {
-    background-color: #28a745;
-    color: white;
-}
-
-.subscribe-btn.following:hover,
-.follow-btn.following:hover {
-    background-color: #218838;
-}
-
-/* 통계 카드(Stats Card) 공통 스타일 */
-.stats-container {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-    margin-bottom: 30px;
-    max-width: 1000px;
-    margin-left: auto;
-    margin-right: auto;
-    justify-content: center;
-}
-
-.stat-card {
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    padding: 20px;
-    text-align: center;
     transition: all 0.3s ease;
-    border: 1px solid #f0f0f0;
-    min-height: 120px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
 }
 
-.stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);
+.follow-btn:hover {
+    background-color: #0056b3;
 }
 
-.stat-number {
-    font-size: 24px;
-    font-weight: bold;
-    color: #007bff;
-    margin-bottom: 6px;
-    display: block;
+.follow-btn.following {
+    background-color: #6c757d;
 }
 
-.stat-label {
-    color: #666;
-    font-size: 13px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.follow-btn.following:hover {
+    background-color: #5a6268;
 }
 
-/* 반응형 디자인 (Media Queries) */
-
-/* 태블릿 사이즈 - 상품 그리드를 2열로 변경 */
 @media (max-width: 1200px) {
     .product-card {
-        /*flex-basis: calc(33.333% - 14px); */
+        flex-basis: calc(33.333% - 15px);
     }
 
     .chart-section {
@@ -314,68 +269,347 @@ body {
     }
 }
 
-/* 모바일 사이즈 - 전체 레이아웃을 세로로 변경 */
 @media (max-width: 992px) {
-    .page-container {
+
+    .page-container,
+    .subpage-container {
         flex-direction: column;
+        gap: 20px;
     }
 
-    .profile-sidebar {
+    .profile-sidebar,
+    .subpage-sidebar {
         position: static;
-        /* sticky 해제 */
-        width: 100%;
-        max-width: 500px;
-        /* 모바일에서 너무 커지지 않도록 */
-        margin: 0 auto;
-        box-sizing: border-box;
+        max-height: none;
+        flex-basis: auto;
     }
 
     .product-card {
-        /* 화면 너비에 따라 2열 또는 1열로 보이도록 조정 가능 */
-        flex-basis: calc(50% - 10px);
+        flex-basis: calc(50% - 15px);
     }
 }
 
 @media (max-width: 600px) {
     .product-card {
         flex-basis: 100%;
-        /* 1열 기준 */
     }
 
-    .profile-name,
-    .section-header h2 {
-        font-size: 24px;
+    .profile-name {
+        font-size: 1.2rem;
     }
 
     .btn {
-        font-size: 16px;
+        font-size: 0.8rem;
+        height: 45px;
     }
 }
 
-/* 통계 카드 반응형 디자인 */
+.main-content-row {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    width: 100%;
+}
+
+.stats-container {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+    margin-bottom: 30px;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.content-table {
+    flex: 1;
+    min-width: 0;
+}
+
+/* 테이블 스타일 개선 */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table thead {
+    background-color: var(--primary-blue);
+    color: var(--text-light);
+}
+
+.table th {
+    padding: 15px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.table td {
+    padding: 15px 12px;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 빈 상태 스타일 */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.empty-state .btn {
+    display: inline-flex;
+    width: auto;
+    padding: 12px 24px;
+    background-color: var(--primary-blue);
+    color: var(--text-light);
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.empty-state .btn:hover {
+    background-color: #0056b3;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    margin-bottom: 10px;
+}
+
+.stat-label {
+    font-size: 1rem;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.page-header {
+    margin-bottom: 30px;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+}
+
+.page-subtitle {
+    font-size: 1.1rem;
+    color: #666;
+}
+
+.table-row.unread {
+    background-color: #f8f9ff;
+}
+
+.table-row.unread:hover {
+    background-color: #e8f0ff;
+}
+
+.category-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.category-system {
+    background-color: #6c757d;
+}
+
+.category-order {
+    background-color: #28a745;
+}
+
+.category-auction {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.category-follow {
+    background-color: #17a2b8;
+}
+
+.category-seller {
+    background-color: #dc3545;
+}
+
+.content-message {
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.content-time {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.status-read {
+    color: #28a745;
+}
+
+.status-unread {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.action-btn {
+    color: var(--primary-blue);
+    text-decoration: none;
+    padding: 8px 16px;
+    background-color: var(--primary-blue);
+    color: var(--text-light);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.action-btn:hover {
+    background-color: #0056b3;
+    color: var(--text-light);
+    text-decoration: none;
+}
+
 @media (max-width: 768px) {
-    .stats-container {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        max-width: 100%;
+
+    .page-container,
+    .subpage-container {
+        padding: 10px;
     }
 
-    .stat-card {
-        padding: 20px;
+    .page-title {
+        font-size: 1.5rem;
     }
 
-    .stat-number {
-        font-size: 24px;
+    .content-message {
+        font-size: 0.9rem;
     }
 
-    .stat-label {
-        font-size: 12px;
+    .table {
+        font-size: 0.9rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 10px 8px;
     }
 }
 
 @media (max-width: 480px) {
-    .stats-container {
-        grid-template-columns: 1fr;
-        gap: 15px;
+    .page-title {
+        font-size: 1.3rem;
     }
+
+    .content-message {
+        font-size: 0.8rem;
+    }
+
+    .category-badge {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+
+    .table {
+        font-size: 0.8rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 8px 6px;
+    }
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 30px;
+    gap: 5px;
+}
+
+.pagination a,
+.pagination span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.pagination .page-link {
+    background-color: #fff;
+    color: var(--text-dark);
+    border: 1px solid #dee2e6;
+}
+
+.pagination .page-link:hover {
+    background-color: var(--primary-blue);
+    color: var(--text-light);
+    border-color: var(--primary-blue);
+}
+
+.pagination .active .page-link {
+    background-color: var(--primary-blue);
+    color: var(--text-light);
+    border-color: var(--primary-blue);
+}
+
+.pagination .disabled .page-link {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
 }

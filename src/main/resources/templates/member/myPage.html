@@ -16,8 +16,8 @@
             <h2 class="profile-name" th:text="${Name} + ' 님'" sec:authentication="name">홍길동 님</h2>
 
             <div class="button-group">
-                <a href="/members/liked-products" class="btn btn-outline">좋아요한 작품</a>
-                <a href="/members/following-products" class="btn btn-outline">팔로잉 목록</a>
+                <a href="/members/liked-products" class="btn btn-outline">찜목록</a>
+                <a href="/members/followings" class="btn btn-outline">팔로잉 목록</a>
             </div>
 
             <a th:href="@{/member/myPage/{id}/points(id=${#authentication.principal.id})}" class="btn btn-solid">포인트
@@ -58,7 +58,6 @@
                 </header>
 
                 <div class="product-grid" th:if="${recentProducts != null and !recentProducts.isEmpty()}">
-                    <!-- th:each를 사용하여 최근 구매 상품 목록을 동적으로 생성 -->
                     <article th:each="product : ${recentProducts}" class="product-card">
                         <a th:href="@{/products/{id}(id=${product.id})}">
                             <div class="product-image-placeholder"
@@ -68,22 +67,18 @@
                         <div class="product-info">
                             <div class="seller-info">
                                 <div class="seller-avatar"></div>
-                                <!-- product.seller.name 으로 판매자 이름에 접근 -->
                                 <span th:text="${product.seller.name}">판매자 이름</span>
                             </div>
-                            <!-- 로그인한 경우이고 본인이 아닌 판매자일 때만 Follow 버튼 표시 -->
                             <button class="follow-btn"
                                 th:if="${product.seller != null and product.seller.email != #authentication.name}"
                                 th:onclick="|toggleFollow(${product.seller.id})|"
                                 sec:authorize="isAuthenticated()">Follow</button>
-                            <!-- 비로그인인 경우 -->
                             <button class="follow-btn" th:if="${product.seller != null}"
                                 onclick="alert('로그인이 필요합니다.'); location.href='/members/login';"
                                 sec:authorize="!isAuthenticated()">Follow</button>
                         </div>
                     </article>
                 </div>
-                <!-- 구매 기록이 없을 경우 보여줄 메시지 (선택 사항) -->
                 <div th:if="${recentProducts == null or recentProducts.isEmpty()}">
                     <p>최근 구매한 작품이 없습니다.</p>
                 </div>
@@ -96,7 +91,6 @@
                     <a href="#" class="see-more-link">더 보러가기 »</a>
                 </header>
                 <div class="product-grid" th:if="${recentViewedProducts != null and !recentViewedProducts.isEmpty()}">
-                    <!-- th:each를 사용하여 최근 열람 상품 목록을 동적으로 생성 -->
                     <article th:each="product : ${recentViewedProducts}" class="product-card">
                         <a th:href="@{/products/{id}(id=${product.id})}">
                             <div class="product-image-placeholder"
@@ -106,44 +100,33 @@
                         <div class="product-info">
                             <div class="seller-info">
                                 <div class="seller-avatar"></div>
-                                <!-- product.seller.name 으로 판매자 이름에 접근 -->
                                 <span th:text="${product.seller.name}">판매자 이름</span>
                             </div>
-                            <!-- 로그인한 경우이고 본인이 아닌 판매자일 때만 Follow 버튼 표시 -->
                             <button class="follow-btn"
                                 th:if="${product.seller != null and product.seller.email != #authentication.name}"
                                 th:onclick="|toggleFollow(${product.seller.id})|"
                                 sec:authorize="isAuthenticated()">Follow</button>
-                            <!-- 비로그인인 경우 -->
                             <button class="follow-btn" th:if="${product.seller != null}"
                                 onclick="alert('로그인이 필요합니다.'); location.href='/members/login';"
                                 sec:authorize="!isAuthenticated()">Follow</button>
                         </div>
                     </article>
                 </div>
-                <!-- 열람 기록이 없을 경우 보여줄 메시지 (선택 사항) -->
                 <div th:if="${recentViewedProducts == null or recentViewedProducts.isEmpty()}">
                     <p>최근 열람한 작품이 없습니다.</p>
                 </div>
             </section>
         </main>
     </div>
-    <!-- ========================================================== -->
-    <!--      페이지별 스크립트 영역 (가장 이상적인 위치)         -->
-    <!-- ========================================================== -->
-    <th:block layout:fragment="script">
-        <!-- 1. Chart.js 라이브러리 로드 -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        <!-- 2. 팔로우 기능 스크립트 추가 -->
+    <th:block layout:fragment="script">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script th:src="@{/js/heartFollow.js}"></script>
 
-        <!-- 3. 차트를 그리는 스크립트 -->
         <script th:inline="javascript">
             /*<![CDATA[*/
             document.addEventListener("DOMContentLoaded", function () {
-
-                // ================= 월별 구매 차트 ==================
+                // 월별 구매 차트
                 const monthlyPurchaseCtx = document.getElementById('monthlyPurchaseChart');
                 if (monthlyPurchaseCtx) {
                     const chartLabels = /*[[${chartLabels}]]*/[];
@@ -164,7 +147,7 @@
                     });
                 }
 
-                // ================= 카테고리 파이 차트 =================
+                // 카테고리 파이 차트
                 const primaryData = /*[[${primaryCategoryData}]]*/ {};
                 const secondaryData = /*[[${secondaryCategoryData}]]*/ {};
                 const pieChartCanvas = document.getElementById('categoryPieChart');
@@ -185,7 +168,7 @@
                 function updateChart(chart, newData, newTitle) {
                     chart.data = createChartData(newData);
                     if (chart.options.plugins.title) chart.options.plugins.title.text = newTitle;
-                    pieChartTitle.textContent = newTitle; // h3 태그의 텍스트도 직접 변경
+                    pieChartTitle.textContent = newTitle;
                     chart.update('active');
                 }
 
@@ -207,7 +190,6 @@
                                 animateRotate: true,
                                 animateScale: true
                             },
-                            // ★★★ 올바른 문법으로 수정된 onClick ★★★
                             onClick: (event, elements) => {
                                 if (elements.length > 0) {
                                     const clickedIndex = elements[0].index;

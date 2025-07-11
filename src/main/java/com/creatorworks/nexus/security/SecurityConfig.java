@@ -106,7 +106,14 @@ public class SecurityConfig {
             )
             .logout(logout -> logout
                 .logoutRequestMatcher(new AntPathRequestMatcher("/members/logout"))
-                .logoutSuccessUrl("/")
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    String redirect = request.getParameter("redirect");
+                    if (redirect != null && !redirect.isBlank()) {
+                        response.sendRedirect(redirect);
+                    } else {
+                        response.sendRedirect("/");
+                    }
+                })
                 .permitAll()
             )
             .oauth2Login(oauth2 -> oauth2
@@ -159,7 +166,14 @@ public class SecurityConfig {
             // 로그아웃 설정
             .logout(logout -> logout
                 .logoutRequestMatcher(new AntPathRequestMatcher("/members/logout"))
-                .logoutSuccessUrl("/")
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    String redirect = request.getParameter("redirect");
+                    if (redirect != null && !redirect.isBlank()) {
+                        response.sendRedirect(redirect);
+                    } else {
+                        response.sendRedirect("/");
+                    }
+                })
                 .permitAll()
             )
             // OAuth2 로그인 설정

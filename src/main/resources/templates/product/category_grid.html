@@ -46,7 +46,9 @@
                             </div>
                             <!-- 로그인한 사용자가 판매자 본인이 아닌 경우에만 팔로우 버튼 표시 -->
                             <button class="btn follow-btn" th:if="${product.sellerId != null}"
-                                th:data-member-id="${product.sellerId}" th:onclick="|toggleFollow(${product.sellerId})|"
+                                th:data-member-id="${product.sellerId}"
+                                th:classappend="${product.isFollowing} ? 'following' : ''"
+                                th:text="${product.isFollowing} ? 'Following' : 'Follow'"
                                 sec:authorize="isAuthenticated()">Follow</button>
                             <!-- 비로그인 사용자에게는 로그인 유도 -->
                             <button class="btn follow-btn" th:if="${product.sellerId != null}"
@@ -112,11 +114,16 @@
                 function createProductCard(product, index) {
                     // Thymeleaf가 처음 렌더링하는 구조와 동일하게 맞춥니다.
 
-                    // 1. Follow 버튼 HTML 생성
+                    // 1. Follow 버튼 HTML 생성 (팔로우 상태에 따라)
+                    let followBtnClass = 'btn follow-btn';
+                    let followBtnText = 'Follow';
+                    if (product.isFollowing) {
+                        followBtnClass += ' following';
+                        followBtnText = 'Following';
+                    }
                     const followButtonHtml = product.sellerId ?
-                        `<button class="btn follow-btn"
-                                 data-member-id="${product.sellerId}"
-                                 onclick="toggleFollow(${product.sellerId})">Follow</button>` : '';
+                        `<button class="${followBtnClass}"
+                                 data-member-id="${product.sellerId}">${followBtnText}</button>` : '';
 
                     // 2. data-i 값을 4로 고정
                     const dataI = 4;

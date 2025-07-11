@@ -4,115 +4,108 @@
 <head>
     <th:block layout:fragment="css">
         <link rel="stylesheet" th:href="@{/css/myPage.css}">
-        <link rel="stylesheet" th:href="@{/css/inquiry.css}">
-        <style>
-            td {
-                align-content: center;
-            }
-        </style>
     </th:block>
+    <title>구매한 작품 현황</title>
 </head>
 
 <body>
-    <div layout:fragment="content" class="page-container">
-        <!-- 1. 왼쪽 고정 메뉴 (사이드바) -->
-        <aside class="profile-sidebar">
-            <div class="profile-pic"></div>
-            <h2 class="profile-name" th:text="${Name} + ' 님'" sec:authentication="name">홍길동 님</h2>
+    <div layout:fragment="content" class="subpage-container">
+        <!-- 좌측 사이드바 -->
+        <div th:replace="~{fragment/myPage_sidebar}"></div>
 
-            <div class="button-group">
-                <a th:href="@{/members/liked-products}" class="btn btn-outline">찜목록</a>
-                <a th:href="@{/members/following-products}" class="btn btn-outline">구독목록</a>
+        <!-- 우측 메인 콘텐츠 -->
+        <main class="subpage-content">
+            <div class="page-header">
+                <h1 class="page-title">구매한 작품 현황</h1>
+                <p class="page-subtitle">구매한 작품들의 상세 내역을 확인할 수 있습니다.</p>
             </div>
 
-            <a href="/members/modify" class="btn btn-solid">개인정보수정</a>
-            <a th:href="@{|/member/myPage/${#authentication.principal.id}/notifications|}"
-                class="btn btn-solid">알림내역</a>
-            <a th:href="@{/api/orders/list}" class="btn btn-solid">구매내역</a>
-            <a href="#" class="btn btn-solid">참여중인 경매</a>
-        </aside>
+            <!-- 통계 정보 -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${totalPurchaseCount}">0</div>
+                    <div class="stat-label">전체 구매</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${totalUsedPoint} + 'P'">0P</div>
+                    <div class="stat-label">총 사용 포인트</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${totalRefundCount}">0</div>
+                    <div class="stat-label">전체 환불</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${totalRefundPoint} + 'P'">0P</div>
+                    <div class="stat-label">총 환불 포인트</div>
+                </div>
+            </div>
 
-        <main class="main-content">
-            <section class="content-section">
-                <header class="section-header">
-                    <h2>구매한 작품 현황</h2>
-                </header>
-
-                <!-- 주요 통계 카드 -->
-                <div class="stats-container">
-                    <div class="stat-card">
-                        <div class="stat-number" th:text="${totalPurchaseCount}">0</div>
-                        <div class="stat-label">전체 구매</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" th:text="${totalUsedPoint} + 'P'">0P</div>
-                        <div class="stat-label">총 사용 포인트</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" th:text="${totalRefundCount}">0</div>
-                        <div class="stat-label">전체 환불</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" th:text="${totalRefundPoint} + 'P'">0P</div>
-                        <div class="stat-label">총 환불 포인트</div>
-                    </div>
+            <!-- 주문 목록 -->
+            <div class="content-table">
+                <div th:if="${orderList == null || !orderList.hasContent()}" class="empty-state">
+                    <h3>구매한 작품이 없습니다</h3>
+                    <p>아직 구매한 작품이 없습니다.</p>
+                    <a href="/" class="btn btn-primary">홈으로 돌아가기</a>
                 </div>
 
-                <!-- 주문 목록이 있을 때만 테이블 표시 -->
                 <div th:if="${orderList != null && orderList.hasContent()}">
-                    <table class="table" style="width:100%; border-collapse:collapse;">
+                    <table class="table">
                         <thead>
                             <tr>
-                                <th style="text-align:left; padding:8px;">주문번호</th>
-                                <th style="text-align:left; padding:8px;">주문타입</th>
-                                <th style="text-align:left; padding:8px;">주문상태</th>
-                                <th style="text-align:left; padding:8px;">포인트</th>
-                                <th style="text-align:left; padding:8px;">구입일</th>
-                                <th style="text-align:left; padding:8px;">설명</th>
-                                <th style="text-align:left; padding:8px;">작업</th>
+                                <th>주문번호</th>
+                                <th>주문타입</th>
+                                <th>주문상태</th>
+                                <th>포인트</th>
+                                <th>구입일</th>
+                                <th>설명</th>
+                                <th>작업</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="order : ${orderList.content}" style="border-top:1px solid #ddd;">
+                            <tr th:each="order : ${orderList.content}" class="table-row">
                                 <td th:text="${order.id}">-</td>
-                                <td th:text="${order.orderType != null ? order.orderType.description : '-'}">-</td>
-                                <td th:text="${order.orderStatus != null ? order.orderStatus.description : '-'}">-</td>
-                                <td th:text="${order.totalAmount != null ? order.totalAmount + 'P' : '-'}">-</td>
-                                <td
+                                <td>
+                                    <span
+                                        th:class="${'category-badge category-' + #strings.toLowerCase(order.orderType != null ? order.orderType.name() : 'unknown')}"
+                                        th:text="${order.orderType != null ? order.orderType.description : '-'}">-</span>
+                                </td>
+                                <td>
+                                    <span
+                                        th:class="${'status-' + #strings.toLowerCase(order.orderStatus != null ? order.orderStatus.name() : 'unknown')}"
+                                        th:text="${order.orderStatus != null ? order.orderStatus.description : '-'}">-</span>
+                                </td>
+                                <td class="content-time"
+                                    th:text="${order.totalAmount != null ? order.totalAmount + 'P' : '-'}">-</td>
+                                <td class="content-time"
                                     th:text="${order.orderDate != null ? #temporals.format(order.orderDate, 'yyyy-MM-dd HH:mm') : '-'}">
                                     -</td>
-                                <td th:text="${order.description != null ? order.description : '-'}">-</td>
+                                <td class="content-message"
+                                    th:text="${order.description != null ? order.description : '-'}">-</td>
                                 <td>
                                     <a th:href="@{/refund/request/{orderId}(orderId=${order.id})}"
-                                        class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;">환불 신청</a>
+                                        class="btn btn-primary action-btn">환불 신청</a>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+            </div>
 
-                <!-- 주문 목록이 없을 때 메시지 표시 -->
-                <div th:if="${orderList == null || !orderList.hasContent()}" style="padding:2rem; text-align:center;">
-                    <p>구매한 작품이 없습니다.</p>
-                </div>
-
-                <!-- 페이징 네비게이션 -->
-                <nav th:if="${orderList != null && orderList.totalPages > 0}" aria-label="Page navigation"
-                    style="margin-top:1rem;">
-                    <ul class="pagination" style="justify-content:center;">
-                        <li class="page-item" th:classappend="${startPage == 0} ? 'disabled'">
-                            <a class="page-link" th:href="@{/api/orders/list(page=${startPage - 1})}">«</a>
-                        </li>
-                        <li class="page-item" th:each="p : ${#numbers.sequence(startPage, endPage)}"
-                            th:classappend="${p == orderList.number} ? 'active'">
-                            <a class="page-link" th:href="@{/api/orders/list(page=${p})}" th:text="${p + 1}"></a>
-                        </li>
-                        <li class="page-item" th:classappend="${endPage >= orderList.totalPages - 1} ? 'disabled'">
-                            <a class="page-link" th:href="@{/api/orders/list(page=${endPage + 1})}">»</a>
-                        </li>
-                    </ul>
-                </nav>
-            </section>
+            <!-- 페이징 네비게이션 -->
+            <nav th:if="${orderList != null && orderList.totalPages > 0}" aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" th:classappend="${startPage == 0} ? 'disabled'">
+                        <a class="page-link" th:href="@{/api/orders/list(page=${startPage - 1})}">&laquo;</a>
+                    </li>
+                    <li class="page-item" th:each="p : ${#numbers.sequence(startPage, endPage)}"
+                        th:classappend="${p == orderList.number} ? 'active'">
+                        <a class="page-link" th:href="@{/api/orders/list(page=${p})}" th:text="${p + 1}">1</a>
+                    </li>
+                    <li class="page-item" th:classappend="${endPage >= orderList.totalPages - 1} ? 'disabled'">
+                        <a class="page-link" th:href="@{/api/orders/list(page=${endPage + 1})}">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
         </main>
     </div>
 </body>

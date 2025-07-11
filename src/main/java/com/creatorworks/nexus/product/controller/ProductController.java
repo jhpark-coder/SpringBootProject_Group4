@@ -32,6 +32,9 @@ import com.creatorworks.nexus.config.CategoryConfig;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.member.service.MemberFollowService;
+import com.creatorworks.nexus.order.entity.Order;
+import com.creatorworks.nexus.order.repository.OrderRepository;
+import com.creatorworks.nexus.order.service.PointService;
 import com.creatorworks.nexus.product.dto.ProductDto;
 import com.creatorworks.nexus.product.dto.ProductInquiryRequestDto;
 import com.creatorworks.nexus.product.dto.ProductPageResponse;
@@ -52,9 +55,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.creatorworks.nexus.order.entity.Order;
-import com.creatorworks.nexus.order.repository.OrderRepository;
-import com.creatorworks.nexus.order.service.PointService;
 
 /**
  * @Controller: 이 클래스가 Spring MVC의 컨트롤러임을 나타냅니다.
@@ -410,13 +410,15 @@ public class ProductController {
      * @param page URL로 전달되는 페이지 번호 (1부터 시작)
      * @param secondaryCategory 2차 카테고리 이름 (필수 아님)
      * @param model 뷰에 데이터를 전달하기 위한 모델 객체
+     * @param principal 현재 로그인한 사용자 정보
      * @return 렌더링할 뷰의 이름 ("product/category_grid")
      */
     @GetMapping("/products/category/{categoryName}")
     public String categoryGridView(@PathVariable String categoryName,
                                    @RequestParam(value = "page", defaultValue = "1") int page,
                                    @RequestParam(value = "secondary", defaultValue = "all") String secondaryCategory,
-                                   Model model) {
+                                   Model model,
+                                   Principal principal) {
 
         // 1. 초기 상품 데이터 로드 (페이지의 첫 16개)
         // URL의 page 파라미터(uiPage)는 1부터 시작, 100개 단위. API 페이지는 16개 단위.
@@ -425,7 +427,14 @@ public class ProductController {
         long initialApiPage = (page - 1) * apiPagesPerUiPage;
 
         Pageable initialPageable = PageRequest.of((int)initialApiPage, (int)itemsPerApiPage, Sort.by(Sort.Direction.DESC, "regTime"));
-        ProductPageResponse initialProductPage = productService.findAllProducts(categoryName, secondaryCategory, initialPageable);
+        
+        // 현재 로그인한 사용자 정보 가져오기
+        Member currentUser = null;
+        if (principal != null) {
+            currentUser = memberRepository.findByEmail(principal.getName());
+        }
+        
+        ProductPageResponse initialProductPage = productService.findAllProducts(categoryName, secondaryCategory, initialPageable, currentUser);
 
         // 2. 전체 2차 카테고리 목록 조회 (버튼용)
         List<String> secondaryCategories = categoryConfig.getSecondaryCategories(categoryName);
@@ -451,6 +460,7 @@ public class ProductController {
      * @param primaryCategory 1차 카테고리
      * @param secondaryCategory 2차 카테고리 (필수 아님)
      * @param pageable 페이징 정보
+     * @param principal 현재 로그인한 사용자 정보
      * @return 페이징 처리된 상품 데이터
      */
     @GetMapping("/api/products/category")
@@ -458,8 +468,16 @@ public class ProductController {
     public ProductPageResponse getProductsByCategory(
             @RequestParam("primary") String primaryCategory,
             @RequestParam(value = "secondary", required = false, defaultValue = "all") String secondaryCategory,
-            Pageable pageable) {
-        return productService.findAllProducts(primaryCategory, secondaryCategory, pageable);
+            Pageable pageable,
+            Principal principal) {
+        
+        // 현재 로그인한 사용자 정보 가져오기
+        Member currentUser = null;
+        if (principal != null) {
+            currentUser = memberRepository.findByEmail(principal.getName());
+        }
+        
+        return productService.findAllProducts(primaryCategory, secondaryCategory, pageable, currentUser);
     }
 
     // --- 좋아요 관련 API 추가 ---
@@ -517,6 +535,37 @@ public class ProductController {
     public ResponseEntity<Map<String, Object>> getHeartCount(@PathVariable Long id) {
         long heartCount = productService.getHeartCount(id);
         return ResponseEntity.ok(Map.of("heartCount", heartCount));
+    }
+
+    @GetMapping("/products/author")
+    public String authorProducts(@RequestParam Long authorId,
+                                @RequestParam(defaultValue = "0") int page,
+                                @RequestParam(defaultValue = "12") int size,
+                                Model model) {
+        try {
+            Member author = memberRepository.findById(authorId)
+                .orElseThrow(() -> new IllegalArgumentException("작가를 찾을 수 없습니다."));
+            
+            Pageable pageable = PageRequest.of(page, size, Sort.by("regTime").descending());
+            Page<Product> productPage = productService.findProductsBySeller(author, pageable);
+            
+            int totalPages = productPage.getTotalPages();
+            boolean hasPrevious = page > 0;
+            boolean hasNext = page < totalPages - 1;
+            
+            model.addAttribute("products", productPage.getContent());
+            model.addAttribute("authorName", author.getName());
+            model.addAttribute("authorId", authorId);
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", totalPages);
+            model.addAttribute("hasPrevious", hasPrevious);
+            model.addAttribute("hasNext", hasNext);
+            
+            return "product/authorProducts";
+        } catch (Exception e) {
+            log.error("작가별 상품 페이지 로드 중 오류 발생", e);
+            return "redirect:/";
+        }
     }
 
     /**

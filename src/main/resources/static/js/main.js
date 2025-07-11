@@ -39,10 +39,16 @@ $(document).ready(function () {
 
                 products.forEach(function (product) {
                     // sellerId가 있는 경우에만 팔로우 버튼 생성
+                    let followBtnClass = 'btn follow-btn';
+                    let followBtnText = 'Follow';
+                    if (product.isFollowing) {
+                        followBtnClass += ' following';
+                        followBtnText = 'Following';
+                    }
                     const followButton = product.sellerId ?
-                        `<button class="btn follow-btn"
+                        `<button class="${followBtnClass}"
                                  data-member-id="${product.sellerId}"
-                                 onclick="toggleFollow(${product.sellerId})">Follow</button>` : '';
+                                 onclick="toggleFollow(${product.sellerId})">${followBtnText}</button>` : '';
 
                     const productItem = `
                         <div class="col-md-3">

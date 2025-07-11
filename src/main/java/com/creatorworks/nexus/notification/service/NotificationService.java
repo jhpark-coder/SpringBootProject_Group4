@@ -123,6 +123,28 @@ public class NotificationService {
         return notificationRepository.save(notification);
     }
 
+    // 좋아요 알림을 DB에 저장하는 메서드 (최초 좋아요에만 알림)
+    public Notification saveLikeNotification(Long senderUserId, Long targetUserId, Long productId, String message, String link) {
+        // 중복 체크: sender, target, type, productId
+        boolean exists = notificationRepository.existsBySenderUserIdAndTargetUserIdAndTypeAndProductId(
+            senderUserId, targetUserId, "like", productId);
+        if (exists) {
+            // 이미 알림이 존재하면 null 반환 (알림 생성하지 않음)
+            return null;
+        }
+        Notification notification = Notification.builder()
+                .senderUserId(senderUserId)
+                .targetUserId(targetUserId)
+                .message(message)
+                .type("like")
+                .category(com.creatorworks.nexus.notification.entity.NotificationCategory.SOCIAL)
+                .isRead(false)
+                .link(link)
+                .productId(productId)
+                .build();
+        return notificationRepository.save(notification);
+    }
+
     // 사용자의 알림 목록 조회
     public List<Notification> getNotificationsByUserId(Long userId) {
         return notificationRepository.findByTargetUserIdOrderByCreatedAtDesc(userId);

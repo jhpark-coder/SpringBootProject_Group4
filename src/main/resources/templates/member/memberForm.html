@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html layout:decorate="~{fragment/layout}"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      xmlns:th="http://www.thymeleaf.org">
+<html layout:decorate="~{fragment/layout}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    xmlns:th="http://www.thymeleaf.org">
 
 <head>
 
@@ -10,17 +9,22 @@
 <!-- 사용자 CSS 추가 -->
 <th:block layout:fragment="css">
     <style>
-        .fieldError{
-          color: #bd2130;
-         }
-         /* 👇 [추가] disabled처럼 보이게 할 CSS 클래스 */
+        .fieldError {
+            color: #bd2130;
+        }
+
+        /* 👇 [추가] disabled처럼 보이게 할 CSS 클래스 */
         .readonly-as-disabled {
-            background-color: #e9ecef; /* 부트스트랩의 기본 disabled 배경색 */
-            opacity: 1; /* 글자가 너무 흐려지지 않게 */
-            cursor: not-allowed; /* 마우스 커서를 '금지' 모양으로 */
+            background-color: #e9ecef;
+            /* 부트스트랩의 기본 disabled 배경색 */
+            opacity: 1;
+            /* 글자가 너무 흐려지지 않게 */
+            cursor: not-allowed;
+            /* 마우스 커서를 '금지' 모양으로 */
         }
     </style>
 </th:block>
+
 <body>
     <div layout:fragment="content">
         <!-- 페이지 전체를 감싸는 컨테이너 (회색 배경) -->
@@ -37,34 +41,35 @@
 
 
                 <!-- 실제 폼 제출 영역 -->
-                <form action="/members/api/new"  role="form"  id="registerForm" th:object="${memberFormDto}">
+                <form action="/members/api/new" role="form" id="registerForm" th:object="${memberFormDto}">
                     <div class="form-group">
                         <label for="email">이메일 주소(로그인ID)</label>
                         <div class="input-with-button">
-                            <input type="email" id="email" class="email-check" placeholder="이메일을 입력해주세요." th:field="*{email}">
+                            <input type="email" id="email" class="email-check" placeholder="이메일을 입력해주세요."
+                                th:field="*{email}">
                             <button type="button" id="sendAuthEmailBtn" class="btn btn-outline">인증메일 발송</button>
                         </div>
-<!--                        <p class="fieldError" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Incorrect date</p>-->
+                        <!--                        <p class="fieldError" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Incorrect date</p>-->
                         <p class="fieldError" id="error-email"></p>
                     </div>
                     <div class="form-group">
                         <label for="authCode">인증코드</label>
                         <div class="input-with-button">
                             <input type="text" id="authCode" name="authCode" placeholder="인증코드를 입력하세요">
-                            <button type="button" id="verifyEmailBtn" class="btn btn-outline"  disabled>인증 확인</button>
+                            <button type="button" id="verifyEmailBtn" class="btn btn-outline" disabled>인증 확인</button>
                         </div>
                         <span id="emailVerifyMessage" style="color:green;"></span>
                     </div>
                     <div class="form-group">
                         <label th:for="name">별명(활동명)</label>
                         <input type="text" placeholder="이름을 입력해주세요." th:field="*{name}">
-<!--                        <p class="fieldError" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Incorrect date</p>-->
+                        <!--                        <p class="fieldError" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Incorrect date</p>-->
                         <p class="fieldError" id="error-name"></p>
                     </div>
                     <div class="form-group">
                         <label th:for="password">비밀번호</label>
                         <input type="password" placeholder="비밀번호 입력" th:field="*{password}" autocomplete="new-password">
-<!--                        <p class="fieldError" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Incorrect date</p>-->
+                        <!--                        <p class="fieldError" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Incorrect date</p>-->
                         <p class="fieldError" id="error-password"></p>
                     </div>
 
@@ -75,8 +80,9 @@
                     <!-- 비밀번호 확인 -->
                     <div class="form-group">
                         <label for="passwordConfirm">비밀번호 확인</label>
-                        <input type="password" id="passwordConfirm" name="passwordConfirm" placeholder="비밀번호를 다시 한번 입력하세요">
-<!--                        <p class="fieldError" th:if="${#fields.hasErrors('passwordConfirm')}" th:errors="*{passwordConfirm}">Incorrect date</p>-->
+                        <input type="password" id="passwordConfirm" name="passwordConfirm"
+                            placeholder="비밀번호를 다시 한번 입력하세요">
+                        <!--                        <p class="fieldError" th:if="${#fields.hasErrors('passwordConfirm')}" th:errors="*{passwordConfirm}">Incorrect date</p>-->
                         <p class="fieldError" id="error-passwordConfirm"></p>
                     </div>
 
@@ -96,7 +102,7 @@
                                 <input type="radio" id="gender-other" name="gender" value="other">
                                 <label for="gender-other">기타</label>
                             </div>
-<!--                            <p class="fieldError" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}">Incorrect date</p>-->
+                            <!--                            <p class="fieldError" th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}">Incorrect date</p>-->
                             <p class="fieldError" id="error-gender"></p>
                         </div>
                     </div>
@@ -110,18 +116,18 @@
                                 <!-- JavaScript로 년도 채우기 -->
                             </select>
                             <p class="fieldError" id="error-birthYear"></p>
-<!--                            <p class="fieldError" th:if="${#fields.hasErrors('birthYear')}" th:errors="*{birthYear}">Incorrect date</p>-->
+                            <!--                            <p class="fieldError" th:if="${#fields.hasErrors('birthYear')}" th:errors="*{birthYear}">Incorrect date</p>-->
                             <select name="birthMonth" aria-label="출생 월" id="birthMonth">
                                 <option>--월</option>
                                 <!-- JavaScript로 월 채우기 -->
                             </select>
-<!--                            <p class="fieldError" th:if="${#fields.hasErrors('birthMonth')}" th:errors="*{birthMonth}">Incorrect date</p>-->
+                            <!--                            <p class="fieldError" th:if="${#fields.hasErrors('birthMonth')}" th:errors="*{birthMonth}">Incorrect date</p>-->
                             <p class="fieldError" id="error-birthMonth"></p>
                             <select name="birthDay" aria-label="출생 일" id="birthDay">
                                 <option>--일</option>
                                 <!-- JavaScript로 일 채우기 -->
                             </select>
-<!--                            <p class="fieldError" th:if="${#fields.hasErrors('birthDay')}" th:errors="*{birthDay}">Incorrect date</p>-->
+                            <!--                            <p class="fieldError" th:if="${#fields.hasErrors('birthDay')}" th:errors="*{birthDay}">Incorrect date</p>-->
                             <p class="fieldError" id="error-birthDay"></p>
                         </div>
                     </div>
@@ -139,20 +145,10 @@
 
             </div>
         </main>
-        <div class="popup-overlay" id="myPopup">
-            <!-- 팝업 컨테이너 -->
-            <div class="popup-container">
-                <!-- 팝업 메시지 (이 부분의 텍스트를 변경하여 사용) -->
-                <p class="popup-message" id="popupMessage">
-                    이메일 인증메일을 보냈습니다!
-                </p>
-                <!-- 확인 버튼 -->
-                <button class="popup-button" id="closePopup">확인</button>
-            </div>
-        </div>
     </div>
     <th:block layout:fragment="script">
         <script th:src="@{/js/memberForm.js}"></script>
     </th:block>
 </body>
+
 </html>

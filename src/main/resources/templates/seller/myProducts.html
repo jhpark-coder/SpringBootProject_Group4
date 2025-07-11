@@ -46,12 +46,13 @@
                     <tbody>
                         <tr th:each="product : ${productPage.content}" style="border-top:1px solid #ddd;">
                             <td th:text="${#temporals.format(product.regTime, 'yyyy-MM-dd HH:mm')}"></td>
-                            <td><a th:href="@{/products/{id}(id=${product.id})}" th:text="${product.name}"></a></td>
+                            <td th:text="${product.name}"></td>
                             <td th:text="${product.primaryCategory} + ' > ' + ${product.secondaryCategory}"></td>
-                            <td th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT') + '원'}"></td>
+                            <td th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT') + 'P'}"></td>
                             <td th:text="${product.viewCount}"></td>
                             <td>
-                                <a th:href="@{/editor/product/{id}(id=${product.id})}" class="btn-sm btn-outline">수정</a>
+                                <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-primary btn-sm"
+                                    style="padding: 2px 8px; font-size: 14px; min-width: 60px; min-height: 28px;">상세보기</a>
                             </td>
                         </tr>
                     </tbody>
