@@ -8,10 +8,15 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.creatorworks.nexus.auction.dto.AuctionPageResponse;
+import com.creatorworks.nexus.auction.dto.BiddingRequestDto;
+import com.creatorworks.nexus.auction.dto.BiddingResponseDto;
 import com.creatorworks.nexus.auction.entity.AuctionInquiry;
+import com.creatorworks.nexus.auction.entity.Bid;
 import com.creatorworks.nexus.auction.service.AuctionInquiryService;
+import com.creatorworks.nexus.auction.service.BiddingService;
 import com.creatorworks.nexus.auction.service.RecentlyViewedAuctionRedisService;
 import com.creatorworks.nexus.config.CategoryConfig;
+import com.creatorworks.nexus.member.dto.CustomUserDetails;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.member.service.MemberFollowService;
@@ -20,6 +25,7 @@ import com.creatorworks.nexus.util.tiptap.TipTapNode;
 import com.creatorworks.nexus.util.tiptap.TipTapRenderer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
@@ -28,6 +34,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -51,6 +60,7 @@ public class AuctionController {
     private final RedisTemplate<String, String>redisTemplate;
     private final ObjectMapper objectMapper;
     private final TipTapRenderer tipTapRenderer;
+    private final BiddingService biddingService; // 새로 추가된 서비스
 
     @GetMapping("/auctions/{id}")
     public String auctionDetail(@PathVariable("id") Long id,
@@ -262,12 +272,41 @@ public class AuctionController {
 
         return "auction/auction_grid";
     }
-
     /**
-     * 카테고리별 상품 목록 데이터를 JSON 형태로 반환하는 API 엔드포인트입니다.
-     * @param primaryCategory 1차 카테고리
-     * @param secondaryCategory 2차 카테고리 (필수 아님)
-     * @param pageable 페이징 정보
-     * @return 페이징 처리된 상품 데이터
+     * 특정 경매에 대한 입찰을 처리하는 API
+     * @param auctionId 경매 ID
+     * @param requestDto 입찰 요청 정보 (금액)
+     * @param userDetails 현재 로그인한 사용자 정보
+     * @return 처리 결과 (성공/실패, 메시지, 새로운 최고가)
      */
+    @PostMapping("/{auctionId}/bids")
+
+    public ResponseEntity<BiddingResponseDto> placeBid(
+            @PathVariable Long auctionId,
+            @RequestBody @Valid BiddingRequestDto requestDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        try {
+            // BiddingService를 통해 입찰 처리
+            Bid newBid = biddingService.placeBid(auctionId, requestDto, userDetails.getName());
+
+            // 성공 응답 생성
+            BiddingResponseDto response = new BiddingResponseDto(
+                    true,
+                    "입찰에 성공했습니다.",
+                    newBid.getAmount(),
+                    newBid.getBidder().getName() // 또는 getName()
+            );
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            // 유효성 검사 실패 시
+            BiddingResponseDto response = new BiddingResponseDto(false, e.getMessage(), null, null);
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            // 기타 예외 발생 시
+            BiddingResponseDto response = new BiddingResponseDto(false, "입찰 처리 중 오류가 발생했습니다.", null, null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }

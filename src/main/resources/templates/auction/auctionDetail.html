@@ -13,6 +13,7 @@
     <link rel="stylesheet" th:href="@{/css/heartFollow.css}">
     <link rel="stylesheet" th:href="@{/css/paywall.css}">
     <link rel="stylesheet" th:href="@{/css/auctionTimer.css}">
+    <link rel="stylesheet" th:href="@{/react-bidding/main.css}">
 
     <!-- Google Fonts 로딩 개선 -->
     <th:block th:if="${auction.fontFamily != null && !#strings.isEmpty(auction.fontFamily)}">
@@ -91,11 +92,7 @@
                     <!-- 구매하지 않은 경우: 구매 버튼 표시 -->
                     <th:block th:if="${!canViewContent}">
                         <!-- 입찰 버튼 -->
-                        <button onclick=""
-                                class="purchase-btn"
-                                th:text="${auction.startBidPrice != null} ? '현재입찰가:'+${auction.startBidPrice} + '원' : '입찰하기'">
-                            입찰하기
-                        </button>
+                        <div id="react-bidding-root"></div>
                         <!-- 즉시입찰 버튼 -->
                         <!-- 기존 버튼을 이렇게 수정합니다 -->
                         <button th:onclick="|location.href='@{/api/auction-payment/payment-page/{id}(id=${auction.id})}'|"
@@ -163,6 +160,23 @@
     <!-- heartFollow.js 스크립트 추가 -->
     <script th:src="@{/js/heartFollow.js}"></script>
     <script th:src="@{/js/countdown.js}"></script>
+    <script defer="defer" th:src="@{/react-bidding/main.js}"></script>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        // Thymeleaf 변수를 JavaScript 객체로 변환하여 window 객체에 저장합니다.
+        // React 앱은 이 window 객체를 통해 초기 데이터를 공급받습니다.
+        window.biddingAppData = {
+            auctionId: /*[[${auction.id}]]*/ null,
+            initialHighestBid: /*[[${auction.highestBidAmount ?: auction.startBidPrice}]]*/ 0, // 초기 최고가는 DB에서 조회해야 합니다.
+            buyNowPrice: /*[[${auction.buyNowPrice}]]*/ null,
+            auctionEndTime: /*[[${auction.auctionEndTime}]]*/ null,
+            authToken: /*[[${#authentication.principal.jwtToken}]]*/ null // 사용자의 JWT 토큰을 전달하는 가상의 예시
+        };
+
+        /*]]>*/
+    </script>
 
     <!-- 폰트 로딩 확인 및 적용 스크립트 -->
     <script th:if="${auction.fontFamily != null && !#strings.isEmpty(auction.fontFamily)}">
