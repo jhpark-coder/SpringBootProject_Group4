@@ -52,6 +52,8 @@ public class Auction extends BaseEntity {
     private int auctionDuration; // 경매기간 (일)
     private Long startBidPrice;
     private Long buyNowPrice;
+    @Column(nullable = false, columnDefinition = "bigint default 0")
+    private long viewCount = 0L;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id")
@@ -79,5 +81,6 @@ public class Auction extends BaseEntity {
         this.auctionEndTime = auctionEndTime;
         this.backgroundColor = backgroundColor;
         this.fontFamily = fontFamily;
+        this.viewCount = 0L;
     }
 }

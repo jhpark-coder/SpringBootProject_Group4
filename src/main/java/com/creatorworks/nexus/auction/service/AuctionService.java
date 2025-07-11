@@ -5,8 +5,10 @@ import java.util.List;
 import com.creatorworks.nexus.auction.Specification.AuctionSpecification;
 import com.creatorworks.nexus.auction.dto.AuctionDto;
 import com.creatorworks.nexus.auction.dto.AuctionPageResponse;
+import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.dto.ProductDto;
 import com.creatorworks.nexus.product.dto.ProductPageResponse;
+import com.creatorworks.nexus.product.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -33,6 +35,7 @@ public class AuctionService {
     private final MemberRepository memberRepository;
     private final ItemTagRepository itemTagRepository;
     private final AuctionItemTagRepository auctionItemTagRepository;
+    private final OrderRepository orderRepository;
 
     @Transactional
     public Auction saveAuction(AuctionSaveRequest request, String userEmail) {
@@ -133,5 +136,27 @@ public class AuctionService {
                 auctionPage.isLast()
         );
 
+    }
+    /**
+     * 상품 조회와 동시에 조회수를 증가시킵니다. (상품 상세 페이지 조회 시 사용)
+     * @param id 조회할 상품의 ID.
+     * @return 찾아낸 상품(Product) 객체.
+     * @throws IllegalArgumentException 해당 ID의 상품이 존재하지 않을 경우 예외를 발생시킵니다.
+     */
+    @Transactional
+    public Auction findAuctionByIdAndIncrementView(Long id) {
+        Auction auction = auctionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid auction Id:" + id));
+        auction.setViewCount(auction.getViewCount() + 1);
+        return auction;
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasUserPurchasedAuction(Member member, Auction auction) {
+        if (member == null || auction == null) {
+            return false;
+        }
+        // OrderRepository를 사용하여 구매 이력 확인
+        return orderRepository.existsByBuyerAndAuction(member, auction);
     }
 }

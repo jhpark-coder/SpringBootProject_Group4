@@ -2,6 +2,7 @@ package com.creatorworks.nexus.order.entity;
 
 import java.time.LocalDateTime;
 
+import com.creatorworks.nexus.auction.entity.Auction;
 import com.creatorworks.nexus.global.BaseEntity;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.product.entity.Product;
@@ -62,6 +63,10 @@ public class Order extends BaseEntity {
     @JoinColumn(name = "product_id")
     private Product product;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "auction_id")
+    private Auction auction;
+
 
 
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -69,7 +74,7 @@ public class Order extends BaseEntity {
 
     @Builder
     public Order(Member buyer, OrderType orderType, OrderStatus orderStatus, 
-                Long totalAmount, LocalDateTime orderDate, String description, Product product) {
+                Long totalAmount, LocalDateTime orderDate, String description, Product product, Auction auction) {
         this.buyer = buyer;
         this.orderType = orderType;
         this.orderStatus = orderStatus;
@@ -77,6 +82,8 @@ public class Order extends BaseEntity {
         this.orderDate = (orderDate != null) ? orderDate : LocalDateTime.now();
         this.description = description;
         this.product = product;
+        this.auction = auction;
+
     }
 
     // 주문 상태 변경 메서드들

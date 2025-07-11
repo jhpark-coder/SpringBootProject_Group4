@@ -60,3 +60,18 @@ document.addEventListener('gridAnimationEnd', function(event) {
     }
 });
 // =======================================================
+// ==================== [추가된 부분] ====================
+/**
+ * 페이지가 로드되었을 때, 애니메이션에 의존하지 않는 모든 카운트다운을 즉시 시작합니다.
+ * 상세 페이지와 같이 정적인 페이지에서 타이머를 작동시키는 역할을 합니다.
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // '.grid-item' 내부에 있지 않은 타이머만 찾습니다.
+    // 이는 그리드 페이지의 타이머가 중복 실행되는 것을 방지합니다.
+    const staticTimers = document.querySelectorAll('.countdown-timer:not(.grid-item .countdown-timer)');
+
+    staticTimers.forEach(timer => {
+        startCountdown(timer);
+    });
+});
+// =======================================================

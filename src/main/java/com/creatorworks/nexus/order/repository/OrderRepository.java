@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.creatorworks.nexus.auction.entity.Auction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -81,6 +82,16 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT EXISTS(SELECT 1 FROM Order o " +
            "WHERE o.buyer = :buyer AND o.product = :product AND o.orderStatus = 'COMPLETED')")
     boolean existsByBuyerAndProduct(@Param("buyer") Member buyer, @Param("product") Product product);
+
+    /**
+     * 특정 사용자가 특정 상품을 구매했는지 여부를 확인합니다.
+     * @param buyer 구매자
+     * @param auction 경매
+     * @return 구매했다면 true, 아니면 false
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM Order o " +
+            "WHERE o.buyer = :buyer AND o.auction = :auction AND o.orderStatus = 'COMPLETED')")
+    boolean existsByBuyerAndAuction(@Param("buyer") Member buyer, @Param("auction") Auction auction);
     
     /**
      * 특정 상품의 구매 횟수를 조회합니다.

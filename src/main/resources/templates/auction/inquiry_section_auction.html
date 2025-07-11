@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<style>
+  html, body {
+      height: 100%;
+      overflow: auto;
+  }
+</style>
+
+<div th:fragment="inquirySection(auction, inquiryPage)">
+  <link rel="stylesheet" th:href="@{/css/inquiry.css}">
+  <section class="inquiry-section">
+
+    <div class="inquiry-section-header">
+      <h3>상품 문의 <span class="count" th:text="${inquiryPage.totalElements}">0</span></h3>
+      <button class="btn-ask-question"
+              sec:authorize="isAuthenticated()"
+              th:if="${#authentication.name != auction.seller.email}">문의하기</button>
+    </div>
+
+    <div class="inquiry-notice">
+      <ul>
+        <li>구매한 상품의 취소/반품은 마이페이지 구매내역에서 신청 가능합니다.</li>
+        <li>상품문의 및 후기게시판을 통해 취소나 환불, 반품 등은 처리되지 않습니다.</li>
+        <li>가격, 판매자, 교환/환불 및 배송 등 해당 상품 자체와 관련 없는 문의는 고객센터 내 1:1 문의하기를 이용해주세요.</li>
+        <li>"해당 상품 자체와 관련 없는 문의" 비방, 광고, 불법적인 내용 등은 사전 통보 없이 삭제될 수 있습니다.</li>
+      </ul>
+    </div>
+
+    <form th:action="@{/auctions/{id}(id=${auction.id})}" method="get" class="search-box">
+      <input type="text" name="inquiryKeyword" placeholder="궁금한 내용을 단어나 키워드로 검색해보세요." th:value="${inquiryKeyword}">
+      <button type="submit"></button>
+    </form>
+
+    <div class="inquiry-list">
+      <div th:if="${inquiryPage.empty}" class="no-inquiries">
+        <p>등록된 문의가 없습니다.</p>
+      </div>
+      <div th:unless="${inquiryPage.empty}" th:each="inquiry : ${inquiryPage.content}" class="inquiry-item">
+        <div class="inquiry-question">
+          <div class="inquiry-header">
+            <strong th:text="${inquiry.writer.name}">작성자</strong>
+            <span class="inquiry-type-q">질문</span>
+            <time th:text="${#temporals.format(inquiry.regTime, 'yyyy-MM-dd HH:mm')}">2023-10-27
+              10:30</time>
+          </div>
+          <div class="inquiry-content">
+            <!-- 비밀글 처리 -->
+            <div th:if="${inquiry.isViewableBy(currentMember)}">
+              <p th:text="${inquiry.content}">질문 내용입니다.</p>
+            </div>
+            <div th:unless="${inquiry.isViewableBy(currentMember)}">
+              <p style="color: #888;">
+                <i class="fas fa-lock" aria-hidden="true"></i>
+                비밀글입니다.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 답변이 있는 경우 -->
+        <div th:if="${!inquiry.children.isEmpty()}" class="inquiry-answer">
+          <div th:each="reply : ${inquiry.children}">
+            <div class.inquiry-header>
+              <strong th:text="${reply.writer.name}">답변자</strong>
+              <span class="inquiry-type-a">답변</span>
+              <time th:text="${#temporals.format(reply.regTime, 'yyyy-MM-dd HH:mm')}">2023-10-27
+                11:00</time>
+            </div>
+            <div class="inquiry-content">
+              <!-- 비밀글 처리 -->
+              <div th:if="${reply.isViewableBy(currentMember)}">
+                <p th:text="${reply.content}">답변 내용입니다.</p>
+              </div>
+              <div th:unless="${reply.isViewableBy(currentMember)}">
+                <p style="color: #888;">
+                  <i class="fas fa-lock" aria-hidden="true"></i>
+                  비밀글입니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 답변이 없는 경우, 상품 작가에게만 답변하기 버튼 표시 -->
+        <div th:if="${inquiry.children.isEmpty()}" sec:authorize="isAuthenticated()">
+          <div th:if="${#authentication.name == auction.seller.email}" class="reply-form-placeholder">
+            <button class="btn-add-reply" th:data-inquiry-id="${inquiry.id}"
+                    th:data-inquiry-writer="${inquiry.writer.name}"
+                    th:data-inquiry-content="${inquiry.content}">답변하기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <nav th:if="${!inquiryPage.empty}" aria-label="Page navigation">
+      <ul class="pagination" style="justify-content: center;">
+        <li class="page-item" th:classappend="${inquiryPage.first} ? 'disabled'">
+          <a class="page-link"
+             th:href="@{/auctions/{id}(id=${auction.id}, inquiryPageable_page=${inquiryPage.number - 1})}">&laquo;</a>
+        </li>
+        <li class="page-item" th:each="pageNumber : ${#numbers.sequence(0, inquiryPage.totalPages - 1)}"
+            th:classappend="${pageNumber == inquiryPage.number} ? 'active'">
+          <a class="page-link"
+             th:href="@{/auctions/{id}(id=${auction.id}, inquiryPageable_page=${pageNumber})}"
+             th:text="${pageNumber + 1}">1</a>
+        </li>
+        <li class="page-item" th:classappend="${inquiryPage.last} ? 'disabled'">
+          <a class="page-link"
+             th:href="@{/auctions/{id}(id=${auction.id}, inquiryPageable_page=${inquiryPage.number + 1})}">&raquo;</a>
+        </li>
+      </ul>
+    </nav>
+  </section>
+
+  <!-- 문의하기 모달 -->
+  <div id="inquiryModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <form th:action="@{/auctions/{id}/inquiries(id=${auction.id})}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <div class="modal-header">
+          <h2>상품 문의</h2>
+          <button type="button" class="close-modal-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>판매자</label>
+            <p th:text="${auction.seller.name}">판매자 이름</p>
+          </div>
+          <div class="form-group" sec:authorize="isAuthenticated()">
+            <label>문의자</label>
+            <p th:text="${#authentication.principal.name}">로그인한 사용자 이름</p>
+          </div>
+          <div class="form-group">
+            <label for="inquiryContent">문의내용</label>
+            <textarea id="inquiryContent" name="content" rows="6" required
+                      placeholder="문의내용을 입력해주세요."></textarea>
+          </div>
+          <div class="form-group-checkbox">
+            <input type="hidden" name="_isSecret" value="on" />
+            <input type="checkbox" id="isSecret" name="isSecret" value="true">
+            <label for="isSecret">비밀글로 문의하기</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <p>* 개인정보(주민번호, 연락처, 주소, 계좌번호, 카드번호 등)가 포함되지 않도록 유의해주세요.</p>
+          <div>
+            <button type="submit" class="btn-submit">확인</button>
+            <button type="button" class="btn-cancel">취소</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- (신규) 답변하기 모달 -->
+  <div id="replyModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <form id="replyForm" action="" method="post"> <!-- action은 스크립트가 채워줌 -->
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <div class="modal-header">
+          <h2>문의 답변하기</h2>
+          <button type="button" class="close-modal-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>문의자</label>
+            <p id="replyModalInquirer"></p>
+          </div>
+          <div class="form-group">
+            <label>문의내용</label>
+            <p id="replyModalInquiryContent" class="original-inquiry-content"></p>
+          </div>
+          <div class="form-group">
+            <label for="replyContent">답변내용</label>
+            <textarea id="replyContent" name="content" rows="6" required
+                      placeholder="답변 내용을 입력해주세요."></textarea>
+          </div>
+          <div class="form-group-checkbox">
+            <input type="hidden" name="_isSecret" value="on" />
+            <input type="checkbox" id="replyIsSecret" name="isSecret" value="true">
+            <label for="replyIsSecret">비밀글로 답변하기</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div>
+            <button type="submit" class="btn-submit">확인</button>
+            <button type="button" class="btn-cancel">취소</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    const auctionId = /*[[${auction.id}]]*/ null;
+
+    // 페이지 레이아웃이 안정된 후 모달 이벤트를 바인딩합니다.
+    document.addEventListener('pageReady', function () {
+        // --- 문의 모달 제어 ---
+        const inquiryModal = document.getElementById('inquiryModal');
+        const openInquiryModalBtn = document.querySelector('.btn-ask-question');
+        if (openInquiryModalBtn && inquiryModal) {
+            openInquiryModalBtn.addEventListener('click', () => {
+                inquiryModal.style.display = 'flex';
+                // 강제 리플로우로 위치 안정화
+                requestAnimationFrame(() => {
+                    void inquiryModal.offsetHeight;
+                    inquiryModal.style.opacity = '0.99';
+                    requestAnimationFrame(() => {
+                        inquiryModal.style.opacity = '';
+                    });
+                });
+            });
+        }
+
+        // --- 답변 모달 제어 ---
+        const replyModal = document.getElementById('replyModal');
+        const addReplyButtons = document.querySelectorAll('.btn-add-reply');
+
+        addReplyButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const inquiryId = this.dataset.inquiryId;
+                const inquiryWriter = this.dataset.inquiryWriter;
+                const inquiryContent = this.dataset.inquiryContent;
+
+                // 모달 내용 채우기
+                if(replyModal) {
+                    document.getElementById('replyModalInquirer').textContent = inquiryWriter;
+                    document.getElementById('replyModalInquiryContent').textContent = inquiryContent;
+
+                    // 폼 action URL 설정
+                    const form = document.getElementById('replyForm');
+                    form.action = `/auctions/${auctionId}/inquiries/${inquiryId}/replies`;
+
+                    replyModal.style.display = 'flex';
+                    // 강제 리플로우로 위치 안정화
+                    requestAnimationFrame(() => {
+                        void replyModal.offsetHeight;
+                        replyModal.style.opacity = '0.99';
+                        requestAnimationFrame(() => {
+                            replyModal.style.opacity = '';
+                        });
+                    });
+                }
+            });
+        });
+
+
+        // --- 공통 모달 닫기 제어 ---
+        const allModals = document.querySelectorAll('.modal-overlay');
+        allModals.forEach(modal => {
+            const closeModalBtn = modal.querySelector('.close-modal-btn');
+            const cancelBtn = modal.querySelector('.btn-cancel');
+
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener('click', () => modal.style.display = 'none');
+            }
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => modal.style.display = 'none');
+            }
+
+            // 모달 외부 클릭 시 닫기
+            modal.addEventListener('click', function (event) {
+                if (event.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        });
+    });
+    /*]]>*/
+  </script>
+</div>
+
+</html>
