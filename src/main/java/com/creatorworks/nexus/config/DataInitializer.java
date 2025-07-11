@@ -5,14 +5,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.creatorworks.nexus.auction.entity.Auction;
-import com.creatorworks.nexus.auction.repository.AuctionRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.creatorworks.nexus.auction.entity.Auction;
+import com.creatorworks.nexus.auction.repository.AuctionRepository;
 import com.creatorworks.nexus.member.constant.Role;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
@@ -69,6 +69,24 @@ public class DataInitializer {
                         .birthDay("N/A")
                         .build();
                 memberRepository.save(user);
+            }
+
+            // 테스트 유저 계정 생성 (10만 포인트 보유)
+            Member testUser = memberRepository.findByEmail("testuser@test.com");
+            if (testUser == null) {
+                testUser = Member.builder()
+                        .email("testuser@test.com")
+                        .name("테스트유저")
+                        .password(passwordEncoder.encode("password"))
+                        .role(Role.USER)
+                        .gender("N/A")
+                        .birthYear("N/A")
+                        .birthMonth("N/A")
+                        .birthDay("N/A")
+                        .point(100000) // 10만 포인트 설정
+                        .build();
+                memberRepository.save(testUser);
+                System.out.println("테스트 유저가 생성되었습니다: testuser@test.com (10만 포인트 보유)");
             }
 
             // 테스트용 판매자 계정 생성 (기존 작가 계정을 판매자로 변경)

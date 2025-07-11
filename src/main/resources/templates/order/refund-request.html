@@ -6,94 +6,189 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>환불 요청 - Nexus</title>
+    <!-- jQuery -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <!-- iamport.payment.js -->
+    <script type="text/javascript" src="https://cdn.iamport.kr/js/iamport.payment-1.1.8.js"></script>
     <style>
         .refund-container {
             max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+            margin: 40px auto;
+            padding: 0 20px;
         }
 
         .refund-card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-            margin-bottom: 20px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            margin-bottom: 30px;
         }
 
         .refund-header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
 
         .refund-title {
-            color: #333;
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 12px;
         }
 
         .refund-subtitle {
-            color: #666;
             font-size: 16px;
+            color: #666;
+        }
+
+        .order-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 24px;
+            color: white;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .order-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .order-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .order-applicant {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .info-title {
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+
+        .info-text {
+            color: #424242;
+            font-size: 14px;
+            line-height: 1.5;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .form-label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
+            font-weight: 600;
             color: #333;
+            margin-bottom: 8px;
         }
 
-        .form-control {
+        .form-input {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
         }
 
-        .form-control:focus {
+        .form-input:focus {
             outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+            border-color: #667eea;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            min-height: 100px;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: white;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 16px;
+            margin-top: 32px;
         }
 
         .btn {
-            padding: 12px 24px;
+            flex: 1;
+            padding: 14px 24px;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
         }
 
         .btn-primary {
-            background: #007bff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
 
         .btn-primary:hover {
-            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
         }
 
         .btn-secondary {
-            background: #6c757d;
-            color: white;
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #e1e5e9;
         }
 
         .btn-secondary:hover {
-            background: #545b62;
+            background: #e9ecef;
+            border-color: #adb5bd;
         }
 
         .alert {
-            padding: 12px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: none;
         }
 
         .alert-success {
@@ -102,31 +197,23 @@
             border: 1px solid #c3e6cb;
         }
 
-        .alert-danger {
+        .alert-error {
             background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
 
-        .order-info {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+        .amount-input-group {
+            position: relative;
         }
 
-        .order-info h3 {
-            margin-top: 0;
-            color: #333;
-        }
-
-        .amount-input {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .bank-select {
-            margin-bottom: 10px;
+        .amount-suffix {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-weight: 600;
         }
 
         .account-info {
@@ -147,23 +234,36 @@
                 <p class="refund-subtitle">주문에 대한 환불을 신청합니다.</p>
             </div>
 
-            <!-- 알림 메시지 -->
-            <div id="alertMessage" class="alert" style="display: none;"></div>
-
             <!-- 주문 정보 -->
             <div class="order-info">
-                <h3>주문 정보</h3>
-                <p><strong>주문 번호:</strong> <span th:text="${orderId}">12345</span></p>
-                <p><strong>신청자:</strong> <span th:text="${member.email}">user@example.com</span></p>
+                <div class="order-label">주문 번호</div>
+                <div class="order-number" th:text="${orderId}">12345</div>
+                <div class="order-applicant" th:text="'신청자: ' + ${member.email}">신청자: user@example.com</div>
             </div>
+
+            <div class="info-box">
+                <div class="info-title">환불 안내</div>
+                <div class="info-text">
+                    • 최소 환불 금액: 1,000원<br>
+                    • 환불 처리: 관리자 검토 후 처리<br>
+                    • 환불 수수료: 없음<br>
+                    • 한 번에 하나의 환불 요청만 가능합니다<br>
+                    • 실제 결제 내역이 있는 경우: 실제 금액 환불<br>
+                    • 포인트 구매의 경우: 포인트 차감 처리
+                </div>
+            </div>
+
+            <div class="alert alert-success" id="successAlert"></div>
+            <div class="alert alert-error" id="errorAlert"></div>
 
             <!-- 환불 신청 폼 -->
             <form id="refundForm">
                 <input type="hidden" name="orderId" th:value="${orderId}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
                 <div class="form-group">
                     <label class="form-label">환불 유형</label>
-                    <select name="refundType" class="form-control" required>
+                    <select name="refundType" class="form-select" required>
                         <option value="">환불 유형을 선택하세요</option>
                         <option value="PAYMENT_REFUND">결제 환불</option>
                         <option value="POINT_REFUND">포인트 환불</option>
@@ -171,137 +271,258 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">환불 금액</label>
-                    <input type="number" name="amount" class="form-control amount-input" placeholder="환불 금액을 입력하세요"
-                        min="1000" step="100" required>
-                    <small class="text-muted">최소 1,000원부터 환불 가능합니다.</small>
+                    <label class="form-label">환불 요청 금액</label>
+                    <div class="amount-input-group">
+                        <input type="number" name="amount" class="form-input" id="amount" placeholder="환불 금액을 입력하세요"
+                            min="1000" step="100" required>
+                        <span class="amount-suffix">원</span>
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">환불 사유</label>
-                    <textarea name="reason" class="form-control" rows="4" placeholder="환불 사유를 상세히 작성해주세요"
+                    <textarea name="reason" class="form-textarea" id="reason" placeholder="환불 사유를 상세히 작성해주세요"
                         required></textarea>
                 </div>
 
                 <!-- 은행 정보 (결제 환불인 경우) -->
                 <div id="bankInfo" class="account-info">
-                    <h3>환불 계좌 정보</h3>
+                    <h3 style="margin-bottom: 20px; color: #333;">환불 계좌 정보</h3>
 
-                    <div class="form-group bank-select">
+                    <div class="form-group">
                         <label class="form-label">은행 선택</label>
-                        <select name="bankCode" class="form-control">
+                        <select name="bankCode" class="form-select" id="bankCode">
                             <option value="">은행을 선택하세요</option>
-                            <option value="088">신한은행</option>
-                            <option value="004">국민은행</option>
+                            <option value="001">한국은행</option>
+                            <option value="002">산업은행</option>
                             <option value="003">기업은행</option>
+                            <option value="004">국민은행</option>
+                            <option value="005">하나은행</option>
+                            <option value="007">수협은행</option>
+                            <option value="008">수출입은행</option>
                             <option value="011">농협은행</option>
+                            <option value="012">농협회원조합</option>
                             <option value="020">우리은행</option>
+                            <option value="023">SC제일은행</option>
+                            <option value="027">한국씨티은행</option>
+                            <option value="031">대구은행</option>
+                            <option value="032">부산은행</option>
+                            <option value="034">광주은행</option>
+                            <option value="035">제주은행</option>
+                            <option value="037">전북은행</option>
+                            <option value="039">경남은행</option>
+                            <option value="045">새마을금고</option>
+                            <option value="048">신협</option>
+                            <option value="050">상호저축은행</option>
+                            <option value="052">모간스탠리은행</option>
+                            <option value="054">HSBC은행</option>
+                            <option value="055">도이치은행</option>
+                            <option value="057">제이피모간체이스은행</option>
+                            <option value="058">미즈호은행</option>
+                            <option value="059">미쓰비시도쿄UFJ은행</option>
+                            <option value="060">BOA은행</option>
+                            <option value="061">비엔피파리바은행</option>
+                            <option value="062">중국공상은행</option>
+                            <option value="063">중국은행</option>
+                            <option value="064">산림조합중앙회</option>
+                            <option value="065">대화은행</option>
+                            <option value="066">교통은행</option>
+                            <option value="067">중국건설은행</option>
+                            <option value="071">우체국</option>
                             <option value="081">하나은행</option>
                             <option value="088">신한은행</option>
                             <option value="089">케이뱅크</option>
                             <option value="090">카카오뱅크</option>
+                            <option value="092">토스뱅크</option>
+                            <option value="209">유안타증권</option>
+                            <option value="218">KB증권</option>
+                            <option value="230">미래에셋증권</option>
+                            <option value="238">대우증권</option>
+                            <option value="240">삼성증권</option>
+                            <option value="243">한국투자증권</option>
+                            <option value="247">우리투자증권</option>
+                            <option value="261">교보증권</option>
+                            <option value="262">하이투자증권</option>
+                            <option value="263">HMC투자증권</option>
+                            <option value="264">키움증권</option>
+                            <option value="265">이베스트투자증권</option>
+                            <option value="266">SK증권</option>
+                            <option value="267">대신증권</option>
+                            <option value="268">아이엠투자증권</option>
+                            <option value="269">한화투자증권</option>
+                            <option value="270">하나대투증권</option>
+                            <option value="271">신한투자증권</option>
+                            <option value="278">신영증권</option>
+                            <option value="279">동부증권</option>
+                            <option value="280">유진투자증권</option>
+                            <option value="287">메리츠증권</option>
+                            <option value="288">카카오페이증권</option>
+                            <option value="290">부국증권</option>
+                            <option value="291">신한금융투자</option>
+                            <option value="292">LIG투자증권</option>
+                            <option value="293">리딩투자증권</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">계좌번호</label>
-                        <input type="text" name="accountNumber" class="form-control" placeholder="계좌번호를 입력하세요">
+                        <input type="text" name="accountNumber" class="form-input" id="accountNumber"
+                            placeholder="계좌번호를 입력하세요 (하이픈 제외)">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">예금주명</label>
-                        <input type="text" name="accountHolder" class="form-control" placeholder="예금주명을 입력하세요">
+                        <input type="text" name="accountHolder" class="form-input" id="accountHolder"
+                            placeholder="예금주명을 입력하세요">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">연락처</label>
-                        <input type="tel" name="phoneNumber" class="form-control" placeholder="연락처를 입력하세요">
+                        <input type="tel" name="phoneNumber" class="form-input" id="phoneNumber"
+                            placeholder="연락처를 입력하세요 (하이픈 제외)">
                     </div>
                 </div>
 
-                <div class="form-group" style="text-align: center; margin-top: 30px;">
-                    <button type="submit" class="btn btn-primary">환불 신청</button>
-                    <a href="/order/list" class="btn btn-secondary" style="margin-left: 10px;">취소</a>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" onclick="history.back()">취소</button>
+                    <button type="submit" class="btn btn-primary">환불 요청</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', function () {
-            const refundTypeSelect = document.querySelector('select[name="refundType"]');
-            const bankInfo = document.getElementById('bankInfo');
-            const form = document.getElementById('refundForm');
+    <th:block layout:fragment="script">
+        <script>
+            // 아임포트 초기화
+            var IMP = window.IMP;
+            IMP.init('channel-key-169a5aa7-ef59-45ee-a715-66c274540c8a'); // KG이니시스 채널키
 
-            // 환불 유형에 따라 은행 정보 표시/숨김
-            refundTypeSelect.addEventListener('change', function () {
-                if (this.value === 'PAYMENT_REFUND') {
-                    bankInfo.classList.add('show');
-                    // 은행 정보 필수로 설정
-                    bankInfo.querySelectorAll('input, select').forEach(input => {
-                        input.required = true;
-                    });
-                } else {
-                    bankInfo.classList.remove('show');
-                    // 은행 정보 선택으로 설정
-                    bankInfo.querySelectorAll('input, select').forEach(input => {
-                        input.required = false;
-                    });
-                }
-            });
+            document.addEventListener('DOMContentLoaded', function () {
+                const refundTypeSelect = document.querySelector('select[name="refundType"]');
+                const bankInfo = document.getElementById('bankInfo');
+                const form = document.getElementById('refundForm');
 
-            // 폼 제출 처리
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
+                // 환불 유형에 따라 은행 정보 표시/숨김
+                refundTypeSelect.addEventListener('change', function () {
+                    if (this.value === 'PAYMENT_REFUND') {
+                        bankInfo.classList.add('show');
+                        // 은행 정보 필수로 설정
+                        bankInfo.querySelectorAll('input, select').forEach(input => {
+                            input.required = true;
+                        });
+                    } else {
+                        bankInfo.classList.remove('show');
+                        // 은행 정보 선택으로 설정
+                        bankInfo.querySelectorAll('input, select').forEach(input => {
+                            input.required = false;
+                        });
+                    }
+                });
 
-                const formData = new FormData(form);
-                const data = {
-                    orderId: formData.get('orderId'),
-                    refundType: formData.get('refundType'),
-                    amount: parseInt(formData.get('amount')),
-                    reason: formData.get('reason'),
-                    bankCode: formData.get('bankCode'),
-                    accountNumber: formData.get('accountNumber'),
-                    accountHolder: formData.get('accountHolder'),
-                    phoneNumber: formData.get('phoneNumber')
-                };
+                // 폼 제출 처리
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
 
-                // 환불 신청 API 호출
-                fetch('/refund/request', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                })
-                    .then(response => response.json())
-                    .then(result => {
-                        const alertDiv = document.getElementById('alertMessage');
-                        alertDiv.style.display = 'block';
+                    const formData = new FormData(form);
+                    const data = {
+                        orderId: formData.get('orderId'),
+                        refundType: formData.get('refundType'),
+                        amount: parseInt(formData.get('amount')),
+                        reason: formData.get('reason'),
+                        bankCode: formData.get('bankCode'),
+                        accountNumber: formData.get('accountNumber'),
+                        accountHolder: formData.get('accountHolder'),
+                        phoneNumber: formData.get('phoneNumber')
+                    };
 
-                        if (result.success) {
-                            alertDiv.className = 'alert alert-success';
-                            alertDiv.textContent = '환불 신청이 완료되었습니다.';
-
-                            // 성공 시 환불 내역 페이지로 이동
-                            setTimeout(() => {
-                                window.location.href = '/refund/my-refunds';
-                            }, 2000);
-                        } else {
-                            alertDiv.className = 'alert alert-danger';
-                            alertDiv.textContent = result.message || '환불 신청 중 오류가 발생했습니다.';
-                        }
+                    // 환불 신청 API 호출
+                    fetch('/refund/request', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
                     })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        const alertDiv = document.getElementById('alertMessage');
-                        alertDiv.style.display = 'block';
-                        alertDiv.className = 'alert alert-danger';
-                        alertDiv.textContent = '환불 신청 중 오류가 발생했습니다.';
-                    });
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                showAlert('success', '환불 신청이 완료되었습니다.');
+                                // 성공 시 환불 내역 페이지로 이동
+                                setTimeout(() => {
+                                    window.location.href = '/refund/my-refunds';
+                                }, 2000);
+                            } else {
+                                showAlert('error', result.message || '환불 신청 중 오류가 발생했습니다.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showAlert('error', '환불 신청 중 오류가 발생했습니다.');
+                        });
+                });
+
+                function showAlert(type, message) {
+                    const successAlert = document.getElementById('successAlert');
+                    const errorAlert = document.getElementById('errorAlert');
+
+                    if (type === 'success') {
+                        successAlert.textContent = message;
+                        successAlert.style.display = 'block';
+                        errorAlert.style.display = 'none';
+                    } else {
+                        errorAlert.textContent = message;
+                        errorAlert.style.display = 'block';
+                        successAlert.style.display = 'none';
+                    }
+                }
+
+                // 계좌번호 입력 시 숫자만 허용
+                document.getElementById('accountNumber').addEventListener('input', function (e) {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+
+                // 연락처 입력 시 숫자만 허용
+                document.getElementById('phoneNumber').addEventListener('input', function (e) {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
             });
-        });
-    </script>
+
+            // 아임포트 환불 처리 함수 (실제 결제 내역이 있는 경우)
+            function processIamportRefund(originalImpUid, amount, reason, accountInfo) {
+                return new Promise((resolve, reject) => {
+                    // 아임포트 환불 API 호출
+                    IMP.request_pay({
+                        pg: 'inicis_v2', // KG이니시스 v2
+                        pay_method: 'card',
+                        merchant_uid: 'refund_' + new Date().getTime(),
+                        amount: amount,
+                        name: '환불 처리',
+                        buyer_email: 'refund@example.com',
+                        buyer_name: accountInfo.accountHolder,
+                        buyer_tel: accountInfo.phoneNumber,
+                        custom_data: {
+                            original_imp_uid: originalImpUid,
+                            refund_reason: reason
+                        }
+                    }, function (rsp) {
+                        if (rsp.success) {
+                            resolve({
+                                success: true,
+                                imp_uid: rsp.imp_uid,
+                                merchant_uid: rsp.merchant_uid,
+                                amount: rsp.paid_amount
+                            });
+                        } else {
+                            reject({
+                                success: false,
+                                error_msg: rsp.error_msg
+                            });
+                        }
+                    });
+                });
+            }
+        </script>
+    </th:block>
 </body>
 
 </html>
