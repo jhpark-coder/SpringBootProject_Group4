@@ -2,9 +2,11 @@ package com.creatorworks.nexus.config;
 
 import java.io.IOException;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -14,6 +16,9 @@ import org.springframework.web.servlet.resource.PathResourceResolver;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final PointInterceptor pointInterceptor;
+    
+    @Value("${spring.profiles.active:dev}")
+    private String activeProfile;
 
     public WebMvcConfig(PointInterceptor pointInterceptor) {
         this.pointInterceptor = pointInterceptor;
@@ -28,6 +33,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // 개발 환경에서 CSS/JS 파일 캐시 비활성화
+        if ("dev".equals(activeProfile)) {
+            registry.addResourceHandler("/css/**", "/js/**")
+                    .addResourceLocations("classpath:/static/css/", "classpath:/static/js/")
+                    .setCacheControl(CacheControl.noCache());
+        }
+        
         // Editor SPA 라우팅
         registry.addResourceHandler("/editor/**")
                 .addResourceLocations("classpath:/static/editor/")

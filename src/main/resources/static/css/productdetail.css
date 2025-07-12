@@ -145,6 +145,7 @@
 
         /* 반응형 */
         @media (max-width: 768px) {
+
             .tiptap-content .photo-grid-wrapper.grid-2-cols,
             .tiptap-content .photo-grid-wrapper.grid-3-cols,
             .tiptap-content .photo-grid-wrapper.grid-4-cols,
@@ -918,4 +919,17 @@
             .sidebar-goalcard .sidebar-actions {
                 gap: 8px;
             }
-        } 
+        }
+
+        /* 폰트 패밀리 공통 선택자 (폰트명은 인라인 스타일에서 적용) */
+        .tiptap-content,
+        .tiptap-content *,
+        .tiptap-content .custom-code-block-wrapper,
+        .tiptap-content .custom-code-block-wrapper *,
+        .tiptap-content .custom-code-block-wrapper .code-block-content,
+        .tiptap-content .custom-code-block-wrapper .code-block-content code,
+        .tiptap-content .custom-code-block-wrapper .language-selector,
+        .tiptap-content .custom-code-block-wrapper .code-block-toolbar button,
+        .tiptap-content .custom-code-block-wrapper .code-block-toolbar button span {
+            /* font-family는 동적으로 인라인에서 적용됨 */
+        }

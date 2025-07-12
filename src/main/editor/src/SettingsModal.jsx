@@ -49,12 +49,12 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
             // 1. 카테고리 설정
             const foundPrimary = allPrimaryCategories.find(cat => initialSettings.tags?.includes(cat)) || '';
             const foundSecondary = allSubCategories.find(sub => initialSettings.tags?.includes(sub)) || '';
-            
+
             setPrimaryCategory(foundPrimary);
 
             // 2. 태그 설정 (카테고리 제외)
-            const pureTags = initialSettings.tags?.filter(tag => 
-                !allPrimaryCategories.includes(tag) && 
+            const pureTags = initialSettings.tags?.filter(tag =>
+                !allPrimaryCategories.includes(tag) &&
                 !allSubCategories.includes(tag)
             ).map(tag => tag.startsWith('#') ? tag : `#${tag}`) || []; // # 기호 정규화
 
@@ -71,7 +71,7 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
                 ...initialSettings,
                 tags: categoryTags // 카테고리 태그만 설정
             });
-            
+
             // 4. 나머지 상태 설정
             setSaleType(initialSettings.saleType || '');
             setSalePrice(initialSettings.salePrice || '');
@@ -131,18 +131,22 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
             newErrors.secondaryCategory = '세부 카테고리를 선택해주세요.';
         }
 
+        // 코드 카테고리+2차 카테고리 선택 시 saleType 체크 건너뜀
+        const CODE_CATEGORIES = ['Java', '프론트엔드', 'Python'];
+        const isCodeCategorySelected = CODE_CATEGORIES.includes(primaryCategory) && hasSecondaryCategory;
+
         // 판매/경매 관련 검사
-        if (hasSecondaryCategory && !saleType) {
+        if (hasSecondaryCategory && !isCodeCategorySelected && !saleType) {
             newErrors.saleType = '판매 방식을 선택해주세요.';
         }
 
-        if (saleType === 'sale') {
+        if ((isCodeCategorySelected || saleType === 'sale')) {
             if (!salePrice || parseFloat(salePrice) <= 0) {
-                newErrors.salePrice = '희망판매가를 입력해주세요.';
+                newErrors.salePrice = '판매 금액을 입력해주세요.';
             }
         }
 
-        if (saleType === 'auction') {
+        if (!isCodeCategorySelected && saleType === 'auction') {
             if (!auctionDuration) {
                 newErrors.auctionDuration = '경매 기간을 선택해주세요.';
             }
@@ -303,8 +307,8 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
         // 카테고리나 서브카테고리가 아닌 경우에만 제거 가능
         const allCategories = Object.keys(CATEGORIES);
         const allSubCategories = Object.values(CATEGORIES).flat();
-        
-        if (!allCategories.includes(tagToRemove) && 
+
+        if (!allCategories.includes(tagToRemove) &&
             !allSubCategories.includes(tagToRemove)) {
             setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
         }
@@ -314,32 +318,16 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
         setWorkDescription(e.target.value);
     };
 
-    const handleSave = () => {
-        if (validateForm()) {
-            // 현재 선택된 카테고리 (1차, 2차)와 사용자가 추가한 태그를 모두 합침
-            const finalTags = [...currentSettings.tags, ...selectedTags];
-
-            const settings = {
-                ...currentSettings,
-                tags: finalTags,
-                primaryCategory,
-                saleType,
-                salePrice: saleType === 'sale' ? salePrice : null,
-                auctionDuration: saleType === 'auction' ? auctionDuration : null,
-                startBidPrice: saleType === 'auction' ? startBidPrice : null,
-                buyNowPrice: saleType === 'auction' ? buyNowPrice : null,
-                workDescription
-            };
-
-            onSave(settings);
-            onClose();
-        }
-    };
+    // 코드 카테고리 목록 정의
+    const CODE_CATEGORIES = ['Java', '프론트엔드', 'Python'];
 
     // 2차 카테고리가 선택되었는지 확인
     const hasSecondaryCategory = currentSettings.tags.some(tag =>
         primaryCategory && CATEGORIES[primaryCategory]?.includes(tag)
     );
+
+    // 코드 카테고리+2차 카테고리 선택 시 플래그
+    const isCodeCategorySelected = CODE_CATEGORIES.includes(primaryCategory) && hasSecondaryCategory;
 
     // 추천 태그 선택 여부 확인 함수 추가
     const isTagSelected = (tag) => {
@@ -351,6 +339,26 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
             removeTag(tag);
         } else if (selectedTags.length < 5) {
             addTag(tag);
+        }
+    };
+
+    // handleSave 함수 복구
+    const handleSave = () => {
+        if (validateForm()) {
+            const finalTags = [...currentSettings.tags, ...selectedTags];
+            const settings = {
+                ...currentSettings,
+                tags: finalTags,
+                primaryCategory,
+                saleType: isCodeCategorySelected ? 'sale' : saleType,
+                salePrice: (isCodeCategorySelected || saleType === 'sale') ? salePrice : null,
+                auctionDuration: !isCodeCategorySelected && saleType === 'auction' ? auctionDuration : null,
+                startBidPrice: !isCodeCategorySelected && saleType === 'auction' ? startBidPrice : null,
+                buyNowPrice: !isCodeCategorySelected && saleType === 'auction' ? buyNowPrice : null,
+                workDescription
+            };
+            onSave(settings);
+            onClose();
         }
     };
 
@@ -463,7 +471,7 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
                             </div>
 
                             {/* 2차 카테고리가 선택되면 판매 방식 섹션 표시 */}
-                            {hasSecondaryCategory && (
+                            {!isCodeCategorySelected && hasSecondaryCategory && (
                                 <div className="form-section">
                                     <h3 className="section-title">판매 방식</h3>
                                     <div className="sale-type-group">
@@ -484,7 +492,25 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
                                 </div>
                             )}
 
-                            {saleType === 'sale' && (
+                            {/* 코드 카테고리+2차 카테고리 선택 시 금액 입력만 노출 */}
+                            {isCodeCategorySelected && (
+                                <div className="price-input-section">
+                                    <label htmlFor="sale-price">판매 금액 (원)</label>
+                                    <input
+                                        type="number"
+                                        id="sale-price"
+                                        value={salePrice}
+                                        onChange={handleSalePriceChange}
+                                        placeholder="판매 금액을 입력하세요"
+                                        min="0"
+                                        className={errors.salePrice ? 'error' : ''}
+                                    />
+                                    {errors.salePrice && <span className="error-message">{errors.salePrice}</span>}
+                                </div>
+                            )}
+
+                            {/* 기존 판매/경매 UI */}
+                            {!isCodeCategorySelected && saleType === 'sale' && (
                                 <div className="price-input-section">
                                     <label htmlFor="sale-price">희망판매가 (원)</label>
                                     <input
@@ -500,7 +526,7 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
                                 </div>
                             )}
 
-                            {saleType === 'auction' && (
+                            {!isCodeCategorySelected && saleType === 'auction' && (
                                 <div className="auction-settings">
                                     <div className="auction-duration-section">
                                         <label>경매 기간</label>
@@ -568,9 +594,9 @@ const SettingsModal = ({ isOpen, onClose, onSave, initialSettings }) => {
                                             <h4 className="recommended-tags-title">추천 태그</h4>
                                             <div className="recommended-tags">
                                                 {RECOMMENDED_TAGS[primaryCategory]?.map(tag => (
-                                                    <button 
-                                                        key={tag} 
-                                                        onClick={() => handleRecommendedTagClick(tag)} 
+                                                    <button
+                                                        key={tag}
+                                                        onClick={() => handleRecommendedTagClick(tag)}
                                                         className={`recommended-tag-btn ${isTagSelected(tag) ? 'selected' : ''}`}
                                                         disabled={selectedTags.length >= 5 && !isTagSelected(tag)}
                                                     >
