@@ -243,13 +243,20 @@
 
             <div class="info-box">
                 <div class="info-title">환불 안내</div>
-                <div class="info-text">
+                <div class="info-text" th:if="${!isPointPurchase}">
                     • 최소 환불 금액: 1,000원<br>
                     • 환불 처리: 관리자 검토 후 처리<br>
                     • 환불 수수료: 없음<br>
                     • 한 번에 하나의 환불 요청만 가능합니다<br>
                     • 실제 결제 내역이 있는 경우: 실제 금액 환불<br>
                     • 포인트 구매의 경우: 포인트 차감 처리
+                </div>
+                <div class="info-text" th:if="${isPointPurchase}">
+                    • 포인트 구매 상품은 구매 금액과 동일한 금액으로만 환불 가능합니다<br>
+                    • 이미 확인한 상품은 환불할 수 없습니다<br>
+                    • 환불 처리: 관리자 검토 후 포인트 차감 처리<br>
+                    • 환불 수수료: 없음<br>
+                    • 한 번에 하나의 환불 요청만 가능합니다
                 </div>
             </div>
 
@@ -259,7 +266,6 @@
             <!-- 환불 신청 폼 -->
             <form id="refundForm">
                 <input type="hidden" name="orderId" th:value="${orderId}">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
                 <div class="form-group">
                     <label class="form-label">환불 유형</label>
@@ -401,6 +407,30 @@
                 const refundTypeSelect = document.querySelector('select[name="refundType"]');
                 const bankInfo = document.getElementById('bankInfo');
                 const form = document.getElementById('refundForm');
+                const amountInput = document.getElementById('amount');
+
+                // 포인트 구매 상품인지 확인
+                const isPointPurchase = /*[[${isPointPurchase}]]*/ false;
+
+                // 포인트 구매 상품인 경우 초기 설정
+                if (isPointPurchase) {
+                    // 환불 유형을 포인트 환불로 자동 설정
+                    refundTypeSelect.value = 'POINT_REFUND';
+                    refundTypeSelect.disabled = true;
+
+                    // 환불 금액을 주문 금액으로 자동 설정
+                    const orderAmount = /*[[${order.totalAmount}]]*/ 0;
+                    amountInput.value = orderAmount;
+                    amountInput.disabled = true;
+                    amountInput.style.backgroundColor = '#f8f9fa';
+                    amountInput.style.color = '#666';
+
+                    // 은행 정보 숨기기
+                    bankInfo.classList.remove('show');
+                    bankInfo.querySelectorAll('input, select').forEach(input => {
+                        input.required = false;
+                    });
+                }
 
                 // 환불 유형에 따라 은행 정보 표시/숨김
                 refundTypeSelect.addEventListener('change', function () {
@@ -435,15 +465,36 @@
                         phoneNumber: formData.get('phoneNumber')
                     };
 
+                    // CSRF 토큰 가져오기 (쿠키에서)
+                    function getCookie(name) {
+                        const value = `; ${document.cookie}`;
+                        const parts = value.split(`; ${name}=`);
+                        if (parts.length === 2) return parts.pop().split(';').shift();
+                        return null;
+                    }
+                    const csrfToken = getCookie('XSRF-TOKEN');
+
+                    // CSRF 토큰이 없으면 오류 처리
+                    if (!csrfToken) {
+                        showAlert('error', 'CSRF 토큰을 찾을 수 없습니다. 페이지를 새로고침해주세요.');
+                        return;
+                    }
+
                     // 환불 신청 API 호출
                     fetch('/refund/request', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                            'X-XSRF-TOKEN': csrfToken
                         },
                         body: JSON.stringify(data)
                     })
-                        .then(response => response.json())
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
                         .then(result => {
                             if (result.success) {
                                 showAlert('success', '환불 신청이 완료되었습니다.');

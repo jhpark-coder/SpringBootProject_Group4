@@ -3,7 +3,6 @@ package com.creatorworks.nexus.order.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -39,6 +38,7 @@ public class RefundService {
     private final PaymentRepository paymentRepository;
     private final MemberRepository memberRepository;
     private final IamportRefundService iamportRefundService;
+    private final PointService pointService;
 
     /**
      * 환불 요청을 생성합니다.
@@ -213,21 +213,27 @@ public class RefundService {
         refund = refundRepository.save(refund);
 
         try {
-            // 아임포트를 통한 실제 환불 처리
-            Map<String, Object> result = iamportRefundService.processRefund(refund);
-            
-            if ((Boolean) result.get("success")) {
-                // 환불 성공
-                refund.complete();
-                refund.setRefundUid((String) result.get("refundUid"));
-                refund.setRefundDate(LocalDateTime.now());
-                
-                log.info("환불 처리 완료: 환불ID={}, 환불UID={}, 금액={}", 
-                        refundId, result.get("refundUid"), refund.getAmount());
+            // 환불 타입에 따른 처리
+            if (refund.getRefundType() == RefundType.POINT_REFUND) {
+                // 포인트 환불 처리
+                processPointRefund(refund);
             } else {
-                // 환불 실패
-                refund.fail((String) result.get("message"));
-                log.error("환불 처리 실패: 환불ID={}, 사유={}", refundId, result.get("message"));
+                // 아임포트를 통한 실제 환불 처리
+                Map<String, Object> result = iamportRefundService.processRefund(refund);
+                
+                if ((Boolean) result.get("success")) {
+                    // 환불 성공
+                    refund.complete();
+                    refund.setRefundUid((String) result.get("refundUid"));
+                    refund.setRefundDate(LocalDateTime.now());
+                    
+                    log.info("환불 처리 완료: 환불ID={}, 환불UID={}, 금액={}", 
+                            refundId, result.get("refundUid"), refund.getAmount());
+                } else {
+                    // 환불 실패
+                    refund.fail((String) result.get("message"));
+                    log.error("환불 처리 실패: 환불ID={}, 사유={}", refundId, result.get("message"));
+                }
             }
         } catch (Exception e) {
             // 예외 발생 시 실패 처리
@@ -435,6 +441,33 @@ public class RefundService {
      * 환불 가능 여부를 검증합니다.
      */
     private void validateRefundEligibility(Long memberId, RefundRequest request) {
+        // 주문 ID가 있는 경우 상세 검증
+        if (request.getOrderId() != null) {
+            Order order = orderRepository.findById(request.getOrderId())
+                    .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다: " + request.getOrderId()));
+            
+            // 본인의 주문인지 확인
+            if (!order.getBuyer().getId().equals(memberId)) {
+                throw new IllegalArgumentException("본인의 주문만 환불할 수 있습니다.");
+            }
+            
+            // 포인트로 구매한 상품의 경우 환불 조건 검증
+            if (order.getOrderType() == Order.OrderType.PRODUCT_PURCHASE && 
+                order.getPayment() != null && 
+                order.getPayment().getPaymentType() == Payment.PaymentType.POINT) {
+                
+                // 이미 읽은 상품은 환불 불가
+                if (order.isRead()) {
+                    throw new IllegalArgumentException("이미 확인한 상품은 환불할 수 없습니다.");
+                }
+                
+                // 환불 금액이 구매 금액과 일치하는지 확인
+                if (!request.getAmount().equals(order.getTotalAmount())) {
+                    throw new IllegalArgumentException("포인트 구매 상품의 환불은 구매 금액과 동일해야 합니다.");
+                }
+            }
+        }
+        
         // 포인트 환불의 경우 포인트 잔액 확인
         if (request.getOrderId() == null && request.getPaymentId() == null) {
             // 포인트 환불인 경우 추가 검증 로직 필요
@@ -447,6 +480,39 @@ public class RefundService {
             if (!(Boolean) paymentInfo.get("success")) {
                 throw new IllegalArgumentException("원본 결제 정보를 찾을 수 없습니다.");
             }
+        }
+    }
+
+    /**
+     * 포인트 환불 처리를 수행합니다.
+     */
+    private void processPointRefund(Refund refund) {
+        try {
+            // 포인트 환불 로직
+            Member member = refund.getMember();
+            Long refundAmount = refund.getAmount();
+
+            // 포인트 잔액 확인
+            Long currentPoint = pointService.getCurrentBalance(member.getId());
+            if (currentPoint < refundAmount) {
+                throw new IllegalStateException("포인트 잔액이 환불 금액보다 적어 환불할 수 없습니다.");
+            }
+
+            // 포인트 차감 (기존 포인트에서 차감)
+            member.setPoint((int) (currentPoint - refundAmount));
+            memberRepository.save(member);
+
+            // 환불 완료 처리
+            refund.complete();
+            refund.setRefundUid("point_refund_" + System.currentTimeMillis()); // 임시 UID
+            refund.setRefundDate(LocalDateTime.now());
+
+            log.info("포인트 환불 처리 완료: 환불ID={}, 환불UID={}, 금액={}", 
+                    refund.getId(), refund.getRefundUid(), refund.getAmount());
+
+        } catch (Exception e) {
+            refund.fail("포인트 환불 처리 중 오류가 발생했습니다: " + e.getMessage());
+            log.error("포인트 환불 처리 중 예외 발생: 환불ID={}, 오류={}", refund.getId(), e.getMessage(), e);
         }
     }
 } 
