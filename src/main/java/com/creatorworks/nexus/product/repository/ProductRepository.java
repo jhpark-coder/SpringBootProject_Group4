@@ -126,4 +126,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
            "(SELECT mf.following.id FROM MemberFollow mf WHERE mf.follower.id = :followerId) " +
            "ORDER BY p.regTime DESC")
     Page<Product> findByFollowingMembers(@Param("followerId") Long followerId, Pageable pageable);
+    
+    /**
+     * 제품명과 생성자로 중복 상품을 확인합니다.
+     * 크롤링된 데이터의 중복 체크에 사용됩니다.
+     */
+    boolean existsByNameAndSeller_Name(String name, String sellerName);
 }

@@ -92,12 +92,15 @@ class NotificationList {
                 filtered = this.notifications.filter(n => ['follow', 'like', 'comment'].includes(n.type));
                 break;
             case 'product':
-                filtered = this.notifications.filter(n => ['product_inquiry', 'product_review'].includes(n.type));
+                filtered = this.notifications.filter(n =>
+                    ['product_inquiry', 'product_review'].includes(n.type)
+                );
                 break;
             case 'admin':
                 filtered = this.notifications.filter(n => [
-                    'seller_request_received', 'seller_request_submitted', 'seller_approved', 'seller_rejected', 'admin_notice'
-                ].includes(n.type));
+                    'seller_request_received', 'seller_request_submitted', 'seller_approved', 'seller_rejected', 'admin_notice',
+                    'payment_success', 'payment_failed'
+                ].includes(n.type) || n.category === 'ORDER');
                 break;
             case 'auction':
                 filtered = this.notifications.filter(n => ['auction_bid', 'auction_win', 'auction_lose'].includes(n.type));

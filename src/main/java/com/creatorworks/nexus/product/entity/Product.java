@@ -57,6 +57,16 @@ public class Product extends BaseEntity implements Serializable {
     @Column(nullable = false, columnDefinition = "bigint default 0")
     private long viewCount = 0L;
 
+    // 크롤링 관련 필드
+    @Column(columnDefinition = "TEXT")
+    private String crawledAuthorName;  // 크롤링된 원본 작가명
+    
+    @Column(columnDefinition = "TEXT")
+    private String crawledSourceUrl;   // 크롤링된 원본 URL
+    
+    @Column(columnDefinition = "TEXT")
+    private String crawledTags;        // 크롤링된 원본 태그들
+
     @OneToMany(mappedBy = "product", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
     private List<ProductInquiry> inquiries = new ArrayList<>();
 
@@ -64,7 +74,7 @@ public class Product extends BaseEntity implements Serializable {
     private List<ProductItemTag> itemTags = new ArrayList<>();
 
     @Builder
-    public Product(Member seller, String name, Long price, String description, String workDescription, String tiptapJson, String imageUrl, String primaryCategory, String secondaryCategory, String backgroundColor, String fontFamily) {
+    public Product(Member seller, String name, Long price, String description, String workDescription, String tiptapJson, String imageUrl, String primaryCategory, String secondaryCategory, String backgroundColor, String fontFamily, String crawledAuthorName, String crawledSourceUrl, String crawledTags) {
         this.seller = seller;
         this.name = name;
         this.price = price;
@@ -77,6 +87,9 @@ public class Product extends BaseEntity implements Serializable {
         this.backgroundColor = backgroundColor;
         this.fontFamily = fontFamily;
         this.viewCount = 0L;
+        this.crawledAuthorName = crawledAuthorName;
+        this.crawledSourceUrl = crawledSourceUrl;
+        this.crawledTags = crawledTags;
     }
 
     public void addReview(ProductReview review) {
