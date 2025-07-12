@@ -1,5 +1,6 @@
 package com.creatorworks.nexus.order.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -124,7 +125,7 @@ public class PointService {
         payment.complete();
 
         // 포인트 구매 성공 알림 전송
-        sendPointPurchaseSuccessNotification(member, product, totalAmount, member.getPoint().longValue());
+        sendPointPurchaseSuccessNotification(member, product, totalAmount, member.getPoint().longValue(), order.getId());
 
         return orderRepository.save(order);
     }
@@ -276,7 +277,7 @@ public class PointService {
     /**
      * 포인트 구매 성공 알림 전송
      */
-    private void sendPointPurchaseSuccessNotification(Member member, Product product, Long totalAmount, Long newBalance) {
+    private void sendPointPurchaseSuccessNotification(Member member, Product product, Long totalAmount, Long newBalance, Long orderId) {
         try {
             String message = String.format("포인트로 상품을 성공적으로 구매했습니다. 구매 금액: %,dP, 현재 잔액: %,dP", 
                 totalAmount, newBalance);
@@ -286,7 +287,7 @@ public class PointService {
             notificationDto.setMessage(message);
             notificationDto.setType("payment_success");
             notificationDto.setCategory(NotificationCategory.ADMIN);
-            notificationDto.setLink("/api/orders/list");
+            notificationDto.setLink("/api/orders/points/purchase/success?orderId=" + orderId);
             notificationDto.setAmount(totalAmount);
             notificationDto.setPaymentMethod("포인트 구매");
             notificationDto.setOrderId("point_purchase_" + System.currentTimeMillis());
@@ -295,7 +296,7 @@ public class PointService {
             notificationService.sendPaymentNotification(notificationDto);
             
             // DB에 알림 저장
-            notificationService.savePaymentNotification(notificationDto, "/member/myPage/" + member.getId() + "/points");
+            notificationService.savePaymentNotification(notificationDto, "/api/orders/points/purchase/success?orderId=" + orderId);
             
             log.info("포인트 구매 성공 알림 전송 완료: userId={}, totalAmount={}, newBalance={}", 
                 member.getId(), totalAmount, newBalance);
@@ -348,5 +349,58 @@ public class PointService {
             dto.setBalanceAfter(null); // 각 거래 후 잔액 계산은 복잡하므로 여기서는 null로 처리
             return dto;
         });
+    }
+
+    /**
+     * 상품을 읽음 처리합니다.
+     */
+    public void markProductAsRead(Long memberId, Long productId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다: " + memberId));
+
+        // 해당 상품을 구매했지만 아직 읽지 않은 주문을 찾습니다.
+        Optional<Order> unreadOrder = orderRepository.findUnreadPurchaseByBuyerAndProduct(member, productId);
+        
+        if (unreadOrder.isPresent()) {
+            Order order = unreadOrder.get();
+            order.markAsRead();
+            orderRepository.save(order);
+            
+            log.info("상품 읽음 처리 완료: memberId={}, productId={}, orderId={}", 
+                    memberId, productId, order.getId());
+        } else {
+            log.warn("읽음 처리할 주문을 찾을 수 없습니다: memberId={}, productId={}", 
+                    memberId, productId);
+        }
+    }
+
+    /**
+     * 특정 사용자가 특정 상품을 구매했는지 확인합니다.
+     */
+    public boolean hasPurchasedProduct(Long memberId, Long productId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다: " + memberId));
+        
+        return orderRepository.existsByBuyerAndProductId(member, productId);
+    }
+
+    /**
+     * 특정 사용자가 특정 상품을 구매하고 읽었는지 확인합니다.
+     */
+    public boolean hasReadProduct(Long memberId, Long productId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다: " + memberId));
+        
+        return orderRepository.existsReadPurchaseByBuyerAndProductId(member, productId);
+    }
+
+    /**
+     * 특정 사용자의 읽지 않은 포인트 구매 주문 목록을 조회합니다.
+     */
+    public List<Order> getUnreadPurchases(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다: " + memberId));
+        
+        return orderRepository.findUnreadPurchasesByBuyer(member);
     }
 } 
