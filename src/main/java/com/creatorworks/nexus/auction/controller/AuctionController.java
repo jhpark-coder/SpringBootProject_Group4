@@ -3,30 +3,34 @@ package com.creatorworks.nexus.auction.controller;
 import java.security.Principal;
 import java.util.List;
 
-import com.creatorworks.nexus.auction.dto.AuctionPageResponse;
-import com.creatorworks.nexus.config.CategoryConfig;
-import com.creatorworks.nexus.product.dto.ProductPageResponse;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.creatorworks.nexus.auction.dto.AuctionPageResponse;
 import com.creatorworks.nexus.auction.dto.AuctionSaveRequest;
 import com.creatorworks.nexus.auction.entity.Auction;
 import com.creatorworks.nexus.auction.service.AuctionService;
+import com.creatorworks.nexus.config.CategoryConfig;
 
 import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/auctions")
 public class AuctionController {
     private final AuctionService auctionService;
     private final CategoryConfig categoryConfig;
 
-    @GetMapping("")
+    @GetMapping("/auctions")
     public String auctionPage() {
         return "auction";
     }
@@ -60,7 +64,7 @@ public class AuctionController {
         return auctionService.findAuctionById(id);
     }
 
-    @GetMapping("/result/auction/{id}")
+    @GetMapping("/auctions/result/auction/{id}")
     public String auctionResult(@PathVariable Long id, Model model) {
         Auction auction = auctionService.findAuctionById(id);
         model.addAttribute("auction", auction);
@@ -75,7 +79,7 @@ public class AuctionController {
      * @param model 뷰에 데이터를 전달하기 위한 모델 객체
      * @return 렌더링할 뷰의 이름 ("product/category_grid")
      */
-    @GetMapping("/category/{categoryName}")
+    @GetMapping("/auctions/category/{categoryName}")
     public String categoryGridView(@PathVariable String categoryName,
                                    @RequestParam(value = "page", defaultValue = "1") int page,
                                    @RequestParam(value = "secondary", defaultValue = "all") String secondaryCategory,

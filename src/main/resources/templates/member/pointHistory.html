@@ -67,23 +67,24 @@
                         <tbody>
                             <tr th:each="point : ${pointHistory}" class="table-row">
                                 <td class="content-time"
-                                    th:text="${point.transactionDate != null ? point.transactionDate.toString().substring(0, 16).replace('T', ' ') : ''}">
+                                    th:text="${point.regTime != null ? point.regTime.toString().substring(0, 16).replace('T', ' ') : ''}">
                                     거래일시
                                 </td>
                                 <td>
-                                    <span th:class="${point.type == 'EARN' ? 'status-earned' : 
-                                                       point.type == 'USE' ? 'status-used' : 
-                                                       point.type == 'REFUND' ? 'status-refunded' : 'status-default'}"
-                                        th:text="${point.type == 'EARN' ? '적립' : 
-                                                 point.type == 'USE' ? '사용' : 
-                                                 point.type == 'REFUND' ? '환불' : '기타'}">
-                                        거래유형
-                                    </span>
+                                                    <span th:class="${point.type == 'EARN' || point.type == 'CHARGE' ? 'status-earned' : 
+                               point.type == 'USE' ? 'status-used' : 
+                               point.type == 'REFUND' ? 'status-refunded' : 'status-default'}"
+                      th:text="${point.type == 'EARN' ? '적립' : 
+                               point.type == 'CHARGE' ? '충전' : 
+                               point.type == 'USE' ? '사용' : 
+                               point.type == 'REFUND' ? '환불' : '기타'}">
+                    거래유형
+                </span>
                                 </td>
                                 <td
                                     th:text="${point.amount > 0 ? '+' : ''} + ${#numbers.formatInteger(point.amount, 1, 'COMMA')} + 'P'">
                                     포인트</td>
-                                <td th:text="${#numbers.formatInteger(point.balance, 1, 'COMMA')} + 'P'">잔액</td>
+                                <td th:text="${point.balanceAfter != null ? #numbers.formatInteger(point.balanceAfter, 1, 'COMMA') + 'P' : '-'}">잔액</td>
                                 <td class="content-message" th:text="${point.description}">설명</td>
                             </tr>
                         </tbody>

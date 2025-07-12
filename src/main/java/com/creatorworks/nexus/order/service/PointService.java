@@ -1,9 +1,11 @@
 package com.creatorworks.nexus.order.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -228,7 +230,7 @@ public class PointService {
             notificationDto.setTargetUserId(member.getId());
             notificationDto.setMessage(message);
             notificationDto.setType("payment_success");
-            notificationDto.setCategory(NotificationCategory.ADMIN);
+            notificationDto.setCategory(NotificationCategory.ORDER);
             notificationDto.setLink("/member/myPage/" + member.getId() + "/points");
             notificationDto.setAmount(chargedAmount);
             notificationDto.setPaymentMethod("포인트 충전");
@@ -286,7 +288,7 @@ public class PointService {
             notificationDto.setTargetUserId(member.getId());
             notificationDto.setMessage(message);
             notificationDto.setType("payment_success");
-            notificationDto.setCategory(NotificationCategory.ADMIN);
+            notificationDto.setCategory(NotificationCategory.ORDER);
             notificationDto.setLink("/api/orders/points/purchase/success?orderId=" + orderId);
             notificationDto.setAmount(totalAmount);
             notificationDto.setPaymentMethod("포인트 구매");
@@ -333,7 +335,14 @@ public class PointService {
 
         Page<Order> orderPage = orderRepository.findByBuyerOrderByOrderDateDesc(member, pageable);
 
-        return orderPage.map(order -> {
+        // 모든 주문을 리스트로 변환하여 잔액 계산
+        List<Order> orders = orderPage.getContent();
+        List<PointHistoryDto> dtos = new ArrayList<>();
+        
+        // 현재 잔액부터 역순으로 계산
+        Long currentBalance = member.getPoint() != null ? member.getPoint().longValue() : 0L;
+        
+        for (Order order : orders) {
             PointHistoryDto dto = new PointHistoryDto();
             dto.setRegTime(order.getOrderDate());
             dto.setDescription(order.getDescription());
@@ -341,14 +350,22 @@ public class PointService {
             if (order.getOrderType() == OrderType.POINT_PURCHASE) {
                 dto.setType("CHARGE");
                 dto.setAmount(order.getTotalAmount());
+                // 충전의 경우: 현재 잔액에서 충전 금액을 빼면 거래 전 잔액
+                dto.setBalanceAfter(currentBalance);
+                currentBalance -= order.getTotalAmount();
             } else {
                 dto.setType("USE");
                 dto.setAmount(order.getTotalAmount());
+                // 사용의 경우: 현재 잔액에 사용 금액을 더하면 거래 전 잔액
+                dto.setBalanceAfter(currentBalance);
+                currentBalance += order.getTotalAmount();
             }
-
-            dto.setBalanceAfter(null); // 각 거래 후 잔액 계산은 복잡하므로 여기서는 null로 처리
-            return dto;
-        });
+            
+            dtos.add(dto);
+        }
+        
+        // Page 객체로 변환
+        return new PageImpl<>(dtos, pageable, orderPage.getTotalElements());
     }
 
     /**
