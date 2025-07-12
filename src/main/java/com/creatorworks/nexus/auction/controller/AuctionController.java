@@ -44,6 +44,10 @@ import org.springframework.web.bind.annotation.*;
 import com.creatorworks.nexus.auction.dto.AuctionSaveRequest;
 import com.creatorworks.nexus.auction.entity.Auction;
 import com.creatorworks.nexus.auction.service.AuctionService;
+import com.creatorworks.nexus.auction.repository.BidRepository;
+import com.creatorworks.nexus.auction.dto.AuctionDetailViewDto;
+import com.creatorworks.nexus.auction.dto.ReactBiddingDataDto;
+import com.creatorworks.nexus.auction.dto.AuctionDto;
 
 import lombok.RequiredArgsConstructor;
 
@@ -51,6 +55,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Slf4j
 public class AuctionController {
+
     private final AuctionService auctionService;
     private final CategoryConfig categoryConfig;
     private final AuctionInquiryService auctionInquiryService;
@@ -61,6 +66,7 @@ public class AuctionController {
     private final ObjectMapper objectMapper;
     private final TipTapRenderer tipTapRenderer;
     private final BiddingService biddingService; // 새로 추가된 서비스
+    private final BidRepository bidRepository;
 
     @GetMapping("/auctions/{id}")
     public String auctionDetail(@PathVariable("id") Long id,
@@ -79,6 +85,7 @@ public class AuctionController {
         boolean canWriteReview = false;
         boolean canViewContent = false; // 컨텐츠 열람 가능 여부
         boolean isFollowing = false; // 팔로우 상태
+        Long highestBidAmount = null;
 
         if (principal != null) {
             currentMember = memberRepository.findByEmail(principal.getName());
@@ -120,9 +127,13 @@ public class AuctionController {
 
                 // 3. 컨텐츠 열람 권한 설정 (구매자 또는 관리자 또는 판매자)
                 canViewContent = canWriteReview || isSeller || currentMember.getRole() == com.creatorworks.nexus.member.constant.Role.ADMIN;
-
-
             }
+        }
+
+        // [추가] 최고 입찰가 조회 로직
+        Bid highestBid = bidRepository.findTopByAuctionOrderByAmountDesc(auction).orElse(null);
+        if (highestBid != null) {
+            highestBidAmount = highestBid.getAmount();
         }
 
         // Tiptap JSON 컨텐츠 처리
@@ -166,19 +177,6 @@ public class AuctionController {
             }
         }
 
-        model.addAttribute("auction", auction);
-        model.addAttribute("contentHtml", contentHtml); // 렌더링된 HTML 추가
-        model.addAttribute("inquiryPage", inquiryPage);
-        model.addAttribute("inquiryKeyword", inquiryKeyword);
-        model.addAttribute("reviewKeyword", reviewKeyword);
-        model.addAttribute("currentMember", currentMember);
-        model.addAttribute("canWriteReview", canWriteReview);
-        model.addAttribute("canViewContent", canViewContent);
-        model.addAttribute("hasPaywall", hasPaywall); // 페이월 존재 여부 추가
-        // --- 팔로우 관련 모델 속성 추가 ---
-        model.addAttribute("isFollowing", isFollowing);
-        // ---
-
         // --- 태그 정보 추가 ---
         List<String> allTagNames = auction.getItemTags().stream()
                 .map(auctionItemTag -> auctionItemTag.getItemTag().getName())
@@ -189,6 +187,37 @@ public class AuctionController {
                 .filter(tagName -> !tagName.equals(auction.getPrimaryCategory()))
                 .filter(tagName -> !tagName.equals(auction.getSecondaryCategory()))
                 .toList();
+
+        // --- [수정] DTO를 사용한 모델 데이터 조립 ---
+
+        // 1. Auction 엔티티를 기본 정보만 담은 AuctionDto로 변환합니다.
+        AuctionDto auctionDto = new AuctionDto(auction);
+
+        // 2. React 앱에 전달할 데이터를 별도의 DTO로 만듭니다.
+        String jwtToken = null; // 실제 JWT 토큰 추출 로직 필요
+        ReactBiddingDataDto biddingData = new ReactBiddingDataDto(
+                auctionDto.id(),
+                (highestBidAmount != null) ? highestBidAmount : auctionDto.startBidPrice(),
+                auctionDto.buyNowPrice(),
+                auctionDto.auctionEndTime(),
+                jwtToken
+        );
+
+        // 3. 화면 전체에 필요한 모든 정보를 최종 뷰 DTO에 담습니다.
+        AuctionDetailViewDto auctionDetailView = new AuctionDetailViewDto(
+                auctionDto,
+                contentHtml,
+                hasPaywall,
+                canViewContent,
+                isFollowing,
+                currentMember,
+                biddingData
+        );
+
+        model.addAttribute("viewData", auctionDetailView);
+        model.addAttribute("inquiryPage", inquiryPage);
+        model.addAttribute("inquiryKeyword", inquiryKeyword);
+        model.addAttribute("reviewKeyword", reviewKeyword); // 필요하다면 유지
 
         model.addAttribute("tagNames", pureTagNames);
 
@@ -201,6 +230,8 @@ public class AuctionController {
         // ---
         return "auction/auctionDetail";
     }
+
+
 
     @PostMapping("/api/auctions")
     @ResponseBody
@@ -279,7 +310,7 @@ public class AuctionController {
      * @param userDetails 현재 로그인한 사용자 정보
      * @return 처리 결과 (성공/실패, 메시지, 새로운 최고가)
      */
-    @PostMapping("/{auctionId}/bids")
+    @PostMapping("/api/auctions/{auctionId}/bids")
 
     public ResponseEntity<BiddingResponseDto> placeBid(
             @PathVariable Long auctionId,

@@ -16,7 +16,7 @@
       <h3>상품 문의 <span class="count" th:text="${inquiryPage.totalElements}">0</span></h3>
       <button class="btn-ask-question"
               sec:authorize="isAuthenticated()"
-              th:if="${#authentication.name != auction.seller.email}">문의하기</button>
+              th:if="${#authentication.name != auction.sellerEmail}">문의하기</button>
     </div>
 
     <div class="inquiry-notice">
@@ -85,7 +85,7 @@
 
         <!-- 답변이 없는 경우, 상품 작가에게만 답변하기 버튼 표시 -->
         <div th:if="${inquiry.children.isEmpty()}" sec:authorize="isAuthenticated()">
-          <div th:if="${#authentication.name == auction.seller.email}" class="reply-form-placeholder">
+          <div th:if="${#authentication.name == auction.sellerEmail}" class="reply-form-placeholder">
             <button class="btn-add-reply" th:data-inquiry-id="${inquiry.id}"
                     th:data-inquiry-writer="${inquiry.writer.name}"
                     th:data-inquiry-content="${inquiry.content}">답변하기</button>
@@ -127,7 +127,7 @@
         <div class="modal-body">
           <div class="form-group">
             <label>판매자</label>
-            <p th:text="${auction.seller.name}">판매자 이름</p>
+            <p th:text="${auction.sellerName}">판매자 이름</p>
           </div>
           <div class="form-group" sec:authorize="isAuthenticated()">
             <label>문의자</label>

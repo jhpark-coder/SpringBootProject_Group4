@@ -16,8 +16,8 @@
     <link rel="stylesheet" th:href="@{/react-bidding/main.css}">
 
     <!-- Google Fonts 로딩 개선 -->
-    <th:block th:if="${auction.fontFamily != null && !#strings.isEmpty(auction.fontFamily)}">
-        <th:block th:with="rawFont=${#strings.substringBefore(auction.fontFamily, ',')}">
+    <th:block th:if="${viewData.auction.fontFamily != null && !#strings.isEmpty(viewData.auction.fontFamily)}">
+        <th:block th:with="rawFont=${#strings.substringBefore(viewData.auction.fontFamily, ',')}">
             <th:block th:with="cleanFont=${#strings.replace(rawFont, '''', '')}">
                 <th:block th:with="finalFont=${#strings.replace(cleanFont, ' ', '+')}">
                     <link th:href="@{'https://fonts.googleapis.com/css2?family=' + ${finalFont} + ':wght@400;700&display=swap'}" rel="stylesheet">
@@ -27,12 +27,12 @@
     </th:block>
 
     <!-- 폰트 적용을 위한 추가 CSS -->
-    <style th:if="${auction.fontFamily != null && !#strings.isEmpty(auction.fontFamily)}">
+    <style th:if="${viewData.auction.fontFamily != null && !#strings.isEmpty(viewData.auction.fontFamily)}">
         .tiptap-content {
-            font-family: [[${auction.fontFamily}]], 'Noto Sans KR', Arial, sans-serif !important;
+            font-family: [[${viewData.auction.fontFamily}]], 'Noto Sans KR', Arial, sans-serif !important;
         }
         .tiptap-content * {
-            font-family: [[${auction.fontFamily}]], 'Noto Sans KR', Arial, sans-serif !important;
+            font-family: [[${viewData.auction.fontFamily}]], 'Noto Sans KR', Arial, sans-serif !important;
         }
         .tiptap-content .custom-code-block-wrapper,
         .tiptap-content .custom-code-block-wrapper *,
@@ -41,7 +41,7 @@
         .tiptap-content .custom-code-block-wrapper .language-selector,
         .tiptap-content .custom-code-block-wrapper .code-block-toolbar button,
         .tiptap-content .custom-code-block-wrapper .code-block-toolbar button span {
-            font-family: [[${auction.fontFamily}]], 'Noto Sans KR', Arial, sans-serif !important;
+            font-family: [[${viewData.auction.fontFamily}]], 'Noto Sans KR', Arial, sans-serif !important;
         }
     </style>
 </th:block>
@@ -50,7 +50,7 @@
 
     <div class="main-content-grid">
         <!-- Artwork Section -->
-        <main class="artwork-main" th:object="${auction}">
+        <main class="artwork-main" th:object="${viewData.auction}">
             <h1 th:text="*{name}">작품 제목</h1>
             <img th:src="*{imageUrl}" alt="Artwork Image" class="artwork-image"
                  onerror="this.onerror=null; this.src='/images/placeholder.png';">
@@ -58,28 +58,28 @@
 
         <!-- Sidebar Section -->
         <aside class="sidebar-goalcard" th:classappend="${#lists.isEmpty(tagNames)} ? '' : 'has-tags'"
-               th:object="${auction}">
+               th:object="${viewData.auction}">
             <div class="seller-info">
-                <div class="countdown-timer" th:if="${auction.auctionEndTime != null}" th:data-endtime="${auction.auctionEndTime}">
+                <div class="countdown-timer" th:if="${viewData.auction.auctionEndTime != null}" th:data-endtime="${viewData.auction.auctionEndTime}">
                     --일 --:--:--
                 </div>
                 <div class="seller-profile">
                     <img class="seller-pfp" alt="seller profile picture">
-                    <span class="seller-name" th:text="*{seller.name}" th:data-author-id="*{seller.id}">판매자 이름</span>
+                    <span class="seller-name" th:text="*{sellerName}" th:data-author-id="*{sellerId}">판매자 이름</span>
                 </div>
                 <!-- 판매자가 아닌 경우에만 Follow 버튼 표시 -->
                 <button class="follow-btn"
-                        th:if="${currentMember != null and auction.seller != null and currentMember.id != auction.seller.id}"
-                        th:data-member-id="${auction.seller.id}"
-                        th:onclick="|toggleFollow(${auction.seller.id})|"
-                        th:classappend="${isFollowing} ? 'following'"
-                        th:text="${isFollowing} ? 'Following' : 'Follow'">Follow</button>
+                        th:if="${viewData.currentMember != null and viewData.auction.sellerId != null and viewData.currentMember.id != viewData.auction.sellerId}"
+                        th:data-member-id="${viewData.auction.sellerId}"
+                        th:onclick="|toggleFollow(${viewData.auction.sellerId})|"
+                        th:classappend="${viewData.isFollowing} ? 'following'"
+                        th:text="${viewData.isFollowing} ? 'Following' : 'Follow'">Follow</button>
             </div>
             <div class="tags">
-                <a th:href="@{/auctions/category/{name}(name=${auction.primaryCategory}, page=1, secondary='all')}"
+                <a th:href="@{/auctions/category/{name}(name=${viewData.auction.primaryCategory}, page=1, secondary='all')}"
                    class="tag-btn" th:text="*{primaryCategory}">카테고리</a>
                 <a th:if="*{secondaryCategory != null and !#strings.isEmpty(secondaryCategory)}"
-                   th:href="@{/auctions/category/{name}(name=${auction.primaryCategory}, page=1, secondary=${auction.secondaryCategory})}"
+                   th:href="@{/auctions/category/{name}(name=${viewData.auction.primaryCategory}, page=1, secondary=${viewData.auction.secondaryCategory})}"
                    class="tag-btn" th:text="*{secondaryCategory}">부 카테고리</a>
                 <button class="tag-btn" th:each="tagName : ${tagNames}" th:text="${tagName}">태그</button>
             </div>
@@ -90,20 +90,20 @@
                 <!-- 구매 버튼들 (오른쪽, 세로 배치) -->
                 <div class="purchase-buttons">
                     <!-- 구매하지 않은 경우: 구매 버튼 표시 -->
-                    <th:block th:if="${!canViewContent}">
+                    <th:block th:if="${!viewData.canViewContent}">
                         <!-- 입찰 버튼 -->
                         <div id="react-bidding-root"></div>
                         <!-- 즉시입찰 버튼 -->
                         <!-- 기존 버튼을 이렇게 수정합니다 -->
-                        <button th:onclick="|location.href='@{/api/auction-payment/payment-page/{id}(id=${auction.id})}'|"
-                                th:disabled="${auction.buyNowPrice == null}"
+                        <button th:onclick="|location.href='@{/api/auction-payment/payment-page/{id}(id=${viewData.auction.id})}'|"
+                                th:disabled="${viewData.auction.buyNowPrice == null}"
                                 class="purchase-btn"
-                                th:text="${auction.buyNowPrice != null} ? '즉시입찰가:' + ${#numbers.formatInteger(auction.buyNowPrice, 3, 'COMMA')} + '원' : '즉시입찰 불가'">
+                                th:text="${viewData.auction.buyNowPrice != null} ? '즉시입찰가:' + ${#numbers.formatInteger(viewData.auction.buyNowPrice, 3, 'COMMA')} + '원' : '즉시입찰 불가'">
                             즉시입찰하기
                         </button>
                     </th:block>
                     <!-- 구매한 경우: 구매 완료 표시 -->
-                    <th:block th:if="${canViewContent}">
+                    <th:block th:if="${viewData.canViewContent}">
                         <div class="purchase-complete">
                             <span class="purchase-badge">구매 완료</span>
                             <p class="purchase-message">전체 콘텐츠를 확인할 수 있습니다.</p>
@@ -112,8 +112,8 @@
                 </div>
             </div>
             <!-- 판매자인 경우만 수정 버튼 표시 -->
-            <th:block th:if="${currentMember != null and auction.seller != null and currentMember.id == auction.seller.id}">
-                <a th:href="@{'/editor/product/' + ${auction.id}}"
+            <th:block th:if="${viewData.currentMember != null and viewData.auction.sellerId != null and viewData.currentMember.id == viewData.auction.sellerId}">
+                <a th:href="@{'/editor/product/' + ${viewData.auction.id}}"
                    style="display:block;width:100%;margin-top:24px;padding:12px 0;background:#222;color:#fff;text-align:center;border-radius:8px;font-weight:600;font-size:16px;">
                     글 수정하기
                 </a>
@@ -121,15 +121,15 @@
         </aside>
 
         <!-- Description Section (Full Width) -->
-        <section class="description-section" th:object="${auction}">
+        <section class="description-section" th:object="${viewData.auction}">
             <h2>작품 설명</h2>
             <div class="tiptap-content"
-                 th:styleappend="|${auction.backgroundColor != null and !#strings.isEmpty(auction.backgroundColor) ? 'background-color: ' + auction.backgroundColor + ';' : ''} ${auction.fontFamily != null and !#strings.isEmpty(auction.fontFamily) ? 'font-family: ' + auction.fontFamily + ';' : ''}|"
-                 th:utext="${contentHtml}">
+                 th:styleappend="|${viewData.auction.backgroundColor != null and !#strings.isEmpty(viewData.auction.backgroundColor) ? 'background-color: ' + viewData.auction.backgroundColor + ';' : ''} ${viewData.auction.fontFamily != null and !#strings.isEmpty(viewData.auction.fontFamily) ? 'font-family: ' + viewData.auction.fontFamily + ';' : ''}|"
+                 th:utext="${viewData.contentHtml}">
                 <!-- Tiptap 에디터로 작성된 본문 컨텐츠가 여기에 렌더링됩니다. -->
             </div>
             <!-- 페이월 안내 메시지 (페이월이 있고 구매하지 않은 경우) -->
-            <th:block th:if="${!canViewContent and hasPaywall}">
+            <th:block th:if="${!viewData.canViewContent and viewData.hasPaywall}">
                 <div class="paywall-notice">
                     <div class="paywall-content">
                         <div class="paywall-icon">
@@ -150,7 +150,7 @@
     </div>
 
     <!-- Inquiry Section -->
-    <div th:replace="~{auction/inquiry_section_auction :: inquirySection(${auction}, ${inquiryPage})}"></div>
+    <div th:replace="~{auction/inquiry_section_auction :: inquirySection(${viewData.auction}, ${inquiryPage})}"></div>
 
 
 
@@ -167,24 +167,17 @@
 
         // Thymeleaf 변수를 JavaScript 객체로 변환하여 window 객체에 저장합니다.
         // React 앱은 이 window 객체를 통해 초기 데이터를 공급받습니다.
-        window.biddingAppData = {
-            auctionId: /*[[${auction.id}]]*/ null,
-            initialHighestBid: /*[[${auction.highestBidAmount ?: auction.startBidPrice}]]*/ 0, // 초기 최고가는 DB에서 조회해야 합니다.
-            buyNowPrice: /*[[${auction.buyNowPrice}]]*/ null,
-            auctionEndTime: /*[[${auction.auctionEndTime}]]*/ null,
-            authToken: /*[[${#authentication.principal.jwtToken}]]*/ null // 사용자의 JWT 토큰을 전달하는 가상의 예시
-        };
-
+        window.biddingAppData =/*[[${viewData.biddingData}]]*/ {};
         /*]]>*/
     </script>
 
     <!-- 폰트 로딩 확인 및 적용 스크립트 -->
-    <script th:if="${auction.fontFamily != null && !#strings.isEmpty(auction.fontFamily)}">
+    <script th:if="${viewData.auction.fontFamily != null && !#strings.isEmpty(viewData.auction.fontFamily)}">
         // 폰트 정보 디버깅
-        const fontFamily = '[[${auction.fontFamily}]]';
+        const fontFamily = '[[${viewData.auction.fontFamily}]]';
         console.log('=== 폰트 디버깅 정보 ===');
         console.log('auction FontFamily:', fontFamily);
-        console.log('auction BackgroundColor:', '[[${auction.backgroundColor}]]');
+        console.log('auction BackgroundColor:', '[[${viewData.auction.backgroundColor}]]');
 
         // 폰트 로딩 확인 함수
         function checkFontLoaded(fontFamily) {
@@ -209,7 +202,7 @@
 
         // 페이지 로드 시 폰트 적용
         document.addEventListener('DOMContentLoaded', function() {
-            const fontFamily = '[[${auction.fontFamily}]]';
+            const fontFamily = '[[${viewData.auction.fontFamily}]]';
             const contentElement = document.querySelector('.tiptap-content');
 
             console.log('DOM 로드 완료');

@@ -20,6 +20,7 @@ public record AuctionDto(
         String fontFamily,
         String sellerName,
         Long sellerId,
+        String sellerEmail, // [추가!] 판매자 이메일 필드
         int auctionDuration,
         Long startBidPrice,
         Long buyNowPrice,
@@ -42,6 +43,7 @@ public record AuctionDto(
                 auction.getFontFamily(),
                 (auction.getSeller() != null) ? auction.getSeller().getName() : "Unknown",
                 (auction.getSeller() != null) ? auction.getSeller().getId() : null,
+                (auction.getSeller() != null) ? auction.getSeller().getEmail() : null,
                 auction.getAuctionDuration(),
                 auction.getStartBidPrice(),
                 auction.getBuyNowPrice(),
