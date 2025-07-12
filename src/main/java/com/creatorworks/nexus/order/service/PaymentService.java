@@ -220,7 +220,7 @@ public class PaymentService {
                 notificationDto.setTargetUserId(member.getId());
                 notificationDto.setMessage(message);
                 notificationDto.setType("payment_success");
-                notificationDto.setCategory(NotificationCategory.ADMIN);
+                notificationDto.setCategory(NotificationCategory.ORDER);
                 notificationDto.setLink("/api/orders/payment/success?orderId=" + payment.getOrder().getId());
                 notificationDto.setAmount(payment.getAmount());
                 notificationDto.setPaymentMethod(paymentMethod);
@@ -257,7 +257,7 @@ public class PaymentService {
                 notificationDto.setTargetUserId(member.getId());
                 notificationDto.setMessage(message);
                 notificationDto.setType("payment_failed");
-                notificationDto.setCategory(NotificationCategory.ADMIN);
+                notificationDto.setCategory(NotificationCategory.ORDER);
                 notificationDto.setLink("/api/orders/payment/fail?message=" + failureReason);
                 notificationDto.setAmount(payment.getAmount());
                 notificationDto.setPaymentMethod(paymentMethod);
