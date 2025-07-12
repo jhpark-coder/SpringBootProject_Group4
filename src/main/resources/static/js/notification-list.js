@@ -177,6 +177,8 @@ class NotificationList {
             case 'seller_request_submitted': return '작가신청';
             case 'seller_approved': return '승인';
             case 'seller_rejected': return '거절';
+            case 'inquiry': return '문의';
+            case 'review': return '후기';
             default: return '알림';
         }
     }

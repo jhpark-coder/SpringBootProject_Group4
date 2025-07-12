@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.creatorworks.nexus.notification.dto.FollowNotificationRequest;
+import com.creatorworks.nexus.notification.dto.InquiryNotificationRequest;
 import com.creatorworks.nexus.notification.dto.PaymentNotificationRequest;
+import com.creatorworks.nexus.notification.dto.ReviewNotificationRequest;
 import com.creatorworks.nexus.notification.dto.SellerRequestNotificationRequest;
 import com.creatorworks.nexus.notification.entity.Notification;
 import com.creatorworks.nexus.notification.repository.NotificationRepository;
@@ -24,6 +26,24 @@ public class NotificationService {
     }
 
     public void sendNotification(FollowNotificationRequest dto) {
+        try {
+            restTemplate.postForObject(NESTJS_NOTIFY_URL, dto, Void.class);
+        } catch (Exception e) {
+            // 실시간 알림 서버 에러는 로깅만 하고 계속 진행
+            System.err.println("실시간 알림 전송 실패: " + e.getMessage());
+        }
+    }
+
+    public void sendNotification(ReviewNotificationRequest dto) {
+        try {
+            restTemplate.postForObject(NESTJS_NOTIFY_URL, dto, Void.class);
+        } catch (Exception e) {
+            // 실시간 알림 서버 에러는 로깅만 하고 계속 진행
+            System.err.println("실시간 알림 전송 실패: " + e.getMessage());
+        }
+    }
+
+    public void sendNotification(InquiryNotificationRequest dto) {
         try {
             restTemplate.postForObject(NESTJS_NOTIFY_URL, dto, Void.class);
         } catch (Exception e) {
@@ -137,6 +157,44 @@ public class NotificationService {
                 .targetUserId(targetUserId)
                 .message(message)
                 .type("like")
+                .category(com.creatorworks.nexus.notification.entity.NotificationCategory.SOCIAL)
+                .isRead(false)
+                .link(link)
+                .productId(productId)
+                .build();
+        return notificationRepository.save(notification);
+    }
+
+    // 후기 알림을 DB에 저장하는 메서드
+    public Notification saveReviewNotification(Long senderUserId, Long targetUserId, Long productId, String message, String link, int rating) {
+        // 중복 체크: sender, target, type, productId
+        boolean exists = notificationRepository.existsBySenderUserIdAndTargetUserIdAndTypeAndProductId(
+            senderUserId, targetUserId, "review", productId);
+        if (exists) {
+            // 이미 알림이 존재하면 null 반환 (알림 생성하지 않음)
+            return null;
+        }
+        Notification notification = Notification.builder()
+                .senderUserId(senderUserId)
+                .targetUserId(targetUserId)
+                .message(message)
+                .type("review")
+                .category(com.creatorworks.nexus.notification.entity.NotificationCategory.SOCIAL)
+                .isRead(false)
+                .link(link)
+                .productId(productId)
+                .build();
+        return notificationRepository.save(notification);
+    }
+
+    // 문의 알림을 DB에 저장하는 메서드
+    public Notification saveInquiryNotification(Long senderUserId, Long targetUserId, Long productId, String message, String link) {
+        // 문의는 같은 상품에 여러 번 달 수 있으므로 중복 체크하지 않음
+        Notification notification = Notification.builder()
+                .senderUserId(senderUserId)
+                .targetUserId(targetUserId)
+                .message(message)
+                .type("inquiry")
                 .category(com.creatorworks.nexus.notification.entity.NotificationCategory.SOCIAL)
                 .isRead(false)
                 .link(link)
