@@ -58,7 +58,7 @@
                             <th>메시지</th>
                             <th>받은 시간</th>
                             <th>상태</th>
-                            <th>작업</th>
+                            <th>이동</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -79,11 +79,12 @@
                                 <span th:unless="${notification.isRead}" class="status-unread">● 안읽음</span>
                             </td>
                             <td>
-                                <button th:if="${!notification.isRead}"
-                                    th:onclick="'markAsRead(' + ${notification.id} + ')'" class="btn btn-primary">읽음
-                                    표시</button>
-                                <button th:onclick="'deleteNotification(' + ${notification.id} + ')'"
-                                    class="btn btn-secondary action-btn">삭제</button>
+                                <a th:if="${notification.link != null and notification.link != ''}"
+                                   th:href="${notification.link}" 
+                                   th:attr="data-notification-id=${notification.id}"
+                                   class="btn btn-primary">관련 페이지로 이동</a>
+                                <span th:unless="${notification.link != null and notification.link != ''}"
+                                      class="text-muted">-</span>
                             </td>
                         </tr>
                     </tbody>
@@ -105,77 +106,39 @@
     </div>
 
     <script th:inline="javascript">
-        function markAsRead(notificationId) {
-            fetch(`/notifications/${notificationId}/read`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-                .then(response => response.json())
-                .then(result => {
-                    const alertDiv = document.getElementById('alertMessage');
-                    alertDiv.style.display = 'block';
-
-                    if (result.success) {
-                        alertDiv.className = 'alert alert-success';
-                        alertDiv.textContent = '알림을 읽음으로 표시했습니다.';
-
-                        // 페이지 새로고침
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
-                    } else {
-                        alertDiv.className = 'alert alert-danger';
-                        alertDiv.textContent = result.message || '알림 상태 변경 중 오류가 발생했습니다.';
+        // 알림 관련 페이지로 이동 시 자동으로 읽음 처리
+        document.addEventListener('DOMContentLoaded', function() {
+            const notificationLinks = document.querySelectorAll('a[href]');
+            notificationLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // 알림 상태가 안읽음인 경우에만 읽음 처리
+                    const row = this.closest('tr');
+                    const statusCell = row.querySelector('.status-unread');
+                    if (statusCell) {
+                        // 알림 ID 추출 (테이블 행에서 알림 ID를 찾는 방법 필요)
+                        const notificationId = this.getAttribute('data-notification-id');
+                        if (notificationId) {
+                            // 백엔드에 읽음 처리 요청
+                            fetch(`/member/notifications/${notificationId}/mark-as-read`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                }
+                            }).then(response => response.json())
+                            .then(result => {
+                                if (result.success) {
+                                    // 클릭 시 즉시 읽음 상태로 변경 (시각적 피드백)
+                                    statusCell.className = 'status-read';
+                                    statusCell.textContent = '✓ 읽음';
+                                }
+                            }).catch(error => {
+                                console.error('알림 읽음 처리 실패:', error);
+                            });
+                        }
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    const alertDiv = document.getElementById('alertMessage');
-                    alertDiv.style.display = 'block';
-                    alertDiv.className = 'alert alert-danger';
-                    alertDiv.textContent = '알림 상태 변경 중 오류가 발생했습니다.';
                 });
-        }
-
-        function deleteNotification(notificationId) {
-            if (!confirm('이 알림을 삭제하시겠습니까?')) {
-                return;
-            }
-
-            fetch(`/notifications/${notificationId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-                .then(response => response.json())
-                .then(result => {
-                    const alertDiv = document.getElementById('alertMessage');
-                    alertDiv.style.display = 'block';
-
-                    if (result.success) {
-                        alertDiv.className = 'alert alert-success';
-                        alertDiv.textContent = '알림이 삭제되었습니다.';
-
-                        // 페이지 새로고침
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
-                    } else {
-                        alertDiv.className = 'alert alert-danger';
-                        alertDiv.textContent = result.message || '알림 삭제 중 오류가 발생했습니다.';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    const alertDiv = document.getElementById('alertMessage');
-                    alertDiv.style.display = 'block';
-                    alertDiv.className = 'alert alert-danger';
-                    alertDiv.textContent = '알림 삭제 중 오류가 발생했습니다.';
-                });
-        }
+            });
+        });
     </script>
 </body>
 

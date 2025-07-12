@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.creatorworks.nexus.member.dto.CustomUserDetails;
 import com.creatorworks.nexus.member.dto.FollowingDto;
@@ -292,9 +293,16 @@ public class MyPageController {
 
     @GetMapping("/member/myPage/{memberId}/notifications")
     public String notificationHistory(@PathVariable("memberId") Long memberId, @AuthenticationPrincipal Object principal, Model model) {
-        String email = getEmailFromPrincipal(principal);
-        Member currentUser = memberRepository.findByEmail(email);
-        if (currentUser != null) {
+        try {
+            String email = getEmailFromPrincipal(principal);
+            Member currentUser = memberRepository.findByEmail(email);
+            
+            if (currentUser == null) {
+                log.error("회원 정보를 찾을 수 없습니다: {}", email);
+                model.addAttribute("notifications", Collections.emptyList());
+                return "member/my-notifications";
+            }
+            
             // 관리자 권한 확인
             boolean isAdmin = false;
             if (principal instanceof CustomUserDetails) {
@@ -312,11 +320,44 @@ public class MyPageController {
             }
             model.addAttribute("notifications", notifications);
             model.addAttribute("Name", currentUser.getName());
-        } else {
+            
+        } catch (Exception e) {
+            log.error("알림 내역 조회 중 오류 발생", e);
             model.addAttribute("notifications", Collections.emptyList());
         }
         
         return "member/my-notifications"; // 알림 내역 페이지 템플릿 반환
+    }
+
+    @PostMapping("/member/notifications/{notificationId}/mark-as-read")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> markNotificationAsRead(@PathVariable Long notificationId, 
+                                                                     @AuthenticationPrincipal Object principal) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String email = getEmailFromPrincipal(principal);
+            Member currentUser = memberRepository.findByEmail(email);
+            
+            if (currentUser == null) {
+                response.put("success", false);
+                response.put("message", "로그인이 필요합니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // 알림을 읽음으로 표시
+            notificationService.markAsRead(notificationId, currentUser.getId());
+            
+            response.put("success", true);
+            response.put("message", "알림을 읽음으로 표시했습니다.");
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("알림 읽음 처리 중 오류: {}", e.getMessage());
+            response.put("success", false);
+            response.put("message", "알림 읽음 처리 중 오류가 발생했습니다.");
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     @GetMapping("/members/liked-products")
@@ -409,6 +450,7 @@ public class MyPageController {
             
             model.addAttribute("currentBalance", currentBalance != null ? currentBalance : 0L);
             model.addAttribute("pointHistoryPage", pointHistoryPage);
+            model.addAttribute("pointHistory", pointHistoryPage.getContent());
             model.addAttribute("page", page);
             model.addAttribute("size", size);
             model.addAttribute("Name", currentMember.getName());
