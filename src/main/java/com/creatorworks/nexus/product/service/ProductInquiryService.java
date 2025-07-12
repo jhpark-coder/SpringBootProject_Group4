@@ -1,12 +1,19 @@
 package com.creatorworks.nexus.product.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.notification.dto.InquiryNotificationRequest;
+import com.creatorworks.nexus.notification.entity.NotificationCategory;
+import com.creatorworks.nexus.notification.service.NotificationService;
 import com.creatorworks.nexus.product.dto.ProductInquiryRequestDto;
 import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.entity.ProductInquiry;
@@ -14,10 +21,6 @@ import com.creatorworks.nexus.product.repository.ProductInquiryRepository;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageImpl;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -27,6 +30,7 @@ public class ProductInquiryService {
     private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
     private final ProductInquiryRepository productInquiryRepository;
+    private final NotificationService notificationService; // 알림 서비스
 
     @Transactional(readOnly = true)
     public Page<ProductInquiry> findInquiriesByProduct(Long productId, String keyword, Pageable pageable) {
@@ -75,6 +79,34 @@ public class ProductInquiryService {
 
         // 생성된 문의를 저장합니다.
         productInquiryRepository.save(inquiry);
+
+        // 문의 알림 생성 및 전송 (판매자에게만 알림)
+        String message = writer.getName() + "님이 '" + product.getName() + "' 상품에 문의를 달았습니다.";
+        String link = "/products/" + productId;
+        
+        // 문의 알림 저장 및 실시간 전송 (문의는 매번 알림 전송)
+        var savedNotification = notificationService.saveInquiryNotification(
+            writer.getId(),
+            product.getSeller().getId(),
+            productId,
+            message,
+            link
+        );
+        
+        // 문의 알림은 매번 전송
+        System.out.println("[알림 DB 저장 완료] 문의 알림, notificationId=" + savedNotification.getId());
+        
+        // InquiryNotificationRequest를 사용하여 실시간 알림 전송
+        InquiryNotificationRequest inquiryNotificationRequest = new InquiryNotificationRequest();
+        inquiryNotificationRequest.setTargetUserId(product.getSeller().getId());
+        inquiryNotificationRequest.setSenderUserId(writer.getId());
+        inquiryNotificationRequest.setProductId(productId);
+        inquiryNotificationRequest.setMessage(message);
+        inquiryNotificationRequest.setType("inquiry");
+        inquiryNotificationRequest.setCategory(NotificationCategory.SOCIAL);
+        inquiryNotificationRequest.setLink(link);
+        
+        notificationService.sendNotification(inquiryNotificationRequest);
     }
 
     @Transactional

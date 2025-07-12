@@ -8,6 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.creatorworks.nexus.member.entity.Member;
+import com.creatorworks.nexus.notification.dto.ReviewNotificationRequest;
+import com.creatorworks.nexus.notification.entity.NotificationCategory;
+import com.creatorworks.nexus.notification.service.NotificationService;
 import com.creatorworks.nexus.order.repository.OrderRepository;
 import com.creatorworks.nexus.product.dto.ProductReviewRequestDto;
 import com.creatorworks.nexus.product.entity.Product;
@@ -25,6 +28,7 @@ public class ProductReviewService {
     private final ProductRepository productRepository;
     private final ProductReviewRepository productReviewRepository;
     private final OrderRepository orderRepository; // 구매 확인용
+    private final NotificationService notificationService; // 알림 서비스
 
     /**
      * 특정 상품의 후기 목록을 조회합니다.
@@ -82,6 +86,41 @@ public class ProductReviewService {
                 .comment(requestDto.getComment())
                 .build();
         productReviewRepository.save(review);
+
+        // 후기 알림 생성 및 전송
+        String message = member.getName() + "님이 후기를 달았습니다. 별점: " + requestDto.getRating() + "점";
+        String link = "/products/" + productId;
+        
+        // 후기 알림 저장 및 실시간 전송
+        var savedNotification = notificationService.saveReviewNotification(
+            member.getId(),
+            product.getSeller().getId(),
+            productId,
+            message,
+            link,
+            requestDto.getRating()
+        );
+        
+        if (savedNotification != null) {
+            // 새로운 후기 알림인 경우에만 WebSocket 전송
+            System.out.println("[알림 DB 저장 완료] 후기 알림, notificationId=" + savedNotification.getId());
+            
+            // ReviewNotificationRequest를 사용하여 실시간 알림 전송
+            ReviewNotificationRequest reviewNotificationRequest = new ReviewNotificationRequest();
+            reviewNotificationRequest.setTargetUserId(product.getSeller().getId());
+            reviewNotificationRequest.setSenderUserId(member.getId());
+            reviewNotificationRequest.setProductId(productId);
+            reviewNotificationRequest.setMessage(message);
+            reviewNotificationRequest.setType("review");
+            reviewNotificationRequest.setCategory(NotificationCategory.SOCIAL);
+            reviewNotificationRequest.setLink(link);
+            reviewNotificationRequest.setRating(requestDto.getRating());
+            
+            notificationService.sendNotification(reviewNotificationRequest);
+        } else {
+            // 중복 후기 알림인 경우
+            System.out.println("[알림 중복 방지] 이미 존재하는 후기 알림");
+        }
     }
 
     /**
