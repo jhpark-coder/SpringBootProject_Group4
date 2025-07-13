@@ -308,7 +308,8 @@
         </div>
 
         <!-- 알림 메시지 -->
-        <div id="alertMessage" class="alert" style="display: none;"></div>
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
 
         <!-- 통계 정보 -->
         <div class="stats-container">
@@ -415,15 +416,33 @@
                         <td th:text="${refund.adminComment != null ? refund.adminComment : '-'}">-</td>
                         <td>
                             <a th:href="@{/admin/refund/detail/{id}(id=${refund.id})}" class="btn btn-primary">상세보기</a>
-                            <button th:if="${refund.refundStatus.name() == 'PENDING'}"
-                                th:onclick="'processRefund(' + ${refund.id} + ')'" class="btn btn-success"
-                                style="margin-left: 5px;">처리</button>
-                            <button th:if="${refund.refundStatus.name() == 'FAILED'}"
-                                th:onclick="'retryRefund(' + ${refund.id} + ')'" class="btn btn-warning"
-                                style="margin-left: 5px;">재시도</button>
-                            <button th:if="${refund.refundStatus.name() == 'PENDING'}"
-                                th:onclick="'cancelRefund(' + ${refund.id} + ')'" class="btn btn-danger"
-                                style="margin-left: 5px;">취소</button>
+                            
+                            <!-- 환불 처리 버튼 (PENDING 상태일 때만) -->
+                            <form th:if="${refund.refundStatus.name() == 'PENDING'}" 
+                                  th:action="@{/admin/refund/process/{id}(id=${refund.id})}" 
+                                  method="post" style="display: inline; margin-left: 5px;">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit" class="btn btn-success" 
+                                        onclick="return confirm('환불을 처리하시겠습니까?')">처리</button>
+                            </form>
+                            
+                            <!-- 환불 재시도 버튼 (FAILED 상태일 때만) -->
+                            <form th:if="${refund.refundStatus.name() == 'FAILED'}" 
+                                  th:action="@{/admin/refund/retry/{id}(id=${refund.id})}" 
+                                  method="post" style="display: inline; margin-left: 5px;">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit" class="btn btn-warning" 
+                                        onclick="return confirm('환불을 재시도하시겠습니까?')">재시도</button>
+                            </form>
+                            
+                            <!-- 환불 취소 버튼 (PENDING 상태일 때만) -->
+                            <form th:if="${refund.refundStatus.name() == 'PENDING'}" 
+                                  th:action="@{/admin/refund/cancel/{id}(id=${refund.id})}" 
+                                  method="post" style="display: inline; margin-left: 5px;">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit" class="btn btn-danger" 
+                                        onclick="return confirm('환불 요청을 취소하시겠습니까?')">취소</button>
+                            </form>
                         </td>
                     </tr>
                 </tbody>
@@ -477,117 +496,6 @@
     <script th:inline="javascript">
         let currentRefundId = null;
 
-        function processRefund(refundId) {
-            if (!confirm('환불을 처리하시겠습니까?')) {
-                return;
-            }
-
-            fetch(`/admin/refund/process/${refundId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-                .then(response => response.json())
-                .then(result => {
-                    const alertDiv = document.getElementById('alertMessage');
-                    alertDiv.style.display = 'block';
-
-                    if (result.success) {
-                        alertDiv.className = 'alert alert-success';
-                        alertDiv.textContent = '환불 처리가 완료되었습니다.';
-
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
-                    } else {
-                        alertDiv.className = 'alert alert-danger';
-                        alertDiv.textContent = result.message || '환불 처리 중 오류가 발생했습니다.';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    const alertDiv = document.getElementById('alertMessage');
-                    alertDiv.style.display = 'block';
-                    alertDiv.className = 'alert alert-danger';
-                    alertDiv.textContent = '환불 처리 중 오류가 발생했습니다.';
-                });
-        }
-
-        function retryRefund(refundId) {
-            if (!confirm('환불을 재시도하시겠습니까?')) {
-                return;
-            }
-
-            fetch(`/admin/refund/retry/${refundId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-                .then(response => response.json())
-                .then(result => {
-                    const alertDiv = document.getElementById('alertMessage');
-                    alertDiv.style.display = 'block';
-
-                    if (result.success) {
-                        alertDiv.className = 'alert alert-success';
-                        alertDiv.textContent = '환불 재시도가 완료되었습니다.';
-
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
-                    } else {
-                        alertDiv.className = 'alert alert-danger';
-                        alertDiv.textContent = result.message || '환불 재시도 중 오류가 발생했습니다.';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    const alertDiv = document.getElementById('alertMessage');
-                    alertDiv.style.display = 'block';
-                    alertDiv.className = 'alert alert-danger';
-                    alertDiv.textContent = '환불 재시도 중 오류가 발생했습니다.';
-                });
-        }
-
-        function cancelRefund(refundId) {
-            if (!confirm('환불 요청을 취소하시겠습니까?')) {
-                return;
-            }
-
-            fetch(`/admin/refund/cancel/${refundId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-                .then(response => response.json())
-                .then(result => {
-                    const alertDiv = document.getElementById('alertMessage');
-                    alertDiv.style.display = 'block';
-
-                    if (result.success) {
-                        alertDiv.className = 'alert alert-success';
-                        alertDiv.textContent = '환불 요청이 취소되었습니다.';
-
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
-                    } else {
-                        alertDiv.className = 'alert alert-danger';
-                        alertDiv.textContent = result.message || '환불 취소 중 오류가 발생했습니다.';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    const alertDiv = document.getElementById('alertMessage');
-                    alertDiv.style.display = 'block';
-                    alertDiv.className = 'alert alert-danger';
-                    alertDiv.textContent = '환불 취소 중 오류가 발생했습니다.';
-                });
-        }
-
         function openCommentModal(refundId) {
             currentRefundId = refundId;
             document.getElementById('commentModal').style.display = 'block';
@@ -619,14 +527,7 @@
                 .then(result => {
                     if (result.success) {
                         closeCommentModal();
-                        const alertDiv = document.getElementById('alertMessage');
-                        alertDiv.style.display = 'block';
-                        alertDiv.className = 'alert alert-success';
-                        alertDiv.textContent = '코멘트가 추가되었습니다.';
-
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
+                        location.reload();
                     } else {
                         alert(result.message || '코멘트 추가 중 오류가 발생했습니다.');
                     }

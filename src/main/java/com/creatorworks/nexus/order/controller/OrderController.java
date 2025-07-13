@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -42,6 +43,7 @@ public class OrderController {
 
     private final OrderService orderService;
     private final PaymentService paymentService;
+    @Qualifier("orderPointService")
     private final PointService pointService;
     private final MemberRepository memberRepository;
     private final RefundService refundService;

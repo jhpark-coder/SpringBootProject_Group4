@@ -30,8 +30,8 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-number"
-                        th:text="${pointHistory == null ? 0 : pointHistory.?[type == 'EARN'].size()}">0</div>
-                    <div class="stat-label">적립 건수</div>
+                        th:text="${pointHistory == null ? 0 : pointHistory.?[type == 'CHARGE'].size()}">0</div>
+                    <div class="stat-label">충전 건수</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number"
@@ -71,11 +71,10 @@
                                     거래일시
                                 </td>
                                 <td>
-                                                    <span th:class="${point.type == 'EARN' || point.type == 'CHARGE' ? 'status-earned' : 
+                                    <span th:class="${point.type == 'CHARGE' ? 'status-earned' : 
                                point.type == 'USE' ? 'status-used' : 
                                point.type == 'REFUND' ? 'status-refunded' : 'status-default'}"
-                      th:text="${point.type == 'EARN' ? '적립' : 
-                               point.type == 'CHARGE' ? '충전' : 
+                      th:text="${point.type == 'CHARGE' ? '충전' : 
                                point.type == 'USE' ? '사용' : 
                                point.type == 'REFUND' ? '환불' : '기타'}">
                     거래유형

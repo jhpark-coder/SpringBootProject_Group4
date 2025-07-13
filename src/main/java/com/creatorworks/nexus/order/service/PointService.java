@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Service
+@Service("orderPointService")
 @Transactional
 @RequiredArgsConstructor
 public class PointService {
@@ -40,6 +40,10 @@ public class PointService {
     private final PaymentRepository paymentRepository;
     private final PaymentService paymentService;
     private final NotificationService notificationService;
+    
+    // 포인트 내역 관리를 위한 의존성 추가
+    private final com.creatorworks.nexus.product.repository.PointRepository pointRepository;
+    private final com.creatorworks.nexus.product.service.PointService pointHistoryService;
 
     /**
      * 포인트 충전을 처리합니다.
@@ -118,16 +122,19 @@ public class PointService {
         Payment payment = paymentService.processPointPayment(order, totalAmount, merchantUid);
         order.setPayment(payment);
 
-        // 포인트 차감
-        member.setPoint((int) (currentBalance - totalAmount));
-        memberRepository.save(member);
+        // 포인트 차감 및 내역 기록
+        Long newBalance = currentBalance - totalAmount;
+        
+        // 포인트 내역에 구매 기록 추가
+        pointHistoryService.addUseHistory(member, totalAmount, 
+                product.getName() + " 구매", merchantUid);
 
         // 주문 완료 처리
         order.complete();
         payment.complete();
 
         // 포인트 구매 성공 알림 전송
-        sendPointPurchaseSuccessNotification(member, product, totalAmount, member.getPoint().longValue(), order.getId());
+        sendPointPurchaseSuccessNotification(member, product, totalAmount, newBalance, order.getId());
 
         return orderRepository.save(order);
     }
@@ -136,10 +143,7 @@ public class PointService {
      * 현재 포인트 잔액을 조회합니다.
      */
     public Long getCurrentBalance(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다: " + memberId));
-        
-        return member.getPoint() != null ? member.getPoint().longValue() : 0L;
+        return pointRepository.calculateBalanceByMemberId(memberId);
     }
 
     /**
@@ -150,6 +154,13 @@ public class PointService {
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다: " + memberId));
 
         return orderRepository.findByBuyerAndOrderTypeOrderByOrderDateDesc(member, OrderType.POINT_PURCHASE, pageable);
+    }
+    
+    /**
+     * 새로운 포인트 내역 엔티티를 사용한 포인트 내역 조회
+     */
+    public Page<com.creatorworks.nexus.product.service.PointService.PointHistoryDto> getNewPointHistory(Long memberId, Pageable pageable) {
+        return pointHistoryService.getPointHistoryDtoList(memberId, pageable);
     }
 
     /**
@@ -181,8 +192,9 @@ public class PointService {
         order.setPayment(payment);
 
         // 포인트 추가
-        member.setPoint(newBalance.intValue());
-        memberRepository.save(member);
+        
+        // 포인트 내역에 관리자 지급 기록 추가
+        pointHistoryService.addChargeHistory(member, amount, "관리자 지급: " + description, null, merchantUid);
 
         return orderRepository.save(order);
     }
@@ -204,8 +216,10 @@ public class PointService {
                 Member member = order.getBuyer();
                 Long currentBalance = getCurrentBalance(member.getId());
                 Long newBalance = currentBalance + point;
-                member.setPoint(newBalance.intValue());
-                memberRepository.save(member);
+                
+                // 포인트 내역에 충전 기록 추가
+                pointHistoryService.addChargeHistory(member, point, "포인트 충전", impUid, payment.getMerchantUid());
+                
                 // Order의 totalAmount를 실제 충전 금액(point)으로 갱신
                 order.setTotalAmount(point);
                 orderRepository.save(order);
@@ -340,7 +354,7 @@ public class PointService {
         List<PointHistoryDto> dtos = new ArrayList<>();
         
         // 현재 잔액부터 역순으로 계산
-        Long currentBalance = member.getPoint() != null ? member.getPoint().longValue() : 0L;
+        Long currentBalance = pointRepository.calculateBalanceByMemberId(memberId);
         
         for (Order order : orders) {
             PointHistoryDto dto = new PointHistoryDto();

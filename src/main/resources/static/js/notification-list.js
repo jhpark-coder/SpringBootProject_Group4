@@ -93,14 +93,17 @@ class NotificationList {
                 break;
             case 'product':
                 filtered = this.notifications.filter(n =>
+                    (n.category === 'ORDER' && [
+                        'payment_success', 'payment_failed',
+                        'refund_request', 'refund_completion', 'refund_cancellation', 'refund_failure'
+                    ].includes(n.type)) ||
                     ['product_inquiry', 'product_review'].includes(n.type)
                 );
                 break;
             case 'admin':
                 filtered = this.notifications.filter(n => [
-                    'seller_request_received', 'seller_request_submitted', 'seller_approved', 'seller_rejected', 'admin_notice',
-                    'payment_success', 'payment_failed'
-                ].includes(n.type) || n.category === 'ORDER');
+                    'seller_request_received', 'seller_request_submitted', 'seller_approved', 'seller_rejected', 'admin_notice'
+                ].includes(n.type));
                 break;
             case 'auction':
                 filtered = this.notifications.filter(n => ['auction_bid', 'auction_win', 'auction_lose'].includes(n.type));
@@ -182,6 +185,20 @@ class NotificationList {
             case 'seller_rejected': return '거절';
             case 'inquiry': return '문의';
             case 'review': return '후기';
+            case 'payment_success': return '결제완료';
+            case 'payment_failed': return '결제실패';
+            case 'payment_cancelled': return '결제취소';
+            case 'refund_request': return '환불신청';
+            case 'refund_approved': return '환불승인';
+            case 'refund_cancelled': return '환불취소';
+            case 'auction_bid': return '입찰';
+            case 'auction_win': return '경매낙찰';
+            case 'auction_lose': return '경매실패';
+            case 'auction_no_bid': return '입찰없음';
+            case 'auction_payment_success': return '경매결제완료';
+            case 'auction_payment_failed': return '경매결제실패';
+            case 'auction_payment_cancelled': return '경매결제취소';
+            case 'admin_notice': return '공지';
             default: return '알림';
         }
     }

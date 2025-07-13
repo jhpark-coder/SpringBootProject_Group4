@@ -79,6 +79,7 @@ public class ProductController {
     private final RedisTemplate<String, String> redisTemplate;
     private final RecentlyViewedProductRedisService recentlyViewedProductRedisService;
     private final OrderRepository orderRepository;
+    @Qualifier("orderPointService")
     private final PointService pointService;
 
 

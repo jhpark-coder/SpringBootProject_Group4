@@ -42,10 +42,21 @@
                 color: #383d41;
             }
 
+            .status-completed {
+                background: #d4edda;
+                color: #155724;
+            }
+
+            .status-failed {
+                background: #f8d7da;
+                color: #721c24;
+            }
+
             .amount {
                 font-weight: bold;
                 color: #007bff;
             }
+
         </style>
     </th:block>
 </head>
@@ -63,7 +74,8 @@
             </div>
 
             <!-- 알림 메시지 -->
-            <div id="alertMessage" class="alert" style="display: none;"></div>
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
 
             <!-- 통계 정보 -->
             <div class="stats-container">
@@ -72,19 +84,24 @@
                     <div class="stat-label">전체 환불 건수</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" th:text="${refunds == null ? 0 : refunds.?[status == 'PENDING'].size()}">0
-                    </div>
+                    <div class="stat-number" th:text="${pendingCount}">0</div>
                     <div class="stat-label">대기 중인 환불</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" th:text="${refunds == null ? 0 : refunds.?[status == 'APPROVED'].size()}">0
-                    </div>
-                    <div class="stat-label">승인된 환불</div>
+                    <div class="stat-number" th:text="${processingCount}">0</div>
+                    <div class="stat-label">처리 중인 환불</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" th:text="${refunds == null ? 0 : refunds.?[status == 'REJECTED'].size()}">0
-                    </div>
-                    <div class="stat-label">거절된 환불</div>
+                    <div class="stat-number" th:text="${completedCount}">0</div>
+                    <div class="stat-label">완료된 환불</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${failedCount}">0</div>
+                    <div class="stat-label">실패한 환불</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${cancelledCount}">0</div>
+                    <div class="stat-label">취소된 환불</div>
                 </div>
             </div>
 
@@ -106,31 +123,37 @@
                                 <th>신청일</th>
                                 <th>상태</th>
                                 <th>처리일</th>
+                                <th>작업</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:each="refund : ${refunds}" class="table-row">
-                                <td th:text="${refund.orderId}">주문번호</td>
-                                <td th:text="${refund.productName}">상품명</td>
+                                <td th:text="${refund.order != null ? refund.order.id : '-'}">주문번호</td>
+                                <td th:text="${refund.order != null && refund.order.product != null ? refund.order.product.name : '상품 정보 없음'}">상품명</td>
                                 <td th:text="${#numbers.formatInteger(refund.amount, 1, 'COMMA')} + '원'">환불 금액</td>
                                 <td class="content-time"
-                                    th:text="${refund.requestDate != null ? refund.requestDate.toString().substring(0, 16).replace('T', ' ') : ''}">
+                                    th:text="${refund.regTime != null ? #temporals.format(refund.regTime, 'yyyy-MM-dd HH:mm') : ''}">
                                     신청일
                                 </td>
                                 <td>
                                     <span
-                                        th:class="${refund.status == 'PENDING' ? 'status-pending' : 
-                                                       refund.status == 'APPROVED' ? 'status-approved' : 
-                                                       refund.status == 'REJECTED' ? 'status-rejected' : 'status-default'}"
-                                        th:text="${refund.status == 'PENDING' ? '대기중' : 
-                                                 refund.status == 'APPROVED' ? '승인' : 
-                                                 refund.status == 'REJECTED' ? '거절' : '알 수 없음'}">
+                                        th:class="${'status-badge status-' + #strings.toLowerCase(refund.refundStatus.name())}"
+                                        th:text="${refund.refundStatus.description}">
                                         상태
                                     </span>
                                 </td>
                                 <td class="content-time"
-                                    th:text="${refund.processDate != null ? refund.processDate.toString().substring(0, 16).replace('T', ' ') : '-'}">
+                                    th:text="${refund.refundDate != null ? #temporals.format(refund.refundDate, 'yyyy-MM-dd HH:mm') : '-'}">
                                     처리일
+                                </td>
+                                <td>
+                                    <form th:if="${refund.refundStatus.name() == 'PENDING'}" 
+                                          th:action="@{/refund/cancel/{id}(id=${refund.id})}" 
+                                          method="post" style="display: inline;">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-danger btn-sm" 
+                                                onclick="return confirm('환불 요청을 취소하시겠습니까?')">취소</button>
+                                    </form>
                                 </td>
                             </tr>
                         </tbody>
@@ -156,46 +179,6 @@
             </nav>
         </main>
     </div>
-
-    <script th:inline="javascript">
-        function cancelRefund(refundId) {
-            if (!confirm('환불 요청을 취소하시겠습니까?')) {
-                return;
-            }
-
-            fetch(`/refund/cancel/${refundId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-                .then(response => response.json())
-                .then(result => {
-                    const alertDiv = document.getElementById('alertMessage');
-                    alertDiv.style.display = 'block';
-
-                    if (result.success) {
-                        alertDiv.className = 'alert alert-success';
-                        alertDiv.textContent = '환불 요청이 취소되었습니다.';
-
-                        // 페이지 새로고침
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
-                    } else {
-                        alertDiv.className = 'alert alert-danger';
-                        alertDiv.textContent = result.message || '환불 취소 중 오류가 발생했습니다.';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    const alertDiv = document.getElementById('alertMessage');
-                    alertDiv.style.display = 'block';
-                    alertDiv.className = 'alert alert-danger';
-                    alertDiv.textContent = '환불 취소 중 오류가 발생했습니다.';
-                });
-        }
-    </script>
 </body>
 
 </html>

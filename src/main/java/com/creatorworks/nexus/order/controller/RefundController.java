@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
@@ -61,6 +62,7 @@ public class RefundController {
 
             model.addAttribute("orderId", orderId);
             model.addAttribute("member", member);
+            model.addAttribute("Name", member.getName()); // 사이드바용 사용자 이름 추가
             model.addAttribute("order", order);
             
             // 포인트 구매 상품인지 확인
@@ -148,9 +150,15 @@ public class RefundController {
             List<Refund> refunds = refundService.getMyRefunds(member.getId(), page, size);
             long totalRefunds = refundService.getMyRefundsCount(member.getId());
             
+            // 페이징 정보 계산
+            int totalPages = (int) Math.ceil((double) totalRefunds / size);
+            
             // 통계 데이터 계산
             long pendingCount = refunds.stream()
                     .filter(r -> r.getRefundStatus() == RefundStatus.PENDING)
+                    .count();
+            long processingCount = refunds.stream()
+                    .filter(r -> r.getRefundStatus() == RefundStatus.PROCESSING)
                     .count();
             long completedCount = refunds.stream()
                     .filter(r -> r.getRefundStatus() == RefundStatus.COMPLETED)
@@ -158,15 +166,22 @@ public class RefundController {
             long failedCount = refunds.stream()
                     .filter(r -> r.getRefundStatus() == RefundStatus.FAILED)
                     .count();
+            long cancelledCount = refunds.stream()
+                    .filter(r -> r.getRefundStatus() == RefundStatus.CANCELLED)
+                    .count();
             
             model.addAttribute("refunds", refunds);
             model.addAttribute("totalRefunds", totalRefunds);
             model.addAttribute("currentPage", page);
             model.addAttribute("pageSize", size);
+            model.addAttribute("totalPages", totalPages);
             model.addAttribute("member", member);
+            model.addAttribute("Name", member.getName()); // 사이드바용 사용자 이름 추가
             model.addAttribute("pendingCount", pendingCount);
+            model.addAttribute("processingCount", processingCount);
             model.addAttribute("completedCount", completedCount);
             model.addAttribute("failedCount", failedCount);
+            model.addAttribute("cancelledCount", cancelledCount);
             
             return "order/my-refunds";
         } catch (Exception e) {
@@ -198,6 +213,7 @@ public class RefundController {
             
             model.addAttribute("refund", refund);
             model.addAttribute("member", member);
+            model.addAttribute("Name", member.getName()); // 사이드바용 사용자 이름 추가
             
             return "order/refund-detail";
         } catch (Exception e) {
@@ -210,8 +226,7 @@ public class RefundController {
      * 환불 요청 취소
      */
     @PostMapping("/cancel/{refundId}")
-    @ResponseBody
-    public ResponseEntity<RefundResponse> cancelRefund(@PathVariable Long refundId) {
+    public String cancelRefund(@PathVariable Long refundId, RedirectAttributes redirectAttributes) {
         try {
             // 현재 로그인한 사용자 정보 가져오기
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -226,20 +241,18 @@ public class RefundController {
             
             if (response.isSuccess()) {
                 log.info("환불 요청 취소 성공: 사용자={}, 환불={}", member.getEmail(), refundId);
-                return ResponseEntity.ok(response);
+                redirectAttributes.addFlashAttribute("successMessage", "환불 요청이 취소되었습니다.");
             } else {
                 log.warn("환불 요청 취소 실패: 사용자={}, 환불={}, 사유={}", 
                         member.getEmail(), refundId, response.getMessage());
-                return ResponseEntity.badRequest().body(response);
+                redirectAttributes.addFlashAttribute("errorMessage", response.getMessage());
             }
         } catch (Exception e) {
             log.error("환불 요청 취소 처리 오류: refundId={}, 오류={}", refundId, e.getMessage(), e);
-            RefundResponse errorResponse = RefundResponse.builder()
-                    .success(false)
-                    .message("환불 요청 취소 처리 중 오류가 발생했습니다: " + e.getMessage())
-                    .build();
-            return ResponseEntity.internalServerError().body(errorResponse);
+            redirectAttributes.addFlashAttribute("errorMessage", "환불 요청 취소 처리 중 오류가 발생했습니다: " + e.getMessage());
         }
+        
+        return "redirect:/refund/my-refunds";
     }
 
     /**

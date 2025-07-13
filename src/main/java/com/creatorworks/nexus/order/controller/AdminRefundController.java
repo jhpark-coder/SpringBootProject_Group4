@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.creatorworks.nexus.order.dto.RefundResponse;
 import com.creatorworks.nexus.order.dto.RefundStatisticsDto;
@@ -107,87 +108,57 @@ public class AdminRefundController {
      * 환불 처리
      */
     @PostMapping("/process/{refundId}")
-    @ResponseBody
-    public ResponseEntity<RefundResponse> processRefund(@PathVariable Long refundId) {
+    public String processRefund(@PathVariable Long refundId, RedirectAttributes redirectAttributes) {
         try {
             Refund refund = refundService.processRefund(refundId);
             
-            RefundResponse response = RefundResponse.builder()
-                    .success(true)
-                    .refundId(refund.getId())
-                    .status(refund.getRefundStatus().name())
-                    .message("환불 처리가 완료되었습니다.")
-                    .build();
-            
             log.info("환불 처리 완료: 환불ID={}, 상태={}", refundId, refund.getRefundStatus());
-            return ResponseEntity.ok(response);
+            redirectAttributes.addFlashAttribute("successMessage", "환불 처리가 완료되었습니다.");
             
         } catch (Exception e) {
             log.error("환불 처리 오류: refundId={}, 오류={}", refundId, e.getMessage(), e);
-            RefundResponse errorResponse = RefundResponse.builder()
-                    .success(false)
-                    .message("환불 처리 중 오류가 발생했습니다: " + e.getMessage())
-                    .build();
-            return ResponseEntity.internalServerError().body(errorResponse);
+            redirectAttributes.addFlashAttribute("errorMessage", "환불 처리 중 오류가 발생했습니다: " + e.getMessage());
         }
+        
+        return "redirect:/admin/refund";
     }
 
     /**
      * 환불 재처리
      */
     @PostMapping("/retry/{refundId}")
-    @ResponseBody
-    public ResponseEntity<RefundResponse> retryRefund(@PathVariable Long refundId) {
+    public String retryRefund(@PathVariable Long refundId, RedirectAttributes redirectAttributes) {
         try {
             Refund refund = refundService.retryRefund(refundId);
             
-            RefundResponse response = RefundResponse.builder()
-                    .success(true)
-                    .refundId(refund.getId())
-                    .status(refund.getRefundStatus().name())
-                    .message("환불 재처리가 완료되었습니다.")
-                    .build();
-            
             log.info("환불 재처리 완료: 환불ID={}, 상태={}", refundId, refund.getRefundStatus());
-            return ResponseEntity.ok(response);
+            redirectAttributes.addFlashAttribute("successMessage", "환불 재처리가 완료되었습니다.");
             
         } catch (Exception e) {
             log.error("환불 재처리 오류: refundId={}, 오류={}", refundId, e.getMessage(), e);
-            RefundResponse errorResponse = RefundResponse.builder()
-                    .success(false)
-                    .message("환불 재처리 중 오류가 발생했습니다: " + e.getMessage())
-                    .build();
-            return ResponseEntity.internalServerError().body(errorResponse);
+            redirectAttributes.addFlashAttribute("errorMessage", "환불 재처리 중 오류가 발생했습니다: " + e.getMessage());
         }
+        
+        return "redirect:/admin/refund";
     }
 
     /**
      * 환불 요청 취소
      */
     @PostMapping("/cancel/{refundId}")
-    @ResponseBody
-    public ResponseEntity<RefundResponse> cancelRefund(@PathVariable Long refundId) {
+    public String cancelRefund(@PathVariable Long refundId, RedirectAttributes redirectAttributes) {
         try {
             Refund refund = refundService.cancelRefund(refundId);
             
-            RefundResponse response = RefundResponse.builder()
-                    .success(true)
-                    .refundId(refund.getId())
-                    .status(refund.getRefundStatus().name())
-                    .message("환불 요청이 취소되었습니다.")
-                    .build();
-            
             log.info("환불 요청 취소 완료: 환불ID={}, 상태={}", refundId, refund.getRefundStatus());
-            return ResponseEntity.ok(response);
+            redirectAttributes.addFlashAttribute("successMessage", "환불 요청이 취소되었습니다.");
             
         } catch (Exception e) {
             log.error("환불 요청 취소 오류: refundId={}, 오류={}", refundId, e.getMessage(), e);
-            RefundResponse errorResponse = RefundResponse.builder()
-                    .success(false)
-                    .message("환불 요청 취소 중 오류가 발생했습니다: " + e.getMessage())
-                    .build();
-            return ResponseEntity.internalServerError().body(errorResponse);
+            redirectAttributes.addFlashAttribute("errorMessage", "환불 요청 취소 중 오류가 발생했습니다: " + e.getMessage());
         }
+        
+        return "redirect:/admin/refund";
     }
 
     /**

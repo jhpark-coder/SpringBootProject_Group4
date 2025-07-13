@@ -4,14 +4,19 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.creatorworks.nexus.member.constant.Role;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
+import com.creatorworks.nexus.notification.dto.PaymentNotificationRequest;
+import com.creatorworks.nexus.notification.entity.NotificationCategory;
+import com.creatorworks.nexus.notification.service.NotificationService;
 import com.creatorworks.nexus.order.dto.RefundRequest;
 import com.creatorworks.nexus.order.dto.RefundResponse;
 import com.creatorworks.nexus.order.dto.RefundStatisticsDto;
@@ -38,7 +43,9 @@ public class RefundService {
     private final PaymentRepository paymentRepository;
     private final MemberRepository memberRepository;
     private final IamportRefundService iamportRefundService;
-    private final PointService pointService;
+    @Qualifier("pointHistoryService")
+    private final com.creatorworks.nexus.product.service.PointService productPointService;
+    private final NotificationService notificationService;
 
     /**
      * 환불 요청을 생성합니다.
@@ -88,28 +95,58 @@ public class RefundService {
             }
         }
 
-        // 환불 엔티티 생성
-        Refund refund = Refund.builder()
-                .member(member)
-                .order(order)
-                .payment(payment)
-                .refundType(refundType)
-                .refundStatus(RefundStatus.PENDING)
-                .amount(request.getAmount())
-                .reason(request.getReason())
-                .bankCode(request.getBankCode())
-                .accountNumber(request.getAccountNumber())
-                .accountHolder(request.getAccountHolder())
-                .phoneNumber(request.getPhoneNumber())
-                .originalImpUid(originalImpUid)
-                .originalMerchantUid(originalMerchantUid)
-                .originalAmount(originalAmount)
-                .build();
-
-        refund = refundRepository.save(refund);
+        // 기존 환불이 있는지 확인 (같은 payment_id로 취소된 환불이 있는 경우)
+        Refund existingRefund = null;
+        if (payment != null) {
+            List<Refund> existingRefunds = refundRepository.findByPaymentId(payment.getId());
+            if (!existingRefunds.isEmpty()) {
+                existingRefund = existingRefunds.get(0); // 첫 번째 환불 사용
+            }
+        }
         
-        log.info("환불 요청 생성: 환불ID={}, 회원ID={}, 금액={}, 타입={}", 
-                refund.getId(), memberId, request.getAmount(), refundType);
+        Refund refund;
+        if (existingRefund != null) {
+            // 기존 환불이 있으면 업데이트
+            existingRefund.setRefundStatus(RefundStatus.PENDING);
+            existingRefund.setAmount(request.getAmount());
+            existingRefund.setReason(request.getReason());
+            existingRefund.setBankCode(request.getBankCode());
+            existingRefund.setAccountNumber(request.getAccountNumber());
+            existingRefund.setAccountHolder(request.getAccountHolder());
+            existingRefund.setPhoneNumber(request.getPhoneNumber());
+            existingRefund.setAdminComment(null); // 관리자 코멘트 초기화
+            existingRefund.setFailureReason(null); // 실패 사유 초기화
+            existingRefund.setRefundDate(null); // 환불 날짜 초기화
+            
+            refund = refundRepository.save(existingRefund);
+            log.info("기존 환불 요청 업데이트: 환불ID={}, 회원ID={}, 금액={}, 타입={}", 
+                    refund.getId(), memberId, request.getAmount(), refundType);
+        } else {
+            // 새로운 환불 엔티티 생성
+            refund = Refund.builder()
+                    .member(member)
+                    .order(order)
+                    .payment(payment)
+                    .refundType(refundType)
+                    .refundStatus(RefundStatus.PENDING)
+                    .amount(request.getAmount())
+                    .reason(request.getReason())
+                    .bankCode(request.getBankCode())
+                    .accountNumber(request.getAccountNumber())
+                    .accountHolder(request.getAccountHolder())
+                    .phoneNumber(request.getPhoneNumber())
+                    .originalImpUid(originalImpUid)
+                    .originalMerchantUid(originalMerchantUid)
+                    .originalAmount(originalAmount)
+                    .build();
+
+            refund = refundRepository.save(refund);
+            log.info("새로운 환불 요청 생성: 환불ID={}, 회원ID={}, 금액={}, 타입={}", 
+                    refund.getId(), memberId, request.getAmount(), refundType);
+
+            // 관리자에게 환불 신청 알림 전송
+            sendRefundRequestNotificationToAdmin(refund);
+        }
 
         return refund;
     }
@@ -181,6 +218,9 @@ public class RefundService {
             refund.cancel();
             refundRepository.save(refund);
             
+            // 소비자에게 환불 취소 알림 전송
+            sendRefundCancellationNotificationToUser(refund);
+            
             return RefundResponse.builder()
                     .success(true)
                     .refundId(refund.getId())
@@ -227,11 +267,18 @@ public class RefundService {
                     refund.setRefundUid((String) result.get("refundUid"));
                     refund.setRefundDate(LocalDateTime.now());
                     
+                    // 소비자에게 환불 완료 알림 전송
+                    sendRefundCompletionNotificationToUser(refund);
+                    
                     log.info("환불 처리 완료: 환불ID={}, 환불UID={}, 금액={}", 
                             refundId, result.get("refundUid"), refund.getAmount());
                 } else {
                     // 환불 실패
                     refund.fail((String) result.get("message"));
+                    
+                    // 소비자에게 환불 실패 알림 전송
+                    sendRefundFailureNotificationToUser(refund, (String) result.get("message"));
+                    
                     log.error("환불 처리 실패: 환불ID={}, 사유={}", refundId, result.get("message"));
                 }
             }
@@ -388,13 +435,22 @@ public class RefundService {
         if (request.getOrderId() != null) {
             Order order = orderRepository.findById(request.getOrderId()).orElse(null);
             if (order != null) {
+                // 상품 구매라도 결제수단이 포인트면 포인트 환불로 분기
+                if (order.getOrderType() == Order.OrderType.PRODUCT_PURCHASE && order.getPayment() != null) {
+                    if (order.getPayment().getPaymentType() == Payment.PaymentType.POINT) {
+                        return RefundType.POINT_REFUND;
+                    } else {
+                        return RefundType.PAYMENT_REFUND;
+                    }
+                }
                 switch (order.getOrderType()) {
                     case POINT_PURCHASE:
                         return RefundType.POINT_REFUND;
                     case SUBSCRIPTION:
                         return RefundType.SUBSCRIPTION_CANCEL;
                     case PRODUCT_PURCHASE:
-                        return RefundType.PAYMENT_REFUND;
+                        // 위에서 이미 처리함
+                        break;
                 }
             }
         }
@@ -492,27 +548,157 @@ public class RefundService {
             Member member = refund.getMember();
             Long refundAmount = refund.getAmount();
 
-            // 포인트 잔액 확인
-            Long currentPoint = pointService.getCurrentBalance(member.getId());
-            if (currentPoint < refundAmount) {
-                throw new IllegalStateException("포인트 잔액이 환불 금액보다 적어 환불할 수 없습니다.");
-            }
-
-            // 포인트 차감 (기존 포인트에서 차감)
-            member.setPoint((int) (currentPoint - refundAmount));
-            memberRepository.save(member);
+            // 포인트 서비스를 통해 환불 내역 기록 및 멤버 포인트 증가
+            productPointService.addRefundHistory(member, refundAmount, refund.getReason());
 
             // 환불 완료 처리
             refund.complete();
             refund.setRefundUid("point_refund_" + System.currentTimeMillis()); // 임시 UID
             refund.setRefundDate(LocalDateTime.now());
 
+            // 소비자에게 포인트 환불 완료 알림 전송
+            sendRefundCompletionNotificationToUser(refund);
+
             log.info("포인트 환불 처리 완료: 환불ID={}, 환불UID={}, 금액={}", 
                     refund.getId(), refund.getRefundUid(), refund.getAmount());
 
         } catch (Exception e) {
             refund.fail("포인트 환불 처리 중 오류가 발생했습니다: " + e.getMessage());
+            
+            // 소비자에게 포인트 환불 실패 알림 전송
+            sendRefundFailureNotificationToUser(refund, "포인트 환불 처리 중 오류가 발생했습니다: " + e.getMessage());
+            
             log.error("포인트 환불 처리 중 예외 발생: 환불ID={}, 오류={}", refund.getId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 관리자에게 환불 신청 알림을 보냅니다.
+     */
+    private void sendRefundRequestNotificationToAdmin(Refund refund) {
+        try {
+            String message = String.format("회원 %s님이 환불 요청을 하셨습니다. 환불 ID: %d, 금액: %d원, 타입: %s",
+                    refund.getMember().getName(), refund.getId(), refund.getAmount(), refund.getRefundType());
+
+            // 관리자 권한을 가진 사용자들을 조회
+            List<Member> admins = memberRepository.findByRole(Role.ADMIN);
+            
+            // 각 관리자에게 알림 발송
+            for (Member admin : admins) {
+                PaymentNotificationRequest notificationDto = new PaymentNotificationRequest();
+                notificationDto.setTargetUserId(admin.getId());
+            notificationDto.setMessage(message);
+            notificationDto.setType("refund_request");
+            notificationDto.setCategory(NotificationCategory.ADMIN);
+            notificationDto.setLink("/admin/refund");
+            notificationDto.setAmount(refund.getAmount());
+            notificationDto.setPaymentMethod("환불 요청");
+            notificationDto.setOrderId("refund_" + refund.getId());
+
+            // 실시간 알림 전송
+            notificationService.sendPaymentNotification(notificationDto);
+            
+            // DB에 알림 저장
+            notificationService.savePaymentNotification(notificationDto, "/admin/refund");
+            
+            log.info("관리자에게 환불 요청 알림 전송: 환불ID={}, 회원ID={}, 금액={}, 타입={}", 
+                    refund.getId(), refund.getMember().getId(), refund.getAmount(), refund.getRefundType());
+            }
+        } catch (Exception e) {
+            log.error("환불 요청 알림 전송 실패: 환불ID={}, 오류={}", refund.getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * 소비자에게 환불 취소 알림을 보냅니다.
+     */
+    private void sendRefundCancellationNotificationToUser(Refund refund) {
+        try {
+            String message = String.format("회원 %s님의 환불 요청이 취소되었습니다. 환불 ID: %d, 금액: %d원, 타입: %s",
+                    refund.getMember().getName(), refund.getId(), refund.getAmount(), refund.getRefundType());
+
+            PaymentNotificationRequest notificationDto = new PaymentNotificationRequest();
+            notificationDto.setTargetUserId(refund.getMember().getId()); // 소비자 ID
+            notificationDto.setMessage(message);
+            notificationDto.setType("refund_cancellation");
+            notificationDto.setCategory(NotificationCategory.ORDER);
+            notificationDto.setLink("/my-refunds"); // 소비자 마이페이지로 이동
+            notificationDto.setAmount(refund.getAmount());
+            notificationDto.setPaymentMethod("환불 취소");
+            notificationDto.setOrderId("refund_" + refund.getId());
+
+            // 실시간 알림 전송
+            notificationService.sendPaymentNotification(notificationDto);
+            
+            // DB에 알림 저장
+            notificationService.savePaymentNotification(notificationDto, "/my-refunds");
+            
+            log.info("소비자에게 환불 취소 알림 전송: 환불ID={}, 회원ID={}, 금액={}, 타입={}", 
+                    refund.getId(), refund.getMember().getId(), refund.getAmount(), refund.getRefundType());
+        } catch (Exception e) {
+            log.error("환불 취소 알림 전송 실패: 환불ID={}, 오류={}", refund.getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * 소비자에게 환불 완료 알림을 보냅니다.
+     */
+    private void sendRefundCompletionNotificationToUser(Refund refund) {
+        try {
+            String message = String.format("회원 %s님의 환불이 완료되었습니다. 환불 ID: %d, 금액: %d원, 타입: %s",
+                    refund.getMember().getName(), refund.getId(), refund.getAmount(), refund.getRefundType());
+
+            PaymentNotificationRequest notificationDto = new PaymentNotificationRequest();
+            notificationDto.setTargetUserId(refund.getMember().getId()); // 소비자 ID
+            notificationDto.setMessage(message);
+            notificationDto.setType("refund_completion");
+            notificationDto.setCategory(NotificationCategory.ORDER);
+            notificationDto.setLink("/my-refunds"); // 소비자 마이페이지로 이동
+            notificationDto.setAmount(refund.getAmount());
+            notificationDto.setPaymentMethod("환불 완료");
+            notificationDto.setOrderId("refund_" + refund.getId());
+
+            // 실시간 알림 전송
+            notificationService.sendPaymentNotification(notificationDto);
+            
+            // DB에 알림 저장
+            notificationService.savePaymentNotification(notificationDto, "/my-refunds");
+            
+            log.info("소비자에게 환불 완료 알림 전송: 환불ID={}, 회원ID={}, 금액={}, 타입={}", 
+                    refund.getId(), refund.getMember().getId(), refund.getAmount(), refund.getRefundType());
+        } catch (Exception e) {
+            log.error("환불 완료 알림 전송 실패: 환불ID={}, 오류={}", refund.getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * 소비자에게 환불 실패 알림을 보냅니다.
+     */
+    private void sendRefundFailureNotificationToUser(Refund refund, String reason) {
+        try {
+            String message = String.format("회원 %s님의 환불이 실패하였습니다. 환불 ID: %d, 금액: %d원, 타입: %s, 사유: %s",
+                    refund.getMember().getName(), refund.getId(), refund.getAmount(), refund.getRefundType(), reason);
+
+            PaymentNotificationRequest notificationDto = new PaymentNotificationRequest();
+            notificationDto.setTargetUserId(refund.getMember().getId()); // 소비자 ID
+            notificationDto.setMessage(message);
+            notificationDto.setType("refund_failure");
+            notificationDto.setCategory(NotificationCategory.ORDER);
+            notificationDto.setLink("/my-refunds"); // 소비자 마이페이지로 이동
+            notificationDto.setAmount(refund.getAmount());
+            notificationDto.setPaymentMethod("환불 실패");
+            notificationDto.setOrderId("refund_" + refund.getId());
+
+            // 실시간 알림 전송
+            notificationService.sendPaymentNotification(notificationDto);
+            
+            // DB에 알림 저장
+            notificationService.savePaymentNotification(notificationDto, "/my-refunds");
+            
+            log.info("소비자에게 환불 실패 알림 전송: 환불ID={}, 회원ID={}, 금액={}, 타입={}, 사유={}", 
+                    refund.getId(), refund.getMember().getId(), refund.getAmount(), refund.getRefundType(), reason);
+        } catch (Exception e) {
+            log.error("환불 실패 알림 전송 실패: 환불ID={}, 오류={}", refund.getId(), e.getMessage());
         }
     }
 } 

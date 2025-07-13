@@ -1,9 +1,9 @@
 <!-- 마이페이지 사이드바 Fragment -->
-<aside class="subpage-sidebar" xmlns:th="http://www.thymeleaf.org"
+<aside class="profile-sidebar" xmlns:th="http://www.thymeleaf.org"
     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
     <div class="profile-pic"></div>
 
-    <h2 class="profile-name" th:text="${Name} + ' 님'" sec:authentication="name">홍길동 님</h2>
+    <h2 class="profile-name" th:text="${#authentication.principal.name} + ' 님'" sec:authentication="name">홍길동 님</h2>
 
     <div class="button-group">
         <a th:href="@{/members/liked-products}" class="btn btn-outline">찜목록</a>

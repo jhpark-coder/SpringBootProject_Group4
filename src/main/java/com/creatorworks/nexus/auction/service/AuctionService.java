@@ -29,17 +29,26 @@ import com.creatorworks.nexus.product.repository.ItemTagRepository;
 import jakarta.persistence.EntityNotFoundException;
 
 import lombok.RequiredArgsConstructor;
+import com.creatorworks.nexus.notification.entity.Notification;
+import com.creatorworks.nexus.notification.repository.NotificationRepository;
+import com.creatorworks.nexus.notification.entity.NotificationCategory;
+import com.creatorworks.nexus.auction.handler.BidWebSocketHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AuctionService {
+    private static final Logger log = LoggerFactory.getLogger(AuctionService.class);
     private final AuctionRepository auctionRepository;
     private final MemberRepository memberRepository;
     private final ItemTagRepository itemTagRepository;
     private final AuctionItemTagRepository auctionItemTagRepository;
     private final AuctionPaymentRepository auctionPaymentRepository;
     private final BidRepository bidRepository;
+    private final NotificationRepository notificationRepository;
+    private final BidWebSocketHandler bidWebSocketHandler;
 
     @Transactional
     public Auction saveAuction(AuctionSaveRequest request, String userEmail) {
@@ -173,7 +182,7 @@ public class AuctionService {
      * @throws IllegalArgumentException 입찰 조건이 맞지 않는 경우
      */
     @Transactional
-    public void placeBid(Long auctionId, Long bidPrice, String userEmail) {
+    public Bid placeBid(Long auctionId, Long bidPrice, String userEmail) {
         // 1. 경매 존재 여부 확인
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new EntityNotFoundException("경매를 찾을 수 없습니다: " + auctionId));
@@ -200,7 +209,12 @@ public class AuctionService {
             throw new IllegalArgumentException("입찰가는 현재가(" + currentPrice + "원)보다 높아야 합니다.");
         }
 
-        // 6. 입찰 기록 저장
+        // 6. 즉시 구매가 검증
+        if (auction.getBuyNowPrice() != null && bidPrice > auction.getBuyNowPrice()) {
+            throw new IllegalArgumentException("입찰가는 즉시구매가(" + auction.getBuyNowPrice() + "원)보다 높을 수 없습니다.");
+        }
+
+        // 7. 입찰 기록 저장
         Bid bid = Bid.builder()
                 .auction(auction)
                 .bidder(bidder)
@@ -208,13 +222,92 @@ public class AuctionService {
                 .build();
         bidRepository.save(bid);
 
-        // 7. 경매 정보 업데이트 (현재가, 최고 입찰자)
+        // 8. 이전 최고 입찰자 정보 저장 (알림 전송용)
+        Member previousHighestBidder = auction.getHighestBidder();
+
+        // 9. 경매 정보 업데이트 (현재가, 최고 입찰자)
         auction.setCurrentPrice(bidPrice);
         auction.setHighestBidder(bidder);
-        auctionRepository.save(auction);
+        // @Transactional 덕분에 auctionRepository.save(auction)을 호출하지 않아도
+        // 메소드가 끝날 때 변경된 내용이 자동으로 DB에 반영됩니다.
 
-        // 8. WebSocket을 통한 실시간 업데이트 (선택사항)
-        // bidWebSocketHandler.broadcastPriceUpdate(auctionId, bidPrice, bidder.getName());
+        log.info("입찰 성공! 경매 ID: {}, 입찰자: {}, 입찰가: {}", auctionId, bidder.getName(), bidPrice);
+
+        // 10. 입찰 알림 전송 (이전 최고 입찰자에게)
+        sendBidNotification(auction, bidder, bidPrice, previousHighestBidder);
+        
+        // 10-1. 입찰 성공 알림 전송 (입찰자 본인에게)
+        sendBidSuccessNotification(auction, bidder, bidPrice);
+
+        // 11. ★★★ 입찰 성공 후 웹소켓 방송 호출! ★★★
+        bidWebSocketHandler.broadcastPriceUpdate(
+                auction.getId(),
+                auction.getCurrentPrice(),
+                bidder.getName() // 최고 입찰자의 이름
+        );
+
+        log.info("입찰 성공! 웹소켓으로 가격 업데이트를 방송합니다.");
+
+        return bid;
+    }
+
+    /**
+     * 입찰 알림 전송
+     */
+    private void sendBidNotification(Auction auction, Member bidder, Long bidPrice, Member previousHighestBidder) {
+        try {
+            // 이전 최고 입찰자에게 알림 (본인이 아닌 경우)
+            if (previousHighestBidder != null && 
+                !previousHighestBidder.getId().equals(bidder.getId())) {
+                
+                String message = String.format("다른 사용자가 %s 경매에 %,d원으로 입찰했습니다.", 
+                    auction.getName(), bidPrice);
+                
+                Notification notification = Notification.builder()
+                        .senderUserId(0L) // 시스템 알림
+                        .targetUserId(previousHighestBidder.getId())
+                        .message(message)
+                        .type("auction_bid")
+                        .category(NotificationCategory.AUCTION)
+                        .isRead(false)
+                        .link("/auctions/" + auction.getId()) // 경로 수정
+                        .build();
+                
+                notificationRepository.save(notification);
+                
+                log.info("입찰 알림 전송 완료: auctionId={}, targetUserId={}, bidPrice={}", 
+                    auction.getId(), previousHighestBidder.getId(), bidPrice);
+            }
+        } catch (Exception e) {
+            log.error("입찰 알림 전송 실패: auctionId={}, error={}", auction.getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * 입찰 성공 알림 전송 (입찰자 본인에게)
+     */
+    private void sendBidSuccessNotification(Auction auction, Member bidder, Long bidPrice) {
+        try {
+            String message = String.format("축하합니다! %s 경매에 %,d원으로 입찰에 성공했습니다.", 
+                auction.getName(), bidPrice);
+            
+            Notification notification = Notification.builder()
+                    .senderUserId(0L) // 시스템 알림
+                    .targetUserId(bidder.getId())
+                    .message(message)
+                    .type("auction_bid_success")
+                    .category(NotificationCategory.AUCTION)
+                    .isRead(false)
+                    .link("/auctions/" + auction.getId())
+                    .build();
+            
+            notificationRepository.save(notification);
+            
+            log.info("입찰 성공 알림 전송 완료: auctionId={}, bidderId={}, bidPrice={}", 
+                auction.getId(), bidder.getId(), bidPrice);
+        } catch (Exception e) {
+            log.error("입찰 성공 알림 전송 실패: auctionId={}, error={}", auction.getId(), e.getMessage());
+        }
     }
 
     /**

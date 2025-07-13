@@ -13,6 +13,7 @@
     <link rel="stylesheet" th:href="@{/css/heartFollow.css}">
     <link rel="stylesheet" th:href="@{/css/paywall.css}">
     <link rel="stylesheet" th:href="@{/css/auctionTimer.css}">
+    <link rel="stylesheet" th:href="@{/css/bidModal.css}">
 
     <!-- Google Fonts 로딩 개선 -->
     <th:block th:if="${auction.fontFamily != null && !#strings.isEmpty(auction.fontFamily)}">
@@ -47,11 +48,14 @@
 
 <div layout:fragment="content" class="product-detail-page">
     <div class="main-content-grid">
+        <!-- Artwork Section -->
         <main class="artwork-main" th:object="${auction}">
             <h1 th:text="*{name}">작품 제목</h1>
             <img th:src="*{imageUrl}" alt="Artwork Image" class="artwork-image"
                  onerror="this.onerror=null; this.src='/images/placeholder.png';">
         </main>
+
+        <!-- Sidebar Section -->
         <aside class="sidebar-goalcard" th:classappend="${#lists.isEmpty(tagNames)} ? '' : 'has-tags'"
                th:object="${auction}">
             <div class="seller-info">
@@ -70,6 +74,7 @@
                         th:classappend="${isFollowing} ? 'following'"
                         th:text="${isFollowing} ? 'Following' : 'Follow'">Follow</button>
             </div>
+            
             <div class="tags">
                 <a th:href="@{/auctions/category/{name}(name=${auction.primaryCategory}, page=1, secondary='all')}"
                    class="tag-btn" th:text="*{primaryCategory}">카테고리</a>
@@ -78,37 +83,98 @@
                    class="tag-btn" th:text="*{secondaryCategory}">부 카테고리</a>
                 <button class="tag-btn" th:each="tagName : ${tagNames}" th:text="${tagName}">태그</button>
             </div>
+            
             <div class="description">
                 <p th:text="*{workDescription}">여기에 설명이 들어갑니다.</p>
             </div>
+            
             <div class="sidebar-actions">
                 <!-- 구매 버튼들 (오른쪽, 세로 배치) -->
                 <div class="purchase-buttons">
-                    <!-- 구매하지 않은 경우: 구매 버튼 표시 -->
-                    <th:block th:if="${!canViewContent}">
-                        <!-- 입찰 버튼 -->
-                        <button onclick=""
-                                class="purchase-btn"
-                                th:text="${auction.startBidPrice != null} ? '현재입찰가:'+${auction.startBidPrice} + '원' : '입찰하기'">
-                            입찰하기
-                        </button>
-                        <!-- 즉시입찰 버튼 -->
-                        <!-- 기존 버튼을 이렇게 수정합니다 -->
-                        <button th:onclick="|location.href='@{/api/auction-payment/payment-page/{id}(id=${auction.id})}'|"
-                                th:disabled="${auction.buyNowPrice == null}"
-                                class="purchase-btn"
-                                th:text="${auction.buyNowPrice != null} ? '즉시입찰가:' + ${#numbers.formatInteger(auction.buyNowPrice, 3, 'COMMA')} + '원' : '즉시입찰 불가'">
-                            즉시입찰하기
-                        </button>
-                    </th:block>
-                    <!-- 구매한 경우: 구매 완료 표시 -->
-                    <th:block th:if="${canViewContent}">
-                        <div class="purchase-complete">
-                            <span class="purchase-badge">구매 완료</span>
-                            <p class="purchase-message">전체 콘텐츠를 확인할 수 있습니다.</p>
+                    
+                    <!-- ★★★ 상태별 UI 처리 (th:switch 사용) ★★★ -->
+                    <div th:switch="${true}">
+                        
+                        <!-- Case 1: 경매가 종료되었고, 내가 최고 입찰자인 경우 (낙찰) -->
+                        <div th:case="${isAuctionEnded and isHighestBidder}">
+                            <div class="purchase-complete" style="background-color: #d4edda; border-color: #c3e6cb;">
+                                <span class="purchase-badge" style="background-color: #28a745;">낙찰 성공!</span>
+                                <p class="purchase-message">축하합니다! 최종 낙찰되셨습니다.</p>
+                            </div>
+                            <button th:onclick="|location.href='@{/api/auction-payment/payment-page/{id}(id=${auction.id}, amount=${auction.currentPrice})}'|"
+                                    class="purchase-btn instant-buy-btn">
+                                결제 : [[${#numbers.formatInteger(auction.currentPrice, 3, 'COMMA')}]]원
+                            </button>
+                            <p style="font-size: 12px; color: #007bff; text-align: center; margin-top: 8px;">
+                                축하합니다! 최종 낙찰되셨습니다.
+                            </p>
                         </div>
-                    </th:block>
-                </div>
+
+                        <!-- Case 2: 경매가 종료되었지만, 내가 최고 입찰자가 아닌 경우 -->
+                        <div th:case="${isAuctionEnded}">
+                            <div class="purchase-complete" style="background-color: #f8f9fa;">
+                                <span class="purchase-badge" style="background-color: #6c757d;">경매 종료</span>
+                                <p class="purchase-message">
+                                    이 경매는 종료되었습니다.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Case 3: 구매가 완료된 경우 -->
+                        <div th:case="${canViewContent}">
+                            <div class="purchase-complete">
+                                <span class="purchase-badge">구매 완료</span>
+                                <p class="purchase-message">전체 콘텐츠를 확인할 수 있습니다.</p>
+                            </div>
+                        </div>
+
+                        <!-- Case 4: (Default) 경매가 진행 중이고, 아직 구매하지 않은 경우 -->
+                        <div th:case="*">
+                            <!-- 1. 현재 최고가 표시 -->
+                            <div class="price-info">
+                                <span>현재 최고가</span>
+                                <span id="current-price-display" class="price-amount"
+                                      th:text="${#numbers.formatInteger(auction.currentPrice, 3, 'COMMA')}">10,000</span>
+                                <span>원</span>
+                            </div>
+
+                            <!-- 버튼 가로 배치 컨테이너 -->
+                            <div class="purchase-buttons-inner btn-row-layout"> <!-- 클래스 이름을 다르게 해서 CSS 충돌 방지 -->
+                                <!-- 입찰 버튼 -->
+                                <button id="show-bid-modal-btn" type="button" class="purchase-btn bid-btn">
+                                    입찰하기
+                                </button>
+                                <!-- 즉시 입찰 버튼 -->
+                                <button th:onclick="|location.href='@{/api/auction-payment/payment-page/{id}(id=${auction.id})}'|"
+                                        th:disabled="${auction.buyNowPrice == null}"
+                                        class="purchase-btn instant-buy-btn">
+                    <span th:if="${auction.buyNowPrice != null}">
+                        즉시입찰가: [[${#numbers.formatInteger(auction.buyNowPrice, 3, 'COMMA')}]]원
+                    </span>
+                                    <span th:if="${auction.buyNowPrice == null}">즉시입찰 불가</span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div> <!-- th:switch 끝 -->
+
+                    <!-- 입찰 입력창 모달 (th:switch 바깥에, 하지만 .sidebar-actions 안쪽에 위치) -->
+                    <!-- 이 모달은 경매 진행 중에만 의미가 있으므로, th:if로 조건을 걸어줍니다. -->
+                    <div id="bid-input-modal" th:if="${!isAuctionEnded and !canViewContent}">
+                        <div class="modal-content">
+                            <h4>입찰 금액</h4>
+                            <p>
+                                현재가([[${#numbers.formatInteger(auction.currentPrice, 3, 'COMMA')}]]원)보다 높은 금액을 입력하세요.
+                            </p>
+                            <input type="number" id="bid-price-input" placeholder="입찰할 금액 입력">
+                            <div class="modal-buttons">
+                                <button id="place-bid-btn" type="button">입찰</button>
+                                <button id="close-bid-modal-btn" type="button">취소</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div> <!-- .purchase-buttons 끝 -->
             </div>
             <!-- 판매자인 경우만 수정 버튼 표시 -->
             <th:block th:if="${currentMember != null and auction.seller != null and currentMember.id == auction.seller.id}">
@@ -118,8 +184,16 @@
                 </a>
             </th:block>
         </aside>
+
+        <!-- Description Section (Full Width) -->
         <section class="description-section" th:object="${auction}">
             <h2>작품 설명</h2>
+            <div class="tiptap-content"
+                 th:styleappend="|${auction.backgroundColor != null and !#strings.isEmpty(auction.backgroundColor) ? 'background-color: ' + auction.backgroundColor + ';' : ''} ${auction.fontFamily != null and !#strings.isEmpty(auction.fontFamily) ? 'font-family: ' + auction.fontFamily + ';' : ''}|"
+                 th:utext="${contentHtml}">
+                <!-- Tiptap 에디터로 작성된 본문 컨텐츠가 여기에 렌더링됩니다. -->
+            </div>
+            <!-- 페이월 안내 메시지 (페이월이 있고 구매하지 않은 경우) -->
             <th:block th:if="${!canViewContent and hasPaywall}">
                 <div class="paywall-notice">
                     <div class="paywall-content">
@@ -127,21 +201,22 @@
                             <i class="fa fa-lock"></i>
                         </div>
                         <div class="paywall-text">
-                            <h3>이 아래부터는 유료 콘텐츠입니다</h3>
+                            <h3>이 아래부터는 구매자만 볼 수 있습니다</h3>
                             <p>경매에 낙찰 후 전체 콘텐츠를 이용하세요</p>
+<!--                            <div class="paywall-price">-->
+<!--                                <span class="price-amount" th:text="${auction.price != null} ? ${auction.price} + 'P' : '30P'">30P</span>-->
+<!--                                <span class="price-label">로 구매하기</span>-->
+<!--                            </div>-->
                         </div>
                     </div>
                 </div>
             </th:block>
-            <div class="tiptap-content"
-                 th:styleappend="|${auction.backgroundColor != null && !#strings.isEmpty(auction.backgroundColor) ? 'background-color: ' + auction.backgroundColor + ';' : ''} ${auction.fontFamily != null && !#strings.isEmpty(auction.fontFamily) ? 'font-family: ' + auction.fontFamily + ';' : ''}|"
-                 th:utext="${contentHtml}">
-                <!-- Tiptap 에디터로 작성된 본문 컨텐츠가 여기에 렌더링됩니다. -->
-            </div>
         </section>
     </div>
-    <!-- 후기/문의 등 전체폭 영역은 반드시 product-detail-page 컨테이너 안, main-content-grid 바로 아래에 위치 -->
+
+    <!-- Inquiry Section -->
     <div th:replace="~{auction/inquiry_section_auction :: inquirySection(${auction}, ${inquiryPage})}"></div>
+
 </div>
 
 <th:block layout:fragment="script">
@@ -217,6 +292,214 @@
                 });
             }
         });
+    </script>
+    
+    <script th:inline="javascript">
+        // Thymeleaf 변수를 JavaScript에서 안전하게 사용하기 위해 선언합니다.
+        (function() {
+        const auctionId = /*[[${auction.id}]]*/ null;
+        const loginUrl = /*[[@{/members/login}]]*/ '/members/login';
+
+         // ★★★ 웹소켓 관련 로직 추가 ★★★
+        let ws = null;
+        
+        // 웹소켓 연결 함수
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/bid`;
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function() {
+                console.log('웹소켓 연결 성공');
+                // 경매방 입장 메시지 전송
+                ws.send(JSON.stringify({
+                    type: 'ENTER_AUCTION_ROOM',
+                    auctionId: auctionId
+                }));
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log('웹소켓 메시지 수신:', data);
+                
+                if (data.type === 'PRICE_UPDATE' && data.auctionId === auctionId) {
+                    // 실시간 가격 업데이트
+                    updateCurrentPrice(data.newPrice, data.highestBidderName);
+                }
+            };
+            
+            ws.onclose = function() {
+                console.log('웹소켓 연결 종료');
+                // 3초 후 재연결 시도
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            ws.onerror = function(error) {
+                console.error('웹소켓 오류:', error);
+            };
+        }
+        
+        // 현재가 업데이트 함수
+        function updateCurrentPrice(newPrice, bidderName) {
+            const priceDisplay = document.getElementById('current-price-display');
+            if (priceDisplay) {
+                priceDisplay.textContent = newPrice.toLocaleString();
+                
+                // 애니메이션 효과 추가
+                priceDisplay.style.color = '#28a745';
+                priceDisplay.style.fontWeight = 'bold';
+                setTimeout(() => {
+                    priceDisplay.style.color = '';
+                    priceDisplay.style.fontWeight = '';
+                }, 2000);
+                
+                // 알림 메시지 표시
+                showNotification(`${bidderName}님이 ${newPrice.toLocaleString()}원으로 입찰했습니다!`);
+            }
+            // === 모달 안내문구도 같이 갱신 ===
+            const modalGuide = document.querySelector('#bid-input-modal p');
+            if (modalGuide) {
+                modalGuide.innerHTML = `현재가(${newPrice.toLocaleString()}원)보다 높은 금액을 입력하세요.`;
+            }
+        }
+        
+        // 알림 메시지 표시 함수
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'bid-notification';
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #28a745;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 5px;
+                z-index: 1000;
+                animation: slideIn 0.5s ease-out;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.5s ease-in';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 500);
+            }, 3000);
+        }
+        
+        // CSS 애니메이션 추가
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // 페이지 로드 시 웹소켓 연결
+        if (auctionId) {
+            connectWebSocket();
+        }
+        
+        // ★★★ 입찰 모달 관련 로직 ★★★
+        const bidModal = document.getElementById('bid-input-modal');
+        const showBidModalBtn = document.getElementById('show-bid-modal-btn');
+        const closeBidModalBtn = document.getElementById('close-bid-modal-btn');
+        const placeBidBtn = document.getElementById('place-bid-btn');
+        const bidPriceInput = document.getElementById('bid-price-input');
+        
+        if (showBidModalBtn) {
+            showBidModalBtn.addEventListener('click', function() {
+                bidModal.style.display = 'flex';
+                bidPriceInput.focus();
+            });
+        }
+        
+        if (closeBidModalBtn) {
+            closeBidModalBtn.addEventListener('click', function() {
+                bidModal.style.display = 'none';
+                bidPriceInput.value = '';
+            });
+        }
+        
+        if (placeBidBtn) {
+            placeBidBtn.addEventListener('click', function() {
+                const bidPrice = parseInt(bidPriceInput.value);
+                if (!bidPrice || bidPrice <= 0) {
+                    alert('유효한 입찰 금액을 입력해주세요.');
+                    return;
+                }
+                
+                // CSRF 토큰 가져오기
+                const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                
+                // 입찰 요청
+                fetch(`/api/auctions/${auctionId}/bid`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [header]: token
+                    },
+                    body: JSON.stringify({
+                        bidPrice: bidPrice
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(text);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert('입찰이 성공적으로 처리되었습니다!');
+                    bidModal.style.display = 'none';
+                    bidPriceInput.value = '';
+                    
+                    // 페이지 새로고침 (실시간 업데이트가 완전하지 않을 경우를 대비)
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                })
+                .catch(error => {
+                    alert('입찰 처리 중 오류가 발생했습니다: ' + error.message);
+                });
+            });
+        }
+        
+        // 모달 외부 클릭 시 닫기
+        if (bidModal) {
+            bidModal.addEventListener('click', function(e) {
+                if (e.target === bidModal) {
+                    bidModal.style.display = 'none';
+                    bidPriceInput.value = '';
+                }
+            });
+        }
+        
+        // Enter 키로 입찰
+        if (bidPriceInput) {
+            bidPriceInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    placeBidBtn.click();
+                }
+            });
+        }
+        
+        })();
     </script>
 </th:block>
 
