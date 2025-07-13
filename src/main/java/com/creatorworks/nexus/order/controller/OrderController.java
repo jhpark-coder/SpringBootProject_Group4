@@ -125,9 +125,7 @@ public class OrderController {
             @RequestBody Map<String, Object> request,
             @RequestParam(required = false) Long memberId,
             Principal principal) {
-        System.out.println("==== [LOG] 충전 API 진입 ==== ");
-        System.out.println("[LOG] OrderController.chargePointForTest 진입"); // TODO: 테스트 후 삭제
-        System.out.println("[LOG] 파라미터: request=" + request + ", memberId=" + memberId + ", principal=" + principal); // TODO: 테스트 후 삭제
+        // 포인트 충전 API 진입
         Map<String, Object> response = new HashMap<>();
         try {
             // 기존 principal 기반 코드 주석처리
@@ -139,30 +137,30 @@ public class OrderController {
 
             // 임시: 인증 없이 memberId로 충전
             Long id = memberId != null ? memberId : (principal != null ? getMemberFromPrincipal(principal).getId() : null);
-            System.out.println("[LOG] id 결정: " + id); // TODO: 테스트 후 삭제
+            // 사용자 ID 결정
             if (id == null) {
                 response.put("success", false);
                 response.put("message", "memberId 파라미터가 필요합니다.");
-                System.out.println("[LOG] memberId 파라미터 없음, 반환: " + response); // TODO: 테스트 후 삭제
+                // memberId 파라미터 없음
                 return ResponseEntity.badRequest().body(response);
             }
             Long amount = Long.valueOf(request.get("amount").toString());
             String paymentMethod = (String) request.get("paymentMethod");
-            System.out.println("[LOG] amount, paymentMethod: " + amount + ", " + paymentMethod); // TODO: 테스트 후 삭제
+            // 결제 정보 확인
             Order order = pointService.chargePoint(id, amount, null, null);
-            System.out.println("[LOG] pointService.chargePoint 반환: orderId=" + (order != null ? order.getId() : null)); // TODO: 테스트 후 삭제
+            // 포인트 충전 처리 완료
 
             response.put("success", true);
             response.put("orderId", order.getId());
             response.put("message", "포인트 충전 주문이 생성되었습니다.");
-            System.out.println("[LOG] 성공 반환: " + response); // TODO: 테스트 후 삭제
+            // 성공 응답
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.out.println("[ERROR] OrderController.chargePointForTest 예외 발생: " + e.getMessage()); // TODO: 테스트 후 삭제
+            // OrderController.chargePointForTest 예외 발생
             e.printStackTrace(); // TODO: 테스트 후 삭제
             response.put("success", false);
             response.put("message", e.getMessage());
-            System.out.println("[LOG] 실패 반환: " + response); // TODO: 테스트 후 삭제
+            // 실패 응답
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -300,6 +298,12 @@ public class OrderController {
         // 상품 정보가 있는 경우
         if (order.getProduct() != null) {
             model.addAttribute("productName", order.getProduct().getName());
+            model.addAttribute("productId", order.getProduct().getId());
+            
+            // 환불 가능 여부 확인 (구매했지만 아직 읽지 않은 경우)
+            boolean canRefund = pointService.hasPurchasedProduct(member.getId(), order.getProduct().getId()) && 
+                               !pointService.hasReadProduct(member.getId(), order.getProduct().getId());
+            model.addAttribute("canRefund", canRefund);
         }
         
         return "order/pointPurchaseSuccess";

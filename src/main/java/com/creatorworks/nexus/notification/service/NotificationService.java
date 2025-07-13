@@ -109,11 +109,10 @@ public class NotificationService {
 
     // 작가 신청 알림을 DB에 저장하는 메서드
     public Notification saveSellerRequestNotification(SellerRequestNotificationRequest dto, String link) {
-        System.out.println("=== [알림 DB 저장] saveSellerRequestNotification 호출 ===");
-        System.out.println("DTO 정보: targetUserId=" + dto.getTargetUserId() + ", message=" + dto.getMessage());
+        // 판매자 요청 알림 저장
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         for (int i = 1; i < Math.min(stackTrace.length, 8); i++) {
-            System.out.println("  at " + stackTrace[i]);
+            // 스택 트레이스 정보
         }
         Notification notification = Notification.builder()
                 .senderUserId(0L) // 시스템에서 보내는 알림이므로 0으로 설정
@@ -129,8 +128,7 @@ public class NotificationService {
 
     // 결제 알림을 DB에 저장하는 메서드
     public Notification savePaymentNotification(PaymentNotificationRequest dto, String link) {
-        System.out.println("=== [알림 DB 저장] savePaymentNotification 호출 ===");
-        System.out.println("DTO 정보: targetUserId=" + dto.getTargetUserId() + ", message=" + dto.getMessage());
+        // 결제 알림 저장
         Notification notification = Notification.builder()
                 .senderUserId(0L) // 시스템에서 보내는 알림이므로 0으로 설정
                 .targetUserId(dto.getTargetUserId())

@@ -1,0 +1,67 @@
+/* ===== 좋아요한 작품 페이지 CSS ===== */
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.product-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    transition: box-shadow 0.2s;
+    width: 100%;
+    min-height: 320px;
+}
+
+.product-card:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
+}
+
+.product-image {
+    width: 100%;
+    max-width: 180px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.product-info {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.product-info h2 {
+    font-size: 18px;
+    margin: 8px 0 4px 0;
+    text-align: center;
+    width: 100%;
+}
+
+.product-info p {
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+    margin-bottom: 10px;
+    width: 100%;
+    word-break: break-all;
+}
+
+.btn.btn-primary {
+    margin-top: auto;
+    padding: 8px 16px;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+} 

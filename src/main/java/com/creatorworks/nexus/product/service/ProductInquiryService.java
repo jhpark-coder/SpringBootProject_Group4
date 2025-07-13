@@ -94,7 +94,7 @@ public class ProductInquiryService {
         );
         
         // 문의 알림은 매번 전송
-        System.out.println("[알림 DB 저장 완료] 문의 알림, notificationId=" + savedNotification.getId());
+        // 알림 DB 저장 완료
         
         // InquiryNotificationRequest를 사용하여 실시간 알림 전송
         InquiryNotificationRequest inquiryNotificationRequest = new InquiryNotificationRequest();

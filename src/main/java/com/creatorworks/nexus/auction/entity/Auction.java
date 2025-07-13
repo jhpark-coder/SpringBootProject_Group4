@@ -52,6 +52,12 @@ public class Auction extends BaseEntity {
     private int auctionDuration; // 경매기간 (일)
     private Long startBidPrice;
     private Long buyNowPrice;
+    private Long currentPrice; // <<< 새로 추가된 부분 (1/2) : 현재 최고 입찰가
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "highest_bidder_id")
+    private Member highestBidder; // <<< 새로 추가된 부분 (2/2) : 현재 최고 입찰자
+    @Column(nullable = false, columnDefinition = "bigint default 0")
+    private long viewCount = 0L;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id")
@@ -70,6 +76,7 @@ public class Auction extends BaseEntity {
         this.name = name;
         this.startBidPrice = startBidPrice;
         this.buyNowPrice = buyNowPrice;
+        this.currentPrice = startBidPrice;
         this.description = description;
         this.workDescription = workDescription;
         this.tiptapJson = tiptapJson;
@@ -79,5 +86,6 @@ public class Auction extends BaseEntity {
         this.auctionEndTime = auctionEndTime;
         this.backgroundColor = backgroundColor;
         this.fontFamily = fontFamily;
+        this.viewCount = 0L;
     }
 }

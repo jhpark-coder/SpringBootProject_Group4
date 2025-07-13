@@ -227,11 +227,11 @@ document.addEventListener('DOMContentLoaded', function () {
     followButtons.forEach(button => {
         // onclick 속성이 이미 있는 버튼은 건너뛰기 (중복 방지)
         if (button.hasAttribute('onclick')) {
-            console.log('팔로우 버튼 (onclick 있음, 건너뜀):', button);
+            // console.log('팔로우 버튼 (onclick 있음, 건너뜀):', button);
             return;
         }
 
-        console.log('팔로우 버튼 발견 (이벤트 리스너 추가):', button);
+        // console.log('팔로우 버튼 발견 (이벤트 리스너 추가):', button);
         button.addEventListener('click', function (e) {
             console.log('팔로우 버튼 클릭됨:', this);
             e.stopPropagation();
@@ -312,8 +312,12 @@ function requestPointPay() {
         .then(data => {
             if (data.success) {
                 alert('포인트 결제가 완료되었습니다!');
-                // 페이지 새로고침 또는 구매 완료 페이지로 이동
-                window.location.reload();
+                // 구매 완료 페이지로 리다이렉트
+                if (data.redirectUrl) {
+                    window.location.href = data.redirectUrl;
+                } else {
+                    window.location.reload();
+                }
             } else {
                 // 포인트 부족 시 포인트 충전 페이지로 이동
                 if (data.message && data.message.includes('포인트가 부족')) {

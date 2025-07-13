@@ -103,7 +103,7 @@ public class ProductReviewService {
         
         if (savedNotification != null) {
             // 새로운 후기 알림인 경우에만 WebSocket 전송
-            System.out.println("[알림 DB 저장 완료] 후기 알림, notificationId=" + savedNotification.getId());
+            // 알림 DB 저장 완료
             
             // ReviewNotificationRequest를 사용하여 실시간 알림 전송
             ReviewNotificationRequest reviewNotificationRequest = new ReviewNotificationRequest();
@@ -119,7 +119,7 @@ public class ProductReviewService {
             notificationService.sendNotification(reviewNotificationRequest);
         } else {
             // 중복 후기 알림인 경우
-            System.out.println("[알림 중복 방지] 이미 존재하는 후기 알림");
+            // 알림 중복 방지
         }
     }
 

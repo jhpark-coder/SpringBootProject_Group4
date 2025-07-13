@@ -1,8 +1,8 @@
 package com.creatorworks.nexus.auction.repository;
 
-import com.creatorworks.nexus.auction.entity.AuctionPayment;
-import com.creatorworks.nexus.auction.entity.PaymentStatus;
-import com.creatorworks.nexus.member.entity.Member;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,8 +10,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.creatorworks.nexus.auction.entity.Auction;
+import com.creatorworks.nexus.auction.entity.AuctionPayment;
+import com.creatorworks.nexus.auction.entity.PaymentStatus;
+import com.creatorworks.nexus.member.entity.Member;
 
 @Repository
 public interface AuctionPaymentRepository extends JpaRepository<AuctionPayment, Long> {
@@ -41,4 +43,17 @@ public interface AuctionPaymentRepository extends JpaRepository<AuctionPayment, 
     // 사용자별 총 결제 금액
     @Query("SELECT SUM(ap.amount) FROM AuctionPayment ap WHERE ap.bidder = :bidder AND ap.status = 'SUCCESS'")
     Long getTotalPaymentAmountByBidder(@Param("bidder") Member bidder);
+
+    /**
+     * 특정 사용자가 특정 경매 상품을 성공적으로 구매했는지 여부를 확인합니다.
+     * @param bidder 구매자 (Member 엔티티)
+     * @param auction 경매 (Auction 엔티티)
+     * @return 성공적으로 구매한 기록이 있다면 true, 아니면 false
+     */
+    @Query("SELECT CASE WHEN COUNT(ap) > 0 THEN true ELSE false END " +
+            "FROM AuctionPayment ap " +
+            "WHERE ap.bidder = :bidder " +
+            "AND ap.auction = :auction " +
+            "AND ap.status = com.creatorworks.nexus.auction.entity.PaymentStatus.SUCCESS")
+    boolean hasSuccessfulPayment(@Param("bidder") Member bidder, @Param("auction") Auction auction);
 }

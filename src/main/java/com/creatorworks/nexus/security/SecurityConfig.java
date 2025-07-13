@@ -92,8 +92,14 @@ public class SecurityConfig {
                 .requestMatchers("/api/orders/payment/**").authenticated()
                 .requestMatchers("/refund/**").authenticated()
                 .requestMatchers("/admin/refund/**").hasRole("ADMIN")
+                // 경매 문의 시스템 보안 설정 추가
+                .requestMatchers("/auctions/*/inquiries").authenticated()
+                .requestMatchers("/auctions/*/inquiries/*/replies").authenticated()
+                // 상품 문의 시스템 보안 설정 추가
+                .requestMatchers("/products/*/inquiries").authenticated()
+                .requestMatchers("/products/*/inquiries/*/replies").authenticated()
                 // 그 외 모든 경로는 허용 (가장 넓은 범위를 나중에)
-                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout", "/test/**", "/nestjstest", "/api/**").permitAll()
+                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/auctions/**", "/members/logout", "/test/**", "/nestjstest", "/api/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(formLogin -> formLogin
@@ -150,8 +156,14 @@ public class SecurityConfig {
                 .requestMatchers("/api/orders/payment/**").authenticated()
                 .requestMatchers("/refund/**").authenticated()
                 .requestMatchers("/admin/refund/**").hasRole("ADMIN")
+                // 경매 문의 시스템 보안 설정 추가
+                .requestMatchers("/auctions/*/inquiries").authenticated()
+                .requestMatchers("/auctions/*/inquiries/*/replies").authenticated()
+                // 상품 문의 시스템 보안 설정 추가
+                .requestMatchers("/products/*/inquiries").authenticated()
+                .requestMatchers("/products/*/inquiries/*/replies").authenticated()
                 // 그 외 모든 경로는 허용
-                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/members/logout", "/test/**", "/nestjstest", "/api/**").permitAll()
+                .requestMatchers("/", "/sentinel", "/members/**", "/products/**", "/auction/**", "/auctions/**", "/members/logout", "/test/**", "/nestjstest", "/api/**").permitAll()
                 .anyRequest().authenticated()
             )
             // 폼 로그인 설정
