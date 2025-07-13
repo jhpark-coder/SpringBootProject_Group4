@@ -143,6 +143,12 @@
             display: block;
         }
 
+        .btn-row-layout{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+
         /* 반응형 */
         @media (max-width: 768px) {
             .tiptap-content .photo-grid-wrapper.grid-2-cols,

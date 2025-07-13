@@ -2,16 +2,20 @@ package com.creatorworks.nexus.auction.controller;
 
 import java.security.Principal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.creatorworks.nexus.auction.dto.AuctionPageResponse;
+import com.creatorworks.nexus.auction.dto.BidRequestDto;
 import com.creatorworks.nexus.auction.entity.AuctionInquiry;
 import com.creatorworks.nexus.auction.service.AuctionInquiryService;
 import com.creatorworks.nexus.auction.service.RecentlyViewedAuctionRedisService;
 import com.creatorworks.nexus.config.CategoryConfig;
+import com.creatorworks.nexus.member.dto.CustomUserDetails;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.member.service.MemberFollowService;
@@ -20,6 +24,7 @@ import com.creatorworks.nexus.util.tiptap.TipTapNode;
 import com.creatorworks.nexus.util.tiptap.TipTapRenderer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
@@ -28,6 +33,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -52,6 +59,8 @@ public class AuctionController {
     private final ObjectMapper objectMapper;
     private final TipTapRenderer tipTapRenderer;
 
+
+
     @GetMapping("/auctions/{id}")
     public String auctionDetail(@PathVariable("id") Long id,
                                 @Qualifier("inquiryPageable") @PageableDefault(size = 4, sort = "regTime", direction = Sort.Direction.DESC) Pageable inquiryPageable,
@@ -69,6 +78,29 @@ public class AuctionController {
         boolean canWriteReview = false;
         boolean canViewContent = false; // 컨텐츠 열람 가능 여부
         boolean isFollowing = false; // 팔로우 상태
+
+        // ==============================================================
+        //          ★★★ 경매 종료 상태 로직 추가 ★★★
+        // ==============================================================
+
+        // 1. 경매 종료 여부 확인
+        boolean isAuctionEnded = auction.getAuctionEndTime() != null && LocalDateTime.now().isAfter(auction.getAuctionEndTime());
+
+        // 2. 현재 로그인한 사용자가 최고 입찰자인지 확인
+        boolean isHighestBidder = false;
+        if (currentMember != null && auction.getHighestBidder() != null) {
+            isHighestBidder = currentMember.getId().equals(auction.getHighestBidder().getId());
+        }
+
+        // ==============================================================
+
+        // --- 기존에 model에 추가하던 속성들은 그대로 둡니다 ---
+        model.addAttribute("auction", auction);
+        // ...
+
+        // --- 새로 계산한 상태들을 model에 담아서 화면으로 보냅니다 ---
+        model.addAttribute("isAuctionEnded", isAuctionEnded);     // 경매 종료 여부 (true/false)
+        model.addAttribute("isHighestBidder", isHighestBidder); // 내가 최고 입찰자인지 여부 (true/false)
 
         if (principal != null) {
             currentMember = memberRepository.findByEmail(principal.getName());
@@ -264,10 +296,48 @@ public class AuctionController {
     }
 
     /**
-     * 카테고리별 상품 목록 데이터를 JSON 형태로 반환하는 API 엔드포인트입니다.
-     * @param primaryCategory 1차 카테고리
-     * @param secondaryCategory 2차 카테고리 (필수 아님)
-     * @param pageable 페이징 정보
-     * @return 페이징 처리된 상품 데이터
+     * 특정 경매에 대한 입찰을 처리하는 API 엔드포인트
+     * @param id 경매 ID
+     * @param bidRequestDto 사용자가 보낸 입찰 정보 (가격)
+     * @param userDetails 현재 로그인한 사용자의 정보 (Spring Security가 자동으로 넣어줘요)
+     * @return 성공 여부와 메시지를 담은 응답
      */
+    @PostMapping("/api/auctions/{id}/bids") // RESTful한 URL 설계: /api/경매/{경매ID}/입찰들
+    @ResponseBody // 이 메소드는 HTML 페이지가 아닌, 데이터(JSON)를 응답으로 보냅니다.
+    public ResponseEntity<?> placeBid(
+            @PathVariable("id") Long id,
+            @RequestBody BidRequestDto bidRequestDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        // 1. 로그인한 사용자인지 확인
+        if (userDetails == null) {
+            // 권한 없음(401 Unauthorized) 상태와 함께 에러 메시지를 보냅니다.
+            return ResponseEntity.status(401).body(Map.of("errorCode", "LOGIN_REQUIRED", "message", "로그인이 필요합니다."));
+        }
+
+        try {
+            // 2. 서비스 로직 호출
+            String userEmail = userDetails.getUsername(); // 사용자의 이메일(ID 역할)을 가져옵니다.
+
+            // 우리가 Step 2에서 만든 서비스 메소드를 드디어 사용합니다!
+            auctionService.placeBid(id, bidRequestDto.getPrice(), userEmail);
+
+            // 3. 성공 응답 반환
+            // 성공(200 OK) 상태와 함께 성공 메시지를 보냅니다.
+            return ResponseEntity.ok().body("입찰에 성공했습니다.");
+
+        } catch (EntityNotFoundException | IllegalArgumentException e) {
+            // 4. 서비스에서 발생한 예상된 오류 처리
+            // 잘못된 요청(400 Bad Request) 상태와 함께 서비스에서 보낸 에러 메시지를 그대로 전달합니다.
+            // 예를 들어 "입찰가는 현재가보다 높아야 합니다." 같은 메시지가 사용자에게 전달됩니다.
+            log.warn("입찰 실패: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+
+        } catch (Exception e) {
+            // 5. 예상치 못한 서버 내부 오류 처리
+            // 서버 내부 오류(500 Internal Server Error) 상태와 함께 일반적인 에러 메시지를 보냅니다.
+            log.error("입찰 처리 중 알 수 없는 오류 발생", e);
+            return ResponseEntity.status(500).body("입찰 처리 중 오류가 발생했습니다.");
+        }
+    }
 }

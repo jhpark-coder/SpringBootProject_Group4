@@ -8,6 +8,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.creatorworks.nexus.auction.entity.Auction;
+import com.creatorworks.nexus.auction.service.AuctionService;
+import com.creatorworks.nexus.member.dto.CustomUserDetails;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +43,7 @@ public class SellerPageController {
     private final MemberRepository memberRepository;
     private final OrderService orderService;
     private final OrderRepository orderRepository;
+    private final AuctionService auctionService;
     // private final ProductService productService; // 사용하지 않으므로 삭제
     // ... 다른 서비스/레포지토리
 

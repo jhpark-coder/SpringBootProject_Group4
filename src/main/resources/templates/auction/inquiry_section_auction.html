@@ -196,6 +196,7 @@
 
   <script th:inline="javascript">
     /*<![CDATA[*/
+    (function() {
     const auctionId = /*[[${auction.id}]]*/ null;
 
     // 페이지 레이아웃이 안정된 후 모달 이벤트를 바인딩합니다.
@@ -271,6 +272,7 @@
             });
         });
     });
+    })();
     /*]]>*/
   </script>
 </div>

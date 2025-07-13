@@ -13,6 +13,7 @@
     <link rel="stylesheet" th:href="@{/css/heartFollow.css}">
     <link rel="stylesheet" th:href="@{/css/paywall.css}">
     <link rel="stylesheet" th:href="@{/css/auctionTimer.css}">
+    <link rel="stylesheet" th:href="@{/css/bidModal.css}">
 
     <!-- Google Fonts 로딩 개선 -->
     <th:block th:if="${auction.fontFamily != null && !#strings.isEmpty(auction.fontFamily)}">
@@ -87,32 +88,88 @@
             </div>
             <div class="sidebar-actions">
                 <!-- 구매 버튼들 (오른쪽, 세로 배치) -->
-                <div class="purchase-buttons">
-                    <!-- 구매하지 않은 경우: 구매 버튼 표시 -->
-                    <th:block th:if="${!canViewContent}">
-                        <!-- 입찰 버튼 -->
-                        <button onclick=""
-                                class="purchase-btn"
-                                th:text="${auction.startBidPrice != null} ? '현재입찰가:'+${auction.startBidPrice} + '원' : '입찰하기'">
-                            입찰하기
-                        </button>
-                        <!-- 즉시입찰 버튼 -->
-                        <!-- 기존 버튼을 이렇게 수정합니다 -->
-                        <button th:onclick="|location.href='@{/api/auction-payment/payment-page/{id}(id=${auction.id})}'|"
-                                th:disabled="${auction.buyNowPrice == null}"
-                                class="purchase-btn"
-                                th:text="${auction.buyNowPrice != null} ? '즉시입찰가:' + ${#numbers.formatInteger(auction.buyNowPrice, 3, 'COMMA')} + '원' : '즉시입찰 불가'">
-                            즉시입찰하기
-                        </button>
-                    </th:block>
-                    <!-- 구매한 경우: 구매 완료 표시 -->
-                    <th:block th:if="${canViewContent}">
-                        <div class="purchase-complete">
-                            <span class="purchase-badge">구매 완료</span>
-                            <p class="purchase-message">전체 콘텐츠를 확인할 수 있습니다.</p>
+                <!-- .purchase-buttons 내부를 아래 코드로 교체 -->
+                <div class="purchase-buttons ">
+
+                    <!-- Thymeleaf의 switch-case 문법을 사용 -->
+                    <div th:switch="true">
+
+                        <!-- Case 1: 경매가 종료되었고, 내가 최고 입찰자인 경우 -->
+                        <div th:case="${isAuctionEnded and isHighestBidder}">
+                            <button th:onclick="|location.href='@{/api/auction-payment/payment-page/{id}(id=${auction.id}, amount=${auction.currentPrice})}'|"
+                                    class="purchase-btn instant-buy-btn">
+                                결제 : [[${#numbers.formatInteger(auction.currentPrice, 3, 'COMMA')}]]원
+                            </button>
+                            <p style="font-size: 12px; color: #007bff; text-align: center; margin-top: 8px;">
+                                축하합니다! 최종 낙찰되셨습니다.
+                            </p>
                         </div>
-                    </th:block>
-                </div>
+
+                        <!-- Case 2: 경매가 종료되었지만, 내가 최고 입찰자가 아닌 경우 -->
+                        <div th:case="${isAuctionEnded}">
+                            <div class="purchase-complete" style="background-color: #f8f9fa;">
+                                <span class="purchase-badge" style="background-color: #6c757d;">경매 종료</span>
+                                <p class="purchase-message">
+                                    이 경매는 종료되었습니다.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Case 3: 구매가 완료된 경우 -->
+                        <div th:case="${canViewContent}">
+                            <div class="purchase-complete">
+                                <span class="purchase-badge">구매 완료</span>
+                                <p class="purchase-message">전체 콘텐츠를 확인할 수 있습니다.</p>
+                            </div>
+                        </div>
+
+                        <!-- Case 4: (Default) 경매가 진행 중이고, 아직 구매하지 않은 경우 -->
+                        <div th:case="*">
+                            <!-- 1. 현재 최고가 표시 -->
+                            <div class="price-info">
+                                <span>현재 최고가</span>
+                                <span id="current-price-display" class="price-amount"
+                                      th:text="${#numbers.formatInteger(auction.currentPrice, 3, 'COMMA')}">10,000</span>
+                                <span>원</span>
+                            </div>
+
+                            <!-- 버튼 가로 배치 컨테이너 -->
+                            <div class="purchase-buttons-inner btn-row-layout"> <!-- 클래스 이름을 다르게 해서 CSS 충돌 방지 -->
+                                <!-- 입찰 버튼 -->
+                                <button id="show-bid-modal-btn" type="button" class="purchase-btn bid-btn">
+                                    입찰하기
+                                </button>
+                                <!-- 즉시 입찰 버튼 -->
+                                <button th:onclick="|location.href='@{/api/auction-payment/payment-page/{id}(id=${auction.id})}'|"
+                                        th:disabled="${auction.buyNowPrice == null}"
+                                        class="purchase-btn instant-buy-btn">
+                    <span th:if="${auction.buyNowPrice != null}">
+                        즉시입찰가: [[${#numbers.formatInteger(auction.buyNowPrice, 3, 'COMMA')}]]원
+                    </span>
+                                    <span th:if="${auction.buyNowPrice == null}">즉시입찰 불가</span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div> <!-- th:switch 끝 -->
+
+                    <!-- 입찰 입력창 모달 (th:switch 바깥에, 하지만 .sidebar-actions 안쪽에 위치) -->
+                    <!-- 이 모달은 경매 진행 중에만 의미가 있으므로, th:if로 조건을 걸어줍니다. -->
+                    <div id="bid-input-modal" th:if="${!isAuctionEnded and !canViewContent}">
+                        <div class="modal-content">
+                            <h4>입찰 금액</h4>
+                            <p>
+                                현재가([[${#numbers.formatInteger(auction.currentPrice, 3, 'COMMA')}]]원)보다 높은 금액을 입력하세요.
+                            </p>
+                            <input type="number" id="bid-price-input" placeholder="입찰할 금액 입력">
+                            <div class="modal-buttons">
+                                <button id="place-bid-btn" type="button">입찰</button>
+                                <button id="close-bid-modal-btn" type="button">취소</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div> <!-- .purchase-buttons 끝 -->
             </div>
             <!-- 판매자인 경우만 수정 버튼 표시 -->
             <th:block th:if="${currentMember != null and auction.seller != null and currentMember.id == auction.seller.id}">
@@ -232,6 +289,140 @@
                 });
             }
         });
+    </script>
+    <script th:inline="javascript">
+        // Thymeleaf 변수를 JavaScript에서 안전하게 사용하기 위해 선언합니다.
+        (function() {
+        const auctionId = /*[[${auction.id}]]*/ null;
+        const loginUrl = /*[[@{/members/login}]]*/ '/members/login';
+
+         // ★★★ 웹소켓 관련 로직 추가 ★★★
+        let websocket = null;
+
+        function connectWebSocket() {
+            // 웹소켓 주소. ws:// 또는 wss:// (보안 연결) 로 시작합니다.
+            const wsUrl = `ws://${window.location.host}/ws/bid`;
+            websocket = new WebSocket(wsUrl);
+
+            // 웹소켓 연결이 성공적으로 열렸을 때
+            websocket.onopen = function(event) {
+                console.log("웹소켓 서버에 연결되었습니다.");
+                // 서버에 '경매방 입장' 메시지를 보냅니다.
+                const enterMessage = {
+                    type: 'ENTER_AUCTION_ROOM',
+                    auctionId: auctionId
+                };
+                websocket.send(JSON.stringify(enterMessage));
+            };
+
+            // 서버로부터 메시지를 수신했을 때
+            websocket.onmessage = function(event) {
+                console.log("서버로부터 메시지 수신:", event.data);
+                const message = JSON.parse(event.data);
+
+                // 가격 업데이트 메시지인지 확인
+                if (message.type === 'PRICE_UPDATE' && message.auctionId === auctionId) {
+                    // 화면의 가격 정보를 업데이트합니다.
+                    const priceDisplay = document.getElementById('current-price-display');
+                    if (priceDisplay) {
+                        // 숫자에 콤마를 찍어주는 헬퍼 함수
+                        const formattedPrice = message.newPrice.toLocaleString('ko-KR');
+                        priceDisplay.textContent = formattedPrice;
+                        console.log(`가격이 ${formattedPrice}원으로 업데이트되었습니다.`);
+                    }
+                }
+            };
+             // 웹소켓 연결이 닫혔을 때
+            websocket.onclose = function(event) {
+                console.log("웹소켓 연결이 닫혔습니다. 재연결을 시도합니다.");
+                // (선택) 3초 후에 다시 연결을 시도하는 로직
+                setTimeout(connectWebSocket, 3000);
+            };
+
+            // 에러가 발생했을 때
+            websocket.onerror = function(error) {
+                console.error("웹소켓 오류 발생:", error);
+            };
+        }
+
+        // 페이지의 모든 요소가 로드된 후에 스크립트가 실행되도록 합니다.
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // ★★★ 페이지가 로드되면 웹소켓 연결 시작! ★★★
+            connectWebSocket();
+
+            // HTML에서 id로 각 요소를 찾아서 변수에 담아둡니다.
+            const showBidModalBtn = document.getElementById('show-bid-modal-btn');
+            const bidModal = document.getElementById('bid-input-modal');
+            const closeBidModalBtn = document.getElementById('close-bid-modal-btn');
+            const placeBidBtn = document.getElementById('place-bid-btn');
+            const bidPriceInput = document.getElementById('bid-price-input');
+
+            // '입찰하기' 버튼을 클릭했을 때의 동작
+            showBidModalBtn.addEventListener('click', () => {
+                bidModal.classList.add('visible'); // 숨겨뒀던 입력창을 보여줍니다.
+            });
+
+            // '취소' 버튼을 클릭했을 때의 동작
+            closeBidModalBtn.addEventListener('click', () => {
+                bidModal.classList.remove('visible'); // 입력창을 다시 숨깁니다.
+            });
+
+            // 최종 '입찰' 버튼을 클릭했을 때의 동작 (가장 중요!)
+            placeBidBtn.addEventListener('click', () => {
+                const bidPrice = bidPriceInput.value; // 사용자가 입력한 값을 가져옵니다.
+
+                // 입력값이 비어있는지 확인
+                if (!bidPrice) {
+                    alert('입찰할 금액을 입력해주세요.');
+                    return; // 함수 실행을 멈춥니다.
+                }
+
+                // 서버에 입찰 요청을 보냅니다 (fetch API 사용)
+                fetch(`/api/auctions/${auctionId}/bids`, {
+                    method: 'POST', // POST 방식으로 요청
+                    headers: {
+                        'Content-Type': 'application/json', // 보내는 데이터는 JSON 형식이라고 알려줌
+                    },
+                    // 우리가 만든 BidRequestDto 모양에 맞춰 JSON 데이터를 만듭니다.
+                    body: JSON.stringify({ price: bidPrice })
+                })
+                .then(response => {
+                    // 서버로부터 응답을 받으면, 먼저 상태 코드를 확인합니다.
+                    if (response.status === 401) { // 401: 권한 없음 (로그인 안 됨)
+                        alert('로그인이 필요합니다.');
+                        window.location.href = loginUrl; // 로그인 페이지로 이동!
+                        throw new Error('로그인이 필요합니다.'); // Promise 체인을 멈추기 위해 에러 발생
+                    }
+                    if (!response.ok) { // 200번대 성공 코드가 아닌 경우 (400, 500 등)
+                        // 응답 본문에 있는 에러 메시지를 얻기 위해 response.text()를 사용
+                        return response.text().then(text => {
+                            throw new Error(text || '입찰 처리 중 오류가 발생했습니다.');
+                        });
+                    }
+                    // 성공했다면 응답 본문을 JSON으로 파싱 (지금은 단순 텍스트지만 나중을 위해)
+                    return response.text();
+                })
+                .then(data => {
+                    // 서버가 보낸 성공 메시지 ("입찰에 성공했습니다.")
+                    alert(data);
+                    // 성공했으니 입력창을 닫아줍니다.
+                    bidModal.classList.remove('visible');
+                    // (임시) 성공했으니 페이지를 새로고침해서 변경된 가격을 확인합니다.
+                    // ★ 다음 단계에서 이 부분을 웹소켓으로 실시간 업데이트 하도록 바꿀 거예요!
+                })
+                .catch(error => {
+                    // .then() 체인에서 발생한 모든 에러를 여기서 잡습니다.
+                    console.error('입찰 오류:', error);
+                    // 사용자에게 에러 메시지를 보여줍니다.
+                    // (로그인 필요 에러는 위에서 이미 처리했으므로, 그 외의 에러만 보여줍니다)
+                    if (error.message !== '로그인이 필요합니다.') {
+                       alert(error.message);
+                    }
+                });
+            });
+        });
+        })();
     </script>
 </th:block>
 

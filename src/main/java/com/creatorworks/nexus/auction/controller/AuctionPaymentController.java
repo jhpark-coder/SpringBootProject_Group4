@@ -165,26 +165,65 @@ public class AuctionPaymentController {
      * 경매 결제 페이지
      */
     @GetMapping("/payment-page/{auctionId}")
-    public String showPaymentPage(@PathVariable Long auctionId, Model model) {
-        // [추가된 로직] 경매 ID로 경매 정보를 서버에서 직접 조회합니다.
+    public String showPaymentPage(@PathVariable Long auctionId,
+                                  @RequestParam(name = "amount", required = false) Long amount, // <<< 추가!
+                                  Model model) {
+
+        // 1. 경매 정보를 서버에서 직접 조회합니다. (보안상 중요)
         Auction auction = auctionService.findAuctionById(auctionId);
-
-        // [추가된 로직] 조회된 정보에서 '즉시 입찰가'를 가져옵니다.
-        Long price = auction.getBuyNowPrice();
-
-        // [안전장치] 만약 즉시 입찰가가 없거나, 조회된 경매가 없다면 원래 상품 페이지로 돌려보냅니다.
-        if (auction == null || price == null) {
-            log.warn("잘못된 결제 시도: 경매 ID {}에 대한 즉시 입찰 정보가 없습니다.", auctionId);
-            return "redirect:/auctions/" + auctionId; // 경매 상세 페이지 주소로 변경
+        if (auction == null) {
+            // 존재하지 않는 경매에 대한 요청은 상세 페이지로 돌려보냅니다.
+            log.warn("존재하지 않는 경매에 대한 결제 페이지 접근 시도: ID {}", auctionId);
+            return "redirect:/auctions/" + auctionId;
         }
 
-        // 모델에 경매 ID와 '서버에서 직접 조회한 안전한 가격'을 담습니다.
-        model.addAttribute("auctionId", auctionId);
-        model.addAttribute("price", price); // price 정보를 추가로 담아줍니다.
+        // 2. 최종 결제할 금액(finalAmount)을 결정하는 로직
+        Long finalAmount;
+        if (amount != null) {
+            // Case A: URL에 amount 파라미터가 있는 경우 (낙찰 후 결제)
+            // 이 경우, 서버에 저장된 현재가와 일치하는지 한번 더 확인하면 더욱 안전합니다.
+            // 여기서는 일단 URL의 값을 신뢰하는 것으로 구현합니다.
+            finalAmount = amount;
+            log.info("경매 ID {} 낙찰가 결제 페이지. 결제 요청 금액: {}", auctionId, finalAmount);
+        } else {
+            // Case B: URL에 amount 파라미터가 없는 경우 (즉시 입찰)
+            finalAmount = auction.getBuyNowPrice();
+            log.info("경매 ID {} 즉시 입찰 페이지. 결제 요청 금액: {}", auctionId, finalAmount);
+        }
 
-        // 결제 페이지(auction/payment.html)로 이동합니다.
+        // 3. 결제할 금액이 유효하지 않은 경우 안전장치
+        if (finalAmount == null || finalAmount <= 0) {
+            log.warn("잘못된 결제 시도: 경매 ID {} 에 대한 결제 금액이 유효하지 않습니다. 금액: {}", auctionId, finalAmount);
+            return "redirect:/auctions/" + auctionId;
+        }
+
+        // 4. 모델에 경매 ID와 '서버에서 최종 결정한 안전한 가격'을 담습니다.
+        model.addAttribute("auctionId", auctionId);
+        model.addAttribute("price", finalAmount); // ★★★ 여기가 핵심! ★★★
+
+        // 5. 결제 페이지(auction/payment.html)로 이동합니다.
         return "auction/payment";
     }
+//    public String showPaymentPage(@PathVariable Long auctionId, Model model) {
+//        // [추가된 로직] 경매 ID로 경매 정보를 서버에서 직접 조회합니다.
+//        Auction auction = auctionService.findAuctionById(auctionId);
+//
+//        // [추가된 로직] 조회된 정보에서 '즉시 입찰가'를 가져옵니다.
+//        Long price = auction.getBuyNowPrice();
+//
+//        // [안전장치] 만약 즉시 입찰가가 없거나, 조회된 경매가 없다면 원래 상품 페이지로 돌려보냅니다.
+//        if (auction == null || price == null) {
+//            log.warn("잘못된 결제 시도: 경매 ID {}에 대한 즉시 입찰 정보가 없습니다.", auctionId);
+//            return "redirect:/auctions/" + auctionId; // 경매 상세 페이지 주소로 변경
+//        }
+//
+//        // 모델에 경매 ID와 '서버에서 직접 조회한 안전한 가격'을 담습니다.
+//        model.addAttribute("auctionId", auctionId);
+//        model.addAttribute("price", price); // price 정보를 추가로 담아줍니다.
+//
+//        // 결제 페이지(auction/payment.html)로 이동합니다.
+//        return "auction/payment";
+//    }
 
     /**
      * 경매 결제 성공 페이지

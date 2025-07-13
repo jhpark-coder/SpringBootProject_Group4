@@ -15,13 +15,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.creatorworks.nexus.auction.entity.Auction;
+import com.creatorworks.nexus.auction.service.AuctionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -71,6 +75,7 @@ public class MyPageController {
     private final PointService pointService;
     private final ProductService productService;
     private final MemberFollowService memberFollowService;
+    private final AuctionService auctionService;
 
     @GetMapping("/member/myPage/{memberId}")
     public String myPage(@PathVariable("memberId") Long memberId, @AuthenticationPrincipal Object principal, Model model) {
@@ -494,5 +499,27 @@ public class MyPageController {
             return oauth2User.getName();
         }
         throw new IllegalStateException("인증된 사용자 정보를 가져올 수 없습니다.");
+    }
+
+    /**
+     * 마이페이지 - 참여중인 경매 목록 페이지
+     */
+    @GetMapping("/member/myBids")
+    public String myBiddingAuctionsPage(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                        @PageableDefault(size = 10, sort = "regTime", direction = Sort.Direction.DESC) Pageable pageable,
+                                        Model model) {
+
+        // 1. 로그인한 사용자 정보를 가져옵니다.
+        String userEmail = userDetails.getUsername();
+
+        // 2. 서비스를 호출해서 사용자가 입찰한 경매 목록을 가져옵니다.
+        Page<Auction> biddingAuctionsPage = auctionService.findBiddingAuctionsByUser(userEmail, pageable);
+
+        // 3. 뷰(HTML)에 데이터를 전달합니다.
+        model.addAttribute("biddingAuctionsPage", biddingAuctionsPage);
+        model.addAttribute("Name", userDetails.getName()); // 사이드바에 표시될 이름
+
+        // 4. mypage/myBids.html 파일을 보여줍니다.
+        return "auction/bidsList";
     }
 }
