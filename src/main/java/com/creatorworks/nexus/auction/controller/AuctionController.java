@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +36,7 @@ import com.creatorworks.nexus.auction.dto.AuctionSaveRequest;
 import com.creatorworks.nexus.auction.dto.BidRequestDto;
 import com.creatorworks.nexus.auction.entity.Auction;
 import com.creatorworks.nexus.auction.entity.AuctionInquiry;
+import com.creatorworks.nexus.auction.entity.Bid;
 import com.creatorworks.nexus.auction.service.AuctionInquiryService;
 import com.creatorworks.nexus.auction.service.AuctionService;
 import com.creatorworks.nexus.auction.service.RecentlyViewedAuctionRedisService;
@@ -48,8 +50,8 @@ import com.creatorworks.nexus.util.tiptap.TipTapNode;
 import com.creatorworks.nexus.util.tiptap.TipTapRenderer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityNotFoundException;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -82,7 +84,6 @@ public class AuctionController {
         // 현재 로그인한 사용자 정보 및 후기 작성 상태 조회
         Member currentMember = null;
         boolean canWriteReview = false;
-        boolean canViewContent = false; // 컨텐츠 열람 가능 여부
         boolean isFollowing = false; // 팔로우 상태
 
         // ==============================================================
@@ -94,6 +95,10 @@ public class AuctionController {
 
         // 2. 현재 로그인한 사용자가 최고 입찰자인지 확인
         boolean isHighestBidder = false;
+
+        // 3. 경매 상태별 UI 처리를 위한 추가 정보
+        boolean hasPaywall = false; // 페이월 존재 여부
+        boolean canViewContent = false; // 컨텐츠 열람 가능 여부
 
         // ==============================================================
 
@@ -151,10 +156,11 @@ public class AuctionController {
         model.addAttribute("auction", auction);
         model.addAttribute("isAuctionEnded", isAuctionEnded);     // 경매 종료 여부 (true/false)
         model.addAttribute("isHighestBidder", isHighestBidder); // 내가 최고 입찰자인지 여부 (true/false)
+        model.addAttribute("hasPaywall", hasPaywall); // 페이월 존재 여부
+        model.addAttribute("canViewContent", canViewContent); // 컨텐츠 열람 가능 여부
 
         // Tiptap JSON 컨텐츠 처리
         String contentHtml = "";
-        boolean hasPaywall = false; // 페이월 존재 여부 확인
         String tiptapJson = auction.getTiptapJson();
         if (tiptapJson != null && !tiptapJson.isEmpty()) {
             try {
@@ -256,6 +262,50 @@ public class AuctionController {
         Auction auction = auctionService.findAuctionById(id);
         model.addAttribute("auction", auction);
         return "auction/auctionResult";
+    }
+
+    /**
+     * 경매 입찰 API
+     */
+    @PostMapping("/api/auctions/{id}/bid")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> placeBid(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> request,
+            Principal principal) {
+        
+        try {
+            Long bidPrice = Long.valueOf(request.get("bidPrice").toString());
+            String userEmail = principal.getName();
+            
+            Bid bid = auctionService.placeBid(id, bidPrice, userEmail);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "입찰이 성공적으로 처리되었습니다.");
+            response.put("bidId", bid.getId());
+            response.put("bidPrice", bid.getPrice());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (EntityNotFoundException e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+            
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "입찰 처리 중 오류가 발생했습니다.");
+            return ResponseEntity.internalServerError().body(response);
+        }
     }
 
     @GetMapping("/auctions/category/{categoryName}")

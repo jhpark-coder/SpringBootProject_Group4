@@ -282,7 +282,7 @@
                     <label class="form-label">환불 요청 금액</label>
                     <div class="amount-input-group">
                         <input type="number" name="amount" class="form-input" id="amount" placeholder="환불 금액을 입력하세요"
-                            min="1000" step="100" required>
+                            min="1000" step="100" required th:value="${order != null && order.totalAmount != null ? order.totalAmount : 0}" readonly>
                         <span class="amount-suffix">원</span>
                     </div>
                 </div>
@@ -401,6 +401,10 @@
 
     <th:block layout:fragment="script">
         <script>
+            // 주문 금액을 JS 변수로 노출
+            var ORDER_TOTAL_AMOUNT = /*[[${order != null and order.totalAmount != null ? order.totalAmount : 0}]]*/ 0;
+            var IS_POINT_PURCHASE = /*[[${isPointPurchase}]]*/ false;
+
             // 아임포트 초기화
             var IMP = window.IMP;
             IMP.init('channel-key-169a5aa7-ef59-45ee-a715-66c274540c8a'); // KG이니시스 채널키
@@ -411,8 +415,13 @@
                 const form = document.getElementById('refundForm');
                 const amountInput = document.getElementById('amount');
 
+                // 환불 금액 자동 입력 (주문 금액)
+                if (ORDER_TOTAL_AMOUNT > 0) {
+                    amountInput.value = ORDER_TOTAL_AMOUNT;
+                }
+
                 // 포인트 구매 상품인지 확인
-                const isPointPurchase = /*[[${isPointPurchase}]]*/ false;
+                const isPointPurchase = IS_POINT_PURCHASE;
 
                 // 포인트 구매 상품인 경우 초기 설정
                 if (isPointPurchase) {
@@ -421,8 +430,7 @@
                     refundTypeSelect.disabled = true;
 
                     // 환불 금액을 주문 금액으로 자동 설정
-                    const orderAmount = /*[[${order != null and order.totalAmount != null ? order.totalAmount : 0}]]*/ 0;
-                    amountInput.value = orderAmount;
+                    amountInput.value = ORDER_TOTAL_AMOUNT;
                     amountInput.disabled = true;
                     amountInput.style.backgroundColor = '#f8f9fa';
                     amountInput.style.color = '#666';

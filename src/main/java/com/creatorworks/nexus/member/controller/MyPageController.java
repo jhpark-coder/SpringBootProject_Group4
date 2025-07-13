@@ -451,13 +451,17 @@ public class MyPageController {
 
             Long currentBalance = pointService.getCurrentBalance(currentMember.getId());
             Pageable pageable = PageRequest.of(page, size);
-            Page<com.creatorworks.nexus.order.service.PointService.PointHistoryDto> pointHistoryPage = pointService.getPointHistoryDtoList(currentMember.getId(), pageable);
+            Page<com.creatorworks.nexus.product.service.PointService.PointHistoryDto> pointHistoryPage = pointService.getNewPointHistory(currentMember.getId(), pageable);
             
             model.addAttribute("currentBalance", currentBalance != null ? currentBalance : 0L);
             model.addAttribute("pointHistoryPage", pointHistoryPage);
             model.addAttribute("pointHistory", pointHistoryPage.getContent());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", pointHistoryPage.getTotalPages());
+            model.addAttribute("totalElements", pointHistoryPage.getTotalElements());
             model.addAttribute("page", page);
             model.addAttribute("size", size);
+            model.addAttribute("memberId", currentMember.getId());
             model.addAttribute("Name", currentMember.getName());
 
             return "member/pointHistory";

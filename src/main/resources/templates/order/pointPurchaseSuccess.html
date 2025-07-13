@@ -192,7 +192,7 @@
             <a th:if="${productId != null}" th:href="@{'/products/' + ${productId} + '?fromPurchaseSuccess=true'}" class="btn btn-primary">
                 상품 보기
             </a>
-            <a href="/members/mypage" class="btn btn-secondary">
+            <a th:href="@{'/member/myPage/' + ${#authentication.principal.id}}" class="btn btn-secondary">
                 마이페이지
             </a>
             <a th:if="${canRefund != null and canRefund and orderId != null}" th:href="@{'/refund/request/' + ${orderId}}" class="btn btn-warning">

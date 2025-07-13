@@ -18,7 +18,10 @@ import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.order.entity.Order;
 import com.creatorworks.nexus.order.repository.OrderRepository;
+import com.creatorworks.nexus.product.entity.Point;
+import com.creatorworks.nexus.product.entity.Point.PointType;
 import com.creatorworks.nexus.product.entity.Product;
+import com.creatorworks.nexus.product.repository.PointRepository;
 import com.creatorworks.nexus.product.repository.ProductInquiryRepository;
 import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.repository.ProductReviewRepository;
@@ -36,6 +39,7 @@ public class DataInitializer {
     private final OrderRepository orderRepository;
     private final ProductReviewRepository productReviewRepository;
     private final ProductInquiryRepository productInquiryRepository;
+    private final PointRepository pointRepository;
 
     @Bean
     public CommandLineRunner initData() {
@@ -83,10 +87,21 @@ public class DataInitializer {
                         .birthYear("N/A")
                         .birthMonth("N/A")
                         .birthDay("N/A")
-                        .point(100000) // 10만 포인트 설정
+                        // .point(100000) // 삭제: 포인트 필드 사용 안함
                         .build();
                 memberRepository.save(testUser);
-                System.out.println("테스트 유저가 생성되었습니다: testuser@test.com (10만 포인트 보유)");
+                // Point 엔티티로 10만 포인트 적립 내역 추가
+                Point point = Point.builder()
+                        .member(testUser)
+                        .amount(100000L)
+                        .type(PointType.CHARGE)
+                        .balanceAfter(100000L)
+                        .description("초기 적립")
+                        .impUid(null)
+                        .merchantUid(null)
+                        .build();
+                pointRepository.save(point);
+                System.out.println("테스트 유저가 생성되었습니다: testuser@test.com (10만 포인트 적립 내역 포함)");
             }
 
             // 테스트용 판매자 계정 생성 (기존 작가 계정을 판매자로 변경)

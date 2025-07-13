@@ -21,16 +21,28 @@
         <div class="payment-info">
             <h3>결제 정보</h3>
             <div class="info-row">
+                <span>경매명:</span>
+                <span th:text="${auctionName}">-</span>
+            </div>
+            <div class="info-row">
                 <span>경매 ID:</span>
                 <span th:text="${auctionId}">-</span>
             </div>
             <div class="info-row">
-                <span>낙찰 금액:</span>
+                <span th:text="${isBuyNow} ? '즉시구매가' : '낙찰가'">결제 금액:</span>
                 <span id="amount" th:text="${#numbers.formatInteger(price, 3, 'COMMA')} + '원'">-</span>
             </div>
             <div class="info-row">
                 <span>결제자:</span>
                 <span th:text="${#authentication.principal.name}">-</span>
+            </div>
+            <div class="info-row" th:if="${!isBuyNow}">
+                <span>결제 유형:</span>
+                <span style="color: #28a745; font-weight: bold;">낙찰 후 결제</span>
+            </div>
+            <div class="info-row" th:if="${isBuyNow}">
+                <span>결제 유형:</span>
+                <span style="color: #007bff; font-weight: bold;">즉시구매</span>
             </div>
         </div>
 

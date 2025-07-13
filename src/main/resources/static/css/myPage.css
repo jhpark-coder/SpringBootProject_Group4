@@ -73,9 +73,6 @@ body {
     color: var(--text-light);
     border-radius: 15px;
     height: fit-content;
-    min-width: 200px;
-    width: 280px;
-    max-width: 280px;
 }
 
 .profile-pic {

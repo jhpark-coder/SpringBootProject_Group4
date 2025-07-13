@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>환불 상세 - 관리자</title>
+    <style>
+        .detail-container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .detail-section { background: #fff; border: 1px solid #ddd; border-radius: 5px; padding: 20px; margin-bottom: 20px; }
+        .detail-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #333; }
+        .detail-row { display: flex; margin-bottom: 10px; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; }
+        .detail-label { width: 150px; font-weight: bold; color: #666; }
+        .detail-value { flex: 1; color: #333; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-processing { background-color: #fff3cd; color: #856404; }
+        .status-completed { background-color: #d4edda; color: #155724; }
+        .status-failed { background-color: #f8d7da; color: #721c24; }
+        .status-cancelled { background-color: #e2e3e5; color: #383d41; }
+        .action-buttons { margin-top: 20px; text-align: center; }
+        .btn { padding: 10px 20px; margin: 0 10px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn:hover { opacity: 0.8; }
+        .payment-info { background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin-top: 10px; }
+        .no-payment { color: #999; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="detail-container">
+        <h1>환불 상세 정보 (관리자)</h1>
+        <!-- 기본 정보 -->
+        <div class="detail-section">
+            <div class="detail-title">기본 정보</div>
+            <div class="detail-row"><div class="detail-label">환불 ID</div><div class="detail-value" th:text="${refund.id}">1</div></div>
+            <div class="detail-row"><div class="detail-label">회원 이메일</div><div class="detail-value" th:text="${refund.member.email}">user@example.com</div></div>
+            <div class="detail-row"><div class="detail-label">환불 금액</div><div class="detail-value" th:text="${#numbers.formatInteger(refund.amount, 3, 'COMMA')} + '원'">10,000원</div></div>
+            <div class="detail-row"><div class="detail-label">환불 사유</div><div class="detail-value" th:text="${refund.reason}">개인 사정</div></div>
+            <div class="detail-row"><div class="detail-label">상태</div><div class="detail-value"><span th:class="${'status-badge status-' + #strings.toLowerCase(refund.refundStatus.name())}" th:text="${refund.refundStatus.description}">처리중</span></div></div>
+            <div class="detail-row"><div class="detail-label">요청일</div><div class="detail-value" th:text="${#temporals.format(refund.requestDate, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 12:00:00</div></div>
+        </div>
+        <!-- 원본 결제 정보 -->
+        <div class="detail-section">
+            <div class="detail-title">원본 결제 정보</div>
+            <div th:if="${refund.originalImpUid != null}">
+                <div class="detail-row"><div class="detail-label">아임포트 UID</div><div class="detail-value" th:text="${refund.originalImpUid}">imp_123456</div></div>
+                <div class="detail-row"><div class="detail-label">주문 UID</div><div class="detail-value" th:text="${refund.originalMerchantUid}">merchant_123456</div></div>
+                <div class="detail-row"><div class="detail-label">원본 결제 금액</div><div class="detail-value" th:text="${refund.originalAmount != null ? #numbers.formatInteger(refund.originalAmount, 3, 'COMMA') + '원' : '정보 없음'}">10,000원</div></div>
+                <div class="payment-info"><strong>실제 결제 환불 처리 가능</strong><br>이 환불 요청은 실제 결제 내역이 있어 아임포트를 통해 실제 금액 환불이 가능합니다.</div>
+            </div>
+            <div th:unless="${refund.originalImpUid != null}" class="no-payment">
+                <div class="detail-row"><div class="detail-label">원본 결제</div><div class="detail-value">결제 내역 없음 (보너스 포인트 등)</div></div>
+                <div class="payment-info"><strong>포인트 차감만 처리</strong><br>이 환불 요청은 실제 결제 내역이 없어 포인트 차감만 처리됩니다.</div>
+            </div>
+        </div>
+        <!-- 환불 계좌 정보 -->
+        <div class="detail-section">
+            <div class="detail-title">환불 계좌 정보</div>
+            <div class="detail-row"><div class="detail-label">은행</div><div class="detail-value" th:text="${refund.bankCode}">신한은행</div></div>
+            <div class="detail-row"><div class="detail-label">계좌번호</div><div class="detail-value" th:text="${refund.accountNumber}">123-456-789</div></div>
+            <div class="detail-row"><div class="detail-label">예금주</div><div class="detail-value" th:text="${refund.accountHolder}">홍길동</div></div>
+            <div class="detail-row"><div class="detail-label">연락처</div><div class="detail-value" th:text="${refund.phoneNumber}">010-1234-5678</div></div>
+        </div>
+        <!-- 관리자 코멘트 -->
+        <div class="detail-section">
+            <div class="detail-title">관리자 코멘트</div>
+            <div class="detail-row"><div class="detail-label">코멘트</div><div class="detail-value" th:text="${refund.adminComment != null ? refund.adminComment : '코멘트 없음'}">-</div></div>
+        </div>
+        <!-- 작업 버튼 -->
+        <div class="action-buttons">
+            <!-- 환불 처리 버튼 (PENDING 상태일 때만) -->
+            <form th:if="${refund.refundStatus.name() == 'PENDING'}" 
+                  th:action="@{/admin/refund/process/{id}(id=${refund.id})}" 
+                  method="post" style="display: inline;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn-primary" 
+                        onclick="return confirm('환불을 처리하시겠습니까?')">처리</button>
+            </form>
+            
+            <!-- 환불 재시도 버튼 (FAILED 상태일 때만) -->
+            <form th:if="${refund.refundStatus.name() == 'FAILED'}" 
+                  th:action="@{/admin/refund/retry/{id}(id=${refund.id})}" 
+                  method="post" style="display: inline;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn-primary" 
+                        onclick="return confirm('환불을 재처리하시겠습니까?')">재처리</button>
+            </form>
+            
+            <!-- 환불 취소 버튼 (PENDING 상태일 때만) -->
+            <form th:if="${refund.refundStatus.name() == 'PENDING'}" 
+                  th:action="@{/admin/refund/cancel/{id}(id=${refund.id})}" 
+                  method="post" style="display: inline;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn-danger" 
+                        onclick="return confirm('환불 요청을 취소하시겠습니까?')">취소</button>
+            </form>
+            
+            <a th:href="@{/admin/refund}" class="btn btn-secondary">목록으로</a>
+        </div>
+    </div>
+</body>
+</html> 
