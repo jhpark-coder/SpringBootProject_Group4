@@ -37,44 +37,40 @@ public class MemberFollowService {
      */
     @Transactional
     public boolean toggleFollow(Long followerId, Long followingId) {
-        System.out.println("=== MemberFollowService.toggleFollow 호출 ===");
-        System.out.println("followerId: " + followerId);
-        System.out.println("followingId: " + followingId);
+        // 팔로우 토글 처리 시작
         
         // 자기 자신을 팔로우할 수 없음
         if (followerId.equals(followingId)) {
-            System.out.println("자기 자신을 팔로우하려고 시도");
+            // 자기 자신을 팔로우하려고 시도
             throw new IllegalArgumentException("자기 자신을 팔로우할 수 없습니다.");
         }
 
         try {
             Member follower = memberRepository.findById(followerId)
                     .orElseThrow(() -> new IllegalArgumentException("팔로우하는 사용자를 찾을 수 없습니다."));
-            System.out.println("follower 찾음: " + follower.getId() + " - " + follower.getName());
+            // 팔로워 정보 확인
             
             Member following = memberRepository.findById(followingId)
                     .orElseThrow(() -> new IllegalArgumentException("팔로우받는 사용자를 찾을 수 없습니다."));
-            System.out.println("following 찾음: " + following.getId() + " - " + following.getName());
+            // 팔로잉 정보 확인
 
             // 기존 팔로우 관계 확인
             Optional<MemberFollow> existingFollow = memberFollowRepository.findByFollowerIdAndFollowingId(followerId, followingId);
-            System.out.println("기존 팔로우 관계 존재: " + existingFollow.isPresent());
+            // 기존 팔로우 관계 확인
 
             if (existingFollow.isPresent()) {
                 // 팔로우 관계가 있으면 삭제 (언팔로우)
-                System.out.println("언팔로우 처리 시작");
-                memberFollowRepository.delete(existingFollow.get());
-                System.out.println("언팔로우 처리 완료");
+                        // 언팔로우 처리
+        memberFollowRepository.delete(existingFollow.get());
                 return false;
             } else {
                 // 팔로우 관계가 없으면 생성 (팔로우)
-                System.out.println("팔로우 처리 시작");
+                // 팔로우 처리
                 MemberFollow newFollow = new MemberFollow(follower, following);
                 memberFollowRepository.save(newFollow);
-                System.out.println("팔로우 처리 완료");
                 
                 // 팔로우 알림 생성 및 전송 (중복 체크 포함)
-                System.out.println("팔로우 알림 생성 시작");
+                // 팔로우 알림 생성 시작
                 FollowNotificationRequest followNotificationRequest = new FollowNotificationRequest();
                 followNotificationRequest.setTargetUserId(followingId); // 알림 받을 사람(팔로우 당한 사람)
                 followNotificationRequest.setSenderUserId(followerId);   // 알림 보낸 사람(팔로우 건 사람)
@@ -87,11 +83,11 @@ public class MemberFollowService {
                 
                 if (savedNotification != null) {
                     // 새로운 팔로우 알림인 경우에만 WebSocket 전송
-                    System.out.println("[알림 DB 저장 완료] 팔로우 알림, notificationId=" + savedNotification.getId());
+                    // 알림 DB 저장 완료
                     notificationService.sendNotification(followNotificationRequest);
                 } else {
                     // 중복 팔로우 알림인 경우
-                    System.out.println("[알림 중복 방지] 이미 존재하는 팔로우 알림");
+                    // 알림 중복 방지
                 }
 
                 return true;

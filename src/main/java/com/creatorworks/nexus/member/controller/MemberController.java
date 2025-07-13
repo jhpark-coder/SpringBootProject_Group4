@@ -68,10 +68,10 @@ public class MemberController {
     public ResponseEntity<String> sendAuthEmail(@RequestBody EmailAuthRequestDto requestDto) {
         try {
             memberService.sendAuthEmail(requestDto.getEmail());
-            System.out.println("인증메일이 발송되었습니다.");
+            // 인증메일 발송 완료
             return new ResponseEntity<>("인증 메일이 발송되었습니다.", HttpStatus.OK);
         } catch (Exception e) {
-            System.out.println("메일 발송에 실패했습니다.");
+            // 메일 발송 실패
             return new ResponseEntity<>("메일 발송에 실패했습니다: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }

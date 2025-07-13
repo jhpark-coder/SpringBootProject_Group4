@@ -596,7 +596,8 @@ public class ProductController {
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "포인트 구매가 완료되었습니다.",
-                "currentBalance", member.getPoint()
+                "orderId", order.getId(),
+                "redirectUrl", "/api/orders/points/purchase/success?orderId=" + order.getId()
             ));
 
         } catch (IllegalArgumentException e) {

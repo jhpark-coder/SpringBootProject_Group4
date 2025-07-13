@@ -16,6 +16,11 @@
             font-family: inherit;
         }
 
+        .product-detail-page {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
         /* --- 메인 컨텐츠 그리드 레이아웃 --- */
         .main-content-grid {
             display: grid;
@@ -48,6 +53,8 @@
             grid-area: description;
             border-top: 1px solid #eee;
             padding-top: 20px;
+            margin-top: 0;
+            width: 100%;
         }
 
         /* --- 기존 메인 컨텐츠 스타일 (이제 사용되지 않음) --- */
@@ -554,6 +561,7 @@
 
         /* --- 그림1 목표 디자인 완전 동일하게 --- */
         .sidebar-goalcard {
+            grid-area: sidebar;
             background: #fff;
             border: 1.5px solid #1ea7fd;
             border-radius: 14px;

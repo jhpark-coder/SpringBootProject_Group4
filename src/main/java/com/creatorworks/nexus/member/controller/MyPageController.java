@@ -18,7 +18,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -31,6 +33,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.creatorworks.nexus.auction.entity.Auction;
+import com.creatorworks.nexus.auction.service.AuctionService;
 import com.creatorworks.nexus.member.dto.CustomUserDetails;
 import com.creatorworks.nexus.member.dto.FollowingDto;
 import com.creatorworks.nexus.member.dto.MemberModifyDto;
@@ -70,6 +74,7 @@ public class MyPageController {
     private final PointService pointService;
     private final ProductService productService;
     private final MemberFollowService memberFollowService;
+    private final AuctionService auctionService;
 
     @GetMapping("/member/myPage/{memberId}")
     public String myPage(@PathVariable("memberId") Long memberId, @AuthenticationPrincipal Object principal, Model model) {
@@ -527,6 +532,36 @@ public class MyPageController {
             response.put("success", false);
             response.put("message", "개인정보 수정 중 오류가 발생했습니다.");
             return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @GetMapping("/member/myBids")
+    public String myBiddingAuctionsPage(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                        @PageableDefault(size = 10, sort = "regTime", direction = Sort.Direction.DESC) Pageable pageable,
+                                        Model model) {
+        try {
+            if (userDetails == null) {
+                return "redirect:/members/login";
+            }
+
+            String email = userDetails.getUsername();
+            Member currentMember = memberRepository.findByEmail(email);
+            
+            if (currentMember == null) {
+                log.error("회원 정보를 찾을 수 없습니다: {}", email);
+                return "redirect:/members/login";
+            }
+
+            // 사용자가 입찰한 경매 목록 조회
+            Page<Auction> biddingAuctionsPage = auctionService.findAuctionsByBidder(currentMember, pageable);
+
+            model.addAttribute("biddingAuctionsPage", biddingAuctionsPage);
+            model.addAttribute("Name", currentMember.getName());
+            
+            return "auction/bidsList";
+        } catch (Exception e) {
+            log.error("참여중인 경매 목록 조회 중 오류 발생", e);
+            return "redirect:/";
         }
     }
 

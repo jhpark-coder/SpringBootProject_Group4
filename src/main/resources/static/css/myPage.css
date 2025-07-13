@@ -30,6 +30,7 @@ body {
     max-width: 1440px;
     margin: 0 auto;
     padding: 40px 20px;
+    background: #fff;
 }
 
 /* 1. 왼쪽 프로필 사이드바 */
@@ -73,6 +74,8 @@ body {
     border-radius: 15px;
     height: fit-content;
     min-width: 200px;
+    width: 280px;
+    max-width: 280px;
 }
 
 .profile-pic {
@@ -104,9 +107,15 @@ body {
 }
 
 .btn-outline {
-    border: 2px solid var(--text-light);
-    color: var(--text-light);
-    flex-grow: 1;
+    background: #fff;
+    border: 2px solid var(--primary-blue);
+    color: var(--primary-blue);
+    transition: background 0.2s, color 0.2s;
+    padding: 12px 6px !important; 
+}
+.btn-outline:hover {
+    background: var(--primary-blue);
+    color: #fff;
 }
 
 .btn-solid {
@@ -121,6 +130,11 @@ body {
     gap: 10px;
     width: 100%;
     max-width: 280px;
+    min-width: 0;
+}
+
+.btn, .btn-outline {
+    min-width: 0;
 }
 
 /* 2. 오른쪽 메인 콘텐츠 */

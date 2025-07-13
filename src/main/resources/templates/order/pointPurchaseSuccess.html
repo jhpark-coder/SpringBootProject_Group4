@@ -4,6 +4,8 @@
 
 <head>
     <title>구매 완료 - Nexus</title>
+    <meta name="_csrf" th:content="${_csrf.token}" th:if="${_csrf != null}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" th:if="${_csrf != null}" />
 </head>
 
 <th:block layout:fragment="css">
@@ -117,6 +119,16 @@
             color: white;
         }
 
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+            color: #212529;
+        }
+
         .refund-notice {
             background: #fff3cd;
             border: 1px solid #ffeaa7;
@@ -139,7 +151,7 @@
         <div class="success-icon">
             <i class="fa fa-check"></i>
         </div>
-
+        
         <h1 class="success-title">구매가 완료되었습니다!</h1>
         <p class="success-message">
             포인트로 상품을 성공적으로 구매하셨습니다.<br>
@@ -147,7 +159,7 @@
         </p>
 
         <div class="order-details">
-            <div class="order-detail-row">
+            <div class="order-detail-row" th:if="${orderId != null}">
                 <span class="detail-label">주문 번호</span>
                 <span class="detail-value" th:text="${orderId}">12345</span>
             </div>
@@ -155,16 +167,15 @@
                 <span class="detail-label">상품명</span>
                 <span class="detail-value" th:text="${productName}">상품명</span>
             </div>
-            <div class="order-detail-row">
+            <div class="order-detail-row" th:if="${totalAmount != null}">
                 <span class="detail-label">결제 금액</span>
                 <span class="detail-value" th:text="${totalAmount} + 'P'">30P</span>
             </div>
-            <div class="order-detail-row">
+            <div class="order-detail-row" th:if="${orderDate != null}">
                 <span class="detail-label">구매 일시</span>
-                <span class="detail-value" th:text="${#temporals.format(orderDate, 'yyyy-MM-dd HH:mm')}">2024-01-01
-                    12:00</span>
+                <span class="detail-value" th:text="${#temporals.format(orderDate, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00</span>
             </div>
-            <div class="order-detail-row">
+            <div class="order-detail-row" th:if="${currentBalance != null}">
                 <span class="detail-label">현재 포인트 잔액</span>
                 <span class="detail-value" th:text="${currentBalance} + 'P'">1000P</span>
             </div>
@@ -178,11 +189,14 @@
         </div>
 
         <div class="action-buttons">
-            <a th:href="@{'/products/' + ${orderId}}" class="btn btn-primary">
+            <a th:if="${productId != null}" th:href="@{'/products/' + ${productId} + '?fromPurchaseSuccess=true'}" class="btn btn-primary">
                 상품 보기
             </a>
             <a href="/members/mypage" class="btn btn-secondary">
                 마이페이지
+            </a>
+            <a th:if="${canRefund != null and canRefund and orderId != null}" th:href="@{'/refund/request/' + ${orderId}}" class="btn btn-warning">
+                환불 요청
             </a>
         </div>
     </div>

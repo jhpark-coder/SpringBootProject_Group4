@@ -11,7 +11,7 @@ const apiClient = axios.create({
     // Axios의 내장 CSRF 보호 기능 설정
     // Spring Security의 기본 설정과 일치시킵니다.
     xsrfCookieName: 'XSRF-TOKEN', // 백엔드가 설정한 쿠키 이름
-    xsrfHeaderName: 'X-XSRF-TOKEN', // 요청 시 보낼 헤더 이름
+            xsrfHeaderName: 'X-CSRF-TOKEN', // 요청 시 보낼 헤더 이름
 });
 
 // apiClient.interceptors.request.use(...)

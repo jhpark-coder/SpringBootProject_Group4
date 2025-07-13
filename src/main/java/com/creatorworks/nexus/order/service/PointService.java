@@ -45,15 +45,15 @@ public class PointService {
      * 포인트 충전을 처리합니다.
      */
     public Order chargePoint(Long memberId, Long amount, String impUid, String merchantUid) {
-        System.out.println("[LOG] chargePoint called: memberId=" + memberId + ", amount=" + amount + ", impUid=" + impUid + ", merchantUid=" + merchantUid); // TODO: 테스트 후 삭제
+        // 포인트 충전 처리 시작
         try {
             Member member = memberRepository.findById(memberId)
                     .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다: " + memberId));
-            System.out.println("[LOG] member found: " + member.getEmail()); // TODO: 테스트 후 삭제
+            // 회원 정보 확인
 
             // 중복 결제 방지
             if (impUid != null && paymentRepository.existsByImpUid(impUid)) {
-                System.out.println("[LOG] 이미 처리된 결제: " + impUid); // TODO: 테스트 후 삭제
+                // 이미 처리된 결제
                 throw new IllegalArgumentException("이미 처리된 결제입니다: " + impUid);
             }
 
@@ -68,16 +68,16 @@ public class PointService {
                     .build();
 
             order = orderRepository.save(order);
-            System.out.println("[LOG] order saved: orderId=" + order.getId()); // TODO: 테스트 후 삭제
+            // 주문 저장 완료
 
             // 결제 정보 생성
             Payment payment = paymentService.processPointPayment(order, amount, merchantUid);
             order.setPayment(payment);
-            System.out.println("[LOG] payment processed"); // TODO: 테스트 후 삭제
+            // 결제 처리 완료
 
             return orderRepository.save(order);
         } catch (Exception e) {
-            System.out.println("[ERROR] chargePoint 예외 발생: " + e.getMessage()); // TODO: 테스트 후 삭제
+            // chargePoint 예외 발생
             e.printStackTrace(); // TODO: 테스트 후 삭제
             throw e;
         }

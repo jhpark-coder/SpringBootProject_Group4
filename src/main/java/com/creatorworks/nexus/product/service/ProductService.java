@@ -129,7 +129,7 @@ public class ProductService {
      */
     public ProductPageResponse findAllProducts(Pageable pageable) {
         // 이 로그는 캐시에 없는 새로운 페이지를 요청할 때만 출력됩니다.
-        System.out.println("DB에서 상품 목록을 조회합니다. page=" + pageable.getPageNumber());
+        // DB에서 상품 목록을 조회합니다.
         // ProductRepository를 통해 데이터베이스에서 상품 목록을 조회합니다.
         Page<Product> productPage = productRepository.findAll(pageable);
 
@@ -189,9 +189,7 @@ public class ProductService {
         }
 
         // 카테고리 저장 디버그 로그
-        System.out.println("🔍 상품 저장 - primaryCategory: '" + request.getPrimaryCategory() + "'");
-        System.out.println("🔍 상품 저장 - secondaryCategory: '" + request.getSecondaryCategory() + "'");
-        System.out.println("🔍 상품 저장 - tags: " + request.getTags());
+        // 상품 저장 - 카테고리 및 태그 정보
 
         Product product = Product.builder()
                 .seller(seller)
@@ -229,11 +227,7 @@ public class ProductService {
         }
 
         // 카테고리 수정 디버그 로그
-        System.out.println("🔍 상품 수정 - 기존 primaryCategory: '" + product.getPrimaryCategory() + "'");
-        System.out.println("🔍 상품 수정 - 기존 secondaryCategory: '" + product.getSecondaryCategory() + "'");
-        System.out.println("🔍 상품 수정 - 새로운 primaryCategory: '" + request.getPrimaryCategory() + "'");
-        System.out.println("🔍 상품 수정 - 새로운 secondaryCategory: '" + request.getSecondaryCategory() + "'");
-        System.out.println("🔍 상품 수정 - 새로운 tags: " + request.getTags());
+        // 상품 수정 - 카테고리 및 태그 정보 업데이트
 
         product.setName(request.getName());
         product.setPrice(request.getPrice());
@@ -312,7 +306,7 @@ public class ProductService {
             
             if (savedNotification != null) {
                 // 새로운 좋아요 알림인 경우에만 WebSocket 전송
-                System.out.println("[알림 DB 저장 완료] 좋아요 알림, notificationId=" + savedNotification.getId());
+                // 알림 DB 저장 완료
                 
                 // FollowNotificationRequest를 사용하여 실시간 알림 전송
                 FollowNotificationRequest likeNotificationRequest = new FollowNotificationRequest();
@@ -326,7 +320,7 @@ public class ProductService {
                 notificationService.sendNotification(likeNotificationRequest);
             } else {
                 // 중복 좋아요 알림인 경우
-                System.out.println("[알림 중복 방지] 이미 존재하는 좋아요 알림");
+                // 알림 중복 방지
             }
 
             return true;

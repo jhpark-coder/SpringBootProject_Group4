@@ -115,10 +115,6 @@ input[type="email"] {
     border: 1px solid var(--primary-color);
     padding: 0 1.5rem;
 }
-.btn:not(:disabled){
-    background-color:#0071de;
-    color: #fff;
-}
 /* 성별 선택 라디오 버튼 그룹 */
 .radio-group {
     display: flex;
@@ -258,4 +254,190 @@ input[type="email"] {
     .birthdate-group {
         flex-direction: column;
     }
+}
+
+/* ===== 회원가입 폼 CSS ===== */
+
+/* 기존 memberForm.css 내용 */
+.signup-page-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.signup-form-wrapper {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: 40px;
+    width: 100%;
+    max-width: 500px;
+}
+
+.form-title {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.input-with-button {
+    display: flex;
+    gap: 10px;
+}
+
+.input-with-button input {
+    flex: 1;
+}
+
+.subpage-content .btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid #667eea;
+    color: #667eea;
+    white-space: nowrap;
+}
+
+.btn-outline:hover {
+    background: #667eea;
+    color: white;
+}
+
+.btn-outline:disabled {
+    border-color: #ccc;
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-submit {
+    width: 100%;
+    background: #667eea;
+    color: white;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+.btn-submit:hover {
+    background: #5a6fd8;
+}
+
+.btn-submit:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.radio-group {
+    display: flex;
+    gap: 20px;
+}
+
+.radio-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.radio-item input[type="radio"] {
+    width: auto;
+    margin: 0;
+}
+
+.birthdate-group {
+    display: flex;
+    gap: 10px;
+}
+
+.birthdate-group select {
+    flex: 1;
+}
+
+/* 인라인 스타일에서 옮겨온 내용 */
+.fieldError {
+    color: #bd2130;
+}
+
+/* 👇 [추가] disabled처럼 보이게 할 CSS 클래스 */
+.readonly-as-disabled {
+    background-color: #e9ecef;
+    /* 부트스트랩의 기본 disabled 배경색 */
+    opacity: 1;
+    /* 글자가 너무 흐려지지 않게 */
+    cursor: not-allowed;
+    /* 마우스 커서를 '금지' 모양으로 */
+}
+
+/* 폼 전용 버튼 스타일 (사이드바와 분리) */
+.form-btn {
+    height: 52px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+}
+.form-btn:hover {
+    opacity: 0.9;
+    background-color: #fff;
+    color : #0071de;
+    border: 1px solid #0071de;
+}
+.form-btn-outline {
+    background: var(--white-color);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    padding: 0 1.5rem;
+}
+.form-btn:not(:disabled){
+    background-color:#0071de;
+    color: #fff;
+}
+.form-btn-submit {
+    width: 100%;
+    height: 60px;
+    background: var(--primary-color);
+    color: var(--white-color);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 1rem;
 }

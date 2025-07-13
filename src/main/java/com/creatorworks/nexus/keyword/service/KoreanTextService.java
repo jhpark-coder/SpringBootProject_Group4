@@ -14,30 +14,22 @@ import scala.collection.Seq;
 @Service
 public class KoreanTextService {
     public List<String> extractNouns(String text) {
-        System.out.println("[DEBUG] =================================");
-        System.out.println("[DEBUG] extractNouns 호출 시작");
-        System.out.println("[DEBUG] 입력 text: '" + text + "'");
+        // 한국어 텍스트 명사 추출 시작
         
         try {
             if (text == null || text.trim().isEmpty()) {
-                System.out.println("[DEBUG] 입력 텍스트가 null 또는 empty, 빈 리스트 반환");
+                // 입력 텍스트가 null 또는 empty, 빈 리스트 반환
                 return Collections.emptyList();
             }
             
-            System.out.println("[DEBUG] 텍스트 정규화 시작...");
+            // 텍스트 정규화
             CharSequence normalized = OpenKoreanTextProcessorJava.normalize(text);
-            System.out.println("[DEBUG] 정규화된 텍스트: '" + normalized + "'");
             
-            System.out.println("[DEBUG] 토큰화 시작...");
+            // 토큰화
             Seq<KoreanTokenizer.KoreanToken> tokens = OpenKoreanTextProcessorJava.tokenize(normalized);
             List<KoreanTokenizer.KoreanToken> tokenList = scala.collection.JavaConverters.seqAsJavaList(tokens);
-            System.out.println("[DEBUG] 총 토큰 개수: " + tokenList.size());
             
             // 모든 토큰 로그 출력 (디버깅용)
-            for (int i = 0; i < tokenList.size(); i++) {
-                KoreanTokenizer.KoreanToken token = tokenList.get(i);
-                System.out.println("[DEBUG] Token[" + i + "]: '" + token.text() + "' (품사: " + token.pos().toString() + ")");
-            }
             
             List<String> nouns = tokenList.stream()
                     .filter(token -> {
@@ -46,9 +38,7 @@ public class KoreanTextService {
                                              pos.equals("ProperNoun") || 
                                              pos.equals("Alpha") ||
                                              pos.equals("Foreign");
-                        if (isValidToken) {
-                            System.out.println("[DEBUG] 유효한 토큰 발견: '" + token.text() + "' (품사: " + pos + ")");
-                        }
+                        // 유효한 토큰 발견
                         return isValidToken;
                     })
                     .map(token -> token.text())
@@ -69,7 +59,7 @@ public class KoreanTextService {
                 if (lowerText.contains(keyword.toLowerCase())) {
                     if (!nouns.contains(keyword)) {
                         nouns.add(keyword);
-                        System.out.println("[DEBUG] 기술용어 직접 추출: '" + keyword + "'");
+                        // 기술용어 직접 추출
                     }
                 }
             }
@@ -77,20 +67,11 @@ public class KoreanTextService {
             // 중복 제거
             nouns = nouns.stream().distinct().collect(Collectors.toList());
             
-            System.out.println("[DEBUG] 추출된 명사들: " + nouns);
-            System.out.println("[DEBUG] 추출된 명사 개수: " + nouns.size());
-            System.out.println("[DEBUG] extractNouns 완료");
-            System.out.println("[DEBUG] =================================");
+            // extractNouns 완료
             
             return nouns;
         } catch (Exception e) {
-            System.err.println("[ERROR] =================================");
-            System.err.println("[ERROR] 명사 추출 중 오류 발생!");
-            System.err.println("[ERROR] 입력값: '" + text + "'");
-            System.err.println("[ERROR] 오류 메시지: " + e.getMessage());
-            System.err.println("[ERROR] 오류 타입: " + e.getClass().getSimpleName());
-            e.printStackTrace();
-            System.err.println("[ERROR] =================================");
+            // 명사 추출 중 오류 발생
             return Collections.emptyList();
         }
     }

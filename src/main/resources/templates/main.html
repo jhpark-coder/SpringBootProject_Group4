@@ -7,8 +7,7 @@
     <th:block layout:fragment="css">
         <link rel="stylesheet" th:href="@{/css/main.css}">
         <link rel="stylesheet" th:href="@{/css/heartFollow.css}">
-        <style>
-        </style>
+
     </th:block>
     <title>Nexus - 당신의 창작품, 세상과 만나다</title>
 </head>
@@ -102,7 +101,7 @@
             <div class="container auction-cta-content">
                 <p class="cta-text">이제 정말 좋은 작품들을<br>경매를 통해 보다 필요한 사람과 거래해보세요.</p>
                 <!-- 경매 기능은 추후 구현 -->
-                <a th:href="@{/auction}" class="btn">경매보러가기</a>
+                <a th:href="@{/auctions/category/artwork}" class="btn">경매보러가기</a>
             </div>
         </section>
 

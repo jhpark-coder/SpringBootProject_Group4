@@ -65,13 +65,7 @@ public class SubscriptionNotificationService {
         log.info("구독 만료 임박 알림 발송: 구독자={}, 작가={}, 만료일={}",
                 subscriber.getEmail(), author.getEmail(), subscription.getEndDate());
 
-        // 임시로 콘솔에 알림 메시지 출력
-        System.out.println("=== 구독 만료 임박 알림 ===");
-        System.out.println("구독자: " + subscriber.getEmail());
-        System.out.println("작가: " + author.getEmail());
-        System.out.println("만료일: " + subscription.getEndDate());
-        System.out.println("메시지: 구독이 곧 만료됩니다. 연장하시겠습니까?");
-        System.out.println("==========================");
+        // 구독 만료 임박 알림 처리
     }
 
     /**
@@ -113,12 +107,6 @@ public class SubscriptionNotificationService {
         log.info("구독 만료 알림 발송: 구독자={}, 작가={}, 만료일={}",
                 subscriber.getEmail(), author.getEmail(), subscription.getEndDate());
 
-        // 임시로 콘솔에 알림 메시지 출력
-        System.out.println("=== 구독 만료 알림 ===");
-        System.out.println("구독자: " + subscriber.getEmail());
-        System.out.println("작가: " + author.getEmail());
-        System.out.println("만료일: " + subscription.getEndDate());
-        System.out.println("메시지: 구독이 만료되었습니다. 새로운 구독을 시작하세요.");
-        System.out.println("======================");
+        // 구독 만료 알림 처리
     }
 }
