@@ -121,6 +121,9 @@ public class RefundService {
             refund = refundRepository.save(existingRefund);
             log.info("기존 환불 요청 업데이트: 환불ID={}, 회원ID={}, 금액={}, 타입={}", 
                     refund.getId(), memberId, request.getAmount(), refundType);
+            
+            // 관리자에게 환불 신청 알림 전송 (재신청)
+            sendRefundRequestNotificationToAdmin(refund);
         } else {
             // 새로운 환불 엔티티 생성
             refund = Refund.builder()
@@ -322,7 +325,12 @@ public class RefundService {
         }
 
         refund.cancel();
-        return refundRepository.save(refund);
+        refund = refundRepository.save(refund);
+        
+        // 환불 취소 알림 전송
+        sendRefundCancellationNotificationToUser(refund);
+        
+        return refund;
     }
 
     /**
@@ -622,7 +630,7 @@ public class RefundService {
             notificationDto.setMessage(message);
             notificationDto.setType("refund_cancellation");
             notificationDto.setCategory(NotificationCategory.ORDER);
-            notificationDto.setLink("/my-refunds"); // 소비자 마이페이지로 이동
+            notificationDto.setLink("/api/orders/list"); // 주문 목록 페이지로 이동 (재신청 가능)
             notificationDto.setAmount(refund.getAmount());
             notificationDto.setPaymentMethod("환불 취소");
             notificationDto.setOrderId("refund_" + refund.getId());
@@ -631,7 +639,7 @@ public class RefundService {
             notificationService.sendPaymentNotification(notificationDto);
             
             // DB에 알림 저장
-            notificationService.savePaymentNotification(notificationDto, "/my-refunds");
+            notificationService.savePaymentNotification(notificationDto, "/api/orders/list");
             
             log.info("소비자에게 환불 취소 알림 전송: 환불ID={}, 회원ID={}, 금액={}, 타입={}", 
                     refund.getId(), refund.getMember().getId(), refund.getAmount(), refund.getRefundType());
