@@ -661,7 +661,7 @@ public class RefundService {
             notificationDto.setMessage(message);
             notificationDto.setType("refund_completion");
             notificationDto.setCategory(NotificationCategory.ORDER);
-            notificationDto.setLink("/my-refunds"); // 소비자 마이페이지로 이동
+            notificationDto.setLink("/refund/my-refunds"); // 환불 내역 페이지로 이동
             notificationDto.setAmount(refund.getAmount());
             notificationDto.setPaymentMethod("환불 완료");
             notificationDto.setOrderId("refund_" + refund.getId());
@@ -670,7 +670,7 @@ public class RefundService {
             notificationService.sendPaymentNotification(notificationDto);
             
             // DB에 알림 저장
-            notificationService.savePaymentNotification(notificationDto, "/my-refunds");
+            notificationService.savePaymentNotification(notificationDto, "/refund/my-refunds");
             
             log.info("소비자에게 환불 완료 알림 전송: 환불ID={}, 회원ID={}, 금액={}, 타입={}", 
                     refund.getId(), refund.getMember().getId(), refund.getAmount(), refund.getRefundType());
@@ -692,7 +692,7 @@ public class RefundService {
             notificationDto.setMessage(message);
             notificationDto.setType("refund_failure");
             notificationDto.setCategory(NotificationCategory.ORDER);
-            notificationDto.setLink("/my-refunds"); // 소비자 마이페이지로 이동
+            notificationDto.setLink("/refund/my-refunds"); // 환불 내역 페이지로 이동
             notificationDto.setAmount(refund.getAmount());
             notificationDto.setPaymentMethod("환불 실패");
             notificationDto.setOrderId("refund_" + refund.getId());
@@ -701,7 +701,7 @@ public class RefundService {
             notificationService.sendPaymentNotification(notificationDto);
             
             // DB에 알림 저장
-            notificationService.savePaymentNotification(notificationDto, "/my-refunds");
+            notificationService.savePaymentNotification(notificationDto, "/refund/my-refunds");
             
             log.info("소비자에게 환불 실패 알림 전송: 환불ID={}, 회원ID={}, 금액={}, 타입={}, 사유={}", 
                     refund.getId(), refund.getMember().getId(), refund.getAmount(), refund.getRefundType(), reason);
