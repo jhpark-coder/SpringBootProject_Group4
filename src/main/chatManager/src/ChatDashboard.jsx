@@ -15,6 +15,19 @@ const ChatDashboard = () => {
     const [connectionStatus, setConnectionStatus] = useState('연결 중...');
     const currentUserRef = useRef(currentUser); // 현재 선택된 사용자 참조
 
+    // 새로고침 시 저장된 데이터 복원
+    useEffect(() => {
+        const savedCurrentUser = localStorage.getItem('chat_currentUser');
+        const savedAllMessages = localStorage.getItem('chat_allMessages');
+        
+        if (savedCurrentUser) {
+            setCurrentUser(JSON.parse(savedCurrentUser));
+        }
+        if (savedAllMessages) {
+            setAllMessages(new Map(JSON.parse(savedAllMessages)));
+        }
+    }, []);
+
     useEffect(() => {
         const serverUrl = import.meta.env.VITE_NOTIFICATION_SERVER_URL || 'http://localhost:3000';
         // Socket.IO 연결 (관리자 권한으로)
@@ -134,6 +147,13 @@ const ChatDashboard = () => {
     // currentUser가 변경될 때마다 ref 업데이트
     useEffect(() => {
         currentUserRef.current = currentUser;
+    }, [currentUser]);
+
+    // 현재 사용자가 변경될 때 로컬 스토리지에 저장
+    useEffect(() => {
+        if (currentUser) {
+            localStorage.setItem('chat_currentUser', JSON.stringify(currentUser));
+        }
     }, [currentUser]);
 
     const joinAsAdmin = (socket) => {

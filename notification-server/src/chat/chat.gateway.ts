@@ -151,6 +151,15 @@ export class ChatGateway
         console.log('📤 채팅 내역 전송 완료');
     }
 
+    @SubscribeMessage('getOnlineUsers')
+    async handleGetOnlineUsers(@ConnectedSocket() client: Socket) {
+        console.log('👥 온라인 사용자 목록 요청 수신');
+        const onlineUsers = this.chatService.getOnlineUsers();
+        console.log('📋 온라인 사용자 목록:', onlineUsers);
+        client.emit('onlineUsers', onlineUsers);
+        console.log('📤 온라인 사용자 목록 전송 완료');
+    }
+
     private getUserIdFromSocket(client: Socket): number | null {
         return client.handshake.auth?.userId || null;
     }
