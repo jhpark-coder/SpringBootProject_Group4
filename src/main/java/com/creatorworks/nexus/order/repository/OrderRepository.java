@@ -185,6 +185,23 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "GROUP BY o.product.id ORDER BY COUNT(o.product.id) DESC")
     List<Long> findTopSellingProductIds(@Param("excludedIds") List<Long> excludedIds, Pageable pageable);
 
+    /**
+     * [추가] 특정 회원의 월별/카테고리별 구매 통계 조회
+     */
+    @Query("SELECT new com.creatorworks.nexus.member.dto.MonthlyCategoryPurchaseDTO(" +
+            "    YEAR(o.orderDate), MONTH(o.orderDate), " +
+            "    o.product.primaryCategory, COUNT(o)) " +
+            "FROM Order o " +
+            "WHERE o.buyer.id = :memberId AND o.orderDate BETWEEN :startDate AND :endDate " +
+            "  AND o.product IS NOT NULL " +
+            "GROUP BY YEAR(o.orderDate), MONTH(o.orderDate), o.product.primaryCategory " +
+            "ORDER BY YEAR(o.orderDate), MONTH(o.orderDate), o.product.primaryCategory")
+    List<com.creatorworks.nexus.member.dto.MonthlyCategoryPurchaseDTO> findMonthlyCategoryPurchases(
+            @Param("memberId") Long memberId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
     List<Order> findByBuyer(Member member);
 
     // === isRead 관련 쿼리 ===

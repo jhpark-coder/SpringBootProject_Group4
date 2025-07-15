@@ -40,7 +40,6 @@ import com.creatorworks.nexus.member.dto.FollowingDto;
 import com.creatorworks.nexus.member.dto.MemberModifyDto;
 import com.creatorworks.nexus.member.dto.MonthlyCategoryPurchaseDTO;
 import com.creatorworks.nexus.member.entity.Member;
-import com.creatorworks.nexus.member.repository.MemberOrderRepository;
 import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.member.service.MemberFollowService;
 import com.creatorworks.nexus.notification.entity.Notification;
@@ -67,7 +66,6 @@ public class MyPageController {
     private final RecentlyViewedProductRedisService recentlyViewedProductRedisService;
     private final RedisTemplate<String, String> redisTemplate;
     private final ProductRepository productRepository;
-    private final MemberOrderRepository memberOrderRepository;
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
     private final NotificationService notificationService;
@@ -104,7 +102,7 @@ public class MyPageController {
         // -------------------------
 
         // 3. DB에서 월별/카테고리별 구매 데이터 조회
-        List<MonthlyCategoryPurchaseDTO> purchases = memberOrderRepository.findMonthlyCategoryPurchases(currentMemberId, startDate, endDate);
+        List<MonthlyCategoryPurchaseDTO> purchases = orderRepository.findMonthlyCategoryPurchases(currentMemberId, startDate, endDate);
 
         // --- ★★★★★ 여기가 가장 중요! 조회된 결과 크기 확인 ★★★★★ ---
         log.info("DB 조회 완료. 조회된 구매 기록 건수: {}", purchases.size());
@@ -544,11 +542,16 @@ public class MyPageController {
                                         @PageableDefault(size = 10, sort = "regTime", direction = Sort.Direction.DESC) Pageable pageable,
                                         Model model) {
         try {
+            log.info("참여중인 경매 목록 조회 시작");
+            
             if (userDetails == null) {
+                log.warn("사용자 정보가 null입니다.");
                 return "redirect:/members/login";
             }
 
             String email = userDetails.getUsername();
+            log.info("조회할 사용자 이메일: {}", email);
+            
             Member currentMember = memberRepository.findByEmail(email);
             
             if (currentMember == null) {
@@ -556,15 +559,21 @@ public class MyPageController {
                 return "redirect:/members/login";
             }
 
+            log.info("회원 정보 확인 완료: {}", currentMember.getName());
+
             // 사용자가 입찰한 경매 목록 조회
             Page<Auction> biddingAuctionsPage = auctionService.findAuctionsByBidder(currentMember, pageable);
+            
+            log.info("입찰한 경매 목록 조회 완료: 총 {}개, 현재 페이지: {}", 
+                biddingAuctionsPage.getTotalElements(), biddingAuctionsPage.getNumber());
 
             model.addAttribute("biddingAuctionsPage", biddingAuctionsPage);
             model.addAttribute("Name", currentMember.getName());
             
+            log.info("모델 속성 설정 완료, 뷰 반환");
             return "auction/bidsList";
         } catch (Exception e) {
-            log.error("참여중인 경매 목록 조회 중 오류 발생", e);
+            log.error("참여중인 경매 목록 조회 중 오류 발생: {}", e.getMessage(), e);
             return "redirect:/";
         }
     }

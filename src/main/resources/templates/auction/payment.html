@@ -30,7 +30,7 @@
             </div>
             <div class="info-row">
                 <span th:text="${isBuyNow} ? '즉시구매가' : '낙찰가'">결제 금액:</span>
-                <span id="amount" th:text="${#numbers.formatInteger(price, 3, 'COMMA')} + '원'">-</span>
+                <span id="amount" th:text="${#numbers.formatDecimal(price, 0, 'COMMA', 0, 'POINT')} + '원'">-</span>
             </div>
             <div class="info-row">
                 <span>결제자:</span>

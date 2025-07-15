@@ -370,6 +370,13 @@ function App() {
         .then(response => response.json())
         .then(data => {
           console.log("Loaded data from server:", data); // 서버에서 받은 데이터 전체를 확인
+          console.log("Auction data details:", {
+            primaryCategory: data.primaryCategory,
+            secondaryCategory: data.secondaryCategory,
+            startBidPrice: data.startBidPrice,
+            buyNowPrice: data.buyNowPrice,
+            auctionDuration: data.auctionDuration
+          });
 
           const isProduct = location.pathname.includes('/editor/product/');
           const isAuction = location.pathname.includes('/editor/auction/');
@@ -398,14 +405,20 @@ function App() {
               auctionDuration: '',
               startBidPrice: '',
               buyNowPrice: '',
+              primaryCategory: data.primaryCategory || 'artwork',
+              secondaryCategory: data.secondaryCategory || '',
             });
           } else if (isAuction) {
-            // 경매 데이터 처리 (필요 시 로직 추가)
+            // 경매 데이터 처리
             setProjectSettings({
               ...commonData,
               saleType: 'auction',
               salePrice: '',
-              // ... 경매 관련 데이터 설정
+              auctionDuration: data.auctionDuration ? `${data.auctionDuration}일` : '7일',
+              startBidPrice: data.startBidPrice?.toString() || '',
+              buyNowPrice: data.buyNowPrice?.toString() || '',
+              primaryCategory: data.primaryCategory || 'artwork',
+              secondaryCategory: data.secondaryCategory || '',
             });
           } else {
             // 일반 문서 데이터 처리

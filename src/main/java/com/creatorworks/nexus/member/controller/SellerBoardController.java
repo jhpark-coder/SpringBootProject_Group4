@@ -1,5 +1,20 @@
 package com.creatorworks.nexus.member.controller;
 
+import java.security.Principal;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.creatorworks.nexus.auction.entity.Auction;
+import com.creatorworks.nexus.auction.service.AuctionService;
+import com.creatorworks.nexus.member.dto.CustomUserDetails;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.member.service.SellerBoardService;
@@ -7,17 +22,8 @@ import com.creatorworks.nexus.product.entity.Product;
 import com.creatorworks.nexus.product.entity.ProductInquiry;
 import com.creatorworks.nexus.product.entity.ProductReview;
 import com.creatorworks.nexus.product.service.ProductService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.security.Principal;
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/seller")
@@ -27,6 +33,7 @@ public class SellerBoardController {
     private final MemberRepository memberRepository;
     private final SellerBoardService sellerBoardService;
     private final ProductService productService;
+    private final AuctionService auctionService;
 
     @GetMapping("/products")
     public String productBoard(Principal principal, @PageableDefault(sort = "regTime", direction = Sort.Direction.DESC) Pageable pageable, Model model) {
@@ -65,6 +72,31 @@ public class SellerBoardController {
         model.addAttribute("Name", seller.getName());
         addPaginationAttributes(model, inquiryPage);
         return "seller/inquiryBoard";
+    }
+
+    /**
+     * 판매자 - 내 경매 관리 페이지
+     */
+    @GetMapping("/auctions")
+    public String myAuctionsPage(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                 @PageableDefault(size = 10, sort = "regTime", direction = Sort.Direction.DESC) Pageable pageable,
+                                 Model model) {
+        if (userDetails == null) {
+            return "redirect:/login";
+        }
+        String userEmail = userDetails.getUsername();
+        Page<Auction> auctionPage = auctionService.findAuctionsBySeller(userEmail, pageable);
+        model.addAttribute("auctionPage", auctionPage);
+        model.addAttribute("Name", userDetails.getName());
+        // 페이징 처리
+        int currentPage = auctionPage.getNumber();
+        int totalPages = auctionPage.getTotalPages();
+        int startPage = Math.max(0, currentPage - 2);
+        int endPage = Math.min(totalPages - 1, currentPage + 2);
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
+        model.addAttribute("activeMenu", "auctions");
+        return "seller/myAuction";
     }
     
     private void addPaginationAttributes(Model model, Page<?> page) {

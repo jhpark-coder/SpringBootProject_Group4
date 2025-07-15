@@ -16,8 +16,10 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
     // 특정 경매의 모든 입찰 기록을 시간순으로 조회
     List<Bid> findByAuctionIdOrderByRegTimeDesc(Long auctionId);
 
-    // 특정 사용자가 입찰한 경매 목록 조회 (페이징)
-    @Query("SELECT DISTINCT b.auction FROM Bid b WHERE b.bidder = :bidder ORDER BY b.regTime DESC")
+    // 특정 사용자가 입찰한 경매 목록 조회 (페이징) - 최신 입찰 기준으로 중복 제거
+    @Query("SELECT b.auction FROM Bid b WHERE b.bidder = :bidder " +
+            "AND b.regTime = (SELECT MAX(b2.regTime) FROM Bid b2 WHERE b2.auction = b.auction AND b2.bidder = :bidder) " +
+            "ORDER BY b.regTime DESC")
     Page<com.creatorworks.nexus.auction.entity.Auction> findAuctionsByBidder(@Param("bidder") Member bidder, Pageable pageable);
 
     // 특정 경매의 최고 입찰 기록 조회

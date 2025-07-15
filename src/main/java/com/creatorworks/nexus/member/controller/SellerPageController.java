@@ -13,6 +13,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.creatorworks.nexus.auction.entity.Auction;
+import com.creatorworks.nexus.auction.repository.AuctionRepository;
 import com.creatorworks.nexus.member.constant.Role;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
@@ -35,6 +37,7 @@ public class SellerPageController {
     private final MemberRepository memberRepository;
     private final OrderService orderService;
     private final OrderRepository orderRepository;
+    private final AuctionRepository auctionRepository;
     // private final ProductService productService; // 사용하지 않으므로 삭제
     // ... 다른 서비스/레포지토리
 
@@ -100,6 +103,15 @@ public class SellerPageController {
         );
         // ★★★★★★★★★★★★★★★★★★★
         model.addAttribute("topSellingProducts", topSellingProducts);
+        // --- 진행 중인 경매 목록 추가 (최대 4개로 제한) ---
+        List<Auction> ongoingAuctions = auctionRepository.findBySellerAndAuctionEndTimeAfter(seller, java.time.LocalDateTime.now());
+        // 최대 4개로 제한 (group4와 동일하게)
+        if (ongoingAuctions.size() > 4) {
+            ongoingAuctions = ongoingAuctions.subList(0, 4);
+        }
+        model.addAttribute("ongoingAuctions", ongoingAuctions);
+        // --- activeMenu 추가 ---
+        model.addAttribute("activeMenu", "dashboard");
         // ---------------------------------------------
 
         model.addAttribute("Name", seller.getName());
@@ -121,4 +133,6 @@ public class SellerPageController {
     public String reviewBoard() {
         return "seller/reviewBoard";
     }
+    
+
 }

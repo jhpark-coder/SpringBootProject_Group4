@@ -38,24 +38,24 @@
                     <thead>
                         <tr>
                             <th style="text-align:left; padding:8px;">작성일시</th>
-                            <th style="text-align:left; padding:8px;">상품명</th>
+                            <th style="text-align:left; padding:8px;">상품</th>
                             <th style="text-align:left; padding:8px;">작성자</th>
                             <th style="text-align:left; padding:8px;">별점</th>
                             <th style="text-align:left; padding:8px;">내용</th>
-                            <th style="text-align:left; padding:8px;">관리</th>
+
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:each="review : ${reviewPage.content}" style="border-top:1px solid #ddd;">
                             <td th:text="${#temporals.format(review.regTime, 'yyyy-MM-dd HH:mm')}"></td>
-                            <td th:text="${review.product.name}"></td>
+                            <td>
+                                <a th:href="@{/products/{id}(id=${review.product.id})}"
+                                    th:text="${review.product.name}"></a>
+                            </td>
                             <td th:text="${review.writer.name}"></td>
                             <td th:text="${review.rating}"></td>
                             <td th:text="${review.comment}"></td>
-                            <td>
-                                <a th:href="@{/products/{id}(id=${review.product.id})}" class="btn btn-primary btn-sm"
-                                    style="padding: 2px 8px; font-size: 14px; min-width: 60px; min-height: 28px;">상세보기</a>
-                            </td>
+
                         </tr>
                     </tbody>
                 </table>

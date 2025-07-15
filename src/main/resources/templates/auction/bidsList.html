@@ -81,11 +81,11 @@
                                 경매 제목
                             </a>
                         </td>
-                        <td style="text-align:right;" th:text="${#numbers.formatInteger(auction.currentPrice, 3, 'COMMA')} + '원'">-</td>
+                        <td style="text-align:right;" th:text="${#numbers.formatDecimal(auction.currentPrice, 0, 'COMMA', 0, 'POINT')} + '원'">-</td>
                         <td style="text-align:center;" th:text="${auction.auctionEndTime != null ? #temporals.format(auction.auctionEndTime, 'yyyy-MM-dd HH:mm') : '-'}">-</td>
                         <td style="text-align:center;">
-                            <span th:if="${auction.auctionEndTime.isAfter(#temporals.createNow())}" class="status-ongoing">진행중</span>
-                            <span th:if="${!auction.auctionEndTime.isAfter(#temporals.createNow())}" class="status-ended">종료</span>
+                            <span th:if="${auction.auctionEndTime != null and auction.auctionEndTime.isAfter(#temporals.createNow())}" class="status-ongoing">진행중</span>
+                            <span th:if="${auction.auctionEndTime == null or !auction.auctionEndTime.isAfter(#temporals.createNow())}" class="status-ended">종료</span>
                         </td>
                     </tr>
                     </tbody>

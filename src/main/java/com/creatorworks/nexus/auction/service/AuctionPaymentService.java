@@ -277,9 +277,25 @@ public class AuctionPaymentService {
     private AuctionPaymentResponse convertToResponse(AuctionPayment payment) {
         AuctionPaymentResponse response = new AuctionPaymentResponse();
         response.setId(payment.getId());
-        response.setAuctionId(payment.getAuction().getId());
-        response.setAuctionTitle(payment.getAuction().getName());
-        response.setBidderName(payment.getBidder().getName());
+        
+        // auction null 체크
+        if (payment.getAuction() != null) {
+            response.setAuctionId(payment.getAuction().getId());
+            response.setAuctionTitle(payment.getAuction().getName() != null ? 
+                payment.getAuction().getName() : "제목 없음");
+        } else {
+            response.setAuctionId(null);
+            response.setAuctionTitle("삭제된 경매");
+        }
+        
+        // bidder null 체크
+        if (payment.getBidder() != null) {
+            response.setBidderName(payment.getBidder().getName() != null ? 
+                payment.getBidder().getName() : "이름 없음");
+        } else {
+            response.setBidderName("알 수 없음");
+        }
+        
         response.setAmount(payment.getAmount());
         response.setImpUid(payment.getImpUid());
         response.setMerchantUid(payment.getMerchantUid());
