@@ -259,8 +259,14 @@
             connectSocket() {
                 console.log('🔗 관리자 채팅 대시보드 연결 시작');
 
-                this.socket = io('http://localhost:3000', {
-                    transports: ['websocket', 'polling']
+                // 현재 호스트의 포트 3000으로 연결
+                const socketUrl = window.location.protocol === 'https:' 
+                    ? 'https://localhost:3000' 
+                    : 'http://localhost:3000';
+                
+                this.socket = io(socketUrl, {
+                    transports: ['websocket', 'polling'],
+                    timeout: 20000
                 });
 
                 this.socket.on('connect', () => {

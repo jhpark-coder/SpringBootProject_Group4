@@ -33,4 +33,12 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     // 특정 시간 이후의 메시지 조회
     @Query("SELECT c FROM ChatMessage c WHERE c.timestamp >= :since ORDER BY c.timestamp ASC")
     List<ChatMessage> findMessagesSince(@Param("since") java.time.LocalDateTime since);
+    
+    // 모든 고유한 채팅 사용자 목록 조회 (관리자 제외, 최근 채팅 순)
+    @Query("SELECT DISTINCT c.sender FROM ChatMessage c WHERE c.sender != '관리자' ORDER BY (SELECT MAX(c2.timestamp) FROM ChatMessage c2 WHERE c2.sender = c.sender OR c2.recipient = c.sender) DESC")
+    List<String> findAllDistinctUsersOrderByLatestMessage();
+    
+    // 특정 사용자의 최근 메시지 조회
+    @Query("SELECT c FROM ChatMessage c WHERE c.sender = :username OR c.recipient = :username ORDER BY c.timestamp DESC LIMIT 1")
+    ChatMessage findLastMessageByUsername(@Param("username") String username);
 } 

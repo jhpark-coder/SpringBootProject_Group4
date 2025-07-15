@@ -75,6 +75,28 @@ public class ChatController {
         return ResponseEntity.ok(messages);
     }
 
+    /**
+     * 모든 채팅 사용자 목록 조회
+     */
+    @GetMapping("/users")
+    public ResponseEntity<List<String>> getAllChatUsers() {
+        System.out.println("👥 모든 채팅 사용자 목록 조회 요청");
+        List<String> users = chatMessageService.getAllChatUsers();
+        System.out.println("📋 조회된 사용자 목록: " + users);
+        return ResponseEntity.ok(users);
+    }
+
+    /**
+     * 특정 사용자의 최근 메시지 조회
+     */
+    @GetMapping("/last/{username}")
+    public ResponseEntity<ChatMessage> getLastMessage(@PathVariable String username) {
+        System.out.println("📨 사용자 최근 메시지 조회 요청: username=" + username);
+        ChatMessage lastMessage = chatMessageService.getLastMessage(username);
+        System.out.println("📋 조회된 최근 메시지: " + (lastMessage != null ? lastMessage.getContent() : "없음"));
+        return ResponseEntity.ok(lastMessage);
+    }
+
     // 요청 DTO
     public static class ChatMessageRequest {
         private String sender;

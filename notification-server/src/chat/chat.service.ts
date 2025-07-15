@@ -163,6 +163,72 @@ export class ChatService {
         return this.onlineUsers.get(username) || null;
     }
 
+    // DB에서 모든 채팅 사용자 목록 조회
+    async getAllChatUsers(): Promise<string[]> {
+        console.log('🔍 DB에서 모든 채팅 사용자 목록 조회 시작');
+        const baseUrl = (process.env.DATABASE_URL || 'http://localhost:8080').replace('/api/chat/messages', '');
+
+        try {
+            const response = await fetch(`${baseUrl}/api/chat/users`);
+            console.log('📡 DB 사용자 목록 조회 응답 상태:', response.status);
+            
+            if (response.ok) {
+                const users = await response.json();
+                console.log('✅ DB에서 조회된 사용자 목록:', users);
+                return users as string[];
+            } else {
+                console.error('❌ DB 사용자 목록 조회 실패 - 상태 코드:', response.status);
+                const errorText = await response.text();
+                console.error('❌ DB 사용자 목록 조회 실패 - 응답 내용:', errorText);
+            }
+        } catch (error) {
+            console.error('❌ DB 사용자 목록 조회 중 오류 발생:', error);
+        }
+
+        // DB 조회 실패 시 메모리에서 조회 (fallback)
+        console.log('🔄 메모리에서 사용자 목록 조회 (fallback)');
+        const memoryUsers = Array.from(new Set(
+            this.messages.map(msg => msg.sender).filter(Boolean)
+        ));
+        console.log('📋 메모리에서 조회된 사용자 목록:', memoryUsers);
+        return memoryUsers;
+    }
+
+    // 사용자의 최근 메시지 조회
+    async getUserLastMessage(userId: string): Promise<any> {
+        console.log('🔍 사용자 최근 메시지 조회 시작:', userId);
+        const baseUrl = (process.env.DATABASE_URL || 'http://localhost:8080').replace('/api/chat/messages', '');
+
+        try {
+            const response = await fetch(`${baseUrl}/api/chat/messages/last/${userId}`);
+            console.log('📡 사용자 최근 메시지 조회 응답 상태:', response.status);
+            
+            if (response.ok) {
+                const lastMessage = await response.json();
+                console.log('✅ DB에서 조회된 최근 메시지:', lastMessage);
+                return lastMessage;
+            } else {
+                console.error('❌ DB 최근 메시지 조회 실패 - 상태 코드:', response.status);
+            }
+        } catch (error) {
+            console.error('❌ DB 최근 메시지 조회 중 오류 발생:', error);
+        }
+
+        // DB 조회 실패 시 메모리에서 조회 (fallback)
+        console.log('🔄 메모리에서 최근 메시지 조회 (fallback)');
+        const userMessages = this.messages.filter(
+            msg => msg.sender === userId || msg.recipient === userId
+        );
+        
+        if (userMessages.length > 0) {
+            const lastMessage = userMessages[userMessages.length - 1];
+            console.log('📋 메모리에서 조회된 최근 메시지:', lastMessage);
+            return lastMessage;
+        }
+        
+        return null;
+    }
+
     // 비활성 사용자 정리 (5분 이상 활동이 없는 사용자)
     cleanupInactiveUsers(): void {
         const now = new Date();
