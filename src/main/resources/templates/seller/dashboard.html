@@ -100,7 +100,13 @@
                             th:style="'background-image: url(\'' + ${auction.imageUrl} + '\');'"></div>
                         <div class="auction-info-wrapper">
                             <div class="timer-tag">
-                                남은 시간 : <span class="timer" th:text="${auction.remainingTime}">17:20:27</span>
+                                남은 시간 : 
+                                <!-- 실시간 카운트다운 추가 -->
+                                <span class="countdown-timer" 
+                                      th:data-endtime="${#temporals.format(auction.auctionEndTime, 'yyyy-MM-dd HH:mm:ss')}"
+                                      th:text="${auction.remainingTime}">
+                                    17:20:27
+                                </span>
                             </div>
                             <p class="auction-title" th:text="${auction.name}">작품의 제목이 들어갈 겁니다.</p>
                             <div class="auction-price-info">
@@ -122,9 +128,17 @@
     <!-- ========================================================== -->
     <th:block layout:fragment="script">
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <!-- 카운트다운 스크립트 추가 -->
+        <script th:src="@{/js/countdown.js}"></script>
         <script th:inline="javascript">
             /*<![CDATA[*/
             document.addEventListener("DOMContentLoaded", function () {
+                // 카운트다운 타이머 시작
+                const countdownElements = document.querySelectorAll('.countdown-timer');
+                countdownElements.forEach(function(element) {
+                    startCountdown(element);
+                });
+
                 // 서버에서 데이터 가져오기
                 const monthlySales = /*[[${monthlySalesData}]]*/[];
                 const genderRatio = /*[[${genderRatioData}]]*/[];
