@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.creatorworks.nexus.product.dto.CategoryDto;
-import com.creatorworks.nexus.product.dto.TagDto;
+import com.creatorworks.nexus.product.dto.ItemTagDto;
 import com.creatorworks.nexus.product.service.CategoryService;
 
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class CategoryController {
     }
 
     @GetMapping("/{categoryId}/tags")
-    public ResponseEntity<List<TagDto>> getTagsByCategory(@PathVariable Long categoryId) {
+    public ResponseEntity<List<ItemTagDto>> getTagsByCategory(@PathVariable Long categoryId) {
         return ResponseEntity.ok(categoryService.findTagsByCategoryId(categoryId));
     }
 } 

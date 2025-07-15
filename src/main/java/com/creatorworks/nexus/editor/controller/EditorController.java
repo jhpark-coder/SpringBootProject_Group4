@@ -29,6 +29,11 @@ public class EditorController {
         return "forward:/editor/index.html";
     }
     
+    @GetMapping("/product/{id}")
+    public String editorPageWithProduct(@PathVariable Long id) {
+        return "forward:/editor/index.html";
+    }
+    
     // CSRF 토큰 및 세션 초기화를 위한 엔드포인트
     @GetMapping("/api/init")
     public ResponseEntity<Void> init() {

@@ -319,4 +319,18 @@ public class AuctionService {
     public Page<Auction> findAuctionsByBidder(Member bidder, Pageable pageable) {
         return bidRepository.findAuctionsByBidder(bidder, pageable);
     }
+
+    /**
+     * 특정 판매자가 등록한 경매 목록을 조회합니다.
+     * @param userEmail 판매자 이메일
+     * @param pageable 페이징 정보
+     * @return 경매 목록 페이지
+     */
+    public Page<Auction> findAuctionsBySeller(String userEmail, Pageable pageable) {
+        com.creatorworks.nexus.member.entity.Member seller = memberRepository.findByEmail(userEmail);
+        if (seller == null) {
+            throw new IllegalArgumentException("판매자 정보를 찾을 수 없습니다: " + userEmail);
+        }
+        return auctionRepository.findBySeller(seller, pageable);
+    }
 }

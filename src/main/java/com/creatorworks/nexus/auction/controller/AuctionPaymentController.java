@@ -1,5 +1,6 @@
 package com.creatorworks.nexus.auction.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -245,6 +246,12 @@ public class AuctionPaymentController {
                                          @RequestParam(defaultValue = "0") int page,
                                          Model model) {
         try {
+            // 사용자 인증 확인
+            if (userDetails == null) {
+                log.warn("인증되지 않은 사용자가 결제 내역 페이지에 접근 시도");
+                return "redirect:/login";
+            }
+
             Pageable pageable = PageRequest.of(page, 10);
             Page<AuctionPaymentResponse> history = auctionPaymentService.getUserPaymentHistory(
                     userDetails.getUsername(), pageable);
@@ -257,8 +264,19 @@ public class AuctionPaymentController {
             model.addAttribute("totalPages", history.getTotalPages());
             model.addAttribute("statistics", statistics);
 
+            log.info("결제 내역 페이지 로드 성공: 사용자={}, 페이지={}, 총결제수={}", 
+                    userDetails.getUsername(), page, history.getTotalElements());
+
         } catch (Exception e) {
-            log.error("결제 내역 페이지 로드 실패: {}", e.getMessage());
+            log.error("결제 내역 페이지 로드 실패: 사용자={}, 오류={}", 
+                    userDetails != null ? userDetails.getUsername() : "unknown", e.getMessage(), e);
+            
+            // 에러 발생 시 빈 데이터로 모델 설정
+            model.addAttribute("payments", new ArrayList<>());
+            model.addAttribute("currentPage", 0);
+            model.addAttribute("totalPages", 0);
+            model.addAttribute("statistics", null);
+            model.addAttribute("errorMessage", "결제 내역을 불러오는 중 오류가 발생했습니다.");
         }
 
         return "auction/paymentHistory";

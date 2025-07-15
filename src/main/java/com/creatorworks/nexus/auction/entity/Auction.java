@@ -64,6 +64,25 @@ public class Auction extends BaseEntity {
     private Member seller;
 
     private LocalDateTime auctionEndTime;
+    
+    // 남은 시간을 계산하는 메서드 (템플릿에서 사용)
+    public String getRemainingTime() {
+        if (auctionEndTime == null) {
+            return "00:00:00";
+        }
+        
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isAfter(auctionEndTime)) {
+            return "00:00:00";
+        }
+        
+        java.time.Duration duration = java.time.Duration.between(now, auctionEndTime);
+        long hours = duration.toHours();
+        long minutes = duration.toMinutesPart();
+        long seconds = duration.toSecondsPart();
+        
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
 
     @OneToMany(mappedBy = "auction", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AuctionItemTag> itemTags = new ArrayList<>();

@@ -182,11 +182,11 @@
             </tr>
             <tr>
                 <th>시작입찰가</th>
-                <td><span th:text="${#numbers.formatInteger(auction.startBidPrice, 3, 'COMMA')}"></span>원</td>
+                                        <td><span th:text="${#numbers.formatDecimal(auction.startBidPrice, 0, 'COMMA', 0, 'POINT')}"></span>원</td>
             </tr>
             <tr>
                 <th>즉시입찰가</th>
-                <td><span th:text="${#numbers.formatInteger(auction.buyNowPrice, 3, 'COMMA')}"></span>원</td>
+                                        <td><span th:text="${#numbers.formatDecimal(auction.buyNowPrice, 0, 'COMMA', 0, 'POINT')}"></span>원</td>
             </tr>
         </table>
 

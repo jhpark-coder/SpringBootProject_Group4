@@ -1,26 +1,26 @@
 # docker-compose.yml
 
 services:
-  # Spring Boot 애플리케이션 서비스
-  # nexus-app:
-  #   build: .
-  #   container_name: nexus-spring-app
-  #   restart: always
-  #   ports:
-  #     - "8081:8080"
-  #   depends_on:
-  #     - mysql-db
-  #     - redis-cache
-  #   environment:
-  #     SPRING_PROFILES_ACTIVE: prod
-  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/springproject
-  #     SPRING_DATASOURCE_USERNAME: nexus_user
-  #     SPRING_DATASOURCE_PASSWORD: nexus_password
-  #     SPRING_DATA_REDIS_HOST: redis-cache
-  #     SPRING_DATA_REDIS_PORT: 6379
+   #Spring Boot 애플리케이션 서비스
+   nexus-app:
+     build: .
+     container_name: nexus-spring-app
+     restart: always
+     ports:
+       - "8081:8080"
+     depends_on:
+       - mysql-db
+       - redis-cache   
+     environment:
+       SPRING_PROFILES_ACTIVE: prod
+       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/springproject
+       SPRING_DATASOURCE_USERNAME: nexus_user
+       SPRING_DATASOURCE_PASSWORD: nexus_password
+       SPRING_DATA_REDIS_HOST: redis-cache
+       SPRING_DATA_REDIS_PORT: 6379
 
   # React 관리자 페이지 서비스
-  chat-manager-admin:
+   chat-manager-admin:
     build:
       context: src/main/chatManager
       dockerfile: Dockerfile
@@ -36,7 +36,7 @@ services:
       - notification-server
 
   # NestJS 알림/채팅 서버 서비스
-  notification-server:
+   notification-server:
     build:
       context: notification-server
       dockerfile: Dockerfile.dev
@@ -53,7 +53,7 @@ services:
     #   - nexus-app
 
     # MySQL 서비스 정의
-  mysql-db:
+   mysql-db:
     image: mysql:8.0
     container_name: nexus-mysql-db
     restart: always
@@ -71,7 +71,7 @@ services:
       - --collation-server=utf8mb4_unicode_ci
 
   # Redis 서비스 정의
-  redis-cache:
+   redis-cache:
     image: redis:latest
     container_name: nexus-redis-cache
     restart: always

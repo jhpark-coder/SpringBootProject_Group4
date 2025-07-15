@@ -8,7 +8,7 @@ body {
 }
 
 .container {
-    max-width: 600px;
+    max-width: 1200px;
     margin: 0 auto;
     background: white;
     border-radius: 10px;
@@ -166,10 +166,10 @@ body {
 }
 
 .btn {
-    padding: 12px 24px;
+    padding: 8px 16px;
     border: none;
-    border-radius: 5px;
-    font-size: 14px;
+    border-radius: 4px;
+    font-size: 12px;
     cursor: pointer;
     text-decoration: none;
     display: inline-block;

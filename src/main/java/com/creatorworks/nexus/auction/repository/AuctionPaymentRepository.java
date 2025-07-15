@@ -41,7 +41,7 @@ public interface AuctionPaymentRepository extends JpaRepository<AuctionPayment, 
     long countByBidderAndStatus(@Param("bidder") Member bidder, @Param("status") PaymentStatus status);
 
     // 사용자별 총 결제 금액
-    @Query("SELECT SUM(ap.amount) FROM AuctionPayment ap WHERE ap.bidder = :bidder AND ap.status = 'SUCCESS'")
+    @Query("SELECT SUM(ap.amount) FROM AuctionPayment ap WHERE ap.bidder = :bidder AND ap.status = com.creatorworks.nexus.auction.entity.PaymentStatus.SUCCESS")
     Long getTotalPaymentAmountByBidder(@Param("bidder") Member bidder);
 
     /**

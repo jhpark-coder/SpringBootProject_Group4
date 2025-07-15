@@ -18,4 +18,10 @@ public interface AuctionRepository extends JpaRepository<Auction, Long>, JpaSpec
     // 종료된 경매 조회
     @Query("SELECT a FROM Auction a WHERE a.auctionEndTime < :now")
     List<Auction> findByAuctionEndTimeBefore(@Param("now") LocalDateTime now);
+
+    // 판매자별 경매 목록 조회
+    Page<Auction> findBySeller(com.creatorworks.nexus.member.entity.Member seller, Pageable pageable);
+
+    // 판매자별 + 진행중인 경매 목록 조회
+    List<Auction> findBySellerAndAuctionEndTimeAfter(com.creatorworks.nexus.member.entity.Member seller, java.time.LocalDateTime now);
 }

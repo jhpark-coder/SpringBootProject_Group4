@@ -103,7 +103,7 @@
                             </div>
                             <button th:onclick="|location.href='@{/api/auction-payment/payment-page/{id}(id=${auction.id}, amount=${auction.currentPrice})}'|"
                                     class="purchase-btn instant-buy-btn">
-                                결제 : [[${#numbers.formatInteger(auction.currentPrice, 3, 'COMMA')}]]원
+                                결제 : [[${#numbers.formatDecimal(auction.currentPrice, 0, 'COMMA', 0, 'POINT')}]]원
                             </button>
                             <p style="font-size: 12px; color: #007bff; text-align: center; margin-top: 8px;">
                                 축하합니다! 최종 낙찰되셨습니다.
@@ -134,7 +134,7 @@
                             <div class="price-info">
                                 <span>현재 최고가</span>
                                 <span id="current-price-display" class="price-amount"
-                                      th:text="${#numbers.formatInteger(auction.currentPrice, 3, 'COMMA')}">10,000</span>
+                                      th:text="${#numbers.formatDecimal(auction.currentPrice, 0, 'COMMA', 0, 'POINT')}">10,000</span>
                                 <span>원</span>
                             </div>
 
@@ -149,7 +149,7 @@
                                         th:disabled="${auction.buyNowPrice == null}"
                                         class="purchase-btn instant-buy-btn">
                     <span th:if="${auction.buyNowPrice != null}">
-                        즉시입찰가: [[${#numbers.formatInteger(auction.buyNowPrice, 3, 'COMMA')}]]원
+                        즉시입찰가: [[${#numbers.formatDecimal(auction.buyNowPrice, 0, 'COMMA', 0, 'POINT')}]]원
                     </span>
                                     <span th:if="${auction.buyNowPrice == null}">즉시입찰 불가</span>
                                 </button>
@@ -164,7 +164,7 @@
                         <div class="modal-content">
                             <h4>입찰 금액</h4>
                             <p>
-                                현재가([[${#numbers.formatInteger(auction.currentPrice, 3, 'COMMA')}]]원)보다 높은 금액을 입력하세요.
+                                현재가([[${#numbers.formatDecimal(auction.currentPrice, 0, 'COMMA', 0, 'POINT')}]]원)보다 높은 금액을 입력하세요.
                             </p>
                             <input type="number" id="bid-price-input" placeholder="입찰할 금액 입력">
                             <div class="modal-buttons">
@@ -344,7 +344,8 @@
         function updateCurrentPrice(newPrice, bidderName) {
             const priceDisplay = document.getElementById('current-price-display');
             if (priceDisplay) {
-                priceDisplay.textContent = newPrice.toLocaleString();
+                // 한국어 로케일로 자리수에 맞게 포맷팅
+                priceDisplay.textContent = newPrice.toLocaleString('ko-KR');
                 
                 // 애니메이션 효과 추가
                 priceDisplay.style.color = '#28a745';
@@ -355,12 +356,12 @@
                 }, 2000);
                 
                 // 알림 메시지 표시
-                showNotification(`${bidderName}님이 ${newPrice.toLocaleString()}원으로 입찰했습니다!`);
+                showNotification(`${bidderName}님이 ${newPrice.toLocaleString('ko-KR')}원으로 입찰했습니다!`);
             }
             // === 모달 안내문구도 같이 갱신 ===
             const modalGuide = document.querySelector('#bid-input-modal p');
             if (modalGuide) {
-                modalGuide.innerHTML = `현재가(${newPrice.toLocaleString()}원)보다 높은 금액을 입력하세요.`;
+                modalGuide.innerHTML = `현재가(${newPrice.toLocaleString('ko-KR')}원)보다 높은 금액을 입력하세요.`;
             }
         }
         

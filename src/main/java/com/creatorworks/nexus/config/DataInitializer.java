@@ -29,7 +29,7 @@ import com.creatorworks.nexus.product.repository.ProductReviewRepository;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
-@Profile("dev") // 'dev' 프로필이 활성화될 때만 이 설정이 적용됩니다.
+@Profile({"dev", "prod"}) // 'dev'와 'prod' 프로필 모두에서 적용됩니다.
 @RequiredArgsConstructor
 public class DataInitializer {
     private final AuctionRepository auctionRepository;

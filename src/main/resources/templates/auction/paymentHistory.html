@@ -29,7 +29,7 @@
             </div>
             <div class="stat-card total">
                 <h3>총 결제 금액</h3>
-                <div class="number" th:text="${#numbers.formatInteger(statistics.totalAmount, 3, 'COMMA')}">0</div>
+                <div class="number" th:text="${#numbers.formatDecimal(statistics.totalAmount, 0, 'COMMA', 0, 'POINT')}">0</div>
                 <div>원</div>
             </div>
         </div>
@@ -38,10 +38,15 @@
         <div class="payment-list">
             <h2>결제 내역</h2>
 
+            <!-- 에러 메시지 표시 -->
+            <div th:if="${errorMessage}" class="error-message" style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
+                <strong>오류:</strong> <span th:text="${errorMessage}">오류가 발생했습니다.</span>
+            </div>
+
             <div th:if="${#lists.isEmpty(payments)}" class="empty-state">
                 <h3>결제 내역이 없습니다</h3>
                 <p>아직 경매 결제를 하지 않으셨네요.</p>
-                <a href="/auction" class="btn btn-secondary">경매 둘러보기</a>
+                <a href="/auctions/category/artwork" class="btn btn-secondary">경매 둘러보기</a>
             </div>
 
             <table th:if="${!#lists.isEmpty(payments)}" class="payment-table">
@@ -60,16 +65,16 @@
                     <tr th:each="payment : ${payments}">
                         <td th:text="${payment.impUid}">-</td>
                         <td th:text="${payment.auctionTitle}">-</td>
-                        <td class="amount" th:text="${#numbers.formatInteger(payment.amount, 3, 'COMMA') + '원'}">-</td>
+                        <td class="amount" th:text="${#numbers.formatDecimal(payment.amount, 0, 'COMMA', 0, 'POINT') + '원'}">-</td>
                         <td>
                             <span
-                                th:class="${'status ' + (payment.status == 'SUCCESS' ? 'success' : payment.status == 'FAILED' ? 'failed' : 'cancelled')}"
-                                th:text="${payment.status == 'SUCCESS' ? '성공' : payment.status == 'FAILED' ? '실패' : '취소'}">
+                                th:class="${'status ' + (payment.status.name() == 'SUCCESS' ? 'success' : payment.status.name() == 'FAILED' ? 'failed' : 'cancelled')}"
+                                th:text="${payment.status.name() == 'SUCCESS' ? '성공' : payment.status.name() == 'FAILED' ? '실패' : '취소'}">
                                 -
                             </span>
                         </td>
-                        <td th:text="${#dates.format(payment.paymentDate, 'yyyy-MM-dd HH:mm')}">-</td>
-                        <td th:text="${payment.cardType + ' ' + payment.cardNumber}">-</td>
+                        <td th:text="${#temporals.format(payment.paymentDate, 'yyyy-MM-dd HH:mm')}">-</td>
+                        <td th:text="${(payment.cardType != null ? payment.cardType : '-') + ' ' + (payment.cardNumber != null ? payment.cardNumber : '-')}">-</td>
                         <td>
                             <button th:if="${payment.status == 'SUCCESS'}"
                                 th:onclick="'cancelPayment(\'' + ${payment.impUid} + '\')'"

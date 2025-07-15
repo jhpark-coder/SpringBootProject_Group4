@@ -23,7 +23,7 @@
             <a th:href="@{/seller/products}" class="btn btn-solid">작품 관리</a>
             <a th:href="@{/seller/reviews}" class="btn btn-solid">내 작품 후기</a>
             <a th:href="@{/seller/inquiries}" class="btn btn-solid">내 작품 문의</a>
-            <a th:href="@{/seller/auctions}" class="btn btn-solid">경매 관리</a>
+            <a th:href="@{/seller/auctions}" class="btn btn-solid" th:classappend="${activeMenu == 'auctions'} ? 'active'">경매 관리</a>
             <a th:href="@{/members/modify}" class="btn btn-outline" style="margin-top: 20px;">개인정보수정</a>
         </aside>
 
@@ -60,7 +60,7 @@
             <section class="content-section">
                 <header class="section-header">
                     <h2>이번 달 가장 많이 팔린 작품</h2>
-                    <a href="#" class="see-more-link">더 보러가기 »</a>
+                    <a th:href="@{/seller/products}" class="see-more-link">더 보러가기 »</a>
                 </header>
                 <!-- ========================================================== -->
                 <!--      ★★★  가장많이 팔린 상품 ★★★-->
@@ -91,7 +91,7 @@
             <section class="content-section">
                 <header class="section-header">
                     <h2>진행 중인 경매</h2>
-                    <a href="#" class="see-more-link">더 보러가기 »</a>
+                    <a th:href="@{/seller/auctions}" class="see-more-link">더 보러가기 »</a>
                 </header>
                 <div class="auction-grid" th:if="${ongoingAuctions != null and !ongoingAuctions.isEmpty()}">
                     <!-- (임시) 경매 아이템. 이 부분은 컨트롤러에서 받은 데이터로 th:each를 사용합니다. -->
@@ -106,8 +106,8 @@
                             <div class="auction-price-info">
                                 <span>현재 최고 입찰가</span>
                                 <span class="current-bid"
-                                    th:text="${#numbers.formatDecimal(auction.currentBid, 0, 'COMMA', 0, 'POINT')} + ' $'">200,000
-                                    $</span>
+                                    th:text="${#numbers.formatDecimal(auction.currentPrice, 0, 'COMMA', 0, 'POINT')} + '원'">200,000
+                                    원</span>
                             </div>
                         </div>
                     </article>
