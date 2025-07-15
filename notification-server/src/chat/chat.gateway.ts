@@ -160,6 +160,24 @@ export class ChatGateway
         console.log('📤 온라인 사용자 목록 전송 완료');
     }
 
+    @SubscribeMessage('getAllChatUsers')
+    async handleGetAllChatUsers(@ConnectedSocket() client: Socket) {
+        console.log('👥 모든 채팅 사용자 목록 요청 수신');
+        const allUsers = await this.chatService.getAllChatUsers();
+        console.log('📋 모든 채팅 사용자 목록:', allUsers);
+        client.emit('allChatUsers', allUsers);
+        console.log('📤 모든 채팅 사용자 목록 전송 완료');
+    }
+
+    @SubscribeMessage('getUserLastMessage')
+    async handleGetUserLastMessage(@MessageBody() data: { userId: string }, @ConnectedSocket() client: Socket) {
+        console.log('📨 사용자 최근 메시지 요청 수신:', data);
+        const lastMessage = await this.chatService.getUserLastMessage(data.userId);
+        console.log('📋 사용자 최근 메시지:', lastMessage);
+        client.emit('userLastMessage', { userId: data.userId, lastMessage });
+        console.log('📤 사용자 최근 메시지 전송 완료');
+    }
+
     private getUserIdFromSocket(client: Socket): number | null {
         return client.handshake.auth?.userId || null;
     }

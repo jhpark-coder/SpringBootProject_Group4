@@ -43,6 +43,10 @@ const ChatDashboard = () => {
             console.log('✅ 관리자 대시보드 연결 성공');
             setConnectionStatus('연결됨');
             joinAsAdmin(newSocket);
+            
+            // 연결 성공 후 DB에서 모든 채팅 사용자 목록 요청
+            console.log('📤 모든 채팅 사용자 목록 요청');
+            newSocket.emit('getAllChatUsers');
         });
 
         newSocket.on('disconnect', () => {
@@ -128,6 +132,77 @@ const ChatDashboard = () => {
                 console.log('❌ 현재 사용자와 일치하지 않는 채팅 내역:', {
                     receivedUserId: data.userId,
                     currentUser: currentUserRef.current
+                });
+            }
+        });
+
+        // 모든 채팅 사용자 목록 수신 (새로고침 시 DB에서 복원)
+        newSocket.on('allChatUsers', (users) => {
+            console.log('📨 모든 채팅 사용자 목록 수신:', users);
+            if (users && Array.isArray(users)) {
+                // DB에서 가져온 사용자들을 오프라인 상태로 추가
+                users.forEach(username => {
+                    const fullUsername = normalizeUsername(username);
+                    setUsers(prev => {
+                        const newUsers = new Map(prev);
+                        if (!newUsers.has(fullUsername)) {
+                            newUsers.set(fullUsername, {
+                                username: fullUsername,
+                                status: 'offline', // DB에서 가져온 사용자는 기본적으로 오프라인
+                                lastMessage: null
+                            });
+                        }
+                        return newUsers;
+                    });
+                });
+                console.log('✅ DB에서 사용자 목록 복원 완료');
+                
+                // 각 사용자의 최근 메시지 정보 요청
+                users.forEach(username => {
+                    const fullUsername = normalizeUsername(username);
+                    console.log('📤 사용자 최근 메시지 요청:', fullUsername);
+                    newSocket.emit('getUserLastMessage', { userId: fullUsername });
+                });
+            } else {
+                console.log('⚠️ DB에서 사용자 목록을 가져오지 못함, 테스트 데이터 사용');
+                // 테스트용 하드코딩된 사용자 목록 (DB 연결 실패 시)
+                const testUsers = ['사용자_test1', '사용자_test2', '사용자_ljs4mu4jp'];
+                testUsers.forEach(username => {
+                    setUsers(prev => {
+                        const newUsers = new Map(prev);
+                        if (!newUsers.has(username)) {
+                            newUsers.set(username, {
+                                username: username,
+                                status: 'offline',
+                                lastMessage: {
+                                    content: '테스트 메시지',
+                                    timestamp: new Date().toISOString()
+                                }
+                            });
+                        }
+                        return newUsers;
+                    });
+                });
+            }
+        });
+
+        // 사용자 최근 메시지 수신
+        newSocket.on('userLastMessage', (data) => {
+            console.log('📨 사용자 최근 메시지 수신:', data);
+            if (data.userId && data.lastMessage) {
+                setUsers(prev => {
+                    const newUsers = new Map(prev);
+                    const user = newUsers.get(data.userId);
+                    if (user) {
+                        newUsers.set(data.userId, {
+                            ...user,
+                            lastMessage: {
+                                content: data.lastMessage.content,
+                                timestamp: data.lastMessage.timestamp
+                            }
+                        });
+                    }
+                    return newUsers;
                 });
             }
         });

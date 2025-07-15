@@ -1,42 +1,26 @@
 # docker-compose.yml
 
 services:
-   #Spring Boot 애플리케이션 서비스
-   nexus-app:
-     build: .
-     container_name: nexus-spring-app
-     restart: always
-     ports:
-       - "8081:8080"
-     depends_on:
-       - mysql-db
-       - redis-cache   
-     environment:
-       SPRING_PROFILES_ACTIVE: prod
-       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/springproject
-       SPRING_DATASOURCE_USERNAME: nexus_user
-       SPRING_DATASOURCE_PASSWORD: nexus_password
-       SPRING_DATA_REDIS_HOST: redis-cache
-       SPRING_DATA_REDIS_PORT: 6379
-
-  # React 관리자 페이지 서비스
-   chat-manager-admin:
-    build:
-      context: src/main/chatManager
-      dockerfile: Dockerfile
-    container_name: nexus-chat-manager-admin
+  # Spring Boot 애플리케이션 서비스
+  nexus-app:
+    build: .
+    container_name: nexus-spring-app
+    restart: always
     ports:
-      - "5173:5173"
-    volumes:
-      - ./src/main/chatManager:/app
-      - /app/node_modules
-    environment:
-      - VITE_NOTIFICATION_SERVER_URL=ws://localhost:3000
+      - "8080:8080"
     depends_on:
-      - notification-server
+      - mysql-db
+      - redis-cache
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/springproject
+      SPRING_DATASOURCE_USERNAME: nexus_user
+      SPRING_DATASOURCE_PASSWORD: nexus_password
+      SPRING_DATA_REDIS_HOST: redis-cache
+      SPRING_DATA_REDIS_PORT: 6379
 
   # NestJS 알림/채팅 서버 서비스
-   notification-server:
+  notification-server:
     build:
       context: notification-server
       dockerfile: Dockerfile.dev
@@ -49,19 +33,17 @@ services:
     environment:
       # Docker 컨테이너에서 호스트 PC(로컬)의 Spring Boot에 접근하기 위한 주소
       - DATABASE_URL=http://host.docker.internal:8080/api/chat/messages
-    # depends_on:
-    #   - nexus-app
 
-    # MySQL 서비스 정의
-   mysql-db:
+  # MySQL 서비스 정의
+  mysql-db:
     image: mysql:8.0
     container_name: nexus-mysql-db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 1234 # 개발자만 아는 루트 비밀번호 (예: root1234)
-      MYSQL_DATABASE: springproject # <<-- 사용자님의 DB 이름으로 수정
-      MYSQL_USER: nexus_user # <<-- 우리 앱이 사용할 사용자 이름
-      MYSQL_PASSWORD: nexus_password # <<-- 우리 앱이 사용할 비밀번호
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: springproject
+      MYSQL_USER: nexus_user
+      MYSQL_PASSWORD: nexus_password
     ports:
       - "3306:3306"
     volumes:
@@ -71,7 +53,7 @@ services:
       - --collation-server=utf8mb4_unicode_ci
 
   # Redis 서비스 정의
-   redis-cache:
+  redis-cache:
     image: redis:latest
     container_name: nexus-redis-cache
     restart: always

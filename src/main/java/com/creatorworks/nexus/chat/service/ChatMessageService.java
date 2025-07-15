@@ -98,4 +98,18 @@ public class ChatMessageService {
         List<ChatMessage> userMessages = chatMessageRepository.findByUsernameOrderByTimestampAsc(username);
         chatMessageRepository.deleteAll(userMessages);
     }
+
+    /**
+     * 모든 채팅 사용자 목록 조회 (최근 채팅 순)
+     */
+    public List<String> getAllChatUsers() {
+        return chatMessageRepository.findAllDistinctUsersOrderByLatestMessage();
+    }
+
+    /**
+     * 특정 사용자의 최근 메시지 조회
+     */
+    public ChatMessage getLastMessage(String username) {
+        return chatMessageRepository.findLastMessageByUsername(username);
+    }
 } 
