@@ -20,36 +20,36 @@
             <div class="slideContainer">
                 <!-- 슬라이드 필름 역할 -->
                 <div class="slideWrap">
-                    <div class="slide">
+                    <div class="slide firstSlide">
                         <div class="slide-content">
                             <div class="slide-text">
                                 <h1>Art<br>Design<br>&<br>Java<br>FrontEnd</h1>
-                                <a href="#" class="btn-view-work">작품보러가기</a>
+                                <a href="/products/category/artwork" class="hover-underline">작품보러가기</a>
                             </div>
                             <div class="slide-image">
-                                <span>또 다른 이미지<br>들어갈 수 있음</span>
+                                <img th:src="@{/images/designAsset/create-asset.png}" style="object-fit: cover;">
                             </div>
                         </div>
                     </div>
-                    <div class="slide">
-                        <div class="slide-content">
-                            <div class="slide-text">
-                                <h1>Slide 2<br>Content</h1>
-                                <a href="#" class="btn-view-work">더 알아보기</a>
+                    <div class="slide secondSlide">
+                        <div class="slide-content-two">
+                            <div class="slide-text slide-point-text">
+                                <h1>이제 개발도 작품이 됩니다!</h1>
                             </div>
-                            <div class="slide-image">
-                                <span>두 번째 슬라이드 이미지</span>
+                            <div class="slide-image-two">
+                                <img th:src="@{/images/designAsset/coding-asset.jpg}" style="object-fit: cover; max-width:300px">
+                                <img th:src="@{/images/designAsset/coding-asset2.jpg}" style="object-fit: cover; max-width:500px">
                             </div>
                         </div>
                     </div>
-                    <div class="slide">
+                    <div class="slide thrSlide">
                         <div class="slide-content">
-                            <div class="slide-text">
-                                <h1>Slide 3<br>Content</h1>
-                                <a href="#" class="btn-view-work">프로젝트 보기</a>
+                            <div class="slide-text slide-point-text-two">
+                                <h1>최고의 작품을<br>이제 내가 가질 수 있습니다</h1>
+                                <a href="/auctions/category/artwork" class="hover-underline">경매보기</a>
                             </div>
-                            <div class="slide-image special-color">
-                                <span>세 번째 슬라이드 이미지</span>
+                            <div class="slide-image">
+                                <img th:src="@{/images/designAsset/auction-asset.png}" style="object-fit: cover; max-width:800px">
                             </div>
                         </div>
                     </div>

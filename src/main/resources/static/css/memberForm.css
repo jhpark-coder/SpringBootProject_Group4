@@ -45,12 +45,12 @@ body {
     border-radius: 30px;
     padding: 5%;
     box-sizing: border-box;
+    margin: 50px;
 }
 
 .signup-form-wrapper form {
     display: flex;
     flex-direction: column;
-    gap: 2.5rem; /* 각 폼 그룹 사이의 간격 */
 }
 
 /* 각 폼 입력 필드 그룹 */
@@ -94,6 +94,8 @@ input[type="email"] {
 }
 /* 기본 버튼 스타일 */
 .btn {
+    background: #0076f6;
+    border: 1px solid #0076f6;
     height: 52px;
     border-radius: 10px;
     font-size: 0.8rem;
@@ -103,17 +105,8 @@ input[type="email"] {
     white-space: nowrap; /* 버튼 글자 줄바꿈 방지 */
 }
 .btn:hover {
-    opacity: 0.9;
-    background-color: #fff;
-    color : #0071de;
-    border: 1px solid #0071de;
-}
-
-.btn-outline {
-    background: var(--white-color);
-    color: var(--primary-color);
-    border: 1px solid var(--primary-color);
-    padding: 0 1.5rem;
+    background-color: #0076f6;
+    color : #fff;
 }
 /* 성별 선택 라디오 버튼 그룹 */
 .radio-group {
@@ -172,6 +165,7 @@ input[type="email"] {
     font-size: 1rem;
     font-weight: 700;
     margin-top: 1rem;
+    border:0px;
 }
 
 /*팝업 class*/
@@ -261,7 +255,6 @@ input[type="email"] {
 /* 기존 memberForm.css 내용 */
 .signup-page-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -336,11 +329,6 @@ input[type="email"] {
     border: 2px solid #667eea;
     color: #667eea;
     white-space: nowrap;
-}
-
-.btn-outline:hover {
-    background: #667eea;
-    color: white;
 }
 
 .btn-outline:disabled {

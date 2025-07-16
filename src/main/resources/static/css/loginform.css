@@ -54,6 +54,10 @@
     font-size: 1.1rem;
     box-sizing: border-box;
 }
+.form-group input:active{
+    border-color: #E5E5E5;
+    background: #fff;
+}
 
 /* '비밀번호 찾기'와 '회원가입' 버튼을 담는 그룹 */
 .button-group {
@@ -66,7 +70,7 @@
 .btn {
     flex-grow: 1; /* 두 버튼이 공간을 똑같이 나눠 가짐 */
     height: 52px;
-    border: none;
+    border: 1px solid #0077F8;
     border-radius: 15px;
     font-size: 0.8rem; /* 18px */
     font-weight: 500;
@@ -77,10 +81,12 @@
 
 .btn:hover {
     opacity: 0.9;
+    background: #fff;
+    color: #0077F8;
 }
-.btn-submit { background-color: #0071DE ; } /* 로그인 */
+.btn-submit { background-color: #0077F8; } /* 로그인 */
 .btn-secondary { background-color: #37AAC0; display: none;} /* 비밀번호 찾기 */
-.btn-primary { background-color: #0071DE ; } /* 회원가입 */
+.btn-primary { background-color: #0059BA; } /* 회원가입 */
 
 
 /* 소셜 로그인 섹션 */
@@ -137,10 +143,12 @@
 .social-btn.kakao {
     background-color: #F7E511;
     color: #000000;
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.1);
 }
 .social-btn.naver {
     background-color: #03C75A;
     color: #FFFFFF;
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.1);
 }
 
 /* ----- 반응형 처리 ----- */

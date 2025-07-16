@@ -1,4 +1,8 @@
 /* ----- 기본 스타일 초기화 ----- */
+:root{
+    --point-color: linear-gradient(to right, #0077F8, #0059BA); /* CSS 전역 변수 선언 */
+}
+
 body {
     margin: 0;
     font-family: 'Noto Sans KR', sans-serif;
@@ -60,9 +64,10 @@ ul {
 }
 
 .logo-img {
-    width: 80px;
+    max-width: 80px;
     /* 로고 크기를 적절히 조절 */
-    height: 80px;
+    max-height: 80px;
+    object-fit: cover;
 }
 
 .nav-actions-wrapper {
@@ -308,7 +313,7 @@ ul {
 
 /* 파란색 배경의 전체 컨테이너 */
 .category-nav {
-    background-color: #0071DE;
+    background: linear-gradient(to right, #0077F8, #0059BA);
     padding: 1.5rem 0;
     /* 상하 1.5rem, 좌우 화면너비 5%의 여백 */
     display: flex;
@@ -344,6 +349,7 @@ ul {
     background-color: #FFFFFF;
     color: #000000;
     border-radius: 10px;
+    border: 1px solid #fff;
     /* 모서리를 둥글게 */
 
     font-weight: 500;
@@ -354,16 +360,14 @@ ul {
     white-space: nowrap;
     /* 버튼 내 글자가 줄바꿈되지 않도록 설정 */
 
-    /* 부드러운 전환 효과 */
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 /* 버튼에 마우스를 올렸을 때 효과 */
 .category-nav a:hover {
-    transform: translateY(-3px);
-    /* 살짝 위로 이동 */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    /* 입체적인 그림자 효과 */
+    background: linear-gradient(to right, #0077F8, #0059BA);
+    border: 1px solid #fff;
+    color: #fff;
+    transition: all 1s ease-in-out;
 }
 
 /* ----- 반응형 웹을 위한 미디어 쿼리 ----- */
