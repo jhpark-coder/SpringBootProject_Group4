@@ -144,9 +144,11 @@ body.category-page-active {
     display: flex;
     align-items: center;
     gap: 8px;
+    margin: 0;
 }
 
 .seller-avatar {
+    display: none;
     width: 30px;
     height: 30px;
     background-color: #ddd;
@@ -278,5 +280,16 @@ box.hide {
         transform:
             translate(var(--translate-x), var(--translate-y)) rotateX(0) rotateY(0) scale(1.02);
         opacity: 1;
+    }
+}
+
+media (max-width: 1280px) and (min-width: 1024){
+    .col-md-3{
+        width: 33%
+    }
+}
+media (max-width: 1023px) and (min-width: 767){
+    .col-md-3{
+        width: 50%
     }
 }
