@@ -17,8 +17,8 @@ import com.creatorworks.nexus.notification.repository.NotificationRepository;
 @Service
 public class NotificationService {
     private final RestTemplate restTemplate = new RestTemplate();
-    private static final String NESTJS_NOTIFY_URL = "http://localhost:3000/api/notifications/create";
-    private static final String NESTJS_ADMIN_NOTIFY_URL = "http://localhost:3000/api/notifications/admin/create";
+    private static final String NESTJS_NOTIFY_URL = "http://notification-server:3000/api/notifications/create";
+    private static final String NESTJS_ADMIN_NOTIFY_URL = "http://notification-server:3000/api/notifications/admin/create";
     private final NotificationRepository notificationRepository;
 
     public NotificationService(NotificationRepository notificationRepository) {
