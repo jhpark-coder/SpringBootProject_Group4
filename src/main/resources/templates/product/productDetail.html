@@ -37,102 +37,112 @@
 <div layout:fragment="content" class="product-detail-page">
     <div class="main-content-grid">
         <main class="artwork-main" th:object="${product}">
-            <h1 th:text="*{name}">작품 제목</h1>
+            <h1 th:text="*{name}" class="artwork-head" style="
+                font-size: 2.5rem;
+                border-bottom: 1px solid #1ea7fd;
+                padding-bottom: 0.5rem;
+                margin-bottom: 0.5rem;">작품 제목</h1>
             <img th:src="*{imageUrl}" alt="Artwork Image" class="artwork-image"
                  onerror="this.onerror=null; this.src='/images/placeholder.png';">
-        </main>
-
-        <!-- Sidebar Section -->
-        <aside class="sidebar-goalcard" th:classappend="${#lists.isEmpty(tagNames)} ? '' : 'has-tags'"
-               th:object="${product}">
-            <div class="seller-info">
-                <div class="seller-profile">
-                    <img class="seller-pfp" alt="seller profile picture">
-                    <span class="seller-name" th:text="*{seller.name}" th:data-author-id="*{seller.id}">판매자 이름</span>
-                </div>
-                <button class="follow-btn"
-                    th:if="${currentMember != null and product.seller != null and currentMember.id != product.seller.id}"
-                    th:data-member-id="${product.seller.id}" th:onclick="|toggleFollow(${product.seller.id})|"
-                    th:classappend="${isFollowing} ? 'following'"
-                    th:text="${isFollowing} ? 'Following' : 'Follow'">Follow</button>
-            </div>
-            <div class="tags">
-                <a th:href="@{/products/category/{name}(name=${product.primaryCategory}, page=1, secondary='all')}"
-                    class="tag-btn" th:text="*{primaryCategory}">카테고리</a>
-                <a th:if="*{secondaryCategory != null and !#strings.isEmpty(secondaryCategory)}"
-                    th:href="@{/products/category/{name}(name=${product.primaryCategory}, page=1, secondary=${product.secondaryCategory})}"
-                    class="tag-btn" th:text="*{secondaryCategory}">부 카테고리</a>
-                <button class="tag-btn" th:each="tagName : ${tagNames}" th:text="${tagName}">태그</button>
-            </div>
-            <div class="description">
-                <p th:text="*{workDescription}">여기에 설명이 들어갑니다.</p>
-            </div>
-            <div class="sidebar-actions">
-                <button class="like-btn" th:data-product-id="${product.id}" th:classappend="${isLiked} ? 'liked'"
-                    th:onclick="|toggleLike(${product.id})|" sec:authorize="isAuthenticated()">
-                    <i class="fa fa-thumbs-up"></i>
-                    <span class="like-count" th:text="${heartCount}">0</span>
-                </button>
-                <button class="like-btn"
-                    onclick="alert('로그인이 필요합니다.'); location.href='/members/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);"
-                    sec:authorize="!isAuthenticated()">
-                    <i class="fa fa-thumbs-up"></i>
-                    <span class="like-count" th:text="${heartCount}">0</span>
-                </button>
-                <div class="purchase-buttons">
-                    <th:block th:if="${!canViewContent}">
-                        <button onclick="requestPointPay()" class="purchase-btn"
-                            th:text="${product.price != null} ? ${product.price} + 'P로 구매하기' : '포인트로 구매하기'">
-                            포인트로 구매하기
-                        </button>
-                    </th:block>
-                    <th:block th:if="${canViewContent}">
-                        <div class="purchase-complete">
-                            <span class="purchase-badge">구매 완료</span>
-                            <p class="purchase-message">전체 콘텐츠를 확인할 수 있습니다.</p>
-                        </div>
-                    </th:block>
-                </div>
-            </div>
-            <th:block
-                th:if="${currentMember != null and product.seller != null and currentMember.id == product.seller.id}">
-                <a th:href="@{'/editor/product/' + ${product.id}}"
-                    style="display:block;width:100%;margin-top:24px;padding:12px 0;background:#222;color:#fff;text-align:center;border-radius:8px;font-weight:600;font-size:16px;">
-                    글 수정하기
-                </a>
-            </th:block>
-        </aside>
-
-        <!-- Description Section (Full Width) -->
-        <section class="description-section" th:object="${product}">
-            <h2>작품 설명</h2>
-            <div class="tiptap-content"
-                 th:styleappend="|
+            <!-- Description Section (Full Width) -->
+            <section class="description-section" th:object="${product}">
+                <h2 class="artwork-head2" style="
+                font-size: 2rem;
+                border-bottom: 1px solid #1ea7fd;
+                padding-bottom: 0.5rem;
+                margin-bottom: 0.5rem;">Content</h2>
+                <div class="tiptap-content"
+                     th:styleappend="|
                     ${product.backgroundColor != null ? 'background-color: ' + product.backgroundColor + ';' : ''}
                     ${product.fontFamily != null ? 'font-family: ' + product.fontFamily + ', &quot;Noto Sans KR&quot;, sans-serif !important;' : ''}
                  |"
-                 th:utext="${contentHtml}">
-                <!-- Tiptap 에디터로 작성된 본문 컨텐츠가 여기에 렌더링됩니다. -->
-            </div>
-            <th:block th:if="${!canViewContent and hasPaywall}">
-                <div class="paywall-notice">
-                    <div class="paywall-content">
-                        <div class="paywall-icon">
-                            <i class="fa fa-lock"></i>
-                        </div>
-                        <div class="paywall-text">
-                            <h3>이 아래부터는 유료 콘텐츠입니다</h3>
-                            <p>포인트 결제를 통해 전체 콘텐츠를 이용하세요</p>
-                            <div class="paywall-price">
+                     th:utext="${contentHtml}">
+                    <!-- Tiptap 에디터로 작성된 본문 컨텐츠가 여기에 렌더링됩니다. -->
+                </div>
+                <th:block th:if="${!canViewContent and hasPaywall}">
+                    <div class="paywall-notice">
+                        <div class="paywall-content">
+                            <div class="paywall-icon">
+                                <i class="fa fa-lock"></i>
+                            </div>
+                            <div class="paywall-text">
+                                <h3>이 아래부터는 유료 콘텐츠입니다</h3>
+                                <p>포인트 결제를 통해 전체 콘텐츠를 이용하세요</p>
+                                <div class="paywall-price">
                                 <span class="price-amount"
-                                    th:text="${product.price != null} ? ${product.price} + 'P' : '30P'">30P</span>
-                                <span class="price-label">로 구매하기</span>
+                                      th:text="${product.price != null} ? ${product.price} + 'P' : '30P'">30P</span>
+                                    <span class="price-label">로 구매하기</span>
+                                </div>
                             </div>
                         </div>
                     </div>
+                </th:block>
+            </section>
+        </main>
+
+        <!-- Sidebar Section -->
+        <div>
+
+            <aside class="sidebar-goalcard" th:classappend="${#lists.isEmpty(tagNames)} ? '' : 'has-tags'"
+                   th:object="${product}">
+                <div class="seller-info">
+                    <div class="seller-profile">
+                        <img class="seller-pfp" alt="seller profile picture">
+                        <span class="seller-name" th:text="*{seller.name}" th:data-author-id="*{seller.id}">판매자 이름</span>
+                    </div>
+                    <button class="follow-btn"
+                        th:if="${currentMember != null and product.seller != null and currentMember.id != product.seller.id}"
+                        th:data-member-id="${product.seller.id}" th:onclick="|toggleFollow(${product.seller.id})|"
+                        th:classappend="${isFollowing} ? 'following'"
+                        th:text="${isFollowing} ? 'Following' : 'Follow'">Follow</button>
                 </div>
-            </th:block>
-        </section>
+                <div class="tags">
+                    <a th:href="@{/products/category/{name}(name=${product.primaryCategory}, page=1, secondary='all')}"
+                        class="tag-btn" th:text="*{primaryCategory}">카테고리</a>
+                    <a th:if="*{secondaryCategory != null and !#strings.isEmpty(secondaryCategory)}"
+                        th:href="@{/products/category/{name}(name=${product.primaryCategory}, page=1, secondary=${product.secondaryCategory})}"
+                        class="tag-btn" th:text="*{secondaryCategory}">부 카테고리</a>
+                    <button class="tag-btn" th:each="tagName : ${tagNames}" th:text="${tagName}">태그</button>
+                </div>
+                <div class="description">
+                    <p th:text="*{workDescription}">여기에 설명이 들어갑니다.</p>
+                </div>
+                <div class="sidebar-actions">
+                    <button class="like-btn" th:data-product-id="${product.id}" th:classappend="${isLiked} ? 'liked'"
+                        th:onclick="|toggleLike(${product.id})|" sec:authorize="isAuthenticated()">
+                        <i class="fa fa-thumbs-up"></i>
+                        <span class="like-count" th:text="${heartCount}">0</span>
+                    </button>
+                    <button class="like-btn"
+                        onclick="alert('로그인이 필요합니다.'); location.href='/members/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);"
+                        sec:authorize="!isAuthenticated()">
+                        <i class="fa fa-thumbs-up"></i>
+                        <span class="like-count" th:text="${heartCount}">0</span>
+                    </button>
+                    <div class="purchase-buttons">
+                        <th:block th:if="${!canViewContent}">
+                            <button onclick="requestPointPay()" class="purchase-btn"
+                                th:text="${product.price != null} ? ${product.price} + 'P로 구매하기' : '포인트로 구매하기'">
+                                포인트로 구매하기
+                            </button>
+                        </th:block>
+                        <th:block th:if="${canViewContent}">
+                            <div class="purchase-complete">
+                                <span class="purchase-badge">구매 완료</span>
+                                <p class="purchase-message">전체 콘텐츠를 확인할 수 있습니다.</p>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+                <th:block
+                    th:if="${currentMember != null and product.seller != null and currentMember.id == product.seller.id}">
+                    <a th:href="@{'/editor/product/' + ${product.id}}"
+                        style="display:block;width:100%;margin-top:24px;padding:12px 0;background:#0071DE;color:#fff;text-align:center;border-radius:8px;font-weight:600;font-size:16px;">
+                        글 수정하기
+                    </a>
+                </th:block>
+            </aside>
+        </div>
     </div>
 
     <!-- Review Section -->
