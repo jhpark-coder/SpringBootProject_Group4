@@ -185,6 +185,10 @@ body {
 
 .chart-item {
     flex: 1;
+    padding: 15px;
+    flex-direction: column;
+    border: 1px solid #ededed;
+    box-shadow: 3px 3px 7px #b6b6b6;
 }
 
 .chart-item h3 {

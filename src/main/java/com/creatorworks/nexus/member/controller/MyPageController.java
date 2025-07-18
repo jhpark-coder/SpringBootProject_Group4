@@ -262,7 +262,7 @@ public class MyPageController {
                 }
             }
 
-// 4. Primary Category별로 데이터 가공 (기존 코드와 동일)
+        // 4. Primary Category별로 데이터 가공 (기존 코드와 동일)
             Map<String, Long> primaryCategoryCounts = totalCounts.entrySet().stream()
                     .collect(Collectors.groupingBy(
                             entry -> entry.getKey().split(":")[0], // "artwork:포토그래피" -> "artwork"

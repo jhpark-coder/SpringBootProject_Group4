@@ -697,6 +697,7 @@
         }
 
         .sidebar-goalcard .purchase-btn {
+            width:100%;
             flex: 1 1 0;
             background: #ffd600;
             color: #fff;
