@@ -1,10 +1,10 @@
 $(document).ready(function(){
     function openPopup(message){
       $("#popupMessage").text(message);
-      $("#myPopup").addClass('show');
+      $("#popupOverlay").addClass('show');
     }
     $("#closePopup").on("click", function() {
-        $("#myPopup").removeClass('show');
+        $("#popupOverlay").removeClass('show');
     });
 
     var errorMessage = /*[[${errorMessage}]]*/ null;
