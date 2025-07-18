@@ -1,17 +1,12 @@
 import {
   WebSocketGateway,
-  SubscribeMessage,
-  MessageBody,
   OnGatewayInit,
   OnGatewayConnection,
   OnGatewayDisconnect,
   WebSocketServer,
-  ConnectedSocket,
 } from '@nestjs/websockets';
-import { NotificationsService } from './notifications.service';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
-import { CreateNotificationDto } from './dto/create-notification.dto';
 
 @WebSocketGateway({
   cors: {
@@ -26,12 +21,12 @@ export class NotificationsGateway
 
   private logger: Logger = new Logger('NotificationsGateway');
 
-  constructor(private readonly notificationsService: NotificationsService) {
-    console.log('웹소켓 서버 초기화 완료');
+  constructor() {
+    console.log('알림 웹소켓 서버 초기화 완료');
   }
 
   afterInit(server: Server) {
-    this.logger.log('웹소켓 서버 초기화 완료');
+    this.logger.log('알림 웹소켓 서버 초기화 완료');
   }
 
   handleConnection(client: Socket, ...args: any[]) {
@@ -53,64 +48,6 @@ export class NotificationsGateway
 
   handleDisconnect(client: Socket) {
     this.logger.log(`클라이언트 연결 끊김: ${client.id}`);
-  }
-
-  @SubscribeMessage('createNotification')
-  async create(@MessageBody() createNotificationDto: CreateNotificationDto) {
-    const notification = await this.notificationsService.create(createNotificationDto);
-    this.server.emit('newNotification', notification);
-    return notification;
-  }
-
-  @SubscribeMessage('findAllNotifications')
-  async findAll(@ConnectedSocket() client: Socket) {
-    const userId = this.getUserIdFromSocket(client);
-    const roles = this.getUserRolesFromSocket(client);
-
-    if (!userId) {
-      client.emit('notifications', { notifications: [] });
-      return;
-    }
-
-    let notifications = this.notificationsService.findByUserId(userId);
-
-    // 사용자가 관리자일 경우, ADMIN 카테고리의 모든 알림을 추가로 가져와 합침
-    if (roles && roles.includes('ROLE_ADMIN')) {
-      const adminNotifications = this.notificationsService.findByCategory('ADMIN');
-      // 중복 방지를 위해 기존 목록에 없는 알림만 추가
-      adminNotifications.forEach(adminNoti => {
-        if (!notifications.some(userNoti => userNoti.id === adminNoti.id)) {
-          notifications.push(adminNoti);
-        }
-      });
-    }
-
-    // 최신순으로 정렬
-    notifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-    client.emit('notifications', { notifications });
-  }
-
-  @SubscribeMessage('findOneNotification')
-  async findOne(@MessageBody() id: number) {
-    return this.notificationsService.findOne(id);
-  }
-
-  @SubscribeMessage('markAsRead')
-  async markAsRead(
-    @MessageBody() data: { id: number },
-    @ConnectedSocket() client: Socket,
-  ) {
-    const userId = this.getUserIdFromSocket(client);
-    if (!userId) return false;
-    return this.notificationsService.markAsRead(data.id, userId);
-  }
-
-  @SubscribeMessage('markAllAsRead')
-  async markAllAsRead(@ConnectedSocket() client: Socket) {
-    const userId = this.getUserIdFromSocket(client);
-    if (!userId) return 0;
-    return this.notificationsService.markAllAsRead(userId);
   }
 
   /**
