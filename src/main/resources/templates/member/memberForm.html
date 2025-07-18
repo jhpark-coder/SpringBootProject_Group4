@@ -131,6 +131,14 @@
 
             </div>
         </main>
+
+        <!-- 팝업 오버레이 -->
+        <div id="popupOverlay" class="popup-overlay">
+            <div class="popup-container">
+                <p id="popupMessage" class="popup-message"></p>
+                <button class="popup-button" id="closePopup">확인</button>
+            </div>
+        </div>
     </div>
     <th:block layout:fragment="script">
         <script th:src="@{/js/memberForm.js}"></script>
