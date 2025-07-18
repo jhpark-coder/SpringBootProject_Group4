@@ -20,30 +20,30 @@
             <div class="slideContainer">
                 <!-- 슬라이드 필름 역할 -->
                 <div class="slideWrap">
-                    <div class="slide firstSlide">
-                        <div class="slide-content">
+                    <div class="slide firstSlide "th:style="'background-image:url(' + @{/images/designAsset/create-back.png} + ');'">
+                        <div class="slide-content-one">
                             <div class="slide-text">
-                                <h1>Art<br>Design<br>&<br>Java<br>FrontEnd</h1>
-                                <a href="/products/category/artwork" class="hover-underline">작품보러가기</a>
-                            </div>
-                            <div class="slide-image">
-                                <img th:src="@{/images/designAsset/create-asset.png}" style="object-fit: cover;">
+                                <h1 style="color: wheat;">Art/Design<br>&<br>Java/FrontEnd</h1>
+                                <a href="/products/category/artwork" class="hover-underline" style="color: wheat;">작품보러가기</a>
                             </div>
                         </div>
                     </div>
-                    <div class="slide secondSlide">
+                    <div class="slide secondSlide" th:style="'background-image:linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(' + @{/images/designAsset/coding-back.png} + ');'">
                         <div class="slide-content-two">
-                            <div class="slide-text slide-point-text">
-                                <h1>이제 개발도 작품이 됩니다!</h1>
-                            </div>
+<!--                            <div class="slide-text slide-point-text">-->
+<!--                                <h1>이제 개발도 작품이 됩니다!</h1>-->
+<!--                            </div>-->
                             <div class="slide-image-two">
-                                <img th:src="@{/images/designAsset/coding-asset.jpg}" style="object-fit: cover; max-width:300px">
-                                <img th:src="@{/images/designAsset/coding-asset2.jpg}" style="object-fit: cover; max-width:500px">
+                                <img th:src="@{/images/designAsset/coding-asset.png}" style="object-fit: cover; max-width:300px">
+                                <img th:src="@{/images/designAsset/coding-asset2.png}" style="object-fit: cover; max-width:500px">
                             </div>
                         </div>
                     </div>
-                    <div class="slide thrSlide">
+                    <div class="slide thrSlide"th:style="'background-image:linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)), url(' + @{/images/designAsset/auction-back.png} + ');'">
                         <div class="slide-content">
+                            <div class="slide-image">
+                                <img th:src="@{/images/designAsset/auction-asset2.png}" style="object-fit: cover; max-width:800px">
+                            </div>
                             <div class="slide-text slide-point-text-two">
                                 <h1>최고의 작품을<br>이제 내가 가질 수 있습니다</h1>
                                 <a href="/auctions/category/artwork" class="hover-underline">경매보기</a>
@@ -97,8 +97,8 @@
         </section>
 
         <!-- 3. 경매 홍보 섹션 (Call to Auction) -->
-        <section class="auction-cta">
-            <div class="container auction-cta-content">
+        <section class="auction-cta" th:style="'background-image:linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)), url(' + @{/images/designAsset/auction-sectionBack.png} + ');'">
+            <div class="container auction-cta-content" >
                 <p class="cta-text">이제 정말 좋은 작품들을<br>경매를 통해 보다 필요한 사람과 거래해보세요.</p>
                 <!-- 경매 기능은 추후 구현 -->
                 <a th:href="@{/auctions/category/artwork}" class="btn">경매보러가기</a>
@@ -109,9 +109,11 @@
         <section class="sell-recommend"
             sec:authorize="hasRole('ROLE_USER') and !hasRole('ROLE_SELLER') and !hasRole('ROLE_ADMIN')">
             <div class="container sell-recommend-content">
-                <div class="sell-image-placeholder"></div>
+                <div class="sell-image-placeholder">
+                    <img th:src="@{/images/designAsset/create-asset.png}" style="object-fit: cover;">
+                </div>
                 <div class="sell-text-content">
-                    <p class="sell-description">창의적인 디자인 아트워크부터 논리적인 자바 코드구조까지 <br>정당한 비용을 받고 공유해보세요!</p>
+                    <p class="sell-description">창의적인 디자인 아트워크부터<br> 논리적인 자바 코드구조까지 <br>정당한 비용을 받고 공유해보세요!</p>
                     <a th:href="@{/members/seller-register}" class="btn">작가 등록하기</a>
                 </div>
             </div>

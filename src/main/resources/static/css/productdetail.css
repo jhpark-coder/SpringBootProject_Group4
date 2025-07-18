@@ -52,7 +52,7 @@
         .description-section {
             grid-area: description;
             border-top: 1px solid #eee;
-            padding-top: 20px;
+            padding-top: 50px;
             margin-top: 0;
             width: 100%;
         }
@@ -572,12 +572,11 @@
             display: flex;
             flex-direction: column;
             align-items: stretch;
-            height: 320px;
+            height: auto;
+            top: 20vh;
+            position: sticky;
         }
 
-        .sidebar-goalcard.has-tags {
-            height: 400px;
-        }
 
         .sidebar-goalcard .seller-info {
             display: flex;
@@ -593,6 +592,7 @@
         }
 
         .sidebar-goalcard .seller-pfp {
+            display: none;
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -662,6 +662,7 @@
             display: flex;
             gap: 10px;
             margin-bottom: 0;
+            align-items: center;~
         }
 
         .sidebar-goalcard .like-btn {
@@ -736,6 +737,20 @@
             flex-direction: column;
             gap: 10px;
             margin-bottom: 14px;
+            width: 100%;
+        }
+        .purchase-buttons{
+            width: 80%;
+        }
+        .purchase-buttons2{
+            width: 100%;
+        }
+
+        .auction-price-won{
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 10px;
         }
 
         .sidebar .purchase-btn {
@@ -872,10 +887,6 @@
                 min-height: 280px;
             }
 
-            .artwork-main h1 {
-                font-size: 20px;
-            }
-
             .artwork-image {
                 aspect-ratio: 16/9;
             }
@@ -890,6 +901,7 @@
             }
 
             .sidebar-goalcard .purchase-btn {
+                width: 100%;
                 font-size: 15px;
                 height: 44px;
             }

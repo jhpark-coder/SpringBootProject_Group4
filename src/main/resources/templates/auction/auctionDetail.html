@@ -50,168 +50,181 @@
     <div class="main-content-grid">
         <!-- Artwork Section -->
         <main class="artwork-main" th:object="${auction}">
-            <h1 th:text="*{name}">작품 제목</h1>
+            <h1 th:text="*{name}" style="
+                font-size: 2.5rem;
+                border-bottom: 1px solid #1ea7fd;
+                padding-bottom: 0.5rem;
+                margin-bottom: 0.5rem;">작품 제목</h1>
             <img th:src="*{imageUrl}" alt="Artwork Image" class="artwork-image"
                  onerror="this.onerror=null; this.src='/images/placeholder.png';">
+            <section class="description-section" th:object="${auction}">
+                <h2 style="
+                font-size: 2rem;
+                border-bottom: 1px solid #1ea7fd;
+                padding-bottom: 0.5rem;
+                margin-bottom: 0.5rem;">Content</h2>
+                <div class="tiptap-content"
+                     th:styleappend="|${auction.backgroundColor != null and !#strings.isEmpty(auction.backgroundColor) ? 'background-color: ' + auction.backgroundColor + ';' : ''} ${auction.fontFamily != null and !#strings.isEmpty(auction.fontFamily) ? 'font-family: ' + auction.fontFamily + ';' : ''}|"
+                     th:utext="${contentHtml}">
+                    <!-- Tiptap 에디터로 작성된 본문 컨텐츠가 여기에 렌더링됩니다. -->
+                </div>
+                <!-- 페이월 안내 메시지 (페이월이 있고 구매하지 않은 경우) -->
+                <th:block th:if="${!canViewContent and hasPaywall}">
+                    <div class="paywall-notice">
+                        <div class="paywall-content">
+                            <div class="paywall-icon">
+                                <i class="fa fa-lock"></i>
+                            </div>
+                            <div class="paywall-text">
+                                <h3>이 아래부터는 구매자만 볼 수 있습니다</h3>
+                                <p>경매에 낙찰 후 전체 콘텐츠를 이용하세요</p>
+                                <!--                            <div class="paywall-price">-->
+                                <!--                                <span class="price-amount" th:text="${auction.price != null} ? ${auction.price} + 'P' : '30P'">30P</span>-->
+                                <!--                                <span class="price-label">로 구매하기</span>-->
+                                <!--                            </div>-->
+                            </div>
+                        </div>
+                    </div>
+                </th:block>
+            </section>
         </main>
 
         <!-- Sidebar Section -->
-        <aside class="sidebar-goalcard" th:classappend="${#lists.isEmpty(tagNames)} ? '' : 'has-tags'"
-               th:object="${auction}">
-            <div class="seller-info">
-                <div class="countdown-timer" th:if="${auction.auctionEndTime != null}" th:data-endtime="${auction.auctionEndTime}">
-                    --일 --:--:--
-                </div>
-                <div class="seller-profile">
-                    <img class="seller-pfp" alt="seller profile picture">
-                    <span class="seller-name" th:text="*{seller.name}" th:data-author-id="*{seller.id}">판매자 이름</span>
-                </div>
-                <!-- 판매자가 아닌 경우에만 Follow 버튼 표시 -->
-                <button class="follow-btn"
-                        th:if="${currentMember != null and auction.seller != null and currentMember.id != auction.seller.id}"
-                        th:data-member-id="${auction.seller.id}"
-                        th:onclick="|toggleFollow(${auction.seller.id})|"
-                        th:classappend="${isFollowing} ? 'following'"
-                        th:text="${isFollowing} ? 'Following' : 'Follow'">Follow</button>
-            </div>
-            
-            <div class="tags">
-                <a th:href="@{/auctions/category/{name}(name=${auction.primaryCategory}, page=1, secondary='all')}"
-                   class="tag-btn" th:text="*{primaryCategory}">카테고리</a>
-                <a th:if="*{secondaryCategory != null and !#strings.isEmpty(secondaryCategory)}"
-                   th:href="@{/auctions/category/{name}(name=${auction.primaryCategory}, page=1, secondary=${auction.secondaryCategory})}"
-                   class="tag-btn" th:text="*{secondaryCategory}">부 카테고리</a>
-                <button class="tag-btn" th:each="tagName : ${tagNames}" th:text="${tagName}">태그</button>
-            </div>
-            
-            <div class="description">
-                <p th:text="*{workDescription}">여기에 설명이 들어갑니다.</p>
-            </div>
-            
-            <div class="sidebar-actions">
-                <!-- 구매 버튼들 (오른쪽, 세로 배치) -->
-                <div class="purchase-buttons">
-                    
-                    <!-- ★★★ 상태별 UI 처리 (th:switch 사용) ★★★ -->
-                    <div th:switch="${true}">
-                        
-                        <!-- Case 1: 경매가 종료되었고, 내가 최고 입찰자인 경우 (낙찰) -->
-                        <div th:case="${isAuctionEnded and isHighestBidder}">
-                            <div class="purchase-complete" style="background-color: #d4edda; border-color: #c3e6cb;">
-                                <span class="purchase-badge" style="background-color: #28a745;">낙찰 성공!</span>
-                                <p class="purchase-message">축하합니다! 최종 낙찰되셨습니다.</p>
-                            </div>
-                            <button th:onclick="|location.href='@{/api/auction-payment/payment-page/{id}(id=${auction.id}, amount=${auction.currentPrice})}'|"
-                                    class="purchase-btn instant-buy-btn">
-                                결제 : [[${#numbers.formatDecimal(auction.currentPrice, 0, 'COMMA', 0, 'POINT')}]]원
-                            </button>
-                            <p style="font-size: 12px; color: #007bff; text-align: center; margin-top: 8px;">
-                                축하합니다! 최종 낙찰되셨습니다.
-                            </p>
-                        </div>
+        <div>
 
-                        <!-- Case 2: 경매가 종료되었지만, 내가 최고 입찰자가 아닌 경우 -->
-                        <div th:case="${isAuctionEnded}">
-                            <div class="purchase-complete" style="background-color: #f8f9fa;">
-                                <span class="purchase-badge" style="background-color: #6c757d;">경매 종료</span>
-                                <p class="purchase-message">
-                                    이 경매는 종료되었습니다.
+            <aside class="sidebar-goalcard" th:classappend="${#lists.isEmpty(tagNames)} ? '' : 'has-tags'"
+                   th:object="${auction}">
+                <div class="seller-info">
+                    <div class="countdown-timer" th:if="${auction.auctionEndTime != null}" th:data-endtime="${auction.auctionEndTime}">
+                        --일 --:--:--
+                    </div>
+                    <div class="seller-profile">
+                        <img class="seller-pfp" alt="seller profile picture">
+                        <span class="seller-name" th:text="*{seller.name}" th:data-author-id="*{seller.id}">판매자 이름</span>
+                    </div>
+                    <!-- 판매자가 아닌 경우에만 Follow 버튼 표시 -->
+                    <button class="follow-btn"
+                            th:if="${currentMember != null and auction.seller != null and currentMember.id != auction.seller.id}"
+                            th:data-member-id="${auction.seller.id}"
+                            th:onclick="|toggleFollow(${auction.seller.id})|"
+                            th:classappend="${isFollowing} ? 'following'"
+                            th:text="${isFollowing} ? 'Following' : 'Follow'">Follow</button>
+                </div>
+
+                <div class="tags">
+                    <a th:href="@{/auctions/category/{name}(name=${auction.primaryCategory}, page=1, secondary='all')}"
+                       class="tag-btn" th:text="*{primaryCategory}">카테고리</a>
+                    <a th:if="*{secondaryCategory != null and !#strings.isEmpty(secondaryCategory)}"
+                       th:href="@{/auctions/category/{name}(name=${auction.primaryCategory}, page=1, secondary=${auction.secondaryCategory})}"
+                       class="tag-btn" th:text="*{secondaryCategory}">부 카테고리</a>
+                    <button class="tag-btn" th:each="tagName : ${tagNames}" th:text="${tagName}">태그</button>
+                </div>
+
+                <div class="description">
+                    <p th:text="*{workDescription}">여기에 설명이 들어갑니다.</p>
+                </div>
+
+                <div class="sidebar-actions">
+                    <!-- 구매 버튼들 (오른쪽, 세로 배치) -->
+                    <div class="purchase-buttons2">
+
+                        <!-- ★★★ 상태별 UI 처리 (th:switch 사용) ★★★ -->
+                        <div th:switch="${true}">
+
+                            <!-- Case 1: 경매가 종료되었고, 내가 최고 입찰자인 경우 (낙찰) -->
+                            <div th:case="${isAuctionEnded and isHighestBidder}">
+                                <div class="purchase-complete" style="background-color: #d4edda; border-color: #c3e6cb;">
+                                    <span class="purchase-badge" style="background-color: #28a745;">낙찰 성공!</span>
+                                    <p class="purchase-message">축하합니다! 최종 낙찰되셨습니다.</p>
+                                </div>
+                                <button th:onclick="|location.href='@{/api/auction-payment/payment-page/{id}(id=${auction.id}, amount=${auction.currentPrice})}'|"
+                                        class="purchase-btn instant-buy-btn">
+                                    결제 : [[${#numbers.formatDecimal(auction.currentPrice, 0, 'COMMA', 0, 'POINT')}]]원
+                                </button>
+                                <p style="font-size: 12px; color: #007bff; text-align: center; margin-top: 8px;">
+                                    축하합니다! 최종 낙찰되셨습니다.
                                 </p>
                             </div>
-                        </div>
 
-                        <!-- Case 3: 구매가 완료된 경우 -->
-                        <div th:case="${canViewContent}">
-                            <div class="purchase-complete">
-                                <span class="purchase-badge">구매 완료</span>
-                                <p class="purchase-message">전체 콘텐츠를 확인할 수 있습니다.</p>
+                            <!-- Case 2: 경매가 종료되었지만, 내가 최고 입찰자가 아닌 경우 -->
+                            <div th:case="${isAuctionEnded}">
+                                <div class="purchase-complete" style="background-color: #f8f9fa;">
+                                    <span class="purchase-badge" style="background-color: #6c757d;">경매 종료</span>
+                                    <p class="purchase-message">
+                                        이 경매는 종료되었습니다.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Case 3: 구매가 완료된 경우 -->
+                            <div th:case="${canViewContent}">
+                                <div class="purchase-complete">
+                                    <span class="purchase-badge">구매 완료</span>
+                                    <p class="purchase-message">전체 콘텐츠를 확인할 수 있습니다.</p>
+                                </div>
+                            </div>
+
+                            <!-- Case 4: (Default) 경매가 진행 중이고, 아직 구매하지 않은 경우 -->
+                            <div th:case="*">
+                                <!-- 1. 현재 최고가 표시 -->
+                                <div class="price-info">
+                                    <span>현재 최고가</span>
+                                    <div class="auction-price-won">
+                                        <span id="current-price-display" class="price-amount"
+                                              th:text="${#numbers.formatDecimal(auction.currentPrice, 0, 'COMMA', 0, 'POINT')}">10,000</span>
+                                        <span>원</span>
+                                    </div>
+                                </div>
+
+                                <!-- 버튼 가로 배치 컨테이너 -->
+                                <div class="purchase-buttons-inner btn-row-layout"> <!-- 클래스 이름을 다르게 해서 CSS 충돌 방지 -->
+                                    <!-- 입찰 버튼 -->
+                                    <button id="show-bid-modal-btn" type="button" class="purchase-btn bid-btn">
+                                        입찰하기
+                                    </button>
+                                    <!-- 즉시 입찰 버튼 -->
+                                    <button th:onclick="|location.href='@{/api/auction-payment/payment-page/{id}(id=${auction.id})}'|"
+                                            th:disabled="${auction.buyNowPrice == null}"
+                                            class="purchase-btn instant-buy-btn">
+                        <span th:if="${auction.buyNowPrice != null}">
+                            즉시입찰가: [[${#numbers.formatDecimal(auction.buyNowPrice, 0, 'COMMA', 0, 'POINT')}]]원
+                        </span>
+                                        <span th:if="${auction.buyNowPrice == null}">즉시입찰 불가</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div> <!-- th:switch 끝 -->
+
+                        <!-- 입찰 입력창 모달 (th:switch 바깥에, 하지만 .sidebar-actions 안쪽에 위치) -->
+                        <!-- 이 모달은 경매 진행 중에만 의미가 있으므로, th:if로 조건을 걸어줍니다. -->
+                        <div id="bid-input-modal" th:if="${!isAuctionEnded and !canViewContent}">
+                            <div class="modal-content">
+                                <h4>입찰 금액</h4>
+                                <p>
+                                    현재가([[${#numbers.formatDecimal(auction.currentPrice, 0, 'COMMA', 0, 'POINT')}]]원)보다 높은 금액을 입력하세요.
+                                </p>
+                                <input type="number" id="bid-price-input" placeholder="입찰할 금액 입력">
+                                <div class="modal-buttons">
+                                    <button id="place-bid-btn" type="button">입찰</button>
+                                    <button id="close-bid-modal-btn" type="button">취소</button>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Case 4: (Default) 경매가 진행 중이고, 아직 구매하지 않은 경우 -->
-                        <div th:case="*">
-                            <!-- 1. 현재 최고가 표시 -->
-                            <div class="price-info">
-                                <span>현재 최고가</span>
-                                <span id="current-price-display" class="price-amount"
-                                      th:text="${#numbers.formatDecimal(auction.currentPrice, 0, 'COMMA', 0, 'POINT')}">10,000</span>
-                                <span>원</span>
-                            </div>
-
-                            <!-- 버튼 가로 배치 컨테이너 -->
-                            <div class="purchase-buttons-inner btn-row-layout"> <!-- 클래스 이름을 다르게 해서 CSS 충돌 방지 -->
-                                <!-- 입찰 버튼 -->
-                                <button id="show-bid-modal-btn" type="button" class="purchase-btn bid-btn">
-                                    입찰하기
-                                </button>
-                                <!-- 즉시 입찰 버튼 -->
-                                <button th:onclick="|location.href='@{/api/auction-payment/payment-page/{id}(id=${auction.id})}'|"
-                                        th:disabled="${auction.buyNowPrice == null}"
-                                        class="purchase-btn instant-buy-btn">
-                    <span th:if="${auction.buyNowPrice != null}">
-                        즉시입찰가: [[${#numbers.formatDecimal(auction.buyNowPrice, 0, 'COMMA', 0, 'POINT')}]]원
-                    </span>
-                                    <span th:if="${auction.buyNowPrice == null}">즉시입찰 불가</span>
-                                </button>
-                            </div>
-                        </div>
-
-                    </div> <!-- th:switch 끝 -->
-
-                    <!-- 입찰 입력창 모달 (th:switch 바깥에, 하지만 .sidebar-actions 안쪽에 위치) -->
-                    <!-- 이 모달은 경매 진행 중에만 의미가 있으므로, th:if로 조건을 걸어줍니다. -->
-                    <div id="bid-input-modal" th:if="${!isAuctionEnded and !canViewContent}">
-                        <div class="modal-content">
-                            <h4>입찰 금액</h4>
-                            <p>
-                                현재가([[${#numbers.formatDecimal(auction.currentPrice, 0, 'COMMA', 0, 'POINT')}]]원)보다 높은 금액을 입력하세요.
-                            </p>
-                            <input type="number" id="bid-price-input" placeholder="입찰할 금액 입력">
-                            <div class="modal-buttons">
-                                <button id="place-bid-btn" type="button">입찰</button>
-                                <button id="close-bid-modal-btn" type="button">취소</button>
-                            </div>
-                        </div>
-                    </div>
-
-                </div> <!-- .purchase-buttons 끝 -->
-            </div>
-            <!-- 판매자인 경우만 수정 버튼 표시 -->
-            <th:block th:if="${currentMember != null and auction.seller != null and currentMember.id == auction.seller.id}">
-                <a th:href="@{'/editor/product/' + ${auction.id}}"
-                   style="display:block;width:100%;margin-top:24px;padding:12px 0;background:#222;color:#fff;text-align:center;border-radius:8px;font-weight:600;font-size:16px;">
-                    글 수정하기
-                </a>
-            </th:block>
-        </aside>
-
-        <!-- Description Section (Full Width) -->
-        <section class="description-section" th:object="${auction}">
-            <h2>작품 설명</h2>
-            <div class="tiptap-content"
-                 th:styleappend="|${auction.backgroundColor != null and !#strings.isEmpty(auction.backgroundColor) ? 'background-color: ' + auction.backgroundColor + ';' : ''} ${auction.fontFamily != null and !#strings.isEmpty(auction.fontFamily) ? 'font-family: ' + auction.fontFamily + ';' : ''}|"
-                 th:utext="${contentHtml}">
-                <!-- Tiptap 에디터로 작성된 본문 컨텐츠가 여기에 렌더링됩니다. -->
-            </div>
-            <!-- 페이월 안내 메시지 (페이월이 있고 구매하지 않은 경우) -->
-            <th:block th:if="${!canViewContent and hasPaywall}">
-                <div class="paywall-notice">
-                    <div class="paywall-content">
-                        <div class="paywall-icon">
-                            <i class="fa fa-lock"></i>
-                        </div>
-                        <div class="paywall-text">
-                            <h3>이 아래부터는 구매자만 볼 수 있습니다</h3>
-                            <p>경매에 낙찰 후 전체 콘텐츠를 이용하세요</p>
-<!--                            <div class="paywall-price">-->
-<!--                                <span class="price-amount" th:text="${auction.price != null} ? ${auction.price} + 'P' : '30P'">30P</span>-->
-<!--                                <span class="price-label">로 구매하기</span>-->
-<!--                            </div>-->
-                        </div>
-                    </div>
+                    </div> <!-- .purchase-buttons 끝 -->
                 </div>
-            </th:block>
-        </section>
+                <!-- 판매자인 경우만 수정 버튼 표시 -->
+                <th:block th:if="${currentMember != null and auction.seller != null and currentMember.id == auction.seller.id}">
+                    <a th:href="@{'/editor/product/' + ${auction.id}}"
+                       style="display:block;width:100%;margin-top:24px;padding:12px 0;background:#222;color:#fff;text-align:center;border-radius:8px;font-weight:600;font-size:16px;">
+                        글 수정하기
+                    </a>
+                </th:block>
+            </aside>
+        </div>
+
+
     </div>
 
     <!-- Inquiry Section -->
