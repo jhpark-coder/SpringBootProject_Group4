@@ -47,6 +47,7 @@ import com.creatorworks.nexus.product.service.ProductInquiryService;
 import com.creatorworks.nexus.product.service.ProductReviewService;
 import com.creatorworks.nexus.product.service.ProductService;
 import com.creatorworks.nexus.product.service.RecentlyViewedProductRedisService;
+import com.creatorworks.nexus.util.CategoryConverter;
 import com.creatorworks.nexus.util.tiptap.TipTapDocument;
 import com.creatorworks.nexus.util.tiptap.TipTapNode;
 import com.creatorworks.nexus.util.tiptap.TipTapRenderer;
@@ -253,10 +254,19 @@ public class ProductController {
                 .map(productItemTag -> productItemTag.getItemTag().getName())
                 .toList();
         
-        // 카테고리를 제외한 순수 태그만 필터링
+        // 카테고리를 한글로 변환해서 모델에 추가
+        String koreanPrimaryCategory = CategoryConverter.convertPrimaryCategoryToKorean(product.getPrimaryCategory());
+        String koreanSecondaryCategory = CategoryConverter.convertSecondaryCategoryToKorean(product.getSecondaryCategory());
+        
+        model.addAttribute("koreanPrimaryCategory", koreanPrimaryCategory);
+        model.addAttribute("koreanSecondaryCategory", koreanSecondaryCategory);
+        
+        // 카테고리를 제외한 순수 태그만 필터링 (영어 + 한글 모두 제외)
         List<String> pureTagNames = allTagNames.stream()
-                .filter(tagName -> !tagName.equals(product.getPrimaryCategory()))
-                .filter(tagName -> !tagName.equals(product.getSecondaryCategory()))
+                .filter(tagName -> !tagName.equals(product.getPrimaryCategory()))      // 영어 1차 카테고리 제외
+                .filter(tagName -> !tagName.equals(product.getSecondaryCategory()))    // 영어 2차 카테고리 제외
+                .filter(tagName -> !tagName.equals(koreanPrimaryCategory))             // 한글 1차 카테고리 제외
+                .filter(tagName -> !tagName.equals(koreanSecondaryCategory))           // 한글 2차 카테고리 제외
                 .toList();
         
         model.addAttribute("tagNames", pureTagNames);
@@ -265,6 +275,8 @@ public class ProductController {
         log.debug("🔍 상품 {} 정보:", id);
         log.debug("  - primaryCategory: '{}'", product.getPrimaryCategory());
         log.debug("  - secondaryCategory: '{}'", product.getSecondaryCategory());
+        log.debug("  - koreanPrimaryCategory: '{}'", koreanPrimaryCategory);
+        log.debug("  - koreanSecondaryCategory: '{}'", koreanSecondaryCategory);
         log.debug("  - 전체 태그 목록: {}", allTagNames);
         log.debug("  - 순수 태그 목록: {}", pureTagNames);
         // ---

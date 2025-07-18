@@ -28,6 +28,7 @@ import com.creatorworks.nexus.product.repository.ProductRepository;
 import com.creatorworks.nexus.product.specification.ProductSpecification;
 import com.creatorworks.nexus.notification.service.NotificationService;
 import com.creatorworks.nexus.notification.dto.FollowNotificationRequest;
+import com.creatorworks.nexus.util.CategoryConverter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -191,6 +192,10 @@ public class ProductService {
         // 카테고리 저장 디버그 로그
         // 상품 저장 - 카테고리 및 태그 정보
 
+        // 카테고리를 영어로 변환
+        String englishPrimaryCategory = CategoryConverter.convertPrimaryCategoryToEnglish(request.getPrimaryCategory());
+        String englishSecondaryCategory = CategoryConverter.convertSecondaryCategoryToEnglish(request.getSecondaryCategory());
+
         Product product = Product.builder()
                 .seller(seller)
                 .name(request.getName())
@@ -199,8 +204,8 @@ public class ProductService {
                 .workDescription(request.getWorkDescription())
                 .tiptapJson(request.getTiptapJson())
                 .imageUrl(request.getImageUrl())
-                .primaryCategory(request.getPrimaryCategory())
-                .secondaryCategory(request.getSecondaryCategory())
+                .primaryCategory(englishPrimaryCategory)
+                .secondaryCategory(englishSecondaryCategory)
                 .backgroundColor(request.getBackgroundColor())
                 .fontFamily(request.getFontFamily())
                 .build();
@@ -229,14 +234,18 @@ public class ProductService {
         // 카테고리 수정 디버그 로그
         // 상품 수정 - 카테고리 및 태그 정보 업데이트
 
+        // 카테고리를 영어로 변환
+        String englishPrimaryCategory = CategoryConverter.convertPrimaryCategoryToEnglish(request.getPrimaryCategory());
+        String englishSecondaryCategory = CategoryConverter.convertSecondaryCategoryToEnglish(request.getSecondaryCategory());
+
         product.setName(request.getName());
         product.setPrice(request.getPrice());
         product.setDescription(request.getDescription());
         product.setImageUrl(request.getImageUrl());
         product.setTiptapJson(request.getTiptapJson());
         product.setWorkDescription(request.getWorkDescription());
-        product.setPrimaryCategory(request.getPrimaryCategory());
-        product.setSecondaryCategory(request.getSecondaryCategory());
+        product.setPrimaryCategory(englishPrimaryCategory);
+        product.setSecondaryCategory(englishSecondaryCategory);
         product.setBackgroundColor(request.getBackgroundColor());
         product.setFontFamily(request.getFontFamily());
 

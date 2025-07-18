@@ -98,10 +98,10 @@
                 </div>
                 <div class="tags">
                     <a th:href="@{/products/category/{name}(name=${product.primaryCategory}, page=1, secondary='all')}"
-                        class="tag-btn" th:text="*{primaryCategory}">카테고리</a>
+                        class="tag-btn" th:text="${koreanPrimaryCategory}">카테고리</a>
                     <a th:if="*{secondaryCategory != null and !#strings.isEmpty(secondaryCategory)}"
                         th:href="@{/products/category/{name}(name=${product.primaryCategory}, page=1, secondary=${product.secondaryCategory})}"
-                        class="tag-btn" th:text="*{secondaryCategory}">부 카테고리</a>
+                        class="tag-btn" th:text="${koreanSecondaryCategory}">부 카테고리</a>
                     <button class="tag-btn" th:each="tagName : ${tagNames}" th:text="${tagName}">태그</button>
                 </div>
                 <div class="description">

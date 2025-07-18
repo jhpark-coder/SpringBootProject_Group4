@@ -45,6 +45,7 @@ import com.creatorworks.nexus.member.dto.CustomUserDetails;
 import com.creatorworks.nexus.member.entity.Member;
 import com.creatorworks.nexus.member.repository.MemberRepository;
 import com.creatorworks.nexus.member.service.MemberFollowService;
+import com.creatorworks.nexus.util.CategoryConverter;
 import com.creatorworks.nexus.util.tiptap.TipTapDocument;
 import com.creatorworks.nexus.util.tiptap.TipTapNode;
 import com.creatorworks.nexus.util.tiptap.TipTapRenderer;
@@ -216,19 +217,30 @@ public class AuctionController {
         List<String> allTagNames = auction.getItemTags().stream()
                 .map(auctionItemTag -> auctionItemTag.getItemTag().getName())
                 .toList();
-
-        // 카테고리를 제외한 순수 태그만 필터링
+        
+        // 카테고리를 한글로 변환해서 모델에 추가
+        String koreanPrimaryCategory = CategoryConverter.convertPrimaryCategoryToKorean(auction.getPrimaryCategory());
+        String koreanSecondaryCategory = CategoryConverter.convertSecondaryCategoryToKorean(auction.getSecondaryCategory());
+        
+        model.addAttribute("koreanPrimaryCategory", koreanPrimaryCategory);
+        model.addAttribute("koreanSecondaryCategory", koreanSecondaryCategory);
+        
+        // 카테고리를 제외한 순수 태그만 필터링 (영어 + 한글 모두 제외)
         List<String> pureTagNames = allTagNames.stream()
-                .filter(tagName -> !tagName.equals(auction.getPrimaryCategory()))
-                .filter(tagName -> !tagName.equals(auction.getSecondaryCategory()))
+                .filter(tagName -> !tagName.equals(auction.getPrimaryCategory()))      // 영어 1차 카테고리 제외
+                .filter(tagName -> !tagName.equals(auction.getSecondaryCategory()))    // 영어 2차 카테고리 제외
+                .filter(tagName -> !tagName.equals(koreanPrimaryCategory))             // 한글 1차 카테고리 제외
+                .filter(tagName -> !tagName.equals(koreanSecondaryCategory))           // 한글 2차 카테고리 제외
                 .toList();
-
+        
         model.addAttribute("tagNames", pureTagNames);
 
         // 카테고리 및 태그 디버그 로그
-        log.debug("🔍 상품 {} 정보:", id);
+        log.debug("🔍 경매 {} 정보:", id);
         log.debug("  - primaryCategory: '{}'", auction.getPrimaryCategory());
         log.debug("  - secondaryCategory: '{}'", auction.getSecondaryCategory());
+        log.debug("  - koreanPrimaryCategory: '{}'", koreanPrimaryCategory);
+        log.debug("  - koreanSecondaryCategory: '{}'", koreanSecondaryCategory);
         log.debug("  - 전체 태그 목록: {}", allTagNames);
         log.debug("  - 순수 태그 목록: {}", pureTagNames);
         // ---

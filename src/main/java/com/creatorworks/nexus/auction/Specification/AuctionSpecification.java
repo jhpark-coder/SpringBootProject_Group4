@@ -1,10 +1,9 @@
 package com.creatorworks.nexus.auction.Specification;
 
-import com.creatorworks.nexus.auction.entity.Auction;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
-import com.creatorworks.nexus.product.entity.Product;
+import com.creatorworks.nexus.auction.entity.Auction;
 
 public class AuctionSpecification {
 
