@@ -186,9 +186,9 @@
                                     <button th:onclick="|location.href='@{/api/auction-payment/payment-page/{id}(id=${auction.id})}'|"
                                             th:disabled="${auction.buyNowPrice == null}"
                                             class="purchase-btn instant-buy-btn">
-                        <span th:if="${auction.buyNowPrice != null}">
-                            즉시입찰가: [[${#numbers.formatDecimal(auction.buyNowPrice, 0, 'COMMA', 0, 'POINT')}]]원
-                        </span>
+                                        <span th:if="${auction.buyNowPrice != null}">
+                                            즉시입찰가: [[${#numbers.formatDecimal(auction.buyNowPrice, 0, 'COMMA', 0, 'POINT')}]]원
+                                        </span>
                                         <span th:if="${auction.buyNowPrice == null}">즉시입찰 불가</span>
                                     </button>
                                 </div>

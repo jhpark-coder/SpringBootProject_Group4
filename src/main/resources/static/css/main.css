@@ -163,14 +163,14 @@ a {
 
 .btn-prev {
     left: 100px;
-    border-top: 2px solid #555;
-    border-left: 2px solid #555;
+    border-top: 2px solid #fff;
+    border-left: 2px solid #fff;
 }
 
 .btn-next {
     right: 100px;
-    border-bottom: 2px solid #555;
-    border-right: 2px solid #555;
+    border-bottom: 2px solid #fff;
+    border-right: 2px solid #fff;
 }
 
 /* 텍스트 및 버튼 스타일 */

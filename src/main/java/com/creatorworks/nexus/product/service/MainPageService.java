@@ -108,7 +108,7 @@ public class MainPageService {
         List<Long> recentlyViewedIds = recentlyViewedProductRedisService.getRecentlyViewedProductIds(member.getId(), 50);
         List<Product> viewedProducts = productRepository.findAllById(recentlyViewedIds);
 
-        // 2. [수정] 관심 카테고리를 1차, 2차로 분리하여 추출
+        // 2. 관심 카테고리를 1차, 2차로 분리하여 추출
         Set<String> primaryInterestCategories = new HashSet<>();
         Set<String> secondaryInterestCategories = new HashSet<>();
 
@@ -137,7 +137,7 @@ public class MainPageService {
                 .toList();
         List<Long> heartedIds = heartedList.stream().map(h -> h.getProduct().getId()).toList();
 
-        // [수정] 수정 가능한 ArrayList로 생성하여 UnsupportedOperationException 방지
+        // 수정 가능한 ArrayList로 생성하여 UnsupportedOperationException 방지
         List<Long> excludedIds = new ArrayList<>(Stream.of(purchasedIds.stream(), heartedIds.stream(), recentlyViewedIds.stream())
                 .flatMap(s -> s)
                 .distinct()
@@ -152,7 +152,7 @@ public class MainPageService {
         log.info("관심 2차 카테고리: {}", secondaryInterestCategories);
         log.info("제외할 상품 ID 개수: {}", excludedIds.size());
 
-        // 4. [수정] 새로운 Repository 메서드를 사용하여 추천 상품 조회
+        // 4. 새로운 Repository 메서드를 사용하여 추천 상품 조회
         Pageable limit = PageRequest.of(0, RECOMMENDATION_LIMIT);
         List<Product> recommendedProducts = productRepository.findByCategoriesAndExcludeIds(
                 primaryInterestCategories,
