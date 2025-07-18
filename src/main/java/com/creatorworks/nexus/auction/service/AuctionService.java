@@ -33,6 +33,7 @@ import com.creatorworks.nexus.notification.entity.Notification;
 import com.creatorworks.nexus.notification.repository.NotificationRepository;
 import com.creatorworks.nexus.notification.entity.NotificationCategory;
 import com.creatorworks.nexus.auction.handler.BidWebSocketHandler;
+import com.creatorworks.nexus.util.CategoryConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +58,10 @@ public class AuctionService {
             throw new IllegalArgumentException("작성자 정보를 찾을 수 없습니다: " + userEmail);
         }
 
+        // 카테고리를 영어로 변환
+        String englishPrimaryCategory = CategoryConverter.convertPrimaryCategoryToEnglish(request.getPrimaryCategory());
+        String englishSecondaryCategory = CategoryConverter.convertSecondaryCategoryToEnglish(request.getSecondaryCategory());
+
         Auction auction = Auction.builder()
                 .seller(seller)
                 .name(request.getName())
@@ -67,8 +72,8 @@ public class AuctionService {
                 .workDescription(request.getWorkDescription())
                 .tiptapJson(request.getTiptapJson())
                 .imageUrl(request.getImageUrl())
-                .primaryCategory(request.getPrimaryCategory())
-                .secondaryCategory(request.getSecondaryCategory())
+                .primaryCategory(englishPrimaryCategory)
+                .secondaryCategory(englishSecondaryCategory)
                 .backgroundColor(request.getBackgroundColor())
                 .fontFamily(request.getFontFamily())
                 .build();
@@ -87,6 +92,10 @@ public class AuctionService {
             throw new IllegalStateException("경매를 수정할 권한이 없습니다.");
         }
 
+        // 카테고리를 영어로 변환
+        String englishPrimaryCategory = CategoryConverter.convertPrimaryCategoryToEnglish(request.getPrimaryCategory());
+        String englishSecondaryCategory = CategoryConverter.convertSecondaryCategoryToEnglish(request.getSecondaryCategory());
+
         auction.setName(request.getName());
         auction.setStartBidPrice(request.getStartBidPrice());
         auction.setBuyNowPrice(request.getBuyNowPrice());
@@ -95,8 +104,8 @@ public class AuctionService {
         auction.setTiptapJson(request.getTiptapJson());
         auction.setImageUrl(request.getImageUrl());
         auction.setWorkDescription(request.getWorkDescription());
-        auction.setPrimaryCategory(request.getPrimaryCategory());
-        auction.setSecondaryCategory(request.getSecondaryCategory());
+        auction.setPrimaryCategory(englishPrimaryCategory);
+        auction.setSecondaryCategory(englishSecondaryCategory);
         auction.setBackgroundColor(request.getBackgroundColor());
         auction.setFontFamily(request.getFontFamily());
 
