@@ -313,6 +313,18 @@
         const auctionId = /*[[${auction.id}]]*/ null;
         const loginUrl = /*[[@{/members/login}]]*/ '/members/login';
 
+        // 카운트다운 타이머 초기화
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log('경매 상세페이지 타이머 초기화 시작');
+            const countdownElements = document.querySelectorAll('.countdown-timer');
+            console.log('찾은 타이머 요소 개수:', countdownElements.length);
+            countdownElements.forEach(function(element, index) {
+                console.log(`타이머 ${index + 1} 초기화:`, element);
+                console.log('타이머 endtime:', element.dataset.endtime);
+                startCountdown(element);
+            });
+        });
+
          // ★★★ 웹소켓 관련 로직 추가 ★★★
         let ws = null;
         
