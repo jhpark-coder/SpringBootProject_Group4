@@ -175,16 +175,35 @@ public class MainPageService {
     private List<Product> getPopularProducts(int limit) {
         Pageable pageable = PageRequest.of(0, limit);
 
+        // 1. 좋아요가 많은 상품들 가져오기
         List<Long> topHeartedIds = productHeartRepository.findTopHeartedProductIds(pageable);
         if (!topHeartedIds.isEmpty()) {
-            return productRepository.findByIdIn(topHeartedIds);
+            List<Product> heartedProducts = productRepository.findByIdIn(topHeartedIds);
+            // 좋아요 상품이 limit보다 적으면 나머지를 최신 상품으로 채움
+            if (heartedProducts.size() < limit) {
+                int remaining = limit - heartedProducts.size();
+                Pageable remainingPageable = PageRequest.of(0, remaining);
+                List<Product> remainingProducts = productRepository.findAll(remainingPageable).getContent();
+                heartedProducts.addAll(remainingProducts);
+            }
+            return heartedProducts;
         }
 
+        // 2. 판매가 많은 상품들 가져오기
         List<Long> topSellingIds = orderRepository.findTopSellingProductIds(pageable);
         if (!topSellingIds.isEmpty()) {
-            return productRepository.findByIdIn(topSellingIds);
+            List<Product> sellingProducts = productRepository.findByIdIn(topSellingIds);
+            // 판매 상품이 limit보다 적으면 나머지를 최신 상품으로 채움
+            if (sellingProducts.size() < limit) {
+                int remaining = limit - sellingProducts.size();
+                Pageable remainingPageable = PageRequest.of(0, remaining);
+                List<Product> remainingProducts = productRepository.findAll(remainingPageable).getContent();
+                sellingProducts.addAll(remainingProducts);
+            }
+            return sellingProducts;
         }
 
+        // 3. 최신 상품들 가져오기 (기본값)
         return productRepository.findAll(pageable).getContent();
     }
 
@@ -203,16 +222,35 @@ public class MainPageService {
             finalExcludedIds.add(-1L); // 쿼리 오류 방지
         }
 
+        // 1. 좋아요가 많은 상품들 가져오기 (제외 로직 포함)
         List<Long> topHeartedIds = productHeartRepository.findTopHeartedProductIds(finalExcludedIds, pageable);
         if (!topHeartedIds.isEmpty()) {
-            return productRepository.findByIdIn(topHeartedIds);
+            List<Product> heartedProducts = productRepository.findByIdIn(topHeartedIds);
+            // 좋아요 상품이 limit보다 적으면 나머지를 제외되지 않은 최신 상품으로 채움
+            if (heartedProducts.size() < limit) {
+                int remaining = limit - heartedProducts.size();
+                Pageable remainingPageable = PageRequest.of(0, remaining);
+                List<Product> remainingProducts = productRepository.findByIdNotIn(finalExcludedIds, remainingPageable).getContent();
+                heartedProducts.addAll(remainingProducts);
+            }
+            return heartedProducts;
         }
 
+        // 2. 판매가 많은 상품들 가져오기 (제외 로직 포함)
         List<Long> topSellingIds = orderRepository.findTopSellingProductIds(finalExcludedIds, pageable);
         if (!topSellingIds.isEmpty()) {
-            return productRepository.findByIdIn(topSellingIds);
+            List<Product> sellingProducts = productRepository.findByIdIn(topSellingIds);
+            // 판매 상품이 limit보다 적으면 나머지를 제외되지 않은 최신 상품으로 채움
+            if (sellingProducts.size() < limit) {
+                int remaining = limit - sellingProducts.size();
+                Pageable remainingPageable = PageRequest.of(0, remaining);
+                List<Product> remainingProducts = productRepository.findByIdNotIn(finalExcludedIds, remainingPageable).getContent();
+                sellingProducts.addAll(remainingProducts);
+            }
+            return sellingProducts;
         }
 
+        // 3. 제외되지 않은 최신 상품들 가져오기 (기본값)
         return productRepository.findByIdNotIn(finalExcludedIds, pageable).getContent();
     }
 } 
