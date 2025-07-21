@@ -92,12 +92,12 @@
 
 /* 가격 정보 스타일 */
 .price-info {
-    background: #f8f9fa;
     padding: 15px;
     border-radius: 8px;
     margin-bottom: 15px;
     text-align: center;
     border: 1px solid #e9ecef;
+    color:#fff;
 }
 
 .price-info span {
@@ -106,10 +106,14 @@
 }
 
 .price-info .price-amount {
-    font-size: 24px;
+    padding: 5px 10px;
+    font-size: 1.5rem;
     font-weight: bold;
-    color: #28a745;
+    color:#203cba;
+    background: #fff;
     margin: 5px 0;
+    border-radius:5px;
+    box-shadow: 3px 4px 6px -1px #404040;
 }
 
 /* 버튼 레이아웃 */
