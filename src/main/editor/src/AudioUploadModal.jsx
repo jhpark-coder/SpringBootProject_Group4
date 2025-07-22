@@ -68,7 +68,7 @@ const AudioUploadModal = ({ onClose, onAudioAdd }) => {
 
             if (audioUrl && audioUrl.trim() !== '' && audioUrl !== '[]') {
               // 상대 경로를 Spring Boot 서버의 전체 URL로 변환
-              const fullAudioUrl = `http://localhost:8080${audioUrl}`;
+              const fullAudioUrl = `${window.location.origin}${audioUrl}`;
               console.log('Full audio URL:', fullAudioUrl);
               onAudioAdd({ src: fullAudioUrl });
               onClose();

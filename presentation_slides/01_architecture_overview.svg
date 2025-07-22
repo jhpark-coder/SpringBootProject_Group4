@@ -1,0 +1,148 @@
+<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.95" />
+      <stop offset="100%" style="stop-color:#f8f9fa;stop-opacity:0.95" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bgGradient)"/>
+  <text x="600" y="80" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white">
+    Nexus Platform Architecture
+  </text>
+  <text x="600" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="white" opacity="0.9">
+    MSA 기반 확장 가능한 실시간 플랫폼
+  </text>
+  <g transform="translate(50, 180)">
+    <rect width="1100" height="120" rx="15" fill="url(#cardGradient)" filter="url(#shadow)"/>
+    <text x="550" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#333">
+      Client Layer
+    </text>
+    <g transform="translate(50, 50)">
+      <rect width="200" height="60" rx="10" fill="#61dafb" opacity="0.9"/>
+      <text x="100" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+        React Editor
+      </text>
+      <text x="100" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">
+        Tiptap + Components
+      </text>
+    </g>
+    <g transform="translate(280, 50)">
+      <rect width="200" height="60" rx="10" fill="#61dafb" opacity="0.9"/>
+      <text x="100" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+        Admin Dashboard
+      </text>
+      <text x="100" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">
+        React + Socket.IO
+      </text>
+    </g>
+    <g transform="translate(510, 50)">
+      <rect width="200" height="60" rx="10" fill="#f7df1e" opacity="0.9"/>
+      <text x="100" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#333">
+        AI Chatbot
+      </text>
+      <text x="100" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#333">
+        Vanilla JS + API
+      </text>
+    </g>
+    <g transform="translate(740, 50)">
+      <rect width="200" height="60" rx="10" fill="#f7df1e" opacity="0.9"/>
+      <text x="100" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#333">
+        User Chat
+      </text>
+      <text x="100" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#333">
+        Socket.IO Client
+      </text>
+    </g>
+  </g>
+  <g transform="translate(50, 340)">
+    <rect width="1100" height="120" rx="15" fill="url(#cardGradient)" filter="url(#shadow)"/>
+    <text x="550" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#333">
+      Real-time Communication Layer
+    </text>
+    <g transform="translate(450, 50)">
+      <rect width="200" height="60" rx="10" fill="#e0234e" opacity="0.9"/>
+      <text x="100" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+        NestJS Server
+      </text>
+      <text x="100" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">
+        WebSocket + Socket.IO
+      </text>
+    </g>
+  </g>
+  <g transform="translate(50, 500)">
+    <rect width="1100" height="120" rx="15" fill="url(#cardGradient)" filter="url(#shadow)"/>
+    <text x="550" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#333">
+      Backend Layer
+    </text>
+    <g transform="translate(50, 50)">
+      <rect width="200" height="60" rx="10" fill="#6db33f" opacity="0.9"/>
+      <text x="100" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+        Spring Boot
+      </text>
+      <text x="100" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">
+        REST API + JPA
+      </text>
+    </g>
+    <g transform="translate(280, 50)">
+      <rect width="200" height="60" rx="10" fill="#dc382d" opacity="0.9"/>
+      <text x="100" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+        Redis Cache
+      </text>
+      <text x="100" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">
+        Rate Limiting + Session
+      </text>
+    </g>
+    <g transform="translate(510, 50)">
+      <rect width="200" height="60" rx="10" fill="#ff6b35" opacity="0.9"/>
+      <text x="100" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+        Security
+      </text>
+      <text x="100" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">
+        CSRF + XSS Protection
+      </text>
+    </g>
+    <g transform="translate(740, 50)">
+      <rect width="200" height="60" rx="10" fill="#9c27b0" opacity="0.9"/>
+      <text x="100" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+        Recommendation
+      </text>
+      <text x="100" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">
+        AI + Data Analysis
+      </text>
+    </g>
+  </g>
+  <g transform="translate(50, 660)">
+    <rect width="1100" height="100" rx="15" fill="url(#cardGradient)" filter="url(#shadow)"/>
+    <text x="550" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#333">
+      Data Layer
+    </text>
+    <g transform="translate(450, 50)">
+      <rect width="200" height="40" rx="10" fill="#003545" opacity="0.9"/>
+      <text x="100" y="20" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">
+        MariaDB
+      </text>
+      <text x="100" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">
+        Primary Database
+      </text>
+    </g>
+  </g>
+  <g stroke="#ffffff" stroke-width="3" opacity="0.6">
+    <line x1="600" y1="300" x2="550" y2="340"/>
+    <line x1="550" y1="460" x2="150" y2="500"/>
+    <line x1="550" y1="460" x2="380" y2="500"/>
+    <line x1="150" y1="620" x2="550" y2="660"/>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="12" fill="white" opacity="0.8">
+    <text x="1050" y="200">Port: 8080</text>
+    <text x="1050" y="360">Port: 3000</text>
+    <text x="1050" y="520">Port: 8080</text>
+    <text x="1050" y="680">Port: 3306</text>
+  </g>
+</svg>

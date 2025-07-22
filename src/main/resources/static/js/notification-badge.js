@@ -44,8 +44,14 @@ class NotificationBadge {
                 const initSocket = () => {
                     if (typeof io !== 'undefined') {
                         console.log('🔔 Socket.IO 초기화 시작');
+                        
+                        // 현재 호스트의 포트 3000으로 연결 (배포 환경 대응)
+                        const socketUrl = window.location.hostname === 'localhost' 
+                            ? 'http://localhost:3000' 
+                            : `http://${window.location.hostname}:3000`;
+                        
                         // Socket.IO 연결 설정
-                        this.socket = io('http://localhost:3000', {
+                        this.socket = io(socketUrl, {
                             withCredentials: true,
                             transports: ['websocket', 'polling'], // fallback 추가
                             autoConnect: true,

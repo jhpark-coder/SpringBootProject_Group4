@@ -12,32 +12,60 @@
                 opacity: 0; /* 처음에는 투명하게 */
                 transition: opacity 0.5s ease; /* 서서히 나타나는 효과 */
             }
+.stickySideBar{
+    position: sticky;
+    top: 20vh;
+}
+.timer-head{
+    color: black;
+    padding: 5px 10px;
+    font-size:0.7rem;
+}
+.btn-head{
+    font-size:0.7rem;
+}
 
+.high-Scorer {
+    margin: 0px auto;
+    background: linear-gradient(-45deg, #0077F8, #0059BA,#93c7ff);
+    background-size: 400% 400%;
+
+    animation: gradientMove 5s ease infinite;
+}
+@keyframes gradientMove {
+    0% {
+     background-position: 0% 50%;
+    }
+    50% {
+     background-position: 100% 50%;
+    }
+    100% {
+     background-position: 0% 50%;
+    }
+}
+.details-timer{
+        color: red;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        margin-bottom: -35px;
+}
 /* 경매 상세페이지용 타이머 스타일 */
-.seller-info .countdown-timer {
-                position: static !important;
-                background-color: #f8f9fa !important;
-                color: #333 !important;
-                border: 1px solid #dee2e6 !important;
-                padding: 8px 12px !important;
-                border-radius: 6px !important;
-                font-size: 16px !important;
-                font-weight: 600 !important;
-                margin-bottom: 20px !important;
-                text-align: center !important;
-                opacity: 1 !important;
-                display: block !important;
-                width: 100% !important;
-                float: none !important;
-                clear: both !important;
+
+.auctionBtn {
+    display: flex;
+    flex-direction: column;
             }
 
 /* 판매자 정보 스타일 조정 */
 .seller-info .seller-profile {
                 display: flex !important;
+                justify-content: flex-start;
                 align-items: center !important;
-                justify-content: center !important;
-                margin-top: 10px !important;
                 clear: both !important;
                 width: 100% !important;
             }

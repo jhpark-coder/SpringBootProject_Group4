@@ -26,9 +26,18 @@ class ChatController {
     connectSocket() {
         console.log('🔗 채팅 Socket.IO 연결 시작');
 
+        // 현재 호스트의 포트 3000으로 연결 (배포 환경 대응)
+        const socketUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000' 
+            : `http://${window.location.hostname}:3000`;
+
+        console.log('🔧 연결할 URL:', socketUrl);
+
         // Socket.IO 연결 설정
-        this.socket = io('http://localhost:3000', {
-            transports: ['websocket', 'polling']
+        this.socket = io(socketUrl, {
+            transports: ['websocket', 'polling'],
+            forceNew: true, // 강제로 새로운 연결 생성
+            timeout: 10000 // 10초 타임아웃
         });
 
         // 연결 성공

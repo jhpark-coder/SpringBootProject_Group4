@@ -10,7 +10,9 @@ import { Logger } from '@nestjs/common';
 
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:8080', 'http://localhost:4000'],
+    origin: process.env.NODE_ENV === 'production' 
+      ? ['http://43.202.160.225:8080', 'http://43.202.160.225:4000']
+      : ['http://43.202.160.225:8080', 'http://43.202.160.225:4000'],
     credentials: true,
   },
 })

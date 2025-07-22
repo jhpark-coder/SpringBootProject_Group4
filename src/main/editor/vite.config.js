@@ -36,17 +36,17 @@ export default defineConfig({
   server: {
     proxy: {
       '/editor/api': {
-        target: 'http://localhost:8080',
+        target: process.env.VITE_API_SERVER_URL || 'http://43.202.160.225:8080',
         changeOrigin: true,
         cookieDomainRewrite: ""
       },
       '/api': {
-        target: 'http://localhost:8080',
+        target: process.env.VITE_API_SERVER_URL || 'http://43.202.160.225:8080',
         changeOrigin: true,
         cookieDomainRewrite: ""
       },
       '/uploads': {
-        target: 'http://localhost:8080',
+        target: process.env.VITE_API_SERVER_URL || 'http://43.202.160.225:8080',
         changeOrigin: true,
         cookieDomainRewrite: ""
       }

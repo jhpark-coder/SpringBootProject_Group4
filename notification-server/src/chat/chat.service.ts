@@ -39,7 +39,7 @@ export class ChatService {
     }
 
     private async saveToDatabase(message: ChatMessageDto): Promise<void> {
-        const apiUrl = process.env.DATABASE_URL || 'http://localhost:8080/api/chat/messages';
+        const apiUrl = process.env.SPRING_BOOT_URL + '/api/chat/messages' || 'http://localhost:8080/api/chat/messages';
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -60,7 +60,7 @@ export class ChatService {
 
     async getChatHistory(userId: string): Promise<ChatMessageDto[]> {
         console.log('🔍 채팅 내역 조회 시작:', userId);
-        const baseUrl = (process.env.DATABASE_URL || 'http://localhost:8080').replace('/api/chat/messages', '');
+        const baseUrl = process.env.SPRING_BOOT_URL || 'http://localhost:8080';
 
         // 먼저 패턴 매칭으로 시도
         try {
@@ -166,7 +166,7 @@ export class ChatService {
     // DB에서 모든 채팅 사용자 목록 조회
     async getAllChatUsers(): Promise<string[]> {
         console.log('🔍 DB에서 모든 채팅 사용자 목록 조회 시작');
-        const baseUrl = (process.env.DATABASE_URL || 'http://localhost:8080').replace('/api/chat/messages', '');
+        const baseUrl = process.env.SPRING_BOOT_URL || 'http://localhost:8080';
 
         try {
             const response = await fetch(`${baseUrl}/api/chat/users`);
@@ -197,7 +197,7 @@ export class ChatService {
     // 사용자의 최근 메시지 조회
     async getUserLastMessage(userId: string): Promise<any> {
         console.log('🔍 사용자 최근 메시지 조회 시작:', userId);
-        const baseUrl = (process.env.DATABASE_URL || 'http://localhost:8080').replace('/api/chat/messages', '');
+        const baseUrl = process.env.SPRING_BOOT_URL || 'http://localhost:8080';
 
         try {
             const response = await fetch(`${baseUrl}/api/chat/messages/last/${userId}`);

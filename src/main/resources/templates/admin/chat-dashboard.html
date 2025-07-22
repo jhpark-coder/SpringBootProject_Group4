@@ -259,10 +259,10 @@
             connectSocket() {
                 console.log('🔗 관리자 채팅 대시보드 연결 시작');
 
-                // 현재 호스트의 포트 3000으로 연결
-                const socketUrl = window.location.protocol === 'https:' 
-                    ? 'https://localhost:3000' 
-                    : 'http://localhost:3000';
+                // 현재 호스트의 포트 3000으로 연결 (배포 환경 대응)
+                const socketUrl = window.location.hostname === 'localhost' 
+                    ? (window.location.protocol === 'https:' ? 'https://localhost:3000' : 'http://localhost:3000')
+                    : `${window.location.protocol}//${window.location.hostname}:3000`;
                 
                 this.socket = io(socketUrl, {
                     transports: ['websocket', 'polling'],

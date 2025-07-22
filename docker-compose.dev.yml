@@ -1,0 +1,45 @@
+# 개발 환경용 docker-compose.dev.yml
+
+services:
+  # Spring Boot 애플리케이션 서비스
+  nexus-spring-app:
+    build: .
+    container_name: nexus-spring-app-dev
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis-cache
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATA_REDIS_HOST: redis-cache
+      SPRING_DATA_REDIS_PORT: 6379
+
+  # NestJS 알림/채팅 서버 서비스 (개발 모드)
+  notification-server:
+    build:
+      context: notification-server
+      dockerfile: Dockerfile.dev
+    container_name: nexus-notification-server-dev
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      SPRING_BOOT_URL: http://nexus-spring-app:8080
+      REDIS_HOST: redis-cache
+      REDIS_PORT: 6379
+
+  # Redis 서비스 정의
+  redis-cache:
+    image: redis:latest
+    container_name: nexus-redis-cache-dev
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data-dev:/data
+
+volumes:
+  redis-data-dev: 

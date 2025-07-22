@@ -74,7 +74,7 @@ const VideoUploadModal = ({ onClose, onVideoAdd }) => {
             if (videoUrl && videoUrl.trim() !== '' && videoUrl !== '[]') {
               console.log('Calling onVideoAdd with:', { src: videoUrl });
               // 상대 경로를 Spring Boot 서버의 전체 URL로 변환
-              const fullVideoUrl = `http://localhost:8080${videoUrl}`;
+              const fullVideoUrl = `${window.location.origin}${videoUrl}`;
               console.log('Full video URL:', fullVideoUrl);
               onVideoAdd({ src: fullVideoUrl });
               onClose();

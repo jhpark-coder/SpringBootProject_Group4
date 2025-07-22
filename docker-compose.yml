@@ -1,56 +1,41 @@
-# docker-compose.yml
+# 운영 환경용 docker-compose.yml (production)
 
 services:
   # Spring Boot 애플리케이션 서비스
-  nexus-app:
+  nexus-spring-app:
     build: .
     container_name: nexus-spring-app
     restart: always
     ports:
       - "8080:8080"
     depends_on:
-      - mysql-db
       - redis-cache
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/springproject
-      SPRING_DATASOURCE_USERNAME: nexus_user
-      SPRING_DATASOURCE_PASSWORD: nexus_password
+      # RDS 사용 (application-prod.properties에서 설정)
       SPRING_DATA_REDIS_HOST: redis-cache
       SPRING_DATA_REDIS_PORT: 6379
 
-  # NestJS 알림/채팅 서버 서비스
+  # NestJS 알림/채팅 서버 서비스 (운영 모드 - 빌드된 파일 사용)
   notification-server:
     build:
       context: notification-server
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile.prod
     container_name: nexus-notification-server
+    restart: always
     ports:
       - "3000:3000"
-    volumes:
-      - ./notification-server:/usr/src/app
-      - /usr/src/app/node_modules
     environment:
-      # Docker 컨테이너에서 호스트 PC(로컬)의 Spring Boot에 접근하기 위한 주소
-      - DATABASE_URL=http://host.docker.internal:8080/api/chat/messages
-
-  # MySQL 서비스 정의
-  mysql-db:
-    image: mysql:8.0
-    container_name: nexus-mysql-db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: 1234
-      MYSQL_DATABASE: springproject
-      MYSQL_USER: nexus_user
-      MYSQL_PASSWORD: nexus_password
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
+      NODE_ENV: production
+      PORT: 3000
+      # RDS MariaDB 연결
+      DATABASE_URL: jdbc:mariadb://nexus-db.c1uoscweiicf.ap-northeast-2.rds.amazonaws.com:3306/springproject?useSSL=false&serverTimezone=UTC&characterEncoding=utf8mb4&useUnicode=true&characterSetResults=utf8mb4&connectionCollation=utf8mb4_unicode_ci&initSQL=SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci
+      DATABASE_USERNAME: nexus_user
+      DATABASE_PASSWORD: nexus_password
+      # Docker 컨테이너에서 Spring Boot에 접근하기 위한 주소 (컨테이너 이름 사용)
+      SPRING_BOOT_URL: http://nexus-spring-app:8080
+      REDIS_HOST: redis-cache
+      REDIS_PORT: 6379
 
   # Redis 서비스 정의
   redis-cache:
@@ -63,5 +48,4 @@ services:
       - redis-data:/data
 
 volumes:
-  mysql-data:
   redis-data:
