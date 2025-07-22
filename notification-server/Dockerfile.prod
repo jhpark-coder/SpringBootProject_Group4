@@ -1,0 +1,17 @@
+# 운영 환경용 Dockerfile.prod
+
+FROM node:20-alpine
+WORKDIR /usr/src/app
+
+# 패키지 파일 복사 및 프로덕션 의존성만 설치
+COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+# 윈도우에서 빌드된 dist 폴더 복사
+COPY dist/ ./dist/
+
+# 포트 노출
+EXPOSE 3000
+
+# 프로덕션 모드로 실행
+CMD ["node", "dist/main"] 
