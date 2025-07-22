@@ -87,7 +87,7 @@ const ImageUploadModal = ({ onClose, onImageAdd }) => {
 
             if (imageUrl && imageUrl.trim() !== '' && imageUrl !== '[]') {
               // 상대 경로를 Spring Boot 서버의 전체 URL로 변환
-              const fullImageUrl = `http://localhost:8080${imageUrl}`;
+              const fullImageUrl = `${window.location.origin}${imageUrl}`;
               console.log('Full image URL:', fullImageUrl);
 
               // Base64 데이터 URL을 이미지 소스로 사용
@@ -197,7 +197,7 @@ const ImageUploadModal = ({ onClose, onImageAdd }) => {
 
             if (imageUrl && imageUrl.trim() !== '' && imageUrl !== '[]') {
               // 상대 경로를 Spring Boot 서버의 전체 URL로 변환
-              const fullImageUrl = `http://localhost:8080${imageUrl}`;
+              const fullImageUrl = `${window.location.origin}${imageUrl}`;
               console.log('Full image URL:', fullImageUrl);
 
               // Base64 데이터 URL을 이미지 소스로 사용

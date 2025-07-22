@@ -124,12 +124,12 @@ public class DataInitializer {
 
             // 상품 데이터 생성 (필요한 경우)
             if (productRepository.count() == 0) {
-                System.out.println("개발 환경: 테스트용 상품 데이터 100개를 생성합니다.");
+                System.out.println("개발 환경: 테스트용 상품 데이터 1000개를 생성합니다.");
 
                 String[] primaryCategories = {"artwork", "graphic-design", "character", "java", "frontend", "python"};
                 String[][] secondaryCategories = {
                         {"포토그래피", "일러스트레이션", "스케치", "코믹스"},
-                        {"타이포그라피", "앨범아트", "로고", "브랜딩", "편집디자인"},
+                        {"타이포그래피", "앨범아트", "로고", "브랜딩", "편집디자인"},
                         {"카툰", "팬아트", "2D 캐릭터", "3D 모델링"},
                         {"Spring/JPA", "네트워크", "알고리즘", "코어 자바"},
                         {"HTML/CSS", "JavaScript", "React/Vue", "UI/UX"},
@@ -159,7 +159,7 @@ public class DataInitializer {
                         "독특한 스타일과 개성이 돋보이는 작품입니다."
                 };
 
-                for (int i = 1; i <= 100;i++) {
+                for (int i = 1; i <= 1000;i++) {
                     // 다양한 상품명 사용
                     String name = productNames[i % productNames.length] + " " + (i / productNames.length + 1);
                     int price = (int) (Math.random() * 90000) + 10000; // 10,000 ~ 99,999원
@@ -200,7 +200,7 @@ public class DataInitializer {
                 }
                 System.out.println("상품 데이터 생성이 완료되었습니다.");
 
-                for (int i = 1; i <= 100; i++) {
+                for (int i = 1; i <= 1000; i++) {
                     // 다양한 상품명 사용
                     String name = productNames[i % productNames.length] + " " + (i / productNames.length + 1);
                     int buyNowPrice = (int) (Math.random() * 90000) + 10000; // 10,000 ~ 99,999원

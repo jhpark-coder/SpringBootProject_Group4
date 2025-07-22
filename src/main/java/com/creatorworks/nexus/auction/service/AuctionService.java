@@ -231,33 +231,107 @@ public class AuctionService {
                 .build();
         bidRepository.save(bid);
 
-        // 8. 이전 최고 입찰자 정보 저장 (알림 전송용)
-        Member previousHighestBidder = auction.getHighestBidder();
+        // [추가된 로직] 즉시 구매가와 동일한 금액으로 입찰했는지 확인
+        boolean isBuyNow = auction.getBuyNowPrice() != null && bidPrice.equals(auction.getBuyNowPrice());
 
-        // 9. 경매 정보 업데이트 (현재가, 최고 입찰자)
-        auction.setCurrentPrice(bidPrice);
-        auction.setHighestBidder(bidder);
-        // @Transactional 덕분에 auctionRepository.save(auction)을 호출하지 않아도
-        // 메소드가 끝날 때 변경된 내용이 자동으로 DB에 반영됩니다.
+        if (isBuyNow) {
+            // --- 즉시 구매로 경매를 종료하는 경우 ---
+            log.info("즉시 구매가 입찰. 경매를 종료합니다. 경매 ID: {}", auctionId);
 
-        log.info("입찰 성공! 경매 ID: {}, 입찰자: {}, 입찰가: {}", auctionId, bidder.getName(), bidPrice);
+            // 경매 최종 정보 업데이트
+            auction.setCurrentPrice(bidPrice);
+            auction.setHighestBidder(bidder); // 최종 낙찰자 설정
+            auction.setAuctionEndTime(LocalDateTime.now()); // 경매를 현재 시간으로 즉시 종료
 
-        // 10. 입찰 알림 전송 (이전 최고 입찰자에게)
-        sendBidNotification(auction, bidder, bidPrice, previousHighestBidder);
-        
-        // 10-1. 입찰 성공 알림 전송 (입찰자 본인에게)
-        sendBidSuccessNotification(auction, bidder, bidPrice);
+            // 웹소켓으로 가격 업데이트 및 경매 종료 상태 방송 (기존 방송 로직 활용)
+            bidWebSocketHandler.broadcastPriceUpdate(
+                    auction.getId(),
+                    auction.getCurrentPrice(),
+                    bidder.getName()
+            );
+            // (선택사항) 경매 종료를 알리는 별도의 웹소켓 메시지를 추가할 수 있습니다.
+            // bidWebSocketHandler.broadcastAuctionEnd(auction.getId());
 
-        // 11. ★★★ 입찰 성공 후 웹소켓 방송 호출! ★★★
-        bidWebSocketHandler.broadcastPriceUpdate(
-                auction.getId(),
-                auction.getCurrentPrice(),
-                bidder.getName() // 최고 입찰자의 이름
-        );
+            // 최종 낙찰 알림 전송
+            sendAuctionWonNotification(auction, bidder); // 낙찰자에게 보내는 알림
+            sendAuctionSoldNotification(auction, bidder); // 판매자에게 보내는 알림
 
-        log.info("입찰 성공! 웹소켓으로 가격 업데이트를 방송합니다.");
+        } else {
+            // 8. 이전 최고 입찰자 정보 저장 (알림 전송용)
+            Member previousHighestBidder = auction.getHighestBidder();
+
+            // 9. 경매 정보 업데이트 (현재가, 최고 입찰자)
+            auction.setCurrentPrice(bidPrice);
+            auction.setHighestBidder(bidder);
+            // @Transactional 덕분에 auctionRepository.save(auction)을 호출하지 않아도
+            // 메소드가 끝날 때 변경된 내용이 자동으로 DB에 반영됩니다.
+
+            log.info("입찰 성공! 경매 ID: {}, 입찰자: {}, 입찰가: {}", auctionId, bidder.getName(), bidPrice);
+
+            // 10. 입찰 알림 전송 (이전 최고 입찰자에게)
+            sendBidNotification(auction, bidder, bidPrice, previousHighestBidder);
+
+            // 10-1. 입찰 성공 알림 전송 (입찰자 본인에게)
+            sendBidSuccessNotification(auction, bidder, bidPrice);
+
+            // 11. ★★★ 입찰 성공 후 웹소켓 방송 호출! ★★★
+            bidWebSocketHandler.broadcastPriceUpdate(
+                    auction.getId(),
+                    auction.getCurrentPrice(),
+                    bidder.getName() // 최고 입찰자의 이름
+            );
+
+            log.info("입찰 성공! 웹소켓으로 가격 업데이트를 방송합니다.");
+        }
+
+
 
         return bid;
+    }
+    /**
+     * 경매 최종 낙찰자에게 알림 전송
+     */
+    private void sendAuctionWonNotification(Auction auction, Member winner) {
+        try {
+            String message = String.format("축하합니다! %s 경매에 %,d원으로 최종 낙찰되었습니다.",
+                    auction.getName(), auction.getCurrentPrice());
+            Notification notification = Notification.builder()
+                    .senderUserId(0L) // 시스템 알림
+                    .targetUserId(winner.getId())
+                    .message(message)
+                    .type("auction_won")
+                    .category(NotificationCategory.AUCTION)
+                    .isRead(false)
+                    .link("/my-page/bids") // 낙찰 내역 페이지 등으로 링크
+                    .build();
+            notificationRepository.save(notification);
+            log.info("경매 낙찰 알림 전송 완료: auctionId={}, winnerId={}", auction.getId(), winner.getId());
+        } catch (Exception e) {
+            log.error("경매 낙찰 알림 전송 실패: auctionId={}, error={}", auction.getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * 경매 판매자에게 판매 완료 알림 전송
+     */
+    private void sendAuctionSoldNotification(Auction auction, Member winner) {
+        try {
+            String message = String.format("축하합니다! 등록하신 %s 경매가 %,d원에 %s님에게 낙찰되었습니다.",
+                    auction.getName(), auction.getCurrentPrice(), winner.getName());
+            Notification notification = Notification.builder()
+                    .senderUserId(0L) // 시스템 알림
+                    .targetUserId(auction.getSeller().getId())
+                    .message(message)
+                    .type("auction_sold")
+                    .category(NotificationCategory.AUCTION)
+                    .isRead(false)
+                    .link("/my-page/sales") // 판매 내역 페이지 등으로 링크
+                    .build();
+            notificationRepository.save(notification);
+            log.info("경매 판매 완료 알림 전송 완료: auctionId={}, sellerId={}", auction.getId(), auction.getSeller().getId());
+        } catch (Exception e) {
+            log.error("경매 판매 완료 알림 전송 실패: auctionId={}, error={}", auction.getId(), e.getMessage());
+        }
     }
 
     /**

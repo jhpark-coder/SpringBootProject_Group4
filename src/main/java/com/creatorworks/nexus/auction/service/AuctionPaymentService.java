@@ -75,6 +75,25 @@ public class AuctionPaymentService {
 
         AuctionPayment savedPayment = auctionPaymentRepository.save(payment);
 
+        // ★★★ 즉시 구매 결제 시 경매 종료 로직 추가 ★★★
+        boolean isBuyNowPayment = auction.getBuyNowPrice() != null &&
+                auction.getBuyNowPrice().equals(request.getAmount());
+
+        if (isBuyNowPayment) {
+            log.info("[즉시 구매] 결제 성공. 경매 ID {}를 즉시 종료합니다.", auction.getId());
+
+            // 1. 경매의 최고 입찰자를 현재 결제자로 설정합니다.
+            auction.setHighestBidder(bidder);
+            // 2. 경매의 현재가를 즉시 구매가로 설정합니다.
+            auction.setCurrentPrice(request.getAmount());
+            // 3. 경매 종료 시간을 현재 시간으로 설정하여 경매를 즉시 종료시킵니다.
+            auction.setAuctionEndTime(LocalDateTime.now());
+            // 4. 변경된 경매 정보를 저장합니다. (더티 체킹으로 자동 저장되지만 명시적으로 호출해도 무방합니다.)
+            auctionRepository.save(auction);
+        }
+        // ★★★ 로직 추가 완료 ★★★
+
+
         // 경매 결제 성공 알림 전송
         sendAuctionPaymentSuccessNotification(savedPayment);
 

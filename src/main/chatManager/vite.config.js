@@ -19,12 +19,12 @@ export default defineConfig({
         port: 5173,
         proxy: {
             '/chat-manager/api': {
-                target: 'http://localhost:8080',
+                target: process.env.VITE_API_SERVER_URL || 'http://43.202.160.225:8080',
                 changeOrigin: true,
                 cookieDomainRewrite: ""
             },
             '/api': {
-                target: 'http://localhost:8080',
+                target: process.env.VITE_API_SERVER_URL || 'http://43.202.160.225:8080',
                 changeOrigin: true,
                 cookieDomainRewrite: ""
             }

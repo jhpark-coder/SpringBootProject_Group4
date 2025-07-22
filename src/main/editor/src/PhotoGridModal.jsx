@@ -40,7 +40,7 @@ const PhotoGridModal = ({ onGridCreate, onClose }) => {
 
                 const imageUrl = await response.text();
                 // 상대 경로를 Spring Boot 서버의 전체 URL로 변환
-                const fullImageUrl = `http://localhost:8080${imageUrl}`;
+                const fullImageUrl = `${window.location.origin}${imageUrl}`;
                 uploadedImages.push({ src: fullImageUrl, alt: file.name });
 
             } catch (err) {

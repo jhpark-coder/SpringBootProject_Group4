@@ -29,10 +29,26 @@ const ChatDashboard = () => {
     }, []);
 
     useEffect(() => {
-        const serverUrl = import.meta.env.VITE_NOTIFICATION_SERVER_URL || 'http://localhost:3000';
+        // 환경변수 또는 동적 호스트명 사용
+        let serverUrl;
+        
+        if (import.meta.env.VITE_NOTIFICATION_SERVER_URL) {
+            serverUrl = import.meta.env.VITE_NOTIFICATION_SERVER_URL;
+        } else if (window.location.hostname === 'localhost') {
+            serverUrl = 'http://43.202.160.225:3000';
+        } else {
+            serverUrl = `http://${window.location.hostname}:3000`;
+        }
+        
+        console.log('🔧 관리자 대시보드 연결 URL:', serverUrl);
+        console.log('🔧 현재 호스트명:', window.location.hostname);
+        console.log('🔧 환경변수:', import.meta.env.VITE_NOTIFICATION_SERVER_URL);
+        
         // Socket.IO 연결 (관리자 권한으로)
         const newSocket = io(serverUrl, {
             transports: ['websocket', 'polling'],
+            forceNew: true, // 강제로 새로운 연결 생성
+            timeout: 10000, // 10초 타임아웃
             auth: {
                 userId: 1, // 관리자 ID
                 roles: ['ROLE_ADMIN'] // 관리자 역할

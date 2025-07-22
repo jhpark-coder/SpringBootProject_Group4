@@ -699,14 +699,14 @@
         .sidebar-goalcard .purchase-btn {
             width:100%;
             flex: 1 1 0;
-            background: #ffd600;
+            background: #4332bc;
             color: #fff;
             padding: 0 0;
             border-radius: 8px;
             font-size: 17px;
             font-weight: 700;
             text-align: center;
-            border: none;
+            border: 1px solid #4332bc;
             height: 48px;
             display: flex;
             align-items: center;
@@ -716,7 +716,9 @@
         }
 
         .sidebar-goalcard .purchase-btn:hover {
-            background: #ffe066;
+            background: #fff;
+            color: #4332bc;
+            border: 1px solid #4332bc;
         }
 
         /* savedLayouts 적용 시: 12열 Grid로 배치 */
@@ -759,7 +761,7 @@
             color: #fff;
             padding: 12px 0;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 1rem;
             font-weight: 700;
             text-align: center;
             border: none;

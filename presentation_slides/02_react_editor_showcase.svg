@@ -1,0 +1,158 @@
+<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#61dafb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00d4ff;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.95" />
+      <stop offset="100%" style="stop-color:#f8f9fa;stop-opacity:0.95" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bgGradient)"/>
+  <text x="600" y="80" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white">
+    React Editor - 창작자를 위한 전문 도구
+  </text>
+  <text x="600" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="white" opacity="0.9">
+    Tiptap 기반 확장 가능한 WYSIWYG 에디터
+  </text>
+  <g transform="translate(100, 180)">
+    <rect width="400" height="500" rx="15" fill="white" filter="url(#shadow)"/>
+    <rect x="0" y="0" width="400" height="60" rx="15" fill="#f8f9fa"/>
+    <text x="20" y="35" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333">
+      Nexus Editor
+    </text>
+    <rect x="0" y="60" width="400" height="40" fill="#e9ecef"/>
+    <g transform="translate(10, 75)">
+      <rect width="30" height="25" rx="3" fill="#007bff" opacity="0.8"/>
+      <text x="15" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">B</text>
+      <rect x="35" width="30" height="25" rx="3" fill="#6c757d" opacity="0.8"/>
+      <text x="50" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">I</text>
+      <rect x="70" width="30" height="25" rx="3" fill="#6c757d" opacity="0.8"/>
+      <text x="85" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">U</text>
+      <rect x="105" width="30" height="25" rx="3" fill="#6c757d" opacity="0.8"/>
+      <text x="120" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">Link</text>
+      <rect x="140" width="30" height="25" rx="3" fill="#6c757d" opacity="0.8"/>
+      <text x="155" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">Img</text>
+      <rect x="175" width="30" height="25" rx="3" fill="#6c757d" opacity="0.8"/>
+      <text x="190" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">Vid</text>
+      <rect x="210" width="30" height="25" rx="3" fill="#6c757d" opacity="0.8"/>
+      <text x="225" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">Code</text>
+    </g>
+    <rect x="0" y="100" width="400" height="400" fill="white"/>
+    <g transform="translate(20, 120)">
+      <text font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#333">
+        나의 창작 이야기
+      </text>
+      <text x="0" y="30" font-family="Arial, sans-serif" font-size="14" fill="#333">
+        안녕하세요! 오늘은 React와 Tiptap을 사용해서 만든
+      </text>
+      <text x="0" y="50" font-family="Arial, sans-serif" font-size="14" fill="#333">
+        전문적인 에디터에 대해 소개해드릴게요.
+      </text>
+      <rect x="0" y="80" width="120" height="80" rx="5" fill="#e9ecef" stroke="#dee2e6" stroke-width="1"/>
+      <text x="60" y="125" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">
+        이미지
+      </text>
+      <rect x="140" y="80" width="220" height="80" rx="5" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+      <text x="150" y="100" font-family="monospace" font-size="12" fill="#e83e8c">
+        &lt;div className="editor"&gt;
+      </text>
+      <text x="150" y="115" font-family="monospace" font-size="12" fill="#e83e8c">
+        &nbsp;&nbsp;&lt;TiptapEditor /&gt;
+      </text>
+      <text x="150" y="130" font-family="monospace" font-size="12" fill="#e83e8c">
+        &lt;/div&gt;
+      </text>
+      <text x="0" y="200" font-family="Arial, sans-serif" font-size="14" fill="#333">
+        이 에디터는 다음과 같은 특징을 가지고 있습니다:
+      </text>
+      <text x="20" y="230" font-family="Arial, sans-serif" font-size="14" fill="#333">• 실시간 저장</text>
+      <text x="20" y="250" font-family="Arial, sans-serif" font-size="14" fill="#333">• 다양한 미디어 지원</text>
+      <text x="20" y="270" font-family="Arial, sans-serif" font-size="14" fill="#333">• 확장 가능한 구조</text>
+      <text x="20" y="290" font-family="Arial, sans-serif" font-size="14" fill="#333">• 직관적인 UI/UX</text>
+    </g>
+  </g>
+  <g transform="translate(550, 180)">
+    <rect width="550" height="500" rx="15" fill="url(#cardGradient)" filter="url(#shadow)"/>
+    <text x="275" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#333">
+      React 에디터의 핵심 강점
+    </text>
+    <g transform="translate(30, 80)">
+      <circle cx="25" cy="25" r="20" fill="#61dafb" opacity="0.8"/>
+      <text x="25" y="32" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="white">1</text>
+      <text x="60" y="20" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333">
+        컴포넌트 기반 개발
+      </text>
+      <text x="60" y="40" font-family="Arial, sans-serif" font-size="12" fill="#666">
+        재사용 가능한 UI 컴포넌트로 유지보수성 극대화
+      </text>
+    </g>
+    <g transform="translate(30, 140)">
+      <circle cx="25" cy="25" r="20" fill="#61dafb" opacity="0.8"/>
+      <text x="25" y="32" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="white">2</text>
+      <text x="60" y="20" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333">
+        실시간 상태 관리
+      </text>
+      <text x="60" y="40" font-family="Arial, sans-serif" font-size="12" fill="#666">
+        상태 변경 시 즉시 UI 업데이트로 부드러운 사용자 경험
+      </text>
+    </g>
+    <g transform="translate(30, 200)">
+      <circle cx="25" cy="25" r="20" fill="#61dafb" opacity="0.8"/>
+      <text x="25" y="32" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="white">3</text>
+      <text x="60" y="20" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333">
+        확장 가능한 구조
+      </text>
+      <text x="60" y="40" font-family="Arial, sans-serif" font-size="12" fill="#666">
+        Tiptap 확장 기능으로 새로운 기능 쉽게 추가
+      </text>
+    </g>
+    <g transform="translate(30, 260)">
+      <circle cx="25" cy="25" r="20" fill="#61dafb" opacity="0.8"/>
+      <text x="25" y="32" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="white">4</text>
+      <text x="60" y="20" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333">
+        성능 최적화
+      </text>
+      <text x="60" y="40" font-family="Arial, sans-serif" font-size="12" fill="#666">
+        지연 로딩과 메모이제이션으로 빠른 응답 속도
+      </text>
+    </g>
+    <g transform="translate(30, 340)">
+      <text font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#333">
+        기술 스택
+      </text>
+      <g transform="translate(0, 30)">
+        <rect width="100" height="30" rx="5" fill="#61dafb" opacity="0.8"/>
+        <text x="50" y="20" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">React</text>
+        <rect x="120" width="100" height="30" rx="5" fill="#ff6b6b" opacity="0.8"/>
+        <text x="170" y="20" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">Tiptap</text>
+        <rect x="240" width="100" height="30" rx="5" fill="#4ecdc4" opacity="0.8"/>
+        <text x="290" y="20" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">TypeScript</text>
+      </g>
+    </g>
+    <g transform="translate(30, 420)">
+      <text font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#333">
+        비즈니스 임팩트
+      </text>
+      <text x="0" y="25" font-family="Arial, sans-serif" font-size="14" fill="#666">
+        • 창작자 만족도 향상 → 콘텐츠 품질 증대
+      </text>
+      <text x="0" y="45" font-family="Arial, sans-serif" font-size="14" fill="#666">
+        • 개발 효율성 증대 → 빠른 기능 출시
+      </text>
+      <text x="0" y="65" font-family="Arial, sans-serif" font-size="14" fill="#666">
+        • 사용자 경험 개선 → 플랫폼 성장
+      </text>
+    </g>
+  </g>
+  <g transform="translate(100, 720)">
+    <rect width="1000" height="60" rx="15" fill="white" opacity="0.9" filter="url(#shadow)"/>
+    <text x="500" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#333">
+      "창작자들이 쉽게 사용할 수 있는 전문적인 에디터"
+    </text>
+  </g>
+</svg>

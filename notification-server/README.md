@@ -96,3 +96,41 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+# Notification Server
+
+NestJS 기반 알림/채팅 서버
+
+## 환경 설정
+
+### 개발 환경
+```bash
+# 개발 모드로 실행
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+### 운영 환경
+```bash
+# 윈도우에서 빌드
+npm install
+npm run build
+
+# EC2에서 실행
+docker-compose up -d
+```
+
+## 환경변수
+
+- `NODE_ENV`: 환경 (development/production)
+- `PORT`: 서버 포트 (기본값: 3000)
+- `SPRING_BOOT_URL`: Spring Boot 서버 URL
+- `REDIS_HOST`: Redis 호스트
+- `REDIS_PORT`: Redis 포트
+- `DATABASE_URL`: 데이터베이스 연결 URL
+- `DATABASE_USERNAME`: 데이터베이스 사용자명
+- `DATABASE_PASSWORD`: 데이터베이스 비밀번호
+
+## Docker 파일
+
+- `Dockerfile.dev`: 개발 환경용 (빌드 없이 개발 모드)
+- `Dockerfile.prod`: 운영 환경용 (빌드된 파일 사용)
