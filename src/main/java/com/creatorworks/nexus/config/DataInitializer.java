@@ -129,7 +129,7 @@ public class DataInitializer {
                 String[] primaryCategories = {"artwork", "graphic-design", "character", "java", "frontend", "python"};
                 String[][] secondaryCategories = {
                         {"포토그래피", "일러스트레이션", "스케치", "코믹스"},
-                        {"타이포그라피", "앨범아트", "로고", "브랜딩", "편집디자인"},
+                        {"타이포그래피", "앨범아트", "로고", "브랜딩", "편집디자인"},
                         {"카툰", "팬아트", "2D 캐릭터", "3D 모델링"},
                         {"Spring/JPA", "네트워크", "알고리즘", "코어 자바"},
                         {"HTML/CSS", "JavaScript", "React/Vue", "UI/UX"},
