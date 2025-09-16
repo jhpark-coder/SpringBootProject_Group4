@@ -204,11 +204,11 @@ Maven을 통한 단위 테스트 및 통합 테스트를 지원합니다.
 
 ## 👥 개발팀
 
-| 이름 | 역할 | 담당 영역 |
-|------|-----|----------|
-| 박준호 | Team Lead & Backend | Spring Boot 백엔드, DB 설계, 시스템 아키텍처, NestJS/Socket.IO 실시간 서버(채팅/알림), TipTap 에디터, Docker 및 Git 환경구축, AWS EC2 배포 |
-| 박영우 | UI/UX Developer | UI/UX 디자인, 회원가입, 마이페이지, 경매 화면 구현 |
-| 윤진 | Full-Stack Developer | 기초자료수집, 결제기능, 상세페이지, 소셜기능(좋아요, 팔로우) |
+| 이름     | 역할 | 담당 영역 |
+|----------|-----|----------|
+| 박준호   | Team Lead & Backend | Spring Boot 백엔드, DB 설계, 시스템 아키텍처, NestJS/Socket.IO 실시간 서버(채팅/알림), TipTap 에디터, Docker 및 Git 환경구축, AWS EC2 배포 |
+| 박영우   | UI/UX Developer | UI/UX 디자인, 회원가입, 마이페이지, 경매 화면 구현 |
+| 윤진     | Full-Stack Developer | 기초자료수집, 결제기능, 상세페이지, 소셜기능(좋아요, 팔로우) |
 
 
 ## 📞 문의
