@@ -7,11 +7,10 @@
 [![NestJS](https://img.shields.io/badge/NestJS-11.0.1-E0234E?logo=nestjs)](https://nestjs.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **실시간 입찰과 창작물 거래를 위한 종합 경매 플랫폼**
 
-[🚀 시작하기](#-빠른-시작) • [📚 문서](#-프로젝트-구조) • [💡 기능](#-주요-기능) • [🤝 기여하기](#-기여-방법)
+[🚀 시작하기](#-빠른-시작) • [📚 문서](#-프로젝트-구조) • [💡 기능](#-주요-기능)
 
 </div>
 
@@ -21,42 +20,20 @@
 
 **Nexus**는 창작자와 구매자를 연결하는 실시간 경매 플랫폼입니다. 디지털 창작물, 예술 작품, 프로젝트를 실시간으로 거래할 수 있으며, WebSocket 기반의 실시간 입찰 시스템과 리치 에디터를 통한 상세한 상품 소개가 가능합니다.
 
-### ✨ 핵심 가치
-- 🎯 **실시간 경매**: WebSocket 기반 즉각적인 입찰 시스템
-- 💬 **통합 커뮤니케이션**: 판매자-구매자 간 실시간 채팅
-- 📝 **리치 컨텐츠**: TipTap 에디터로 상세한 상품 설명 작성
-- 💳 **안전한 결제**: 아임포트 결제 시스템 통합
-- 🛡️ **관리자 대시보드**: 종합적인 플랫폼 관리 도구
 
 ## 🏗️ 시스템 아키텍처
 
-```mermaid
-graph TB
-    subgraph "Frontend Layer"
-        A[Thymeleaf SSR] 
-        B[React Chat Manager]
-        C[React Editor]
-    end
-    
-    subgraph "Backend Services"
-        D[Spring Boot API<br/>:8080]
-        E[NestJS WebSocket<br/>:3000]
-    end
-    
-    subgraph "Data Layer"
-        F[(MariaDB)]
-        G[(Redis Cache)]
-        H[File Storage]
-    end
-    
-    A --> D
-    B --> E
-    C --> D
-    D --> F
-    D --> G
-    E --> G
-    D --> H
-```
+### Frontend
+- **Thymeleaf**: 서버 사이드 렌더링 (SSR)
+- **React**: 채팅 관리자 및 에디터 컴포넌트
+
+### Backend
+- **Spring Boot** (Port 8080): 메인 API 서버
+- **NestJS** (Port 3000): WebSocket 실시간 통신
+
+### Data
+- **MariaDB**: 메인 데이터베이스
+- **Redis**: 캐싱 및 세션 관리
 
 ## 🚀 빠른 시작
 
@@ -68,62 +45,7 @@ graph TB
 
 ### 설치 및 실행
 
-#### 1️⃣ 저장소 클론
-```bash
-git clone https://github.com/jhpark-coder/SpringBootProject_Group4.git
-cd SpringBootProject_Group4
-```
-
-#### 2️⃣ 환경 설정
-```bash
-# application.properties 설정
-cp src/main/resources/application.properties.example src/main/resources/application.properties
-
-# 환경 변수 설정
-export SPRING_PROFILES_ACTIVE=dev
-export DB_URL=your_database_url
-export DB_USERNAME=your_username
-export DB_PASSWORD=your_password
-```
-
-#### 3️⃣ Docker Compose로 전체 실행
-```bash
-# 전체 서비스 실행
-docker compose up -d --build
-
-# 서비스 확인
-docker compose ps
-```
-
-#### 4️⃣ 개발 환경 실행
-```bash
-# 1. 인프라 시작
-docker compose up redis-cache -d
-
-# 2. Spring Boot 백엔드 실행
-./mvnw spring-boot:run
-
-# 3. NestJS 실시간 서버 실행
-cd notification-server
-npm install
-npm run start:dev
-
-# 4. React 채팅 매니저 실행
-cd src/main/chatManager
-npm install
-npm run dev
-
-# 5. React 에디터 실행
-cd src/main/editor
-npm install
-npm run dev
-```
-
-### 접속 주소
-- 🌐 **메인 플랫폼**: http://localhost:8080
-- 💬 **채팅 관리자**: http://localhost:5173
-- 📝 **에디터**: http://localhost:5174
-- 🔌 **WebSocket**: ws://localhost:3000
+Docker Compose를 통해 전체 서비스를 한 번에 실행하거나, 개발 환경에서 각 서비스를 개별적으로 실행할 수 있습니다.
 
 ## 🛠️ 기술 스택
 
@@ -196,7 +118,7 @@ nexus/
 ├── src/
 │   ├── main/
 │   │   ├── java/           # Spring Boot 소스 코드
-│   │   │   └── nexus/
+│   │   │   └── com/creatorworks/nexus/
 │   │   │       ├── auction/    # 경매 모듈
 │   │   │       ├── member/     # 회원 모듈
 │   │   │       ├── chat/       # 채팅 모듈
@@ -211,11 +133,16 @@ nexus/
 │   └── test/                  # 테스트 코드
 ├── notification-server/       # NestJS 실시간 서버
 │   ├── src/
-│   │   ├── communication/     # WebSocket 게이트웨이
+│   │   ├── chat/             # 채팅 게이트웨이
+│   │   ├── notifications/    # 알림 게이트웨이
 │   │   └── main.ts           # 진입점
 │   └── package.json
-├── docker-compose.yml         # Docker 구성
-├── Dockerfile                # Docker 이미지 정의
+├── presentation_slides/       # 프레젠테이션 자료
+├── docker-compose.yml         # 프로덕션 Docker 구성
+├── docker-compose.dev.yml     # 개발 Docker 구성
+├── deploy-ec2.sh             # EC2 배포 스크립트
+├── EC2_DEPLOYMENT_GUIDE.md  # EC2 배포 가이드
+├── CHAT_FLOWCHART.md        # 채팅 시스템 플로우차트
 ├── pom.xml                   # Maven 설정
 └── README.md                 # 프로젝트 문서
 ```
@@ -265,110 +192,41 @@ nexus/
 
 ## 🧪 테스트
 
-```bash
-# 단위 테스트 실행
-./mvnw test
+Maven을 통한 단위 테스트 및 통합 테스트를 지원합니다.
 
-# 통합 테스트 실행
-./mvnw verify
 
-# 특정 테스트 실행
-./mvnw test -Dtest=AuctionServiceTest
 
-# 테스트 커버리지 확인
-./mvnw jacoco:report
-```
+## 📊 프로젝트 현황
 
-## 📈 성능 최적화
-
-### 캐싱 전략
-- Redis를 통한 세션 관리
-- Spring Cache로 자주 조회되는 데이터 캐싱
-- 경매 조회수 캐싱
-
-### 데이터베이스 최적화
-- QueryDSL을 통한 최적화된 쿼리
-- 인덱싱 전략 적용
-- N+1 문제 해결
-
-### 프론트엔드 최적화
-- Vite를 통한 빠른 빌드
-- 코드 스플리팅 및 레이지 로딩
-- TailwindCSS 퍼지를 통한 CSS 최적화
-
-## 🤝 기여 방법
-
-### 기여 가이드라인
-
-1. **Fork** - 프로젝트를 Fork합니다
-2. **Branch** - 기능 브랜치를 생성합니다 (`git checkout -b feature/AmazingFeature`)
-3. **Commit** - 변경사항을 커밋합니다 (`git commit -m 'Add some AmazingFeature'`)
-4. **Push** - 브랜치에 푸시합니다 (`git push origin feature/AmazingFeature`)
-5. **Pull Request** - Pull Request를 생성합니다
-
-### 커밋 컨벤션
-```
-feat: 새로운 기능 추가
-fix: 버그 수정
-docs: 문서 수정
-style: 코드 포맷팅
-refactor: 코드 리팩토링
-test: 테스트 코드
-chore: 빌드 업무 수정
-```
-
-## 📊 프로젝트 상태
-
-### 개발 진행 상황
-- ✅ 기본 경매 시스템
-- ✅ 실시간 입찰
+### 구현 완료 기능
+- ✅ 경매 시스템 (등록, 입찰, 낙찰)
+- ✅ 실시간 입찰 업데이트 (WebSocket)
 - ✅ 채팅 시스템
 - ✅ 관리자 대시보드
-- ✅ 결제 시스템
-- 🔄 모바일 앱 개발
-- 📋 AI 가격 추천
-- 📋 블록체인 인증
+- ✅ 결제 시스템 (아임포트 연동)
+- ✅ 리치 텍스트 에디터 (TipTap)
+- ✅ 실시간 알림 시스템
+- ✅ 회원 가입 및 로그인
+- ✅ 카테고리별 상품 분류
 
-### 알려진 이슈
-- [ ] 대용량 이미지 업로드 시 성능 저하
-- [ ] IE11 호환성 문제
-- [ ] 모바일 반응형 디자인 개선 필요
+## 👥 개발팀
 
-## 👥 팀원
+| 이름 | 역할 | 담당 영역 |
+|------|-----|----------|
+| 박준호 | Team Lead & Backend | Spring Boot 백엔드, DB 설계, 시스템 아키텍처, NestJS/Socket.IO 실시간 서버(채팅/알림), TipTap 에디터, Docker 및 Git 환경구축, AWS EC2 배포 |
+| 박영우 | UI/UX Developer | UI/UX 디자인, 회원가입, 마이페이지, 경매 화면 구현 |
+| 윤진 | Full-Stack Developer | 기초자료수집, 결제기능, 상세페이지, 소셜기능(좋아요, 팔로우) |
 
-| 이름 | 역할 | GitHub |
-|------|-----|--------|
-| 박종현 | Team Lead & Backend | [@jhpark-coder](https://github.com/jhpark-coder) |
-| 팀원2 | Frontend Developer | [@member2](https://github.com) |
-| 팀원3 | UI/UX Designer | [@member3](https://github.com) |
-| 팀원4 | DevOps Engineer | [@member4](https://github.com) |
 
-## 📝 라이센스
+## 📞 문의
 
-이 프로젝트는 MIT 라이센스를 따릅니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
+프로젝트 관련 문의는 이슈 트래커를 이용해 주세요.
 
-## 📞 연락처
-
-- **이메일**: jhpark.coder@gmail.com
-- **이슈 트래커**: [GitHub Issues](https://github.com/jhpark-coder/SpringBootProject_Group4/issues)
-- **위키**: [프로젝트 위키](https://github.com/jhpark-coder/SpringBootProject_Group4/wiki)
-
-## 🙏 감사의 말
-
-이 프로젝트는 다음 오픈소스 프로젝트들의 도움을 받았습니다:
-- Spring Boot
-- React
-- NestJS
-- TipTap Editor
-- Docker
 
 ---
 
 <div align="center">
-  
-**Made with ❤️ by Team Nexus**
 
-[![Stars](https://img.shields.io/github/stars/jhpark-coder/SpringBootProject_Group4?style=social)](https://github.com/jhpark-coder/SpringBootProject_Group4/stargazers)
-[![Forks](https://img.shields.io/github/forks/jhpark-coder/SpringBootProject_Group4?style=social)](https://github.com/jhpark-coder/SpringBootProject_Group4/network/members)
+**Nexus PortFolio Platform © 2025**
 
 </div>
