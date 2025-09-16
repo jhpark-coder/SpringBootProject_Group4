@@ -1,12 +1,11 @@
 # 🎨 Nexus - Creative Auction Platform
 
 <div align="center">
-  
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.3-brightgreen?logo=springboot)](https://spring.io/projects/spring-boot)
-[![React](https://img.shields.io/badge/React-18.3.1-61DAFB?logo=react)](https://reactjs.org/)
-[![NestJS](https://img.shields.io/badge/NestJS-11.0.1-E0234E?logo=nestjs)](https://nestjs.com/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
+
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.3-brightgreen?logo=springboot)
+![React](https://img.shields.io/badge/React-18.3.1-61DAFB?logo=react)
+![NestJS](https://img.shields.io/badge/NestJS-11.0.1-E0234E?logo=nestjs)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)
 
 **실시간 입찰과 창작물 거래를 위한 종합 경매 플랫폼**
 
@@ -80,36 +79,31 @@ Docker Compose를 통해 전체 서비스를 한 번에 실행하거나, 개발 
 
 ## 💡 주요 기능
 
-### 🎯 경매 시스템
-- **실시간 입찰**: WebSocket 기반 즉각적인 입찰 반영
-- **자동 경매 종료**: 예약된 시간에 자동 경매 마감
-- **즉시 구매**: Buy Now 가격 설정 가능
-- **입찰 기록**: 모든 입찰 내역 추적 및 표시
-- **카테고리 분류**: 계층적 카테고리 시스템
+### 경매 시스템
+- 실시간 입찰 (WebSocket)
+- 자동 경매 종료
+- 즉시 구매 기능
+- 입찰 기록 관리
+- 카테고리별 분류
 
-### 💬 커뮤니케이션
-- **실시간 채팅**: 판매자-구매자 간 직접 소통
-- **관리자 지원**: 고객 지원 채팅 시스템
-- **알림 시스템**: 입찰, 낙찰 등 실시간 알림
-- **문의 게시판**: 상품별 Q&A 기능
+### 커뮤니케이션
+- 실시간 채팅
+- 알림 시스템
+- 상품 Q&A
 
-### 📝 컨텐츠 관리
-- **리치 에디터**: TipTap 기반 WYSIWYG 에디터
-- **이미지 업로드**: 드래그 앤 드롭 이미지 추가
-- **미리보기**: 실시간 컨텐츠 미리보기
-- **템플릿**: 미리 정의된 상품 설명 템플릿
+### 컨텐츠 관리
+- TipTap 리치 텍스트 에디터
+- 이미지 업로드
+- 실시간 미리보기
 
-### 💳 결제 시스템
-- **아임포트 연동**: 안전한 결제 처리
-- **다양한 결제 수단**: 카드, 계좌이체, 간편결제
-- **결제 검증**: 서버 측 결제 검증 시스템
-- **환불 처리**: 관리자 환불 기능
+### 결제
+- 아임포트 결제 연동
+- 다양한 결제 수단 지원
 
-### 🛡️ 관리자 기능
-- **판매자 승인**: 판매자 신청 검토 및 승인
-- **회원 관리**: 사용자 권한 및 상태 관리
-- **경매 관리**: 부적절한 경매 삭제 및 수정
-- **통계 대시보드**: 플랫폼 운영 통계
+### 관리자
+- 회원 관리
+- 경매 관리
+- 통계 대시보드
 
 ## 📁 프로젝트 구조
 
@@ -184,11 +178,10 @@ nexus/
 - 역할 기반 접근 제어 (USER, ADMIN)
 - BCrypt 패스워드 암호화
 
-### 보안 기능
-- CSRF 보호
-- XSS 방지
-- SQL Injection 방지 (JPA 사용)
-- 파일 업로드 검증
+### 보안 적용
+- Spring Security 기반 인증/인가
+- BCrypt 패스워드 암호화
+- JPA를 통한 SQL Injection 방지
 
 ## 🧪 테스트
 
@@ -227,6 +220,6 @@ Maven을 통한 단위 테스트 및 통합 테스트를 지원합니다.
 
 <div align="center">
 
-**Nexus PortFolio Platform © 2025**
+**Nexus Portfolio Platform © 2025**
 
 </div>
